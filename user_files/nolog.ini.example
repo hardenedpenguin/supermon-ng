@@ -1,0 +1,64 @@
+; This is the nolog.ini example file
+;
+; Any line started with a semicolon
+; is a comment. It is often good to
+; add comments to your ini files to
+; remind you of things you have done.
+;
+; If you create this file named nolog.ini
+; in  the /user_files directory and the
+; authini.inc file is active and configured
+; for your users the nolog.ini file will be
+; used when a user is viewing but not logged
+; into your supermon2.
+;
+; If the nolog.ini file does not exist the 
+; the allmon.ini file is used for the NO
+; login state. The file is intially distributed
+; as Xnolog.ini meaning it is inactive. Activate
+; the user/ini selection and remove the "X" to
+; activate.
+;
+; Create the nolog.ini file the same as you
+; would the allmon.ini file only configure it 
+; with only the nodes and options you want the
+; not logged user to see.
+;
+; You can also create the non-logged message
+; in global.inc
+;
+; This is the FIRST node definition
+; Change the number to a node you
+; want to monitor.
+
+[1998]
+; The host is the URL or IP address of the
+; server where the node resides. If it is on
+; the same server as this file then it would
+; be 127.0.0.1 - 5038 is the standard manager
+; port. It can be changed here and in manager.conf
+host=127.0.0.1:5038
+;
+; The user/pw here must match that in manager.conf
+user=admin
+passwd=
+;
+; Determines if you want this to be a menu item.
+menu=yes
+;
+; Attaches the header label Nodes to the system group
+; It will be listed under Nodes in the header
+system=Nodes
+;
+; Determines if theURL for the node is hidden
+hideNodeURL=no
+;
+; Example to add URL for an available audio feed
+listenlive="https://www.Broadcastify.com/listen/feed/...."
+;
+; Example to add URL to display of audio archive files
+archive="http://node.ip.hamvoip.org:8080/supermon2/custom/node"
+
+; Add additional NODES or content for the NO log user here
+
+

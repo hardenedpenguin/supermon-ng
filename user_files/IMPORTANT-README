@@ -1,0 +1,52 @@
+
+This directory - user_files - houses ALL of the files that the Supermon2
+user can configure. There are NO configurable files in the supermon2
+directory. Do NOT change permissions of files. See the various example
+files for configuration ideas. 
+
+     CONFIGURABLE FILES IN THIS DIRECTORY
+     ------------------------------------
+
+authini.inc      - ini to user mapping. Named Xauthini.inc to deactivate
+authusers.inc    - button to user maaping. Named Xauthusers.inc to deactivate
+allmon.ini       - The default Sueprmon2 initialization file
+nolog.ini        - The NOT logged ini file if ini to user mapping is activated
+global.inc	 - User configuration settings
+favorites.ini    - Favorites button configuration
+controlpanel.ini - Control Panel button configuration
+background.jpg	 - This is a symbolic link to a header background image of your choice.
+		   By default linked to Cape_Coral_yard.jpg
+
+      FILES A USER MAY ADD -  Replace <username> with real login username.
+      --------------------------------------------------------------------
+
+<username>-allmon.ini 		- Additional ini files for other users. Replace <username>
+                        	  with real login username.
+<username>-favorites.ini	- Favorites ini files mapped to users 
+<username>-controlpanel.ini	- Control Panel ini files mapped to users
+
+An_image_file.jpg     - Replacement for header background symbolicly linked to background.jpg
+
+ EXAMPLE AND BACKUP FILES
+ -------------------------
+
+global.inc.example
+allmon.ini.example
+admin-allmon.ini.example
+user1-allmon.ini.example
+nolog.ini.example
+authini.inc.example
+authusers.inc.example
+authusers.ini.backup
+favini.inc.example
+cntrlini.inc.example
+favnolog.ini
+cntrlnolog.ini
+
+NOTE - files renamed with preceeding 'X' to deavtivate.
+
+For more information, see the howto document at this URL:
+
+http://www.crompton.com/hamradio/supermon2/supermon2_manual.pdf
+
+

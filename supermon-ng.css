@@ -1,0 +1,784 @@
+:root {
+  --primary-color: #66ccff;
+  --background-color: #031224;
+  --menu-background: #191970;
+  --text-color: #a8b9a1;
+  --table-header-bg: #4a5161;
+  --light-yellow: #ffff80;
+  --light-green: #90ee90;
+}
+
+body {
+  margin: 0 auto 7px;
+  padding: 0 5px;
+  color: var(--text-color);
+  min-width: 350px;
+  max-width: 1800px;
+  text-align: center;
+  background-color: black;
+  font-family: sans-serif;
+}
+
+a,
+a:link,
+a:visited,
+.nodeNum {
+  color: limegreen;
+  text-decoration: none;
+}
+
+.nodeNum {
+  margin: 5px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.nodeNum:hover {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+#node {
+  color: white;
+  border: 2px solid #007bff;
+  background-color: var(--menu-background);
+  margin: 2px;
+  border-radius: 5px;
+}
+
+#header {
+  width: 100%;
+  position: relative;
+  margin: 1px 0;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+}
+
+#headerTitle {
+  position: absolute;
+  top: 3px;
+  left: 5px;
+  margin: 0;
+  font-weight: bold;
+  font-size: 1.1em;
+  color: white;
+  line-height: normal;
+  letter-spacing: normal;
+  font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
+}
+
+#headerTitle a,
+#headerTitle a:link,
+#headerTitle a:visited {
+  text-decoration: none;
+  color: white;
+}
+
+#headerTag {
+  position: absolute;
+  top: 105px;
+  text-align: left;
+  left: 10px;
+  margin: 0;
+  color: white;
+  font-weight: bold;
+  font-size: 1.1em;
+  line-height: normal;
+  font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
+  letter-spacing: normal;
+}
+
+#header2Tag {
+  position: absolute;
+  top: 145px;
+  left: 10px;
+  margin: 0;
+  font-size: 0.9em;
+  color: white;
+  font-weight: bold;
+  line-height: normal;
+  font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
+  letter-spacing: normal;
+}
+
+#header3Tag,
+#header4Tag {
+  position: absolute;
+  top: 75px;
+  left: 10px;
+  margin: 0;
+  font-size: 1.3em;
+  font-weight: bold;
+  line-height: normal;
+  font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
+  letter-spacing: normal;
+}
+
+#header3Tag {
+  color: var(--light-green);
+}
+
+#header4Tag {
+  color: var(--light-yellow);
+}
+
+#headerImg,
+#headerImg2,
+#mytilepic,
+#mytilepic2 {
+  position: absolute;
+  top: 2px;
+}
+
+#headerImg {
+  right: 12px;
+}
+
+#headerImg2 {
+  right: 170px;
+}
+
+#mytilepic {
+  right: 128px;
+}
+
+#mytilepic2 {
+  right: 228px;
+}
+
+#headerLogin {
+  position: absolute;
+  top:  82%;
+  left: 92%;
+  font-size: 14px;
+  font-family: Verdana, Arial, sans-serif;
+  color: white;
+  text-align: right;
+  font-weight: bold;
+  font-style: italic;
+}
+
+#headerLogin a,
+#headerLogin a:link,
+#headerLogin a:visited {
+  text-decoration: none;
+  color: white;
+}
+
+#headerLogin a:hover {
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+}
+
+#headerLogout2 {
+  position: absolute;
+  bottom: 2%;
+  left: 58%;
+  text-align: right;
+  width: 22em;
+} 
+
+#headerLogout a:link {
+  text-decoration: none;
+  font-weight: bold;
+  color: white;
+}
+
+#headerLogout a:visited {
+  text-decoration: none;
+  font-weight: bold;
+  color: white;
+}
+
+#headerLogout a:hover {
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: bold;
+  color: yellow;
+}
+
+#menu {
+  position: relative;
+  width: 100%;
+  text-align: center; /* Keep the overall menu centered */
+  padding: 0 0 0 12px;
+  box-sizing: border-box;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  background-color: var(--menu-background);
+  font-size: 15px;
+  font-family: Verdana, Arial, sans-serif;
+}
+
+#menu ul {
+  list-style-type: none;
+  margin: 0 auto; /* Center the ul within the menu */
+  display: flex;
+  padding: 1px 8px 2px 3px;
+  background-color: var(--menu-background);
+  justify-content: center; /* Center the list items horizontally */
+}
+
+#menu li {
+  display: inline-block;
+}
+
+#menu li a,
+.dropbtn {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  color: white;
+  padding: 2px 8px;
+}
+
+#menu li a:hover {
+  font-weight: bold;
+}
+
+#menu li.dropdown {
+  display: inline-block;
+}
+
+#menu .dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: var(--menu-background);
+  min-width: 160px;
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+  z-index: 5;
+}
+
+#menu .dropdown-content a {
+  color: white;
+  padding: 1px 4px 4px 4px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+}
+
+#menu .dropdown-content a:hover {
+  background-color: #0056b3;
+  font-weight: bold;
+}
+
+#menu .dropdown:hover .dropdown-content {
+  display: block;
+}
+
+#footer {
+  font-size: 15px;
+}
+
+table {
+  margin: auto;
+  display: table;
+  box-sizing: border-box;
+  text-indent: initial;
+  border-spacing: 2px;
+  border-radius: 8px;
+  overflow: hidden;
+  border-collapse: collapse;
+}
+
+table.rtcm {
+  border-collapse: collapse;
+  padding: 5px;
+  font-family: verdana, arial, sans-serif;
+}
+
+table.rtcm tr {
+  font-size: 12px;
+}
+
+table.rtcm td {
+  white-space: nowrap;
+}
+
+table.rtcm th {
+  font-size: 12px;
+  padding: 5px;
+  background-color: #e0e0e0;
+}
+
+table.gridtable {
+  font-family: verdana, arial, sans-serif;
+  font-size: 12px;
+  font-weight: bold;
+  color: white;
+  padding: 4px;
+  border-collapse: collapse;
+}
+
+table.gridtable th {
+  padding: 4px;
+  background-color: var(--table-header-bg);
+  font-size: 12px;
+}
+
+table.gridtable td {
+  padding: 4px;
+  background-color: #666666;
+  font-size: 11px;
+}
+
+table.gridtable tr.rColor td {
+  background-color: #001fd7;
+  font-weight: bold;
+  color: var(--light-yellow);
+}
+
+table.gridtable tr.cColor td,
+table.gridtable tr.tColor td {
+  background-color: #007bff;
+  font-weight: bold;
+  color: var(--light-yellow);
+}
+
+table.gridtable tr.bColor td {
+  background-color: var(--light-green);
+  font-weight: bold;
+  color: black;
+}
+
+table.gridtable tr.gColor td {
+  background-color: #323ca8;
+  font-weight: bold;
+  color: white;
+}
+
+table.gridtable tr.lColor td {
+  background-color: #ffa500;
+  font-weight: bold;
+  color: black;
+}
+
+.disconnect {
+  font-size: 14px;
+  text-align: left;
+}
+
+.text {
+  position: relative;
+  margin: 0 0 0 10px;
+  width: 330px;
+  font-size: 14px;
+  text-align: left;
+}
+
+.barbox_a {
+  display: flex;
+  align-items: center;
+  position: absolute;
+  top: 2px;
+  left: 10px;
+  margin: 0;
+  width: 302px;
+  height: 22px;
+  background-color: black;
+}
+
+.bar {
+  flex-grow: 1;
+  position: relative;
+  top: 1px;
+  left: 1px;
+  margin: 0;
+  height: 20px;
+  background-color: #0099ff;
+  text-align: center;
+  color: white;
+}
+
+.per {
+  position: absolute;
+  top: 0;
+  font-size: 12px;
+  left: 50%;
+  height: 20px;
+  margin: 0;
+  background-color: #0099ff;
+  color: white;
+}
+
+.blank {
+  background-color: white;
+  width: 300px;
+}
+
+#login {
+  display: none;
+}
+
+#login-header {
+  margin: 0 auto;
+  position: absolute;
+  right: 250px;
+}
+
+#login-link {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: block;
+  background: #2a2a2a;
+  padding: 5px 15px;
+  color: #fff;
+  border-radius: 5px;
+}
+
+#login-panel {
+  position: absolute;
+  top: 26px;
+  right: 0;
+  width: 200px;
+  padding: 10px 15px 5px;
+  background: #2a2a2a;
+  font-size: 10pt;
+  font-weight: bold;
+  color: #fff;
+  display: none;
+  border-radius: 5px;
+}
+
+label {
+  line-height: 1.8;
+}
+
+.clearer {
+  clear: both;
+}
+
+#cpMain {
+  display: none;
+}
+
+.submit,
+.submit2 {
+  padding: 3px 15px;
+  cursor: pointer;
+  border-radius: 15px;
+  border: none;
+}
+
+.submit {
+  background: var(--table-header-bg);
+  color: white;
+}
+
+.submit:hover {
+  background: #797a7e;
+  font-weight: bold;
+  color: white;
+}
+
+.submit2 {
+  background: lightgray;
+  color: black;
+}
+
+.submit2:hover {
+  background: yellow;
+  font-weight: bold;
+  color: black;
+}
+
+#bubblechart,
+#lsnodeschart,
+#website {
+  font-size: 9.5px;
+}
+
+@media (max-width: 768px) {
+  #menu ul {
+    flex-direction: column;
+  }
+
+  #headerTitle {
+    font-size: 1em;
+  }
+
+  #headerImg,
+  #headerImg2,
+  #mytilepic,
+  #mytilepic2 {
+    position: static;
+    display: block;
+    margin: 5px auto;
+    text-align: center;
+  }
+
+  #headerLogin {
+    position: static;
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  #login-header {
+    position: static;
+    text-align: center;
+  }
+
+  #login-panel {
+    position: static;
+    width: 90%;
+    margin: 10px auto;
+  }
+}
+
+a:focus,
+button:focus,
+input:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* For the main "System Info" title */
+.page-title {
+  font-size: 1.4em;
+  margin-bottom: 0;
+  font-weight: bold;
+  text-align: center; /* Replaces the need for <center> tag */
+}
+
+/* For the main content container - Summary view */
+.info-container-summary {
+  font-size: 20px; /* Larger font for summary */
+  padding: 10px;
+  /* Add text-align: left; if content shouldn't be centered */
+  /* text-align: left; */
+}
+
+/* For the main content container - Detailed view */
+.info-container-detailed {
+  font-size: 14px; /* Smaller font for detail */
+  padding: 10px;
+  /* Add text-align: left; if content shouldn't be centered */
+  /* text-align: left; */
+}
+
+/* For subheadings like "AllStar Version Numbers" */
+.section-subheader {
+  margin-left: 2em;
+  font-weight: bold;
+  text-decoration: underline;
+  /* Add text-align: left; if needed */
+   /* text-align: left; */
+}
+
+/* Style for core dump warnings/errors */
+.coredump-warning {
+  background-color: yellow;
+  color: black;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+.coredump-error {
+  background-color: red;
+  color: yellow;
+  font-weight: bold;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+/* Style for CPU Temperature highlight based on state */
+.cpu-temp-normal {
+  background-color: palegreen;
+  color: black;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+.cpu-temp-warning {
+  background-color: yellow;
+  color: black;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+.cpu-temp-high {
+  background-color: red;
+  color: white;
+  font-weight: bold;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+/* Fallback style if parsing fails */
+.cpu-temp-unknown {
+  background-color: lightgray;
+  color: black;
+  padding: 0 4px;
+  border-radius: 3px;
+}
+
+.container {
+    padding: 20px;
+}
+
+.supermon-log-content {
+    font-size: 16px; /* Original was 18px, 16px can be more readable for logs */
+    white-space: pre-wrap;   /* Wrap long lines */
+    word-break: break-all;   /* Break long words/strings */
+    background-color: #f8f9fa; /* Very light gray/off-white */
+    border: 1px solid #dee2e6; /* Light gray */
+    padding: 10px;
+    max-height: 80vh;      /* Limit height to make page manageable */
+    overflow-y: auto;      /* Add scrollbar if content exceeds max-height */
+    color: #000; /* Explicitly black text for log, or inherit if body sets it */
+}
+
+/* Base styling for all messages */
+.supermon-message {
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 1em; /* Add some spacing if multiple messages could appear */
+    border: 1px solid transparent; /* Base border, color will be overridden */
+}
+
+/* Error-specific message styling */
+.supermon-message--error {
+    color: #721c24; /* Dark red text */
+    background-color: #f8d7da; /* Light pinkish-red background */
+    border-color: #f5c6cb; /* Pale red/pink border */
+}
+
+.section-header {
+    font-size: 1.1em; /* Example size, adjust as needed */
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #cccccc; /* Example styling */
+    color: #333333; /* Darker gray for text */
+}
+
+.result-item {
+    font-size: 1em;
+    margin-bottom: 10px;
+    line-height: 1.4;
+    padding: 8px;
+    border: 1px solid #eeeeee; /* Light border for each item */
+    background-color: #f9f9f9; /* Slight background tint */
+    border-radius: 4px; /* Slightly rounded corners */
+}
+
+.info-message {
+    font-size: 1em;
+    padding: 10px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #dddddd;
+    border-radius: 4px;
+    background-color: #f0f0f0;
+    color: #555555;
+}
+
+.info-message.no-results {
+    /* Specific styling for no-results if needed, inherits from .info-message */
+    /* background-color: #fefae0; */ /* Example: slightly different bg for no results */
+    /* color: #856404; */
+}
+
+.error-message {
+    font-size: 1.2em; /* Example size for h3 */
+    color: #a94442; /* Standard error red color */
+    background-color: #f2dede; /* Light red background */
+    border: 1px solid #ebccd1; /* Reddish border */
+    padding: 10px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+}
+
+.db-header {
+    color: #FFFF00; /* Yellow */
+    margin-bottom: 10px;
+    font-size: 1.2em;
+}
+
+.db-content {
+    white-space: pre-wrap; /* Preserve formatting from AMI output */
+    word-wrap: break-word;
+    background-color: #111;
+    padding: 15px;
+    border: 1px solid #444;
+    color: #DDDDDD;
+    font-family: "Courier New", Courier, monospace;
+    font-size: 0.9em;
+    max-height: 70vh; /* Limit height and make it scrollable if too long */
+    overflow-y: auto;
+    border-radius: 5px;
+}
+
+.status-message { /* Used for 'no content' or 'error fetching' */
+    color: yellow;
+    font-style: italic;
+    padding: 10px;
+    background-color: #222200;
+    border: 1px solid #555500;
+    border-radius: 5px;
+    margin-top: 10px;
+}
+
+.even-row {
+        background : #00FFFF;
+}
+.odd-row {
+        background : #00E8E8;
+}
+
+body.cpustats pre {
+  text-align: left;
+  background-color: black;
+  color: white;
+  padding: 1em;
+  border-radius: 5px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.rptstatus {
+    text-align: left;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.ast-status-pre {
+    text-align: left;
+    font-family: "Courier New", Courier, monospace; 
+    background-color: var(--background-color); 
+    color: white; 
+    padding: 15px; 
+    border-radius: 5px; 
+    line-height: 1.3; 
+    margin: 0; 
+}
+
+.ast-status-highlight {
+    color: var(--primary-color); 
+    font-weight: bold;
+}
+
+.ast-status-header-line {
+    color: var(--primary-color); 
+}
+
+.ast-status-section-title {
+    color: var(--light-yellow); 
+}
+
+.ast-status-error-msg {
+    color: red;
+    font-weight: bold;
+}
+
+.ast-status-count {
+    color: orange;
+    font-weight: bold;
+}
+
+.ast-status-none-indicator {
+    color: gray; 
+    font-style: italic;
+}

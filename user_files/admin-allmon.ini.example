@@ -1,0 +1,127 @@
+; This is example of the ini
+; file named for the admin user. This 
+; name is mapped in the authini.inc file
+;
+; Any line started with a semicolon
+; is a comment. It is often good to
+; add comments to your ini files to
+; remind you of things you have done.
+;
+; This is the first node definition
+; Change the number to a node you
+; want to monitor.
+
+[1998]
+; The host is the URL or IP address of the
+; server where the node resides. If it is on
+; the same server as this file then it would 
+; be 127.0.0.1 - 5038 is the standard manager
+; port. It can be changed here and in manager.conf
+host=127.0.0.1:5038
+;
+; The user/pw here must match that in manager.conf
+user=admin
+passwd=
+;
+; Determines if you want this to be a menu item.
+menu=yes
+;
+; Attaches the header label Nodes to the system group
+; It will be listed under Nodes in the header
+system=Nodes
+;
+; Determines if theURL for the node is hidden
+hideNodeURL=no
+;
+; Example to add URL for an available audio feed
+listenlive="https://www.Broadcastify.com/listen/feed/...."
+;
+; Example to add URL to display of audio archive files
+archive="http://node.ip.hamvoip.org:8080/supermon2/custom/node"
+
+; Another local node
+
+[1999]
+host=127.0.0.1:5038
+user=admin
+passwd=
+menu=yes
+system=Nodes
+hideNodeURL=no
+
+; Example of another node on a different server
+; but on your same LAN
+
+[4xxxx]
+host=192.168.1.134:5038
+user=admin
+passwd=
+menu=yes
+system=Nodes
+hideNodeURL=no
+;
+; Here we define the lsnodes URL to display it
+lsnodes="http://192.168.1.134/cgi-bin/lsnodes_web?node=4xxxx"
+
+; Example of another node monitored out on the Internet
+; We use the hamvoip.org site to get the IP address based
+; on the node number 
+
+[5xxxx]
+host=5xxxx.ip.hamvoip.org:5038
+user=admin
+passwd=
+menu=yes
+system=Nodes
+hideNodeURL=no
+lsnodes="http://5xxxx.ip.hamvoip.org/cgi-bin/lsnodes_web?node=5xxxx"
+
+; Select nodes to be displayed when All Nodes is selected
+
+[All Nodes]
+nodes=4xxxx,5xxxx,1998,1999
+menu=yes
+
+; Select nodes to be displayed when Hubs is selected
+
+[Hubs]
+system=Display Groups
+menu=yes
+nodes=4xxxx,5xxxx
+
+; Select nodes to be displayed that are public
+
+[Public Nodes]
+system=Display Groups
+menu=yes
+nodes=5xxxx,4xxxx
+ 
+; Select nodes to be displayed that are private
+
+[Private Nodes]
+system=Display Groups
+menu=yes
+nodes=1998,1999
+
+; Select node to be displayed that is Echolink connected
+
+[Echolink Node]
+system=Display Groups
+menu=yes
+nodes=4xxxx
+
+; URL's of your choice can be added to the header. Note the
+; ">" at the end of the URL name. If this is present the URL
+; is opened on a new tab otherwise the selection opens on the
+; same tab and you would have to hit the back arrow to return
+; to Supermon2
+
+[IRLP Status]
+url="http://status.irlp.net>"
+menu=yes
+
+[HAMVOIP]
+url="http://HamVOIP.org>"
+menu=yes
+
+
