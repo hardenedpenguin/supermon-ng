@@ -63,20 +63,38 @@ $sdetail = $settings['show-detailed'];
     <meta charset="UTF-8">
     <title>Supermon Display Settings</title>
     <link type="text/css" rel="stylesheet" href="supermon-ng.css">
+    <style>
+        input[type="text"] {
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+        }
+        input[type="radio"] {
+            accent-color: #007bff;
+        }
+        .submit-large {
+            background-color: #555;
+            color: white;
+            border: 1px solid #777;
+        }
+        .submit-large:hover {
+            background-color: #666;
+        }
+    </style>
     <script>
         function refreshParent() {
             if (window.opener && !window.opener.closed) {
                 try {
                     window.opener.location.reload();
                 } catch (e) {
-                    // Silently ignore errors
+                    
                 }
             }
         }
         window.addEventListener('unload', refreshParent);
     </script>
 </head>
-<body style="background-color:powderblue;">
+<body style="background-color:black; color:white;">
 <center>
 <p style="font-size:1.5em;margin-bottom:0;"><b>Supermon Display Settings</b></p>
 
