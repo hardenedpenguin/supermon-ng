@@ -1,7 +1,7 @@
 <?php
 
 include("session.inc");
-include("amifunctions.inc"); 
+include("amifunctions.inc");
 include("common.inc");
 include("authusers.php");
 include("authini.php");
@@ -13,8 +13,9 @@ include("authini.php");
     <link rel="stylesheet" type="text/css" href="supermon-ng.css">
     <style>
         body {
-             color: white; 
-             padding: 10px; 
+             color: white;
+             padding: 10px;
+             background-color: #000000 !important;
         }
     </style>
 </head>
@@ -32,7 +33,7 @@ include("authini.php");
         $config = parse_ini_file($SUPINI, true);
 
         $node = isset($_GET['node']) ? trim(strip_tags($_GET['node'])) : null;
-        
+
         if (empty($node)) {
              die("<span class='ast-status-error-msg'>ERROR:</span> 'node' parameter is missing in the URL.");
         }
@@ -43,15 +44,15 @@ include("authini.php");
         if (!class_exists('SimpleAmiClient')) {
             die("<span class='ast-status-error-msg'>ERROR:</span> SimpleAmiClient class not found. Ensure amifunctions.inc provides it.");
         }
-        
-        $fp = SimpleAmiClient::connect($config[$node]['host']); 
+
+        $fp = SimpleAmiClient::connect($config[$node]['host']);
         if ($fp === false) {
             die("<span class='ast-status-error-msg'>ERROR:</span> Could not connect to Asterisk Manager on host <span class='ast-status-highlight'>{$config[$node]['host']}</span>.");
         }
 
-        $loginSuccess = SimpleAmiClient::login($fp, $config[$node]['user'], $config[$node]['passwd']); 
+        $loginSuccess = SimpleAmiClient::login($fp, $config[$node]['user'], $config[$node]['passwd']);
         if ($loginSuccess === false) {
-            SimpleAmiClient::logoff($fp); 
+            SimpleAmiClient::logoff($fp);
             die("<span class='ast-status-error-msg'>ERROR:</span> Could not login to Asterisk Manager using user <span class='ast-status-highlight'>{$config[$node]['user']}</span>. Check credentials and manager.conf permissions.");
         }
 
@@ -61,7 +62,7 @@ include("authini.php");
         show_channels($fp);
         show_netstats($fp);
 
-        SimpleAmiClient::logoff($fp); 
+        SimpleAmiClient::logoff($fp);
 
     } else {
         echo ("<h3 class='error-message'>ERROR: You Must login and have ASTATUSER permission to use this function!</h3>");
@@ -71,10 +72,10 @@ include("authini.php");
 </body>
 </html>
 
-<?php       
+<?php
 function page_header()
 {
-    global $HOSTNAME, $AWK, $DATE; 
+    global $HOSTNAME, $AWK, $DATE;
 
     $HOSTNAME_CMD = isset($HOSTNAME) ? $HOSTNAME : 'hostname';
     $AWK_CMD = isset($AWK) ? $AWK : 'awk';
@@ -90,23 +91,23 @@ function page_header()
 
 function show_all_nodes($fp)
 {
-    global $TAIL, $HEAD, $GREP, $SED; 
+    global $TAIL, $HEAD, $GREP, $SED;
 
     $TAIL_CMD = isset($TAIL) ? $TAIL : '/usr/bin/tail';
     $HEAD_CMD = isset($HEAD) ? $HEAD : '/usr/bin/head';
-    $GREP_CMD = isset($GREP) ? $GREP : '/bin/grep'; 
+    $GREP_CMD = isset($GREP) ? $GREP : '/bin/grep';
     $SED_CMD = isset($SED) ? $SED : '/bin/sed';
-    $ECHO_CMD = '/bin/echo'; 
+    $ECHO_CMD = '/bin/echo';
 
-    $nodes_output = SimpleAmiClient::command($fp, "rpt localnodes"); 
+    $nodes_output = SimpleAmiClient::command($fp, "rpt localnodes");
 
     if ($nodes_output === false) {
         echo "<span class='ast-status-error-msg'>Error:</span> Failed to execute 'rpt localnodes' command.\n";
-        return; 
+        return;
     }
     if (trim($nodes_output) === '') {
          echo "<span class='ast-status-none-indicator'>No local nodes reported by Asterisk.</span>\n";
-         return; 
+         return;
     }
 
     $nodelist = explode("\n", $nodes_output);
@@ -114,7 +115,15 @@ function show_all_nodes($fp)
 
     $processed_node_count = 0;
     for ($i = 0; $i < $node_count; $i++) {
-        $node_num_raw = trim($nodelist[$i]);
+        $line = $nodelist[$i];
+        $node_num_raw_candidate = $line;
+
+        $prefix = "Output: ";
+        if (strpos($line, $prefix) === 0) {
+            $node_num_raw_candidate = substr($line, strlen($prefix));
+        }
+
+        $node_num_raw = trim($node_num_raw_candidate);
 
         if (empty($node_num_raw) || $node_num_raw === "Node" || $node_num_raw === "----") {
              continue;
@@ -125,7 +134,7 @@ function show_all_nodes($fp)
         }
 
         $processed_node_count++;
-        $node_num = $node_num_raw; 
+        $node_num = $node_num_raw;
 
         $AMI1 = SimpleAmiClient::command($fp, "rpt xnode $node_num");
         if ($AMI1 === false) {
@@ -179,7 +188,7 @@ function show_all_nodes($fp)
         $N = trim(`$cmd_lstats 2>&1`);
         echo htmlspecialchars($N) . "\n\n\n";
 
-   } 
+   }
 
    if ($processed_node_count == 0 && trim($nodes_output) !== '') {
         echo "<span class='ast-status-error-msg'>Warning:</span> Node list retrieved, but no valid node numbers identified in the output:\n<pre class='ast-status-pre'>" . htmlspecialchars($nodes_output) . "</pre>\n";
@@ -201,8 +210,8 @@ function show_channels($fp)
 
     $cmd_channels = "$ECHO_CMD -n ". escapeshellarg($AMI1) ." | $HEAD_CMD --lines=-1";
     $channels = trim(`$cmd_channels 2>&1`);
-    
-    if (trim($channels) === '' && trim($AMI1) !== '') { 
+
+    if (trim($channels) === '' && trim($AMI1) !== '') {
         echo htmlspecialchars($AMI1) . "\n\n";
     } else {
         echo htmlspecialchars($channels) . "\n\n";
@@ -225,7 +234,7 @@ function show_netstats($fp)
     $cmd_netstats = "$ECHO_CMD -n ". escapeshellarg($AMI1) ." | $HEAD_CMD --lines=-1";
     $netstats = trim(`$cmd_netstats 2>&1`);
 
-    if (trim($netstats) === '' && trim($AMI1) !== '') { 
+    if (trim($netstats) === '' && trim($AMI1) !== '') {
         echo htmlspecialchars($AMI1) . "\n\n";
     } else {
         echo htmlspecialchars($netstats) . "\n\n";
@@ -236,7 +245,7 @@ function show_peers($fp)
 {
     global $HEAD, $EGREP;
     $HEAD_CMD = isset($HEAD) ? $HEAD : '/usr/bin/head';
-    $EGREP_CMD = isset($EGREP) ? $EGREP : '/bin/egrep'; 
+    $EGREP_CMD = isset($EGREP) ? $EGREP : '/bin/egrep';
     $ECHO_CMD = '/bin/echo';
 
     $AMI1 = SimpleAmiClient::command($fp, "iax2 show peers");
