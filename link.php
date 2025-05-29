@@ -174,42 +174,40 @@ $(document).ready(function() {
                         let nodeNum = nodeData.node;
                         if (nodeNum != 1 || (nodeData.info && nodeData.info !== "NO CONNECTION")) {
                             total_nodes++;
-                            if (row < ndisp) {
-                                if (sall == 1 || nodeData.last_keyed != "Never" || total_nodes < 2) {
-                                    shown_nodes++;
+                            if (sall == 1 || (row < ndisp && (nodeData.last_keyed != "Never" || total_nodes < 2))) {
+                                shown_nodes++;
 
-                                    var rowClass = '';
-                                    if (nodeData.keyed == 'yes') {
-                                        rowClass = (nodeData.mode == 'R') ? 'rxkColor' : 'rColor';
-                                    } else if (nodeData.mode == 'C') {
-                                        rowClass = 'cColor';
-                                    } else if (nodeData.mode == 'R') {
-                                        rowClass = 'rxColor';
-                                    }
-                                    tablehtml += rowClass ? `<tr class="${rowClass}">` : '<tr>';
-
-                                    tablehtml += `<td id="t${localNode}c0r${row}" align="center" class="nodeNum" onclick="toTop()">${nodeData.node}</td>`;
-                                    tablehtml += `<td>${nodeData.info != "" ? nodeData.info : (nodeData.ip || '')}</td>`;
-
-                                    if (sdetail == 1) {
-                                        tablehtml += `<td align="center" id="lkey${localNode}_${row}">${nodeData.last_keyed}</td>`;
-                                    }
-                                    tablehtml += `<td align="center">${nodeData.link || 'n/a'}</td>`;
-                                    tablehtml += `<td align="center">${nodeData.direction || 'n/a'}</td>`;
-
-                                    if (sdetail == 1) {
-                                        tablehtml += `<td align="right" id="elap${localNode}_${row}">${nodeData.elapsed}</td>`;
-                                    }
-
-                                    var modeText = nodeData.mode;
-                                    if (nodeData.mode == 'R') modeText = 'RX Only';
-                                    else if (nodeData.mode == 'T') modeText = 'Transceive';
-                                    else if (nodeData.mode == 'C') modeText = 'Connecting';
-                                    else if (nodeData.mode == 'Echolink') modeText = 'Echolink';
-                                    else if (nodeData.mode == 'Local RX') modeText = 'Local RX';
-                                    tablehtml += `<td align="center">${modeText || 'n/a'}</td>`;
-                                    tablehtml += '</tr>';
+                                var rowClass = '';
+                                if (nodeData.keyed == 'yes') {
+                                    rowClass = (nodeData.mode == 'R') ? 'rxkColor' : 'rColor';
+                                } else if (nodeData.mode == 'C') {
+                                    rowClass = 'cColor';
+                                } else if (nodeData.mode == 'R') {
+                                    rowClass = 'rxColor';
                                 }
+                                tablehtml += rowClass ? `<tr class="${rowClass}">` : '<tr>';
+
+                                tablehtml += `<td id="t${localNode}c0r${row}" align="center" class="nodeNum" onclick="toTop()">${nodeData.node}</td>`;
+                                tablehtml += `<td>${nodeData.info != "" ? nodeData.info : (nodeData.ip || '')}</td>`;
+
+                                if (sdetail == 1) {
+                                    tablehtml += `<td align="center" id="lkey${localNode}_${row}">${nodeData.last_keyed}</td>`;
+                                }
+                                tablehtml += `<td align="center">${nodeData.link || 'n/a'}</td>`;
+                                tablehtml += `<td align="center">${nodeData.direction || 'n/a'}</td>`;
+
+                                if (sdetail == 1) {
+                                    tablehtml += `<td align="right" id="elap${localNode}_${row}">${nodeData.elapsed}</td>`;
+                                }
+
+                                var modeText = nodeData.mode;
+                                if (nodeData.mode == 'R') modeText = 'RX Only';
+                                else if (nodeData.mode == 'T') modeText = 'Transceive';
+                                else if (nodeData.mode == 'C') modeText = 'Connecting';
+                                else if (nodeData.mode == 'Echolink') modeText = 'Echolink';
+                                else if (nodeData.mode == 'Local RX') modeText = 'Local RX';
+                                tablehtml += `<td align="center">${modeText || 'n/a'}</td>`;
+                                tablehtml += '</tr>';
                             }
                         }
                     }
