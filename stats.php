@@ -73,6 +73,25 @@ include("authini.php");
 </html>
 
 <?php
+
+// Helper function to remove "Output: " prefix from lines of a string
+function clean_ami_output_for_display($raw_output) {
+    if ($raw_output === null || trim($raw_output) === '') {
+        return $raw_output;
+    }
+    $lines = explode("\n", $raw_output);
+    $cleaned_lines = [];
+    $prefix = "Output: ";
+    foreach ($lines as $line) {
+        if (strpos($line, $prefix) === 0) {
+            $cleaned_lines[] = substr($line, strlen($prefix));
+        } else {
+            $cleaned_lines[] = $line;
+        }
+    }
+    return implode("\n", $cleaned_lines);
+}
+
 function page_header()
 {
     global $HOSTNAME, $AWK, $DATE;
@@ -118,7 +137,7 @@ function show_all_nodes($fp)
         $line = $nodelist[$i];
         $node_num_raw_candidate = $line;
 
-        $prefix = "Output: ";
+        $prefix = "Output: "; // This prefix is for parsing node numbers from rpt localnodes output lines
         if (strpos($line, $prefix) === 0) {
             $node_num_raw_candidate = substr($line, strlen($prefix));
         }
@@ -154,6 +173,13 @@ function show_all_nodes($fp)
 
         $cmd_n3 = "$ECHO_CMD -n " . escapeshellarg($AMI1) . " | $TAIL_CMD --lines=+3 | $HEAD_CMD --lines=1";
         $N3 = trim(`$cmd_n3 2>&1`);
+        
+        // Strip "Output: " prefix if present from the single line $N3 before parsing
+        $output_prefix_to_strip = "Output: ";
+        if (strpos($N3, $output_prefix_to_strip) === 0) {
+            $N3 = substr($N3, strlen($output_prefix_to_strip));
+        }
+        
         $res = explode(", ", $N3);
         $CNODES2 = count($res);
         $tmp = isset($res[0]) ? trim($res[0]) : '';
@@ -186,12 +212,14 @@ function show_all_nodes($fp)
 
         $cmd_lstats = "$ECHO_CMD -n " . escapeshellarg($AMI2) . " | $HEAD_CMD --lines=-1";
         $N = trim(`$cmd_lstats 2>&1`);
+        $N = clean_ami_output_for_display($N); // Clean output before display
         echo htmlspecialchars($N) . "\n\n\n";
 
    }
 
    if ($processed_node_count == 0 && trim($nodes_output) !== '') {
-        echo "<span class='ast-status-error-msg'>Warning:</span> Node list retrieved, but no valid node numbers identified in the output:\n<pre class='ast-status-pre'>" . htmlspecialchars($nodes_output) . "</pre>\n";
+        $nodes_output_cleaned = clean_ami_output_for_display($nodes_output); // Clean output before display
+        echo "<span class='ast-status-error-msg'>Warning:</span> Node list retrieved, but no valid node numbers identified in the output:\n<pre class='ast-status-pre'>" . htmlspecialchars($nodes_output_cleaned) . "</pre>\n";
    }
 }
 
@@ -212,9 +240,12 @@ function show_channels($fp)
     $channels = trim(`$cmd_channels 2>&1`);
 
     if (trim($channels) === '' && trim($AMI1) !== '') {
-        echo htmlspecialchars($AMI1) . "\n\n";
+        // Fallback to AMI1 if channels is empty but AMI1 was not
+        $display_output = clean_ami_output_for_display($AMI1);
+        echo htmlspecialchars($display_output) . "\n\n";
     } else {
-        echo htmlspecialchars($channels) . "\n\n";
+        $display_output = clean_ami_output_for_display($channels);
+        echo htmlspecialchars($display_output) . "\n\n";
     }
 }
 
@@ -235,9 +266,12 @@ function show_netstats($fp)
     $netstats = trim(`$cmd_netstats 2>&1`);
 
     if (trim($netstats) === '' && trim($AMI1) !== '') {
-        echo htmlspecialchars($AMI1) . "\n\n";
+        // Fallback to AMI1 if netstats is empty but AMI1 was not
+        $display_output = clean_ami_output_for_display($AMI1);
+        echo htmlspecialchars($display_output) . "\n\n";
     } else {
-        echo htmlspecialchars($netstats) . "\n\n";
+        $display_output = clean_ami_output_for_display($netstats);
+        echo htmlspecialchars($display_output) . "\n\n";
     }
 }
 
@@ -259,6 +293,7 @@ function show_peers($fp)
     $peers = trim(`$cmd_peers 2>&1`);
 
     if (!empty($peers)) {
+        $peers = clean_ami_output_for_display($peers); // Clean output before display
         echo htmlspecialchars($peers) . "\n\n\n";
     } else {
         if (trim($AMI1) !== '') {
