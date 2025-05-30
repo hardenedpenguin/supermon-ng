@@ -1,7 +1,4 @@
 <?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
 
 include("session.inc");
 include("amifunctions.inc");
@@ -50,6 +47,11 @@ SimpleAmiClient::logoff($fp);
 
 $processedOutput = ($databaseOutput === false) ? "" : trim($databaseOutput);
 
+if (!empty($processedOutput)) {
+    $processedOutput = preg_replace('/^Output:.*\R?/m', '', $processedOutput);
+    $processedOutput = trim($processedOutput);
+}
+
 ?>
 <html>
 <head>
@@ -70,7 +72,7 @@ $processedOutput = ($databaseOutput === false) ? "" : trim($databaseOutput);
     if ($databaseOutput === false) {
         echo "<p class='status-message'>ERROR: Could not retrieve database content from AMI.</p>";
     } elseif (empty($processedOutput)) {
-        echo "<p class='status-message'>--- NO DATABASE CONTENT RETURNED (or output was empty) ---</p>";
+        echo "<p class='status-message'>--- NO DATABASE CONTENT RETURNED (or output was empty after cleaning) ---</p>";
     } else {
         echo "<div class='db-content'>" . nl2br(htmlspecialchars($processedOutput)) . "</div>";
     }
