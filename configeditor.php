@@ -28,13 +28,18 @@ if (($_SESSION['sm61loggedin'] === true) && (get_user_auth("CFGEDUSER"))) {
         ["$SUPERMON_DIR/$USERFILES/cntrlnolog.ini", "Supermon-ng - $USERFILES/cntrlnolog.ini"],
         ["$SUPERMON_DIR/$USERFILES/favini.inc", "Supermon-ng - $USERFILES/favini.inc"],
         ["$SUPERMON_DIR/$USERFILES/favnolog.ini", "Supermon-ng - $USERFILES/favnolog.ini"],
-        ["$SUPERMON_DIR/$USERFILES/global.inc", "Supermon-ng - global.inc"],
-        ["$SUPERMON_DIR/$USERFILES/nolog.ini", "Supermon-ng nolog.ini"],
-        ["$SUPERMON_DIR/$USERFILES/allmon.ini", "Supermon-ng - allmon.ini"],
-        ["$SUPERMON_DIR/$USERFILES/favorites.ini", "Supermon-ng - favorites.ini"],
-        ["$SUPERMON_DIR/$USERFILES/controlpanel.ini", "Supermon-ng - controlpanel.ini"],
-        ["$SUPERMON_DIR/supermon.css", "Supermon-ng - supermon-ng.css"],
-        ["$SUPERMON_DIR/privatenodes.txt", "Supermon-ng - privatenodes.txt"],
+        ["$SUPERMON_DIR/$USERFILES/global.inc", "Supermon-ng - $USERFILES/global.inc"],
+        ["$SUPERMON_DIR/$USERFILES/nolog.ini", "Supermon-ng $USERFILES/nolog.ini"],
+        ["$SUPERMON_DIR/$USERFILES/allmon.ini", "Supermon-ng - $USERFILES/allmon.ini"],
+        ["$SUPERMON_DIR/$USERFILES/favorites.ini", "Supermon-ng - $USERFILES/favorites.ini"],
+        ["$SUPERMON_DIR/$USERFILES/controlpanel.ini", "Supermon-ng - $USERFILES/controlpanel.ini"],
+        ["$SUPERMON_DIR/$USERFILES/privatenodes.txt", "Supermon-ng - $USERFILES/privatenodes.txt"],
+        ["$SUPERMON_DIR/supermon-ng.css", "Supermon-ng - supermon-ng.css"],
+
+        ["/opt/Analog_Bridge/Analog_Bridge.ini", "DvSwitch - Analog_Bridge.ini"],
+        ["/opt/MMDVM_Bridge/MMDVM_Bridge.ini", "DvSwitch - MMDVM_Bridge.ini"],
+        ["/opt/MMDVM_Bridge/DVSwitch.ini", "DvSwitch - DVSwitch.ini"],
+
         ["/etc/asterisk/http.conf", "AllStar - http.conf"],
         ["/etc/asterisk/rpt.conf", "AllStar - rpt.conf"],
         ["/etc/asterisk/iax.conf", "AllStar - iax.conf"],
@@ -47,18 +52,28 @@ if (($_SESSION['sm61loggedin'] === true) && (get_user_auth("CFGEDUSER"))) {
         ["/etc/asterisk/logger.conf", "AllStar - logger.conf"],
         ["/etc/asterisk/usbradio.conf", "AllStar - usbradio.conf"],
         ["/etc/asterisk/simpleusb.conf", "AllStar - simpleusb.conf"],
-        ["/etc/wpa_supplicant/wpa_supplicant_custom-wlan0.conf", "AllStar - wpa_supplicant_custom-wlan0.conf"],
         ["/etc/asterisk/irlp.conf", "AllStar - irlp.conf"],
+        ["/etc/asterisk/echolink.conf", "EchoLink - echolink.conf"],
+        ["/etc/asterisk/sip.conf", "AllStar - sip.conf"],
+        ["/etc/asterisk/users.conf", "AllStar - users.conf"],
+
         ["/home/irlp/custom/environment", "IRLP - environment"],
         ["/home/irlp/custom/custom_decode", "IRLP - custom_decode"],
         ["/home/irlp/custom/custom.crons", "IRLP - custom.crons"],
         ["/home/irlp/custom/lockout_list", "IRLP - lockout_list"],
         ["/home/irlp/custom/timing", "IRLP - timing"],
         ["/home/irlp/custom/timeoutvalue", "IRLP - timeoutvalue"],
-        ["/etc/asterisk/echolink.conf", "EchoLink - echolink.conf"],
+
         ["/usr/local/bin/AUTOSKY/AutoSky.ini", "AutoSky - AutoSky.ini"],
-        ["$SUPERMON_DIR/$USERFILES/IMPORTANT-README", "Allmon - README"],
+
+        ["/usr/local/etc/allstar.env", "Misc - allstar.env"],
     ];
+
+    $separator_item = ["###SEPARATOR###", "─────────────────────────────────"];
+
+    array_splice($files_to_list, 13, 0, [$separator_item]);
+    array_splice($files_to_list, 17, 0, [$separator_item]);
+    array_splice($files_to_list, 34, 0, [$separator_item]);
 
     $irlp_cron_path_noupdate = "/home/irlp/noupdate/scripts/irlp.crons";
     $irlp_cron_path_scripts = "/home/irlp/scripts/irlp.crons";
@@ -76,9 +91,15 @@ if (($_SESSION['sm61loggedin'] === true) && (get_user_auth("CFGEDUSER"))) {
     foreach ($files_to_list as $file_info) {
         $path = $file_info[0];
         $label = $file_info[1];
-        $check_type = isset($file_info[2]) ? $file_info[2] : 'file_exists';
 
+        if ($path === "###SEPARATOR###") {
+            print "<option value=\"\" disabled>" . htmlspecialchars($label) . "</option>\n";
+            continue;
+        }
+
+        $check_type = isset($file_info[2]) ? $file_info[2] : 'file_exists';
         $display_option = false;
+
         if ($check_type === 'file_exists' && file_exists($path)) {
             $display_option = true;
         } elseif ($check_type === 'is_writable' && is_writable($path)) {
