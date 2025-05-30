@@ -98,16 +98,40 @@ Enter comment -
    
 <input type="button" class="submit-large" Value="Close Window" onclick="self.close()">
 </td></tr>
+<tr><td> </td></tr>
 <tr><td style="text-align:left;">Current Nodes in the Denied - denylist (for node <?php echo htmlspecialchars($localnode); ?>):
 <?php
 $denylistDBFamily = "denylist/" . $localnode;
-$dataDenylist = getDataFromAMI($fp, "database show " . $denylistDBFamily); 
+$rawDataDeny = getDataFromAMI($fp, "database show " . $denylistDBFamily); 
 
-if ($dataDenylist === false || trim($dataDenylist) === "") {
+if ($rawDataDeny === false || trim($rawDataDeny) === "") {
 	print "<p>---NONE---</p>";
 } else {
-    $dataDenylist = str_replace('          ', ' ', $dataDenylist);
-	print "<pre>" . htmlspecialchars(trim($dataDenylist)) . "</pre>";
+    $lines = explode("\n", $rawDataDeny);
+    $outputLines = [];
+    foreach ($lines as $line) {
+        $processedLine = trim($line);
+        if (strpos($processedLine, "Output: ") === 0) {
+            $processedLine = substr($processedLine, strlen("Output: "));
+            $processedLine = trim($processedLine); 
+        }
+        
+        if (preg_match('/^\d+\s+results found\.?$/i', $processedLine)) {
+            continue; 
+        }
+
+        if (trim($processedLine) !== "") {
+            $processedLine = str_replace('          ', ' ', $processedLine);
+            $outputLines[] = $processedLine;
+        }
+    }
+
+    if (empty($outputLines)) {
+        print "<p>---NONE---</p>";
+    } else {
+        $finalOutput = implode("\n", $outputLines);
+        print "<pre>" . htmlspecialchars(trim($finalOutput)) . "</pre>";
+    }
 } 
 ?>
 </td></tr>
@@ -115,13 +139,35 @@ if ($dataDenylist === false || trim($dataDenylist) === "") {
 <td style="text-align:left;">Current Nodes in the Allowed - allowlist (for node <?php echo htmlspecialchars($localnode); ?>):
 <?php
 $allowlistDBFamily = "allowlist/" . $localnode;
-$dataAllowlist = getDataFromAMI($fp, "database show " . $allowlistDBFamily);
+$rawDataAllow = getDataFromAMI($fp, "database show " . $allowlistDBFamily);
 
-if ($dataAllowlist === false || trim($dataAllowlist) === "") {
+if ($rawDataAllow === false || trim($rawDataAllow) === "") {
 	print "<p>---NONE---</p>";
 } else {
-    $dataAllowlist = str_replace('          ', ' ', $dataAllowlist);
-	print "<pre>" . htmlspecialchars(trim($dataAllowlist)) . "</pre>";
+    $lines = explode("\n", $rawDataAllow);
+    $outputLines = [];
+    foreach ($lines as $line) {
+        $processedLine = trim($line);
+        if (strpos($processedLine, "Output: ") === 0) {
+            $processedLine = substr($processedLine, strlen("Output: "));
+            $processedLine = trim($processedLine); 
+        }
+
+        if (preg_match('/^\d+\s+results found\.?$/i', $processedLine)) {
+            continue; 
+        }
+        
+        if (trim($processedLine) !== "") {
+            $processedLine = str_replace('          ', ' ', $processedLine);
+            $outputLines[] = $processedLine;
+        }
+    }
+    if (empty($outputLines)) {
+        print "<p>---NONE---</p>";
+    } else {
+        $finalOutput = implode("\n", $outputLines);
+        print "<pre>" . htmlspecialchars(trim($finalOutput)) . "</pre>";
+    }
 }
 
 ?>
