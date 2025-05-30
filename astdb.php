@@ -3,7 +3,7 @@
 
 define('APP_DIR', "/var/www/html/supermon-ng/");
 define('ASTDB_FILE', APP_DIR . "astdb.txt");
-define('PRIVATE_NODES_FILE', APP_DIR . "privatenodes.txt");
+define('PRIVATE_NODES_FILE', APP_DIR . "user_files/privatenodes.txt");
 define('ALLSTAR_DB_URL', "http://allmondb.allstarlink.org/");
 
 define('MIN_DB_SIZE_BYTES', 300000);
