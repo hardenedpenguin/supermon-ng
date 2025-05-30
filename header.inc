@@ -212,7 +212,7 @@ $(document).ready(function() {
         '#webacclog': ["webacclog.php", "WebAccessLog{localnode}", 1400, 560],
         '#weberrlog': ["weberrlog.php", "WebErrorLog{localnode}", 1400, 560],
         '#openpigpio': ["pi-gpio.php", "Pi-GPIO{localnode}", 900, 900],
-        '#openbanallow': ["node-ban-allow-intro.php?node={node}&localnode={localnode}", "Ban-Allow{localnode}", 750, 700],
+        '#openbanallow': ["node-ban-allow.php?node={node}&localnode={localnode}", "Ban-Allow{localnode}", 1050, 700],
         '#smlog': ["smlog.php", "SMLog{localnode}", 1200, 560]
     };
 

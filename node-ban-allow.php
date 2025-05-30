@@ -44,13 +44,13 @@ function getDataFromAMI($fp, $cmd)
     return SimpleAmiClient::command($fp, $cmd);
 }
 
-if (!empty($_POST["whiteblack"])) {
-	$whiteblack = $_POST["whiteblack"];
+if (!empty($_POST["listtype"])) {
+	$listtype_base = $_POST["listtype"];
 	$nodeToModify = $_POST["node"];
 	$comment = $_POST["comment"];
 	$deleteadd = $_POST["deleteadd"];
 
-	$DBname = ($whiteblack == "whitelist") ? "whitelist" : "blacklist";
+	$DBname = $listtype_base . "/" . $localnode; 
 	$cmdAction = ($deleteadd == "add") ? "put" : "del";
 
 	$amiCmdString = "database $cmdAction $DBname $nodeToModify";
@@ -65,64 +65,64 @@ if (!empty($_POST["whiteblack"])) {
 <html>
 <head>
 <link type="text/css" rel="stylesheet" href="supermon-ng.css">
-<title>Allow/Restrict Nodes - <?php echo htmlspecialchars($localnode); ?></title>
+<title>Allow/Deny Nodes - <?php echo htmlspecialchars($localnode); ?></title>
 </head>
 <body style="background-color: black; color: white;">
 
-<p style="text-align:center;font-size: 1.5em;"><b>Allow/Restrict AllStar Nodes at node <?php echo htmlspecialchars($localnode); ?></b></p>
+<p style="text-align:center; font-size: 1.5em; color: #3399FF;"><b>Allow/Deny AllStar Nodes at node <?php echo htmlspecialchars($localnode); ?></b></p>
 
 <center>
 <form action="node-ban-allow.php?ban-node=<?php echo htmlspecialchars($Node); ?>&localnode=<?php echo htmlspecialchars($localnode); ?>" method="post">
 <table cellspacing="20" style="margin-top:0; font-size:22px;">
 <tr>
-<td align="top">
- <input type="radio" style="transform: scale(2);" name="whiteblack" value="blacklist" checked> Restricted - blacklist
- <input type="radio" style="margin-left:30px; transform: scale(2);" name="whiteblack" value="whitelist"> Allowed - whitelist<br>
+<td align="top" style="text-align:center;">
+ <input type="radio" style="transform: scale(2);" name="listtype" value="denylist" checked> Denied - denylist
+ <input type="radio" style="margin-left:30px; transform: scale(2);" name="listtype" value="allowlist"> Allowed - allowlist<br>
 </td></tr>
-<tr><td>
+<tr><td style="text-align:center;">
 Enter Node number -  
  <input type="text" name="node" value="<?php echo htmlspecialchars($Node); ?>" maxlength="7" size="5">
 </td></tr>
-<tr><td>
+<tr><td style="text-align:center;">
 Enter comment -
  <input type="text" name="comment" maxlength="30" size="22">
 </td></tr>
 <tr>
-<td>
+<td style="text-align:center;">
  <input type="radio" style="transform: scale(2);" name="deleteadd" value="add" checked> Add
  <input type="radio" style="margin-left:30px; transform: scale(2);" name="deleteadd" value="delete"> Delete<br>
 </td>
 </tr>
-<tr><td>Current Nodes in the Restricted - blacklist:
-<?php
-$dataBlacklist = getDataFromAMI($fp, "database show blacklist");
-
-if ($dataBlacklist === false || trim($dataBlacklist) === "") {
-	print "<p>---NONE---</p>";
-} else {
-    $dataBlacklist = str_replace('          ', ' ', $dataBlacklist);
-	print "<pre>" . htmlspecialchars(trim($dataBlacklist)) . "</pre>";
-} 
-?>
-</td></tr>
 <tr><td align="center">
 <input type="submit" class="submit-large" value="Update">
    
 <input type="button" class="submit-large" Value="Close Window" onclick="self.close()">
 </td></tr>
-<tr>
-<td>Current Nodes in the Allowed - whitelist:
+<tr><td style="text-align:left;">Current Nodes in the Denied - denylist (for node <?php echo htmlspecialchars($localnode); ?>):
 <?php
-$dataWhitelist = getDataFromAMI($fp, "database show whitelist");
+$denylistDBFamily = "denylist/" . $localnode;
+$dataDenylist = getDataFromAMI($fp, "database show " . $denylistDBFamily); 
 
-if ($dataWhitelist === false || trim($dataWhitelist) === "") {
+if ($dataDenylist === false || trim($dataDenylist) === "") {
 	print "<p>---NONE---</p>";
 } else {
-    $dataWhitelist = str_replace('          ', ' ', $dataWhitelist);
-	print "<pre>" . htmlspecialchars(trim($dataWhitelist)) . "</pre>";
-}
+    $dataDenylist = str_replace('          ', ' ', $dataDenylist);
+	print "<pre>" . htmlspecialchars(trim($dataDenylist)) . "</pre>";
+} 
+?>
+</td></tr>
+<tr>
+<td style="text-align:left;">Current Nodes in the Allowed - allowlist (for node <?php echo htmlspecialchars($localnode); ?>):
+<?php
+$allowlistDBFamily = "allowlist/" . $localnode;
+$dataAllowlist = getDataFromAMI($fp, "database show " . $allowlistDBFamily);
 
-print "<center><b>White or Blacklist must be defined<br>in iax.conf file of node - " . htmlspecialchars($localnode) . "</b></center>";
+if ($dataAllowlist === false || trim($dataAllowlist) === "") {
+	print "<p>---NONE---</p>";
+} else {
+    $dataAllowlist = str_replace('          ', ' ', $dataAllowlist);
+	print "<pre>" . htmlspecialchars(trim($dataAllowlist)) . "</pre>";
+}
 
 ?>
 </td></tr>

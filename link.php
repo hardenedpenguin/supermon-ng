@@ -374,7 +374,7 @@ if (($_SESSION['sm61loggedin'] ?? false) === true) {
             print_auth_button("WERRUSER", "submit", "Web Error Log", "weberrlog");
         }
 
-        print_auth_button("BANUSER", $SUBMIT_SIZE, "Restrict", "openbanallow", "style=\"margin-bottom:10px;\"");
+        print_auth_button("BANUSER", $SUBMIT_SIZE, "Access List", "openbanallow", "style=\"margin-bottom:10px;\"");
 ?>
     </center>
     </div>
