@@ -1,16 +1,4 @@
 <?php
-// Supermon2 global.inc file
-// Set the values below to your parameters
-// ONLY change text between quotes
-// Remove leading // before $ to 
-// make variable active.
-// MAKE SURE there is a terminating semicolon!
-// Change ONLY data between the quotes.
-// If SUpermon2 does not start it is probably because
-// you have syntax wrong in this file! Check
-// /var/log/httpd/error_log
-
-// These messages if defined appear below the header and above the node grid
 
 // Welcome Message when not logged in
 //$WELCOME_MSG="<p style='margin-top:1em;'><center><b>Welcome to my Supermon2 page</b><br><br>You can use any valid html code here<br>
@@ -25,28 +13,23 @@ $CALL = "CALL";
 // Your name
 $NAME = "NAME";
 //
-// Your location
+// Your location, example Houston, Texas
 $LOCATION = "<span style=\"color: #ff0000\">LOCATION</span>";
 //
 // Second line header title
-$TITLE2 = "RPi2-3-4 Node";
+$TITLE2 = "ASL3+ Management Dashboard";
 //
 // Third line header title
-$TITLE3 = "Allstar/IRLP/Echolink System Manager";
+$TITLE3 = "AllStarLink/IRLP/EchoLink/Digital - Bridging Control Center";
 //
-// Background image -  image located in user_files directory
-// By default it is a symbolic link to "Cape_Coral_yard.jpg"
-// called background.jpg. To change remove the symbolic
-// link and make a new one to your image file 
-// 
 // Leaving $BACKGROUND null "" results in BACKGROUND_COLOR (below)
 $BACKGROUND = "user_files/background.jpg";
 //
 // Background color if no image
-$BACKGROUND_COLOR = "blue";
+$BACKGROUND_COLOR = "black";
 //
 // Height of background - matches image height
-$BACKGROUND_HEIGHT = "131px";
+$BACKGROUND_HEIGHT = "164px";
 //
 // Maximum number of connections to show per node
 // undefined or "0" = show all
@@ -64,25 +47,10 @@ $BACKGROUND_HEIGHT = "131px";
 // "Node# -"
 $SMSERVERNAME = "";
 //
-// NOTICE LOCALZIP for weather now defined in 
-// /usr/local/sbin/supermon/node_info.ini
-// See manual
-//
-// Refresh delay as of Supermon2 V1.06 is no longer needed
-// or supported.
-//
 // Enable [Database] button For quick review of entire AllStar
 // internal database.
 //
 $DATABASE_TXT = "/tmp/database.txt";
-//
-// The following commands are obsolete starting at Supermon2 V1.08
-// and no longer used. See V1.08 update and manual
-//
-//  $STREAMING_NODE 
-//  $ARCHIVING_NODE
-//  $ARCHIVE_DIR 
-//  $ARCHIVE_URL
 //
 // When your RPi2-3 system is running on a LAN network with a router/firewall,
 // you do NOT need this variable set!
@@ -93,13 +61,10 @@ $DATABASE_TXT = "/tmp/database.txt";
 //
 $WANONLY = "";
 //
-// Display Background Color
-// If not defined it is white
-// Use name or code, Google html color
-// Shades of gray look best
+// Display Background Color, If not defined it is white
+// Use name or code, Google html color shades of gray look best
 //
-$DISPLAY_BACKGROUND = "#abb2b9";
-//$DISPLAY_BACKGROUND = "black";
+$DISPLAY_BACKGROUND = "black";
 //
 // Add logos to header - See manual
 // for more info
@@ -131,5 +96,13 @@ $DISPLAY_BACKGROUND = "#abb2b9";
 // Log Supermon2 login/out sessions
 // Set to yes or no or make line a comment for no.
 $SMLOG = "yes";
+
+// Enable or Disable hamclock, set url to use to embed
+$HAMCLOCK_ENABLED = "False";
+$HAMCLOCK_URL = "";
+
+// Provide a url for the Digital Dashboard
+// Dashboard button will not displayed if not configured!!
+// $DVM_URL = "../dvswitch";
 
 ?>
