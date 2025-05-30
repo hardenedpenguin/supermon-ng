@@ -1,70 +1,97 @@
 <?php
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
 include("session.inc");
 include("authusers.php");
+include("user_files/global.inc");
+include("common.inc");
 
 if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("CFGEDUSER"))) {
-    http_response_code(403);
-    echo "<!DOCTYPE html><html><head><title>Error</title>";
-    echo "<link type='text/css' rel='stylesheet' href='supermon-ng.css'>";
-    echo "</head><body>";
-    echo "<h3>ERROR: You Must login to use the 'Save' function!</h3>";
-    echo "</body></html>";
-    exit;
+    die ("<br><h3>ERROR: You Must login to use the 'Save' function!</h3>");
 }
 
-$edit_content = $_POST["edit"] ?? '';
-$filename = $_POST["filename"] ?? '';
+$target_filepath = $_POST['filename'] ?? null;
+$new_content = $_POST['edit'] ?? '';
 
-$edit_content = str_replace("\r", "", $edit_content);
+if (!$target_filepath || strpos($target_filepath, '..') !== false) {
+    die("<br><h3>ERROR: Invalid file path specified for saving.</h3>");
+}
+
+$helper_script = "/usr/local/sbin/supermon_unified_file_editor.sh";
+
+$cmd = "sudo " . escapeshellcmd($helper_script) . " " . escapeshellarg($target_filepath);
+
+$output_stdout = [];
+$output_stderr = [];
+$return_var = -1;
+
+$descriptorspec = array(
+   0 => array("pipe", "r"),
+   1 => array("pipe", "w"),
+   2 => array("pipe", "w")
+);
+
+$process = proc_open($cmd, $descriptorspec, $pipes);
+
+$stdout_data = '';
+$stderr_data = '';
+
+if (is_resource($process)) {
+    fwrite($pipes[0], $new_content);
+    fclose($pipes[0]);
+
+    $stdout_data = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+
+    $stderr_data = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+
+    $return_var = proc_close($process);
+} else {
+    $return_var = -1;
+    $stderr_data = "Error: Could not execute the helper command. Check web server logs (e.g., Apache error log) for sudo or permission issues.";
+}
 
 ?>
-<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Configuration Save</title>
-    <link type="text/css" rel="stylesheet" href="supermon-ng.css">
+    <title>Save File Status</title>
+    <link type='text/css' rel='stylesheet' href='supermon-ng.css'>
+    <style>
+        body { background-color: black; color: white; }
+        p, h3, pre { font-size: 16px; }
+        .container { padding: 20px; }
+        .success { color: lightgreen; }
+        .error { color: #ff6b6b; }
+        pre { background-color: #1e1e1e; padding: 10px; border: 1px solid #555; white-space: pre-wrap; word-wrap: break-word; }
+    </style>
 </head>
 <body>
+<div class="container">
+    <h2>Save Status for: <?php echo htmlspecialchars($target_filepath); ?></h2>
 
-<h1>Configuration Save Result</h1>
+    <?php if ($return_var === 0): ?>
+        <p class="success">File saved successfully!</p>
+    <?php else: ?>
+        <p class="error">Error saving file. Helper script exit code: <?php echo htmlspecialchars($return_var); ?></p>
+    <?php endif; ?>
 
-<form method="POST" action="configeditor.php">
-    <input name="return" tabindex="50" type="submit" class="submit-large" value="Return to Index">
-</form>
-<hr>
+    <?php if (!empty($stdout_data)): ?>
+        <h3>Helper Script Output (stdout):</h3>
+        <pre><?php echo htmlspecialchars(trim($stdout_data)); ?></pre>
+    <?php endif; ?>
 
-<?php
+    <?php if (!empty($stderr_data)): ?>
+        <h3 class="<?php echo ($return_var !== 0) ? 'error' : ''; ?>">Helper Script Output (stderr):</h3>
+        <pre><?php echo htmlspecialchars(trim($stderr_data)); ?></pre>
+    <?php endif; ?>
 
-if (empty(trim($filename))) {
-    echo "<strong>ERROR: Filename was not provided or is empty.</strong><br>";
-} elseif (!file_exists($filename)) {
-    echo "<strong>ERROR: The file <em>" . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . "</em> does not exist.</strong>";
-} elseif (is_writable($filename)) {
-    $backup_filename = $filename . ".bak";
-    if (copy($filename, $backup_filename)) {
-        echo "<strong>Success, backup file created <em>(" . htmlspecialchars($backup_filename, ENT_QUOTES, 'UTF-8') . ")</em></strong><br>";
-    } else {
-        echo "<strong>Warning: Could not create backup file <em>(" . htmlspecialchars($backup_filename, ENT_QUOTES, 'UTF-8') . ")</em>. Proceeding with save...</strong><br>";
-    }
-
-    if (file_put_contents($filename, $edit_content) !== false) {
-        echo "<strong>Success, wrote edits to file <em>(" . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . ")</em>:</strong><br><br>";
-        echo nl2br(htmlspecialchars($edit_content, ENT_QUOTES, 'UTF-8'));
-        echo "<br>";
-    } else {
-        echo "<strong>Cannot write to file <em>(" . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . ")</em></strong>";
-        echo "</body></html>";
-        exit;
-    }
-} else {
-    echo "<strong>The file <em>(" . htmlspecialchars($filename, ENT_QUOTES, 'UTF-8') . ")</em> is not writable.</strong>";
-}
-?>
-
+    <br>
+    <form style='display:inline;' name="EDIT_AGAIN" method="POST" action="edit.php">
+        <input type="hidden" name="file" value="<?php echo htmlspecialchars($target_filepath); ?>">
+        <input name="edit_again" type="submit" class="submit-large" value="Edit This File Again">
+    </form>
+    <form style='display:inline;' name="RETURN_TO_LIST" method="POST" action="configeditor.php">
+        <input name="return_list" type="submit" class="submit-large" value="Return to File List">
+    </form>
+</div>
 </body>
 </html>
