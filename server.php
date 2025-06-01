@@ -240,7 +240,7 @@ while (TRUE) {
         $currentIterationData[$node]['cpu_load'] = $rawConnectedNodes[$mainNodeSpecificDataKey]['cpu_load'] ?? null;
         $currentIterationData[$node]['ALERT'] = $rawConnectedNodes[$mainNodeSpecificDataKey]['ALERT'] ?? null;
         $currentIterationData[$node]['WX'] = $rawConnectedNodes[$mainNodeSpecificDataKey]['WX'] ?? null;
-        $currentIterationData[$node]['LOGS'] = $rawConnectedNodes[$mainNodeSpecificDataKey]['LOGS'] ?? null;
+        $currentIterationData[$node]['DISK'] = $rawConnectedNodes[$mainNodeSpecificDataKey]['DISK'] ?? null;
 
         $sortedConnectedNodes = sortNodes($rawConnectedNodes);
 
@@ -462,7 +462,7 @@ function parseNode($fp, $queriedNode, $rptStatus, $sawStatus) {
     $mainNodeCpuLoad = $parsedVars['cpu_load'] ?? null;
     $mainNodeALERT = $parsedVars['ALERT'] ?? null;
     $mainNodeWX = $parsedVars['WX'] ?? null;
-    $mainNodeLOGS = $parsedVars['LOGS'] ?? null;
+    $mainNodeDISK = $parsedVars['DISK'] ?? null;
 
     if (count($conns) > 0) {
         foreach ($conns as $connData) {
@@ -516,7 +516,7 @@ function parseNode($fp, $queriedNode, $rptStatus, $sawStatus) {
     $curNodes[$localStatsKey]['cpu_load'] = $mainNodeCpuLoad;
     $curNodes[$localStatsKey]['ALERT'] = $mainNodeALERT;
     $curNodes[$localStatsKey]['WX'] = $mainNodeWX;
-    $curNodes[$localStatsKey]['LOGS'] = $mainNodeLOGS;
+    $curNodes[$localStatsKey]['DISK'] = $mainNodeDISK;
 
     if (empty($conns) && count($curNodes) === 1 && isset($curNodes[$localStatsKey])) {
          $curNodes[$localStatsKey]['info'] = "NO CONNECTIONS";

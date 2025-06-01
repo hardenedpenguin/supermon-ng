@@ -157,7 +157,7 @@ $(document).ready(function() {
             
             let headerStatusDetails = '';
             if (localNodeDataFromServer.cpu_temp) {
-                headerStatusDetails = `<br>${localNodeDataFromServer.ALERT || ''}<br>${localNodeDataFromServer.WX || ''}<br>CPU=${localNodeDataFromServer.cpu_temp} - ${localNodeDataFromServer.cpu_up || ''}<br>${localNodeDataFromServer.cpu_load || ''}<br>${localNodeDataFromServer.LOGS || ''}`;
+                headerStatusDetails = `<br>${localNodeDataFromServer.ALERT || ''}<br>${localNodeDataFromServer.WX || ''}<br>CPU=${localNodeDataFromServer.cpu_temp} - ${localNodeDataFromServer.cpu_up || ''}<br>${localNodeDataFromServer.cpu_load || ''}<br>${localNodeDataFromServer.DISK || ''}`;
                 if (headerStatusTextBase === 'PTT-Keyed') headerStatusTextBase = 'PTT-KEYED';
                 if (headerStatusTextBase === 'COS-Detected') headerStatusTextBase = 'COS-DETECTED';
                 if (headerStatusTextBase === 'COS-Detected and PTT-Keyed (Full-Duplex)') headerStatusTextBase = 'COS-Detected and PTT-Keyed (Full Duplex)';
