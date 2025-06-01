@@ -219,7 +219,7 @@ if (isset($_COOKIE['display-data']) && is_array($_COOKIE['display-data'])) {
     define('CPU_TEMP_WARNING_THRESHOLD', 50); 
     define('CPU_TEMP_HIGH_THRESHOLD', 65);    
 
-    $temp_script_path = "/usr/local/sbin/supermon/get_temp";
+    $temp_script_path = "$USERFILES/sbin/get_temp";
     $CPUTemp_raw = '';
     if (is_executable($temp_script_path)) {
         $CPUTemp_raw = exec($temp_script_path);

@@ -1,6 +1,7 @@
 <?php
 include("session.inc");
 include("authusers.php");
+include("common.inc");
 ?>
 <html>
 <head>
@@ -14,9 +15,9 @@ include("authusers.php");
 
         $commands_to_run = [
             "/usr/bin/date",
-            "export TERM=vt100 && sudo /usr/local/sbin/supermon/ssinfo - ",
+            "export TERM=vt100 && sudo $USERFILES/sbin/ssinfo - ",
             "/usr/bin/ip a",
-            "/usr/local/sbin/supermon/din",
+            "$USERFILES/sbin/din",
             "/usr/bin/df -hT",
             "export TERM=vt100 && sudo /usr/bin/top -b -n1"
         ];
