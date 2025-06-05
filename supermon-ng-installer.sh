@@ -9,13 +9,13 @@ ARCHIVE_FILE="supermon-ng-${APP_VERSION}.tar.xz"
 EXTRACTED_DIR="supermon-ng"
 EXPECTED_ARCHIVE_CHECKSUM="d3aa0e745ad256f3a5fad216d40e48eb8608e7523430abb6e5e20a9d1b0b94b6"
 
-SUDO_FILE_URL="http://w5gle.us/~anarchy/011_www-nopasswd"
+SUDO_FILE_URL="https://w5gle.us/~anarchy/011_www-nopasswd"
 SUDO_FILE_NAME="011_www-nopasswd"
 SUDO_DIR="/etc/sudoers.d/"
 SUDO_FILE_PATH="${SUDO_DIR}/${SUDO_FILE_NAME}"
 EXPECTED_SUDO_CHECKSUM="e2835a79c0e5ce4f6020f704830bad43a1bdba880ea597b4d5bcde534f08adaf"
 
-EDITOR_SCRIPT_URL="http://w5gle.us/~anarchy/supermon_unified_file_editor.sh"
+EDITOR_SCRIPT_URL="https://w5gle.us/~anarchy/supermon_unified_file_editor.sh"
 EDITOR_SCRIPT_NAME="supermon_unified_file_editor.sh"
 EDITOR_SCRIPT_PATH="/usr/local/sbin/${EDITOR_SCRIPT_NAME}"
 EXPECTED_EDITOR_SCRIPT_CHECKSUM="113afda03ba1053b08a25fe2efd44161396fe7c931de0ac7d7b7958463b5e18f"
@@ -148,8 +148,6 @@ fi
 
 log_info "--- Processing Sudoers File ---"
 log_warning "Downloading $SUDO_FILE_NAME from $SUDO_FILE_URL (HTTP)."
-log_warning "SECURITY RISK: Downloading sudoers configuration over unencrypted HTTP is dangerous."
-log_warning "Consider hosting this file on an HTTPS server, embedding its content in this script, or providing it manually."
 
 TMP_SUDO_FILE=$(mktemp)
 log_info "Downloading $SUDO_FILE_NAME to $TMP_SUDO_FILE..."
@@ -196,8 +194,6 @@ log_info "Permissions and ownership set for $SUDO_FILE_PATH."
 
 log_info "--- Processing Editor Script ---"
 log_warning "Downloading $EDITOR_SCRIPT_NAME from $EDITOR_SCRIPT_URL (HTTP)."
-log_warning "SECURITY RISK: Downloading executable scripts over unencrypted HTTP is dangerous."
-log_warning "Consider hosting this file on an HTTPS server, embedding its content (if small), or providing it manually."
 
 TMP_EDITOR_SCRIPT=$(mktemp)
 log_info "Downloading $EDITOR_SCRIPT_NAME to $TMP_EDITOR_SCRIPT..."
