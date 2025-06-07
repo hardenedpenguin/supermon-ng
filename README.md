@@ -35,10 +35,10 @@ After the installer completes and you have configured an initial user, it is rec
 You can do this by editing the `authuser.inc` file, which is typically located in your web server's directory for supermon-ng (e.g., `/var/www/html/supermon-ng/`).
 Choose the option that works best for you, the sed statement is best if you are the sole admin or the lead admin.
 ```bash
-sudo nano /var/www/html/supermon-ng/authuser.inc
+sudo nano /var/www/html/supermon-ng/user_files/authuser.inc
 ```
 ```bash
-sudo sed -i 's/admin/username/g' /var/www/html/supermon-ng/authuser.inc
+sudo sed -i 's/admin/username/g' /var/www/html/supermon-ng/user_files/authuser.inc
 ```
 
 ## Requirements
