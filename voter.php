@@ -15,6 +15,8 @@ if (empty($passedNodes)) {
 }
 $jsNodesArray = array_values($passedNodes);
 
+session_write_close();
+
 ?>
 <script>
     $.ajaxSetup ({
@@ -36,7 +38,7 @@ $jsNodesArray = array_values($passedNodes);
 
                     source.onerror = function(error) {
                         console.error("EventSource error for node " + node + ":", error);
-                        $("#link_list_" + node).html("Error receiving updates for node " + node + ".");
+                        $("#link_list_" + node).html("<div style='color:red; font-weight:bold;'>Error receiving updates for node " + node + ". The connection was lost.</div>");
                     };
                 }
             });
@@ -49,21 +51,29 @@ $jsNodesArray = array_values($passedNodes);
         }
     });
 </script>
+
 <br/>
+
 <?php foreach ($passedNodes as $node): ?>
 <div id="link_list_<?php echo htmlspecialchars($node, ENT_QUOTES, 'UTF-8'); ?>">
     Loading data for node <?php echo htmlspecialchars($node, ENT_QUOTES, 'UTF-8'); ?>...
 </div>
 <?php endforeach; ?>
 
-<div style='width:500px; text-align:left;'>
-    The numbers indicate the relative signal strength. The value ranges from 0 to 255, a range of approximately 30db.
-    A value of zero means that no signal is being received. The color of the bars indicate the type of RTCM client.
-</div>
-<div style='width: 240px; text-align:left; position: relative; left: 160px;'>
-    <div style='background-color: #0099FF; color: white; text-align: center;'>A blue bar indicates a voting station.</div>
-    <div style='background-color: greenyellow; color: black; text-align: center;'>Green indicates the station is voted.</div>
-    <div style='background-color: cyan; color: black; text-align: center;'>Cyan is a non-voting mix station. </div>
+<div style="display: flex; align-items: flex-start; justify-content: flex-start; gap: 30px; max-width: 800px; margin: 20px 0;">
+
+    <div style='flex: 1; text-align:left;'>
+        The numbers indicate the relative signal strength. The value ranges from 0 to 255, a range of approximately 30db.
+        A value of zero means that no signal is being received. The color of the bars indicate the type of RTCM client.
+    </div>
+
+    <div style='width: 240px; text-align:left;'>
+        <div style='background-color: #0099FF; color: white; text-align: center;'>A blue bar indicates a voting station.</div>
+        <div style='background-color: greenyellow; color: black; text-align: center;'>Green indicates the station is voted.</div>
+        <div style='background-color: cyan; color: black; text-align: center;'>Cyan is a non-voting mix station. </div>
+    </div>
+
 </div>
 <br>
+
 <?php include "footer.inc"; ?>
