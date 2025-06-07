@@ -40,6 +40,7 @@ sudo nano /var/www/html/supermon-ng/user_files/authuser.inc
 ```bash
 sudo sed -i 's/admin/username/g' /var/www/html/supermon-ng/user_files/authuser.inc
 ```
+If you are using the sed method, please ensure you replace username with the username you have created for your supermon-ng login.
 
 ## Requirements
 
