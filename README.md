@@ -12,7 +12,13 @@
 
 ## Quick Install
 
-To download and run the installer script, use the following commands:
+First, ensure `rsync` and other necessary tools are installed:
+
+```bash
+sudo apt update && sudo apt install -y rsync
+```
+
+Then, download and run the installer script:
 
 ```bash
 wget https://raw.githubusercontent.com/hardenedpenguin/supermon-ng/refs/heads/main/supermon-ng-installer.sh
@@ -22,13 +28,26 @@ sudo ./supermon-ng-installer.sh
 
 > ⚠️ **Note:** This installer is designed for Debian-based systems (e.g., Debian, Ubuntu, or AllStarLink distributions). Run as root or with `sudo`.
 
+## Post-Installation
+
+After the installer completes and you have configured an initial user, it is recommended to review and customize user permissions.
+
+You can do this by editing the `authuser.inc` file, which is typically located in your web server's directory for supermon-ng (e.g., `/var/www/html/supermon-ng/`).
+Choose the option that works best for you, the sed statement is best if you are the sole admin or the lead admin.
+```bash
+sudo nano /var/www/html/supermon-ng/authuser.inc
+```
+```bash
+sudo sed -i 's/admin/username/g' /var/www/html/supermon-ng/authuser.inc
+```
+
 ## Requirements
 
 - Debian-based Linux system
 - Apache2 or other compatible web server
 - Asterisk with AllStarLink node configured
 - PHP 7.4 or later
-
+- Rsync
 
 ## Contributions
 
