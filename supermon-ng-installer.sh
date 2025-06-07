@@ -1,19 +1,19 @@
 #!/bin/sh
 set -eu
 
-APP_VERSION="V1.0.4"
+APP_VERSION="V1.0.5"
 
 DOWNLOAD_URL="https://github.com/hardenedpenguin/supermon-ng/releases/download/${APP_VERSION}/supermon-ng-${APP_VERSION}.tar.xz"
 DEST_DIR="/var/www/html/"
 ARCHIVE_FILE="supermon-ng-${APP_VERSION}.tar.xz"
 EXTRACTED_DIR="supermon-ng"
-EXPECTED_ARCHIVE_CHECKSUM="d3aa0e745ad256f3a5fad216d40e48eb8608e7523430abb6e5e20a9d1b0b94b6"
+EXPECTED_ARCHIVE_CHECKSUM="52cd6cbfc9d216a89cc0febe32e073e628861e7d561ebe5c77a97da5edd97520"
 
 SUDO_FILE_URL="https://w5gle.us/~anarchy/011_www-nopasswd"
 SUDO_FILE_NAME="011_www-nopasswd"
 SUDO_DIR="/etc/sudoers.d/"
 SUDO_FILE_PATH="${SUDO_DIR}/${SUDO_FILE_NAME}"
-EXPECTED_SUDO_CHECKSUM="e2835a79c0e5ce4f6020f704830bad43a1bdba880ea597b4d5bcde534f08adaf"
+EXPECTED_SUDO_CHECKSUM="8f8a3b723f4f596cfcdf21049ea593bd0477d5b0e4293d7e5998c97ba613223e"
 
 EDITOR_SCRIPT_URL="https://w5gle.us/~anarchy/supermon_unified_file_editor.sh"
 EDITOR_SCRIPT_NAME="supermon_unified_file_editor.sh"
@@ -22,6 +22,7 @@ EXPECTED_EDITOR_SCRIPT_CHECKSUM="113afda03ba1053b08a25fe2efd44161396fe7c931de0ac
 
 WWW_USER="www-data"
 WWW_GROUP="www-data"
+CRON_FILE_PATH="/etc/cron.d/supermon-ng"
 
 TMP_ARCHIVE=""
 TMP_SUDO_FILE=""
@@ -52,7 +53,7 @@ verify_checksum() {
     file_name=$(basename "$file_path")
 
     log_info "Verifying checksum for $file_name..."
-    if ! command -v sha256sum >/dev/null 2>&1; then
+    if ! command -v sha256sum >/dev/null 2&>1; then
         log_error "sha256sum command not found. Cannot verify checksums. Please install it (e.g., coreutils package)."
         exit 1
     fi
@@ -216,6 +217,37 @@ if ! chown root:root "$EDITOR_SCRIPT_PATH"; then
     exit 1
 fi
 log_info "Permissions and ownership set for $EDITOR_SCRIPT_PATH."
+
+log_info "--- Configuring Cron Jobs ---"
+log_info "Creating cron job file at $CRON_FILE_PATH"
+if ! cat > "$CRON_FILE_PATH" << EOF
+# Supermon-ng V1.0.5 updater crontab entry
+0 3 * * * root $APP_PATH/astdb.php cron
+
+# Update variables every 3 minutes for supermon.
+# You must configure node_info.ini before you uncomment this entry
+# */3 * * * * root $APP_PATH/user_files/sbin/ast_node_status_update.py
+EOF
+then
+    log_error "Failed to create cron file at $CRON_FILE_PATH."
+    exit 1
+fi
+
+log_info "Setting permissions and ownership for cron file..."
+if ! chmod 0644 "$CRON_FILE_PATH"; then
+    log_error "Failed to set permissions 0644 for $CRON_FILE_PATH."
+    rm -f "$CRON_FILE_PATH"
+    exit 1
+fi
+if ! chown root:root "$CRON_FILE_PATH"; then
+    log_error "Failed to set ownership root:root for $CRON_FILE_PATH."
+    rm -f "$CRON_FILE_PATH"
+    exit 1
+fi
+log_info "Cron jobs configured successfully."
+log_warning "The cron job for 'ast_node_status_update.py' is disabled by default."
+log_warning "You may need to ensure the script exists at '$APP_PATH/user_files/sbin/' and uncomment the line in $CRON_FILE_PATH."
+
 
 log_info "Script finished successfully."
 exit 0
