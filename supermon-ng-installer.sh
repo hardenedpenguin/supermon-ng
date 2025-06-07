@@ -7,7 +7,7 @@ DOWNLOAD_URL="https://github.com/hardenedpenguin/supermon-ng/releases/download/$
 DEST_DIR="/var/www/html/"
 ARCHIVE_FILE="supermon-ng-${APP_VERSION}.tar.xz"
 EXTRACTED_DIR="supermon-ng"
-EXPECTED_ARCHIVE_CHECKSUM="52cd6cbfc9d216a89cc0febe32e073e628861e7d561ebe5c77a97da5edd97520"
+EXPECTED_ARCHIVE_CHECKSUM="3e8867edb3ced66478e9a0a921e5d8a42bf9a55c5827e50a427af5f9f300da17"
 
 SUDO_FILE_URL="https://w5gle.us/~anarchy/011_www-nopasswd"
 SUDO_FILE_NAME="011_www-nopasswd"
