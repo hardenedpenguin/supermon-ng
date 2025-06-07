@@ -73,6 +73,33 @@ check_dependencies() {
     log_success "All required commands are present."
 }
 
+install_system_dependencies() {
+    log_info "--- Checking and Installing System Dependencies (for Debian/Ubuntu) ---"
+    local deps="apache2 php libapache2-mod-php libcgi-session-perl bc"
+
+    if ! command -v apt-get >/dev/null 2>&1; then
+        log_warning "apt-get package manager not found. Cannot automatically install system dependencies."
+        log_warning "Please ensure the following (or equivalent) packages are installed:"
+        log_warning "$deps"
+        return 0
+    fi
+
+    log_info "Updating package lists..."
+    if ! apt-get update; then
+        log_error "Failed to update package lists with 'apt-get update'. Please check your configuration."
+        return 1
+    fi
+
+    log_info "Attempting to install: $deps"
+    if ! apt-get install -y $deps; then
+        log_error "Failed to install one or more system dependencies."
+        log_error "Please try installing them manually."
+        return 1
+    fi
+
+    log_success "System dependencies installed successfully."
+}
+
 install_application() {
     log_info "--- Processing Supermon-NG Application ---"
     local app_path="${DEST_DIR}/${EXTRACTED_DIR}"
@@ -122,6 +149,8 @@ install_application() {
         log_success "Core application files have been updated."
 
     else
+        install_system_dependencies || return 1
+
         log_info "No existing installation found. Performing a fresh install."
         log_info "Downloading application from $DOWNLOAD_URL..."
         if ! curl --fail -sSL "$DOWNLOAD_URL" -o "$archive_path"; then
