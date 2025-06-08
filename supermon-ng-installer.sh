@@ -99,7 +99,7 @@ install_application() {
     local app_path="${DEST_DIR}/${EXTRACTED_DIR}"
     local archive_path="${TMP_DIR}/${APP_VERSION}.tar.xz"
     local tmp_extract_path="${TMP_DIR}/${EXTRACTED_DIR}"
-    local preserve_files="allmon.ini authini.inc authusers.inc background.jpg controlpanel.ini favorites.ini global.inc privatenodes.txt"
+    local preserve_files="user_files/allmon.ini user_files/authini.inc user_files/authusers.inc user_files/background.jpg user_files/controlpanel.ini user_files/favorites.ini user_files/global.inc user_files/privatenodes.txt user_files/sbin/node_info.ini"
 
     if [ -d "$app_path" ]; then
         log_warning "An existing Supermon-NG installation was found at '$app_path'."
@@ -132,7 +132,7 @@ install_application() {
         log_info "Syncing new files to installation directory, preserving user configurations..."
         local rsync_excludes=""
         for file in $preserve_files; do
-            rsync_excludes="$rsync_excludes --exclude=user_files/$file"
+            rsync_excludes="$rsync_excludes --exclude=$file"
         done
         if ! rsync -a --delete $rsync_excludes "${tmp_extract_path}/" "${app_path}/"; then
             log_error "rsync failed to update the application files."
@@ -142,8 +142,8 @@ install_application() {
 
         log_info "Checking for and installing missing config files from the tarball..."
         for file in $preserve_files; do
-            local dest_config_file="${app_path}/user_files/${file}"
-            local src_config_file="${tmp_extract_path}/user_files/${file}"
+            local dest_config_file="${app_path}/${file}"
+            local src_config_file="${tmp_extract_path}/${file}"
             if [ ! -e "$dest_config_file" ] && [ -e "$src_config_file" ]; then
                 log_info "Installing missing config file: $file"
                 cp "$src_config_file" "$dest_config_file"
@@ -172,7 +172,7 @@ install_application() {
 
     log_info "Setting final permissions on user-configurable files..."
     for file in $preserve_files; do
-        local file_path="$app_path/user_files/$file"
+        local file_path="$app_path/$file"
         if [ -e "$file_path" ]; then
             chown "root:$WWW_GROUP" "$file_path"
             log_info "Ownership set for $file to root:$WWW_GROUP."
