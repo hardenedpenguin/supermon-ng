@@ -105,7 +105,7 @@ install_application() {
     local app_path="${DEST_DIR}/${EXTRACTED_DIR}"
     local archive_path="${TMP_DIR}/${APP_VERSION}.tar.xz"
     local tmp_extract_path="${TMP_DIR}/${EXTRACTED_DIR}"
-    local preserve_files="allmon.ini authini.inc authuser.inc controlpanel.ini favorites.ini global.inc"
+    local preserve_files="allmon.ini authini.inc authusers.inc background.jpg controlpanel.ini favorites.ini global.inc privatenodes.txt "
 
     if [ -d "$app_path" ]; then
         log_warning "An existing Supermon-NG installation was found at '$app_path'."
