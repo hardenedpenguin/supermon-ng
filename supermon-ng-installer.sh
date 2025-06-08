@@ -30,10 +30,10 @@ C_GREEN='\033[0;32m'
 C_YELLOW='\033[0;33m'
 C_BLUE='\033[0;34m'
 
-log_error() { echo "${C_RED}Error: ${SCRIPT_NAME}: $1${C_RESET}" >&2; }
-log_warning() { echo "${C_YELLOW}Warning: ${SCRIPT_NAME}: $1${C_RESET}" >&2; }
-log_info() { echo "${C_BLUE}Info: ${SCRIPT_NAME}: $1${C_RESET}"; }
-log_success() { echo "${C_GREEN}Success: ${SCRIPT_NAME}: $1${C_RESET}"; }
+log_error() { echo -e "${C_RED}Error: ${SCRIPT_NAME}: $1${C_RESET}" >&2; }
+log_warning() { echo -e "${C_YELLOW}Warning: ${SCRIPT_NAME}: $1${C_RESET}" >&2; }
+log_info() { echo -e "${C_BLUE}Info: ${SCRIPT_NAME}: $1${C_RESET}"; }
+log_success() { echo -e "${C_GREEN}Success: ${SCRIPT_NAME}: $1${C_RESET}"; }
 
 cleanup() {
     if [ -n "$TMP_DIR" ] && [ -d "$TMP_DIR" ]; then
@@ -48,10 +48,8 @@ verify_checksum() {
     local expected_checksum="$2"
     local file_name
     file_name=$(basename "$file_path")
-
     log_info "Verifying checksum for $file_name..."
     DOWNLOADED_CHECKSUM=$(sha256sum "$file_path" | awk '{print $1}')
-
     if [ "$DOWNLOADED_CHECKSUM" != "$expected_checksum" ]; then
         log_error "Checksum mismatch for $file_name."
         log_error "Expected: $expected_checksum"
@@ -76,27 +74,23 @@ check_dependencies() {
 install_system_dependencies() {
     log_info "--- Checking and Installing System Dependencies (for Debian/Ubuntu) ---"
     local deps="apache2 php libapache2-mod-php libcgi-session-perl bc"
-
     if ! command -v apt-get >/dev/null 2>&1; then
         log_warning "apt-get package manager not found. Cannot automatically install system dependencies."
         log_warning "Please ensure the following (or equivalent) packages are installed:"
         log_warning "$deps"
         return 0
     fi
-
     log_info "Updating package lists..."
     if ! apt-get update; then
         log_error "Failed to update package lists with 'apt-get update'. Please check your configuration."
         return 1
     fi
-
     log_info "Attempting to install: $deps"
     if ! apt-get install -y $deps; then
         log_error "Failed to install one or more system dependencies."
         log_error "Please try installing them manually."
         return 1
     fi
-
     log_success "System dependencies installed successfully."
 }
 
@@ -105,7 +99,7 @@ install_application() {
     local app_path="${DEST_DIR}/${EXTRACTED_DIR}"
     local archive_path="${TMP_DIR}/${APP_VERSION}.tar.xz"
     local tmp_extract_path="${TMP_DIR}/${EXTRACTED_DIR}"
-    local preserve_files="allmon.ini authini.inc authusers.inc background.jpg controlpanel.ini favorites.ini global.inc privatenodes.txt "
+    local preserve_files="allmon.ini authini.inc authusers.inc background.jpg controlpanel.ini favorites.ini global.inc privatenodes.txt"
 
     if [ -d "$app_path" ]; then
         log_warning "An existing Supermon-NG installation was found at '$app_path'."
@@ -135,22 +129,29 @@ install_application() {
             return 1
         fi
 
-        log_info "Syncing new files to installation directory..."
+        log_info "Syncing new files to installation directory, preserving user configurations..."
         local rsync_excludes=""
         for file in $preserve_files; do
             rsync_excludes="$rsync_excludes --exclude=user_files/$file"
         done
-
-        # shellcheck disable=SC2086
         if ! rsync -a --delete $rsync_excludes "${tmp_extract_path}/" "${app_path}/"; then
-            log_error "rsync failed to update the application files. Your installation may be in an inconsistent state."
+            log_error "rsync failed to update the application files."
             return 1
         fi
         log_success "Core application files have been updated."
 
+        log_info "Checking for and installing missing config files from the tarball..."
+        for file in $preserve_files; do
+            local dest_config_file="${app_path}/user_files/${file}"
+            local src_config_file="${tmp_extract_path}/user_files/${file}"
+            if [ ! -e "$dest_config_file" ] && [ -e "$src_config_file" ]; then
+                log_info "Installing missing config file: $file"
+                cp "$src_config_file" "$dest_config_file"
+            fi
+        done
+
     else
         install_system_dependencies || return 1
-
         log_info "No existing installation found. Performing a fresh install."
         log_info "Downloading application from $DOWNLOAD_URL..."
         if ! curl --fail -sSL "$DOWNLOAD_URL" -o "$archive_path"; then
@@ -158,7 +159,6 @@ install_application() {
             return 1
         fi
         verify_checksum "$archive_path" "$EXPECTED_ARCHIVE_CHECKSUM"
-
         log_info "Extracting archive to $DEST_DIR..."
         if ! tar -xaf "$archive_path" -C "$DEST_DIR"; then
             log_error "Failed to extract archive. Check archive integrity and permissions."
@@ -170,14 +170,14 @@ install_application() {
     log_info "Setting base ownership for $app_path..."
     chown -R root:root "$app_path"
 
-    log_info "Adjusting ownership for specific user files in $app_path/user_files/..."
+    log_info "Setting final permissions on user-configurable files..."
     for file in $preserve_files; do
         local file_path="$app_path/user_files/$file"
-        if [ -f "$file_path" ]; then
+        if [ -e "$file_path" ]; then
             chown "root:$WWW_GROUP" "$file_path"
             log_info "Ownership set for $file to root:$WWW_GROUP."
         else
-            log_warning "Expected user file not found: $file_path. Skipping ownership change."
+            log_warning "Expected user file not found after install/update: $file_path. Skipping ownership change."
         fi
     done
 
@@ -188,33 +188,22 @@ install_application() {
 install_sudo_config() {
     log_info "--- Processing Sudoers File ---"
     local tmp_sudo_file="${TMP_DIR}/${SUDO_FILE_NAME}"
-
-    if [ -f "$SUDO_FILE_PATH" ]; then
-        log_info "Existing sudoers file found. Removing '$SUDO_FILE_PATH' to install the updated version."
-        if ! rm -f "$SUDO_FILE_PATH"; then
-            log_error "Failed to remove existing sudoers file at '$SUDO_FILE_PATH'. Check permissions."
-            return 1
-        fi
-    fi
-
     log_info "Downloading $SUDO_FILE_NAME from $SUDO_FILE_URL..."
     if ! curl --fail -sSL "$SUDO_FILE_URL" -o "$tmp_sudo_file"; then
         log_error "Failed to download $SUDO_FILE_NAME."
         return 1
     fi
     verify_checksum "$tmp_sudo_file" "$EXPECTED_SUDO_CHECKSUM"
-
     log_info "Validating sudoers file syntax..."
     if ! visudo -c -f "$tmp_sudo_file"; then
         log_error "Downloaded sudoers file has invalid syntax. Aborting installation of this file."
         return 1
     fi
     log_success "Sudoers syntax is valid."
-
+    log_info "Installing sudoers file to $SUDO_FILE_PATH..."
     mkdir -p "$SUDO_DIR"
     chmod 0750 "$SUDO_DIR"
     mv "$tmp_sudo_file" "$SUDO_FILE_PATH"
-    
     log_info "Setting permissions and ownership for $SUDO_FILE_PATH..."
     chmod 0440 "$SUDO_FILE_PATH"
     chown root:root "$SUDO_FILE_PATH"
@@ -224,24 +213,14 @@ install_sudo_config() {
 install_editor_script() {
     log_info "--- Processing Editor Script ---"
     local tmp_editor_script="${TMP_DIR}/${EDITOR_SCRIPT_NAME}"
-
-    if [ -f "$EDITOR_SCRIPT_PATH" ]; then
-        log_info "Existing editor script found. Removing '$EDITOR_SCRIPT_PATH' to install the updated version."
-        if ! rm -f "$EDITOR_SCRIPT_PATH"; then
-            log_error "Failed to remove existing editor script at '$EDITOR_SCRIPT_PATH'. Check permissions."
-            return 1
-        fi
-    fi
-
     log_info "Downloading $EDITOR_SCRIPT_NAME from $EDITOR_SCRIPT_URL..."
     if ! curl --fail -sSL "$EDITOR_SCRIPT_URL" -o "$tmp_editor_script"; then
         log_error "Failed to download $EDITOR_SCRIPT_NAME."
         return 1
     fi
     verify_checksum "$tmp_editor_script" "$EXPECTED_EDITOR_SCRIPT_CHECKSUM"
-
+    log_info "Installing editor script to $EDITOR_SCRIPT_PATH..."
     mv "$tmp_editor_script" "$EDITOR_SCRIPT_PATH"
-    
     log_info "Setting permissions and ownership for $EDITOR_SCRIPT_PATH..."
     chmod 0750 "$EDITOR_SCRIPT_PATH"
     chown root:root "$EDITOR_SCRIPT_PATH"
@@ -253,42 +232,39 @@ install_cron_job() {
     local app_path="${DEST_DIR}/${EXTRACTED_DIR}"
     local marker_comment="# Supermon-ng V1.0.5 cron entries"
 
-    if [ -f "$CRON_FILE_PATH" ] && grep -qF -- "$marker_comment" "$CRON_FILE_PATH"; then
-        log_warning "Cron file '$CRON_FILE_PATH' with supermon-ng entries already exists. Skipping."
+    if [ -f "$CRON_FILE_PATH" ]; then
+        log_warning "Cron file '$CRON_FILE_PATH' already exists. Skipping to preserve user modifications."
         return 0
     fi
 
-    log_info "Creating/updating cron job file at $CRON_FILE_PATH"
-    {
-        echo "$marker_comment"
-        echo "0 3 * * * root $app_path/astdb.php cron"
-        echo "# Update variables every 3 minutes for supermon."
-        echo "# You must configure node_info.ini before you uncomment this entry"
-        echo "# */3 * * * * root $app_path/user_files/sbin/ast_node_status_update.py"
-    } >> "$CRON_FILE_PATH"
+    log_info "Creating new cron job file at $CRON_FILE_PATH..."
+    cat > "$CRON_FILE_PATH" << EOF
+$marker_comment
+0 3 * * * root $app_path/astdb.php cron
+# Update variables every 3 minutes for supermon.
+# You must configure node_info.ini before you uncomment this entry
+# */3 * * * * root $app_path/user_files/sbin/ast_node_status_update.py
+EOF
 
     log_info "Setting permissions for cron file..."
     chmod 0644 "$CRON_FILE_PATH"
     chown root:root "$CRON_FILE_PATH"
-    log_success "Cron jobs configured."
+    log_success "New cron file created."
     log_warning "The cron job for 'ast_node_status_update.py' is disabled by default."
     log_warning "You may need to ensure the script exists and uncomment the line in $CRON_FILE_PATH."
 }
 
 main() {
     check_dependencies
-
     if [ "$(id -u)" -ne 0 ]; then
         log_error "This script must be run as root or with sudo."
         echo "Usage: sudo sh $SCRIPT_NAME"
         exit 1
     fi
-
     if ! getent group "$WWW_GROUP" >/dev/null 2>&1; then
         log_error "Group '$WWW_GROUP' does not exist. This group is needed for setting file permissions."
         exit 1
     fi
-
     if [ ! -d "$DEST_DIR" ]; then
         log_info "Destination directory $DEST_DIR does not exist. Creating it..."
         if ! mkdir -p "$DEST_DIR"; then
@@ -296,14 +272,11 @@ main() {
             exit 1
         fi
     fi
-
     TMP_DIR=$(mktemp -d)
-
     install_application || exit 1
     install_sudo_config || exit 1
     install_editor_script || exit 1
     install_cron_job || exit 1
-
     log_success "Supermon-NG installation/update script finished successfully."
     exit 0
 }
