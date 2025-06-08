@@ -21,7 +21,7 @@ sudo apt update && sudo apt install -y rsync
 Then, download and run the installer script:
 
 ```bash
-wget https://raw.githubusercontent.com/hardenedpenguin/supermon-ng/refs/heads/main/supermon-ng-installer.sh
+wget -q -O supermon-ng-installer.sh "https://raw.githubusercontent.com/hardenedpenguin/supermon-ng/refs/heads/main/supermon-ng-installer.sh"
 chmod +x supermon-ng-installer.sh
 sudo ./supermon-ng-installer.sh
 ```
