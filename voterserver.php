@@ -1,9 +1,14 @@
 <?php
+@set_time_limit(0);
+
 include_once("session.inc");
+session_write_close(); 
 
 header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache');
+header('Connection: keep-alive');
 header('X-Accel-Buffering: no');
+
 date_default_timezone_set('America/Los_Angeles');
 
 include_once('nodeinfo.inc');
@@ -11,12 +16,6 @@ include_once("user_files/global.inc");
 include_once("common.inc");
 include_once("authini.php");
 include_once('amifunctions.inc');
-
-if (empty($_GET['node'])) {
-    echo "data: [FATAL] 'node' parameter is missing.\n\n";
-    ob_flush(); flush(); exit;
-}
-$node = trim(strip_tags($_GET['node']));
 
 $db = $ASTDB_TXT;
 $astdb = [];
@@ -33,7 +32,13 @@ if (file_exists($db)) {
     }
 }
 
-if (!isset($_SESSION['user'])) {
+if (empty($_GET['node'])) {
+    echo "data: [FATAL] 'node' parameter is missing.\n\n";
+    ob_flush(); flush(); exit;
+}
+$node = trim(strip_tags($_GET['node']));
+
+if (empty($_SESSION['user'])) {
     echo "data: [FATAL] User session not found. Please log in again.\n\n";
     ob_flush(); flush(); exit;
 }
@@ -71,54 +76,96 @@ $actionIDBase = "voter" . preg_replace('/[^a-zA-Z0-9]/', '', $node);
 while (true) {
     $actionID = $actionIDBase . mt_rand(1000, 9999);
     $response = get_voter_status($fp, $actionID);
-    if ($response === false) {
-        echo "data: Error getting voter response or disconnected.\n\n";
-        ob_flush(); flush();
-        SimpleAmiClient::logoff($fp);
-        exit;
-    }
-    
-    $lines = explode("\n", $response);
-    $parsed_nodes_data = [];
-    $parsed_voted_data = [];
-    $currentNodeContext = null;
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if (empty($line)) continue;
-        $parts = explode(": ", $line, 2);
-        if (count($parts) < 2) continue;
-        list($key, $value) = $parts;
-        $$key = $value;
-        if ($key == "Node") {
-            $currentNodeContext = $value;
-            $parsed_nodes_data[$currentNodeContext] = [];
-        }
-        if ($key == "RSSI" && $currentNodeContext && isset($Client)) {
-            $parsed_nodes_data[$currentNodeContext][$Client]['rssi'] = isset($RSSI) ? $RSSI : 'N/A';
-            $parsed_nodes_data[$currentNodeContext][$Client]['ip'] = isset($IP) ? $IP : 'N/A';
-        }
-        if ($key == 'Voted' && $currentNodeContext) {
-            $parsed_voted_data[$currentNodeContext] = $value;
-        }
-    }
-    
-    $message = printNode($node, $parsed_nodes_data, $parsed_voted_data, $nodeConfig);
-    $ticToc = $spinChars[$spinIndex];
-    $spinIndex = ($spinIndex + 1) % count($spinChars);
 
-    echo "data: $message\n";
-    echo "data: $ticToc\n\n";
-    ob_flush();
+    if ($response === false) {
+        $error_data = json_encode(['html' => 'Error: Disconnected from Asterisk server.', 'spinner' => 'X']);
+        echo "id: " . time() . "\n";
+        echo "data: " . $error_data . "\n\n";
+        ob_flush(); flush();
+        break;
+    }
+    
+    list($parsed_nodes_data, $parsed_voted_data) = parse_voter_response($response);
+    
+    $html_message = format_node_html($node, $parsed_nodes_data, $parsed_voted_data, $nodeConfig);
+    
+    $spinner = $spinChars[$spinIndex];
+    $spinIndex = ($spinIndex + 1) % count($spinChars);
+    
+    $payload = json_encode([
+        'html' => $html_message,
+        'spinner' => $spinner
+    ]);
+
+    echo "id: " . time() . "\n";
+    echo "data: " . $payload . "\n\n";
+    
+    if (ob_get_level() > 0) {
+        ob_flush();
+    }
     flush();
     
-    usleep(150000);
+    if (connection_aborted()) {
+        break;
+    }
+    
+    sleep(1);
 }
 
 SimpleAmiClient::logoff($fp);
 exit;
 
-function printNode($nodeNum, $nodesData, $votedData, $currentConfig) {
-    global $fp;
+function parse_voter_response($response) {
+    $lines = explode("\n", $response);
+    $parsed_nodes_data = [];
+    $parsed_voted_data = [];
+    $currentNodeContext = null;
+    $Client = $RSSI = $IP = null;
+
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (empty($line)) continue;
+
+        $parts = explode(": ", $line, 2);
+        if (count($parts) < 2) continue;
+        
+        list($key, $value) = $parts;
+
+        switch ($key) {
+            case 'Node':
+                $currentNodeContext = $value;
+                if (!isset($parsed_nodes_data[$currentNodeContext])) {
+                    $parsed_nodes_data[$currentNodeContext] = [];
+                }
+                break;
+            case 'Client':
+                $Client = $value;
+                break;
+            case 'RSSI':
+                $RSSI = $value;
+                break;
+            case 'IP':
+                $IP = $value;
+                if ($currentNodeContext && $Client) {
+                    $parsed_nodes_data[$currentNodeContext][$Client] = [
+                        'rssi' => $RSSI ?? 'N/A',
+                        'ip'   => $IP ?? 'N/A'
+                    ];
+                    $Client = $RSSI = $IP = null;
+                }
+                break;
+            case 'Voted':
+                if ($currentNodeContext) {
+                    $parsed_voted_data[$currentNodeContext] = $value;
+                }
+                break;
+        }
+    }
+    return [$parsed_nodes_data, $parsed_voted_data];
+}
+
+function format_node_html($nodeNum, $nodesData, $votedData, $currentConfig) {
+    global $fp, $astdb;
     $message = '';
     $info = getAstInfo($fp, $nodeNum); 
 
@@ -141,12 +188,14 @@ function printNode($nodeNum, $nodesData, $votedData, $currentConfig) {
             $rssi = isset($client['rssi']) ? (int)$client['rssi'] : 0;
             $bar_width_px = round(($rssi / 255) * 300);
             $bar_width_px = ($rssi == 0) ? 3 : max(1, $bar_width_px);
+            
             $barcolor = "#0099FF"; $textcolor = 'white';
             if ($votedClient && strpos($clientName, $votedClient) !== false) {
                 $barcolor = 'greenyellow'; $textcolor = 'black';
             } elseif (strpos($clientName, 'Mix') !== false) {
                 $barcolor = 'cyan'; $textcolor = 'black';
             }
+
             $message .= "<tr>";
             $message .= "<td><div>" . htmlspecialchars($clientName) . "</div></td>";
             $message .= "<td><div class='text'> <div class='barbox_a'>";
@@ -157,7 +206,7 @@ function printNode($nodeNum, $nodesData, $votedData, $currentConfig) {
     $message .= "<tr><td colspan=2> </td></tr>";
     $message .= "</table><br/>";
     
-    return $message;
+    return str_replace(["\r", "\n"], '', $message);
 }
 
 function get_voter_status($fp, $actionID) {
