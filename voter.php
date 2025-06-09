@@ -19,7 +19,6 @@ session_write_close();
 
 ?>
 <script>
-    // No changes needed here
     $.ajaxSetup ({
         cache: false,
         timeout: 3000
@@ -33,30 +32,21 @@ session_write_close();
                 if (node && node.trim() !== "") {
                     let source = new EventSource("voterserver.php?node=" + encodeURIComponent(node));
                     
-                    // --- THIS IS THE UPDATED SECTION ---
                     source.onmessage = function(event) {
                         try {
-                            // 1. Parse the JSON string received from the server
                             const data = JSON.parse(event.data);
-
-                            // 2. Use the 'html' property to update the main content
                             $("#link_list_" + node).html(data.html);
-
-                            // 3. (Optional but recommended) Update the spinner element
                             if (data.spinner) {
                                 $("#spinner_" + node).text(data.spinner);
                             }
                         } catch (e) {
-                            // This will catch any errors if the server sends invalid JSON
                             console.error("Error parsing data for node " + node + ":", e);
                             $("#link_list_" + node).html("<div style='color:red;'>Received invalid data from server.</div>");
                         }
                     };
-                    // --- END OF UPDATED SECTION ---
 
                     source.onerror = function(error) {
                         console.error("EventSource error for node " + node + ":", error);
-                        // Update both the content and the spinner on error
                         $("#spinner_" + node).text('X');
                         $("#link_list_" + node).html("<div style='color:red; font-weight:bold;'>Error receiving updates for node " + node + ". The connection was lost.</div>");
                     };
@@ -72,20 +62,49 @@ session_write_close();
     });
 </script>
 
+<style>
+    /* ---- Updated Styles ---- */
+    .rtcm th {
+        background-color: white !important;
+        color: black !important;
+        font-size: 16px; /* Slightly larger header font */
+    }
+    
+    /* Target all data cells for consistent vertical alignment and a minimum height */
+    .rtcm td {
+        vertical-align: middle;
+        height: 28px;
+    }
+    
+    /* Style the client name cell */
+    .rtcm td:first-child {
+        color: white;
+        font-size: 18px; /* Increase font size */
+        padding-left: 5px;
+    }
+
+    /* Style the bar itself */
+    .rtcm .bar {
+        font-size: 18px; /* Make font size match the client name */
+        line-height: 25px; /* Vertically center the text within the bar */
+        height: 25px; /* Ensure the bar's background has a consistent height */
+        text-align: right; /* Push number to the right */
+        padding-right: 5px; /* Add some space from the edge */
+        box-sizing: border-box; /* Ensures padding is included in the width calculation */
+    }
+</style>
+
 <br/>
 
 <?php foreach ($passedNodes as $node): 
     $safeNode = htmlspecialchars($node, ENT_QUOTES, 'UTF-8');
 ?>
 <div class="voter-container" style="margin-bottom: 20px;">
-    <!-- We add a spinner element that the JavaScript can update -->
-    <h4>
-        Status for Node <?php echo $safeNode; ?>
-        <span id="spinner_<?php echo $safeNode; ?>" style="font-family: monospace; margin-left: 10px; color: #888;"></span>
-    </h4>
-    <!-- This is the original div where the table will be rendered -->
     <div id="link_list_<?php echo $safeNode; ?>">
-        Connecting...
+        Connecting to Node <?php echo $safeNode; ?>...
+    </div>
+    <div style="text-align: center; height: 20px; color: #888;">
+        <span id="spinner_<?php echo $safeNode; ?>" style="font-family: monospace;"></span>
     </div>
 </div>
 <hr style="border: none; border-top: 1px solid #ccc; margin-bottom: 20px;" />
