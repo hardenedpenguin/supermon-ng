@@ -1,7 +1,21 @@
 <?php
 
-	session_start([ 'name' => "supermon61"]);
+if (session_status() == PHP_SESSION_NONE) {
 
-	$_SESSION["sm61loggedin"] = $_SESSION["sm61loggedin"] ?? false;
+    session_name('supermon61');
+
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'domain'   => '',
+        'secure'   => isset($_SERVER['HTTPS']),
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+
+    session_start();
+}
+
+$_SESSION['sm61loggedin'] = $_SESSION['sm61loggedin'] ?? false;
 
 ?>

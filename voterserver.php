@@ -2,7 +2,7 @@
 @set_time_limit(0);
 
 include_once("session.inc");
-session_write_close(); 
+session_write_close();
 
 header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache');
@@ -38,20 +38,29 @@ if (empty($_GET['node'])) {
 }
 $node = trim(strip_tags($_GET['node']));
 
-if (empty($_SESSION['user'])) {
-    echo "data: [FATAL] User session not found. Please log in again.\n\n";
+$ini_file_path = '';
+$user_context = 'public';
+
+if (isset($_SESSION['sm61loggedin']) && $_SESSION['sm61loggedin'] === true && !empty($_SESSION['user'])) {
+    $ini_file_path = get_ini_name($_SESSION['user']);
+    $user_context = "user '{$_SESSION['user']}'";
+} else {
+    $ini_file_path = "$USERFILES/allmon.ini";
+}
+
+if (!file_exists($ini_file_path)) {
+    echo "data: [FATAL] Configuration file not found for {$user_context}: {$ini_file_path}\n\n";
     ob_flush(); flush(); exit;
 }
 
-$SUPINI = get_ini_name($_SESSION['user']);
-if (!file_exists($SUPINI)) {
-    echo "data: [FATAL] Couldn't load INI file: $SUPINI\n\n";
+$config = parse_ini_file($ini_file_path, true);
+if ($config === false) {
+    echo "data: [FATAL] Error parsing configuration file: {$ini_file_path}\n\n";
     ob_flush(); flush(); exit;
 }
 
-$config = parse_ini_file($SUPINI, true);
 if (!isset($config[$node])) {
-    echo "data: [FATAL] Configuration for node '$node' not found in $SUPINI.\n\n";
+    echo "data: [FATAL] Configuration for node '$node' not found in {$user_context} context.\n\n";
     ob_flush(); flush(); exit;
 }
 $nodeConfig = $config[$node];
@@ -74,6 +83,10 @@ $spinIndex = 0;
 $actionIDBase = "voter" . preg_replace('/[^a-zA-Z0-9]/', '', $node);
 
 while (true) {
+    if (connection_aborted()) {
+        break;
+    }
+
     $actionID = $actionIDBase . mt_rand(1000, 9999);
     $response = get_voter_status($fp, $actionID);
 
@@ -84,14 +97,12 @@ while (true) {
         ob_flush(); flush();
         break;
     }
-    
+
     list($parsed_nodes_data, $parsed_voted_data) = parse_voter_response($response);
-    
     $html_message = format_node_html($node, $parsed_nodes_data, $parsed_voted_data, $nodeConfig);
-    
     $spinner = $spinChars[$spinIndex];
     $spinIndex = ($spinIndex + 1) % count($spinChars);
-    
+
     $payload = json_encode([
         'html' => $html_message,
         'spinner' => $spinner
@@ -99,16 +110,12 @@ while (true) {
 
     echo "id: " . time() . "\n";
     echo "data: " . $payload . "\n\n";
-    
+
     if (ob_get_level() > 0) {
         ob_flush();
     }
     flush();
-    
-    if (connection_aborted()) {
-        break;
-    }
-    
+
     sleep(1);
 }
 
@@ -199,7 +206,7 @@ function format_node_html($nodeNum, $nodesData, $votedData, $currentConfig) {
             $message .= "<tr>";
             $message .= "<td><div>" . htmlspecialchars($clientName) . "</div></td>";
             $message .= "<td><div class='text'> <div class='barbox_a'>";
-            $message .= "<div class='bar' style='width: " . $bar_width_px . "px; background-color: $barcolor; color: $textcolor'>" . $rssi . "</div>";
+            $message .= "<div class='bar' style='text-align: center; width: " . $bar_width_px . "px; background-color: $barcolor; color: $textcolor'>" . $rssi . "</div>";
             $message .= "</div></td></tr>";
         }
     }
