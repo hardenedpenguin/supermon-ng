@@ -122,12 +122,23 @@ while (true) {
 SimpleAmiClient::logoff($fp);
 exit;
 
+/**
+ * Parses the raw multi-line text response from Asterisk's 'VoterStatus' AMI command.
+ * This function is stateful, iterating through the lines to build a structured array of clients
+ * and their associated data. It also cleans client names by removing common suffixes
+ * and flags "Mix" stations for later styling.
+ *
+ * @param string $response The raw, multi-line string from the AMI 'VoterStatus' command.
+ * @return array A two-element array:
+ *               [0] => An associative array of nodes, each containing an array of its clients and their data.
+ *               [1] => An associative array mapping each node number to its currently voted client name.
+ */
 function parse_voter_response($response) {
     $lines = explode("\n", $response);
     $parsed_nodes_data = [];
     $parsed_voted_data = [];
     $currentNodeContext = null;
-    $Client = $RSSI = $IP = null;
+    $currentClientData = [];
 
     foreach ($lines as $line) {
         $line = trim($line);
@@ -140,27 +151,42 @@ function parse_voter_response($response) {
 
         switch ($key) {
             case 'Node':
+                if ($currentNodeContext && !empty($currentClientData) && isset($currentClientData['name'])) {
+                    $parsed_nodes_data[$currentNodeContext][$currentClientData['name']] = $currentClientData;
+                }
                 $currentNodeContext = $value;
+                $currentClientData = [];
                 if (!isset($parsed_nodes_data[$currentNodeContext])) {
                     $parsed_nodes_data[$currentNodeContext] = [];
                 }
                 break;
+
             case 'Client':
-                $Client = $value;
+                if ($currentNodeContext && !empty($currentClientData) && isset($currentClientData['name'])) {
+                    $parsed_nodes_data[$currentNodeContext][$currentClientData['name']] = $currentClientData;
+                }
+                // Check for the "Mix" suffix BEFORE cleaning it
+                $isMix = (strpos($value, ' Mix') !== false);
+                
+                // Clean all known suffixes from the client name
+                $cleanName = preg_replace('/(\sMaster\sActiveMaster|\sLocal\sLocal|\sMix)$/', '', $value);
+                
+                // Store the clean name and the isMix flag
+                $currentClientData = ['name' => $cleanName, 'isMix' => $isMix, 'rssi' => 'N/A', 'ip' => 'N/A'];
                 break;
+                
             case 'RSSI':
-                $RSSI = $value;
-                break;
-            case 'IP':
-                $IP = $value;
-                if ($currentNodeContext && $Client) {
-                    $parsed_nodes_data[$currentNodeContext][$Client] = [
-                        'rssi' => $RSSI ?? 'N/A',
-                        'ip'   => $IP ?? 'N/A'
-                    ];
-                    $Client = $RSSI = $IP = null;
+                if (isset($currentClientData['name'])) {
+                    $currentClientData['rssi'] = $value;
                 }
                 break;
+                
+            case 'IP':
+                if (isset($currentClientData['name'])) {
+                    $currentClientData['ip'] = $value;
+                }
+                break;
+
             case 'Voted':
                 if ($currentNodeContext) {
                     $parsed_voted_data[$currentNodeContext] = $value;
@@ -168,9 +194,27 @@ function parse_voter_response($response) {
                 break;
         }
     }
+
+    if ($currentNodeContext && !empty($currentClientData) && isset($currentClientData['name'])) {
+        $parsed_nodes_data[$currentNodeContext][$currentClientData['name']] = $currentClientData;
+    }
+
     return [$parsed_nodes_data, $parsed_voted_data];
 }
 
+/**
+ * Generates the HTML table for a single voter node's status display.
+ * It takes the cleanly parsed data, builds the table structure, calculates RSSI bar widths,
+ * and determines the correct color for each bar based on its status flag (voted, voting, or mix).
+ *
+ * @global resource $fp          The active file pointer/socket connection to the Asterisk Manager.
+ * @global array    $astdb       A cached array of the Asterisk database contents.
+ * @param  string   $nodeNum       The node number for which to generate the HTML.
+ * @param  array    $nodesData     The structured array of all nodes and their clients from parse_voter_response().
+ * @param  array    $votedData     The array mapping nodes to their voted client from parse_voter_response().
+ * @param  array    $currentConfig The configuration stanza for this specific node from the INI file.
+ * @return string   A single-line HTML string representing the complete table for one node.
+ */
 function format_node_html($nodeNum, $nodesData, $votedData, $currentConfig) {
     global $fp, $astdb;
     $message = '';
@@ -193,17 +237,19 @@ function format_node_html($nodeNum, $nodesData, $votedData, $currentConfig) {
 
         foreach($clients as $clientName => $client) {
             $rssi = isset($client['rssi']) ? (int)$client['rssi'] : 0;
-            $bar_width_px = round(($rssi / 255) * 300);
+            $bar_width_px = round(($rssi / 255) * 300); 
             $bar_width_px = ($rssi == 0) ? 3 : max(1, $bar_width_px);
             
-            $barcolor = "#0099FF"; $textcolor = 'white';
-            if ($votedClient && strpos($clientName, $votedClient) !== false) {
+            $barcolor = "#0099FF"; $textcolor = 'white'; 
+            
+            if ($votedClient && $clientName === $votedClient) {
                 $barcolor = 'greenyellow'; $textcolor = 'black';
-            } elseif (strpos($clientName, 'Mix') !== false) {
+            } elseif (isset($client['isMix']) && $client['isMix'] === true) {
                 $barcolor = 'cyan'; $textcolor = 'black';
             }
 
             $message .= "<tr>";
+            // The $clientName is already clean from the parsing function
             $message .= "<td><div>" . htmlspecialchars($clientName) . "</div></td>";
             $message .= "<td><div class='text'> <div class='barbox_a'>";
             $message .= "<div class='bar' style='text-align: center; width: " . $bar_width_px . "px; background-color: $barcolor; color: $textcolor'>" . $rssi . "</div>";
@@ -216,6 +262,15 @@ function format_node_html($nodeNum, $nodesData, $votedData, $currentConfig) {
     return str_replace(["\r", "\n"], '', $message);
 }
 
+/**
+ * Sends the 'VoterStatus' action to the Asterisk Manager Interface (AMI) and retrieves the response.
+ * This function constructs the command, sends it over the active socket, and waits for the full response
+ * that corresponds to the unique ActionID provided.
+ *
+ * @param  resource     $fp         The active file pointer/socket connection to the Asterisk Manager.
+ * @param  string       $actionID   A unique identifier for this AMI action to correlate the command and response.
+ * @return string|false The full, multi-line text response from Asterisk on success, or false on failure.
+ */
 function get_voter_status($fp, $actionID) {
     $amiEOL = "\r\n";
     $action = "Action: VoterStatus" . $amiEOL;
