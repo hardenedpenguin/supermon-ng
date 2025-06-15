@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-APP_VERSION="V1.0.6"
+APP_VERSION="v1.0.6"
 DOWNLOAD_URL="https://github.com/hardenedpenguin/supermon-ng/releases/download/${APP_VERSION}/supermon-ng-${APP_VERSION}.tar.xz"
 DEST_DIR="/var/www/html"
 EXTRACTED_DIR="supermon-ng"
