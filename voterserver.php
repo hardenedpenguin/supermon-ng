@@ -229,8 +229,8 @@ function format_node_html($nodeNum, $nodesData, $votedData, $currentConfig) {
     $message .= "<tr><th>Client</th><th>RSSI</th></tr>";
 
     if (!isset($nodesData[$nodeNum]) || empty($nodesData[$nodeNum])) {
-        $message .= "<tr><td><div style='width: 120px;'> No clients </div></td>";
-        $message .= "<td><div style='width: 339px;'> </div></td></tr>";
+        $message .= "<tr><td><div class='voter-no-clients'>&nbsp;No clients&nbsp;</div></td>";
+        $message .= "<td><div class='voter-empty-bar'>&nbsp;</div></td></tr>";
     } else {
         $clients = $nodesData[$nodeNum];
         $votedClient = isset($votedData[$nodeNum]) && $votedData[$nodeNum] !== 'none' ? $votedData[$nodeNum] : null;
@@ -252,7 +252,7 @@ function format_node_html($nodeNum, $nodesData, $votedData, $currentConfig) {
             // The $clientName is already clean from the parsing function
             $message .= "<td><div>" . htmlspecialchars($clientName) . "</div></td>";
             $message .= "<td><div class='text'> <div class='barbox_a'>";
-            $message .= "<div class='bar' style='text-align: center; width: " . $bar_width_px . "px; background-color: $barcolor; color: $textcolor'>" . $rssi . "</div>";
+            $message .= "<div class='bar' style='width: " . $bar_width_px . "px; background-color: $barcolor; color: $textcolor'>" . $rssi . "</div>";
             $message .= "</div></td></tr>";
         }
     }

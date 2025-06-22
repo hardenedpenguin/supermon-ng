@@ -259,12 +259,12 @@ $(document).ready(function() {
             if (errordata.node) {
                 var tableID = 'table_' + errordata.node;
                 var colspan = (<?php echo (int) $Show_Detail; ?> == 1) ? 7 : 5;
-                $('#' + tableID + ' tbody:first').html(`<tr><td colspan="${colspan}" style="color:red;">Error: ${errordata.status}</td></tr>`);
+                $('#' + tableID + ' tbody:first').html(`<tr><td colspan="${colspan}" class="error-inline">Error: ${errordata.status}</td></tr>`);
             } else if (errordata.status) {
                  var firstNodeTable = $('table[id^="table_"]:first');
                  if (firstNodeTable.length) {
                     var colspan = (<?php echo (int) $Show_Detail; ?> == 1) ? 7 : 5;
-                    firstNodeTable.find('tbody:first').html(`<tr><td colspan="${colspan}" style="color:red;">Error: ${errordata.status}</td></tr>`);
+                    firstNodeTable.find('tbody:first').html(`<tr><td colspan="${colspan}" class="error-inline">Error: ${errordata.status}</td></tr>`);
                  } else {
                      $("#list_link").html("Error: " + errordata.status);
                  }
@@ -496,14 +496,14 @@ foreach($nodes as $node) {
 <?php
 if (filter_var($HAMCLOCK_ENABLED ?? false, FILTER_VALIDATE_BOOLEAN) && !empty($HAMCLOCK_URL)) {
 ?>
-    <div style="text-align:center; margin-bottom: 10px;">
-        <iframe src="<?php echo htmlspecialchars($HAMCLOCK_URL); ?>" width="800" height="480" style="border:none;"></iframe>
+    <div class="centered-margin-bottom">
+        <iframe src="<?php echo htmlspecialchars($HAMCLOCK_URL); ?>" width="800" height="480" class="iframe-borderless"></iframe>
     </div>
 <?php
 }
 
 if ($isDetailed) {
-    print "<div id=\"spinny\" style=\"text-align:center; font-size: large; margin: 10px;\"></div>";
+    print "<div id=\"spinny\"></div>";
 }
 
 $user_ini_file = htmlspecialchars(get_ini_name($_SESSION['user']));

@@ -109,7 +109,7 @@ if ($_SESSION['sm61loggedin'] === true) {
     </script>
 </head>
 <body>
-<div id="header" style="background-image: url(<?php echo $BACKGROUND; ?>); background-color:<?php echo $BACKGROUND_COLOR; ?>; height: <?php echo $BACKGROUND_HEIGHT; ?> ">
+<div id="header" class="header-dynamic" style="background-image: url(<?php echo $BACKGROUND; ?>); background-color:<?php echo $BACKGROUND_COLOR; ?>; height: <?php echo $BACKGROUND_HEIGHT; ?>;">
     <div id="headerTitle" class="headerTitle-large"><i><?php echo "$CALL - $TITLE_LOGGED"; ?></i></div>
     <div id="header4Tag" class="header4Tag-large"><i><?php echo $title ?></i></div>
     <div id="header2Tag" class="header2Tag-large"><i><?php echo $TITLE3; ?></i></div>
@@ -133,7 +133,7 @@ if ($_SESSION['sm61loggedin'] === true) {
         </div>
 </div>
 <br>
-<div style="position:absolute; bottom:0px; left:30%;">
+<div class="bottom-left-30">
     <center>
         <input type="button" class="submit-large" Value="Close Window" onclick="self.close()">
         <br><br>

@@ -1642,3 +1642,50 @@ button:focus {
 .webacclog-table tr:nth-child(odd) {
   background-color: #0f0f0f;
 }
+
+/* VoterServer no clients and empty bar */
+.voter-no-clients {
+  width: 120px;
+  display: inline-block;
+}
+.voter-empty-bar {
+  width: 339px;
+  display: inline-block;
+}
+
+.bar {
+  text-align: center;
+}
+
+/* Inline error text for link.php */
+.error-inline {
+  color: red;
+}
+
+.centered-margin-bottom {
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.iframe-borderless {
+  border: none;
+}
+
+#spinny {
+  text-align: center;
+  font-size: large;
+  margin: 10px;
+}
+
+/* Favorites and Control Panel dynamic header and image styles */
+.header-dynamic {
+  /* background-image, background-color, and height set inline for dynamic values */
+}
+.img-borderless {
+  border: 0px;
+}
+.bottom-left-30 {
+  position: absolute;
+  bottom: 0px;
+  left: 30%;
+}

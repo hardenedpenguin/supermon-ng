@@ -80,11 +80,11 @@ $cpCommands = [
     </script>
 </head>
 <body>
-    <div id="header" style="background-image: url(<?php echo htmlspecialchars($BACKGROUND ?? '', ENT_QUOTES, 'UTF-8'); ?>); background-color:<?php echo htmlspecialchars($BACKGROUND_COLOR ?? '', ENT_QUOTES, 'UTF-8'); ?>; height: <?php echo htmlspecialchars($BACKGROUND_HEIGHT ?? '', ENT_QUOTES, 'UTF-8'); ?> ">
+    <div id="header" class="header-dynamic" style="background-image: url(<?php echo htmlspecialchars($BACKGROUND ?? '', ENT_QUOTES, 'UTF-8'); ?>); background-color:<?php echo htmlspecialchars($BACKGROUND_COLOR ?? '', ENT_QUOTES, 'UTF-8'); ?>;<?php if (isset($BACKGROUND_HEIGHT)) echo ' height:' . htmlspecialchars($BACKGROUND_HEIGHT, ENT_QUOTES, 'UTF-8') . ';'; ?>">
         <div id="headerTitle-large"><i><?php echo htmlspecialchars(($CALL ?? '') . " - " . ($TITLE_LOGGED ?? '')); ?></i></div>
         <div id="header3Tag-large"><i><?php echo htmlspecialchars($title); ?></i></div>
         <div id="header2Tag-large"><i><?php echo htmlspecialchars($TITLE3 ?? ''); ?></i></div>
-        <div id="headerImg"><a href="https://www.allstarlink.org" target="_blank"><img src="allstarlink.jpg" width="70%" style="border: 0px;" alt="AllStar Logo"></a></div>
+        <div id="headerImg"><a href="https://www.allstarlink.org" target="_blank"><img src="allstarlink.jpg" width="70%" class="img-borderless" alt="AllStar Logo"></a></div>
     </div>
 
     <div id="cpMain">
@@ -119,7 +119,7 @@ $cpCommands = [
         </div>
     </div>
 
-    <div style="position:absolute; bottom:0px; left:30%;">
+    <div class="bottom-left-30">
         <center>
             <input type="button" class="submit-large" Value="Close Window" onclick="self.close()">
             <br><br>
