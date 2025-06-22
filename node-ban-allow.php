@@ -67,30 +67,30 @@ if (!empty($_POST["listtype"])) {
 <link type="text/css" rel="stylesheet" href="supermon-ng.css">
 <title>Allow/Deny Nodes - <?php echo htmlspecialchars($localnode); ?></title>
 </head>
-<body style="background-color: black; color: white;">
+<body class="ban-allow-page">
 
-<p style="text-align:center; font-size: 1.5em; color: #3399FF;"><b>Allow/Deny AllStar Nodes at node <?php echo htmlspecialchars($localnode); ?></b></p>
+<p class="ban-allow-title"><b>Allow/Deny AllStar Nodes at node <?php echo htmlspecialchars($localnode); ?></b></p>
 
 <center>
 <form action="node-ban-allow.php?ban-node=<?php echo htmlspecialchars($Node); ?>&localnode=<?php echo htmlspecialchars($localnode); ?>" method="post">
-<table cellspacing="20" style="margin-top:0; font-size:22px;">
+<table class="ban-allow-table">
 <tr>
-<td align="top" style="text-align:center;">
- <input type="radio" style="transform: scale(2);" name="listtype" value="denylist" checked> Denied - denylist
- <input type="radio" style="margin-left:30px; transform: scale(2);" name="listtype" value="allowlist"> Allowed - allowlist<br>
+<td align="top" class="ban-allow-cell">
+ <input type="radio" class="ban-allow-radio" name="listtype" value="denylist" checked> Denied - denylist
+ <input type="radio" class="ban-allow-radio ban-allow-radio-spaced" name="listtype" value="allowlist"> Allowed - allowlist<br>
 </td></tr>
-<tr><td style="text-align:center;">
+<tr><td class="ban-allow-cell">
 Enter Node number -  
  <input type="text" name="node" value="<?php echo htmlspecialchars($Node); ?>" maxlength="7" size="5">
 </td></tr>
-<tr><td style="text-align:center;">
+<tr><td class="ban-allow-cell">
 Enter comment -
  <input type="text" name="comment" maxlength="30" size="22">
 </td></tr>
 <tr>
-<td style="text-align:center;">
- <input type="radio" style="transform: scale(2);" name="deleteadd" value="add" checked> Add
- <input type="radio" style="margin-left:30px; transform: scale(2);" name="deleteadd" value="delete"> Delete<br>
+<td class="ban-allow-cell">
+ <input type="radio" class="ban-allow-radio" name="deleteadd" value="add" checked> Add
+ <input type="radio" class="ban-allow-radio ban-allow-radio-spaced" name="deleteadd" value="delete"> Delete<br>
 </td>
 </tr>
 <tr><td align="center">
@@ -99,7 +99,7 @@ Enter comment -
 <input type="button" class="submit-large" Value="Close Window" onclick="self.close()">
 </td></tr>
 <tr><td> </td></tr>
-<tr><td style="text-align:left;">Current Nodes in the Denied - denylist (for node <?php echo htmlspecialchars($localnode); ?>):
+<tr><td class="ban-allow-cell-left">Current Nodes in the Denied - denylist (for node <?php echo htmlspecialchars($localnode); ?>):
 <?php
 $denylistDBFamily = "denylist/" . $localnode;
 $rawDataDeny = getDataFromAMI($fp, "database show " . $denylistDBFamily); 
@@ -136,7 +136,7 @@ if ($rawDataDeny === false || trim($rawDataDeny) === "") {
 ?>
 </td></tr>
 <tr>
-<td style="text-align:left;">Current Nodes in the Allowed - allowlist (for node <?php echo htmlspecialchars($localnode); ?>):
+<td class="ban-allow-cell-left">Current Nodes in the Allowed - allowlist (for node <?php echo htmlspecialchars($localnode); ?>):
 <?php
 $allowlistDBFamily = "allowlist/" . $localnode;
 $rawDataAllow = getDataFromAMI($fp, "database show " . $allowlistDBFamily);

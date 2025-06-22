@@ -63,24 +63,6 @@ $sdetail = $settings['show-detailed'];
     <meta charset="UTF-8">
     <title>Supermon Display Settings</title>
     <link type="text/css" rel="stylesheet" href="supermon-ng.css">
-    <style>
-        input[type="text"] {
-            background-color: #333;
-            color: white;
-            border: 1px solid #555;
-        }
-        input[type="radio"] {
-            accent-color: #007bff;
-        }
-        .submit-large {
-            background-color: #555;
-            color: white;
-            border: 1px solid #777;
-        }
-        .submit-large:hover {
-            background-color: #666;
-        }
-    </style>
     <script>
         function refreshParent() {
             if (window.opener && !window.opener.closed) {
@@ -94,9 +76,9 @@ $sdetail = $settings['show-detailed'];
         window.addEventListener('unload', refreshParent);
     </script>
 </head>
-<body style="background-color:black; color:white;">
+<body class="display-config-page">
 <center>
-<p style="font-size:1.5em;margin-bottom:0;"><b>Supermon Display Settings</b></p>
+<p class="display-config-title"><b>Supermon Display Settings</b></p>
 
 <?php if ($form_submitted_successfully): ?>
     <script type="text/javascript">
@@ -105,35 +87,35 @@ $sdetail = $settings['show-detailed'];
 <?php endif; ?>
 
 <form action="display-config.php" method="get">
-<table cellspacing="15" style="margin-top:0; font-size:22px;">
+<table class="display-config-table">
 <tr>
 <td valign="top">
  Display Detailed View<br>
-    <input type="radio" style="transform: scale(2); margin-top:6px;" name="show_detailed" value="1" <?= ($sdetail === "1") ? 'checked' : '' ?>> YES
-    <input type="radio" style="transform: scale(2); margin-top:14px; margin-left:20px;" name="show_detailed" value="0" <?= ($sdetail === "0") ? 'checked' : '' ?>> NO<br>
+    <input type="radio" class="display-config-radio display-config-radio-top" name="show_detailed" value="1" <?= ($sdetail === "1") ? 'checked' : '' ?>> YES
+    <input type="radio" class="display-config-radio display-config-radio-spaced" name="show_detailed" value="0" <?= ($sdetail === "0") ? 'checked' : '' ?>> NO<br>
 </td>
 </tr><tr>
 <td valign="top">
  Show the number of connections (Displays x of y)<br>
-    <input type="radio" style="transform: scale(2); margin-top:6px;" name="show_number" value="1" <?= ($snum === "1") ? 'checked' : '' ?>> YES
-    <input type="radio" style="transform: scale(2); margin-top:14px; margin-left:20px;" name="show_number" value="0" <?= ($snum === "0") ? 'checked' : '' ?>> NO<br>
+    <input type="radio" class="display-config-radio display-config-radio-top" name="show_number" value="1" <?= ($snum === "1") ? 'checked' : '' ?>> YES
+    <input type="radio" class="display-config-radio display-config-radio-spaced" name="show_number" value="0" <?= ($snum === "0") ? 'checked' : '' ?>> NO<br>
 </td>
 </tr><tr>
 <td valign="top">
  Show ALL Connections (NO omits NEVER Keyed)<br>
-    <input type="radio" style="transform: scale(2); margin-top:6px;" name="show_all" value="1" <?= ($sall === "1") ? 'checked' : '' ?>> YES
-    <input type="radio" style="transform: scale(2); margin-top:14px; margin-left:20px;" name="show_all" value="0" <?= ($sall === "0") ? 'checked' : '' ?>> NO<br>
+    <input type="radio" class="display-config-radio display-config-radio-top" name="show_all" value="1" <?= ($sall === "1") ? 'checked' : '' ?>> YES
+    <input type="radio" class="display-config-radio display-config-radio-spaced" name="show_all" value="0" <?= ($sall === "0") ? 'checked' : '' ?>> NO<br>
 </td>
 </tr><tr>
 <td valign="top">
  Maximum Number of Connections to Display in Each Node (0=ALL)<br><br>
- <input type="text" style="transform: scale(1.5); margin-left:20px;" name="number_displayed" value="<?= htmlspecialchars($ndisp, ENT_QUOTES, 'UTF-8') ?>" maxlength="4" size="3">
+ <input type="text" class="display-config-input" name="number_displayed" value="<?= htmlspecialchars($ndisp, ENT_QUOTES, 'UTF-8') ?>" maxlength="4" size="3">
 </td>
 </tr>
 <tr>
 <td align="center">
 <input type="submit" class="submit-large" value="Update">
-   
+   
 <input type="button" class="submit-large" Value="Close Window" onclick="self.close()">
 </td>
 </tr>

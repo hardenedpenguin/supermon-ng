@@ -55,41 +55,33 @@ if (is_resource($process)) {
 <head>
     <title>Save File Status</title>
     <link type='text/css' rel='stylesheet' href='supermon-ng.css'>
-    <style>
-        body { background-color: black; color: white; }
-        p, h3, pre { font-size: 16px; }
-        .container { padding: 20px; }
-        .success { color: lightgreen; }
-        .error { color: #ff6b6b; }
-        pre { background-color: #1e1e1e; padding: 10px; border: 1px solid #555; white-space: pre-wrap; word-wrap: break-word; }
-    </style>
 </head>
 <body>
-<div class="container">
-    <h2>Save Status for: <?php echo htmlspecialchars($target_filepath); ?></h2>
+<div class="log-viewer-container">
+    <h2 class="log-viewer-title">Save Status for: <?php echo htmlspecialchars($target_filepath); ?></h2>
 
     <?php if ($return_var === 0): ?>
-        <p class="success">File saved successfully!</p>
+        <p class="log-viewer-info">File saved successfully!</p>
     <?php else: ?>
-        <p class="error">Error saving file. Helper script exit code: <?php echo htmlspecialchars($return_var); ?></p>
+        <p class="log-viewer-error">Error saving file. Helper script exit code: <?php echo htmlspecialchars($return_var); ?></p>
     <?php endif; ?>
 
     <?php if (!empty($stdout_data)): ?>
         <h3>Helper Script Output (stdout):</h3>
-        <pre><?php echo htmlspecialchars(trim($stdout_data)); ?></pre>
+        <pre class="log-viewer-pre"><?php echo htmlspecialchars(trim($stdout_data)); ?></pre>
     <?php endif; ?>
 
     <?php if (!empty($stderr_data)): ?>
-        <h3 class="<?php echo ($return_var !== 0) ? 'error' : ''; ?>">Helper Script Output (stderr):</h3>
-        <pre><?php echo htmlspecialchars(trim($stderr_data)); ?></pre>
+        <h3 class="<?php echo ($return_var !== 0) ? 'log-viewer-error' : ''; ?>">Helper Script Output (stderr):</h3>
+        <pre class="log-viewer-pre"><?php echo htmlspecialchars(trim($stderr_data)); ?></pre>
     <?php endif; ?>
 
     <br>
-    <form style='display:inline;' name="EDIT_AGAIN" method="POST" action="edit.php">
+    <form class="save-form" name="EDIT_AGAIN" method="POST" action="edit.php">
         <input type="hidden" name="file" value="<?php echo htmlspecialchars($target_filepath); ?>">
         <input name="edit_again" type="submit" class="submit-large" value="Edit This File Again">
     </form>
-    <form style='display:inline;' name="RETURN_TO_LIST" method="POST" action="configeditor.php">
+    <form class="save-form" name="RETURN_TO_LIST" method="POST" action="configeditor.php">
         <input name="return_list" type="submit" class="submit-large" value="Return to File List">
     </form>
 </div>

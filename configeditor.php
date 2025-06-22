@@ -6,17 +6,16 @@ include("common.inc");
 
 $SUPERMON_DIR = "/var/www/html/supermon-ng";
 
-print "<html>\n<body style=\"background-color:black;\">\n";
-print "<p style=font-size:16px;>";
+print "<html>\n<head>\n<link type='text/css' rel='stylesheet' href='supermon-ng.css'>\n</head>\n<body class=\"configeditor-page\">\n";
+print "<p class=\"configeditor-text\">";
 
 if (($_SESSION['sm61loggedin'] === true) && (get_user_auth("CFGEDUSER"))) {
 
     print "<form name=REFRESH method=POST action='configeditor.php'>";
-    print "<link type='text/css' rel='stylesheet' href='supermon-ng.css'>";
     print "<h2> <i>$CALL</i> - AllStar Link / IRLP / EchoLink - Configuration File Editor </h2>";
     print "<p><b>Please use caution when editing files, misconfiguration can cause problems!</b></p><br>";
     print "<input name=refresh tabindex=50 class=submit-large TYPE=SUBMIT Value=Refresh> ";
-    print "   <input type=\"button\" class=\"submit-large\" Value=\"Close Window\" onclick=\"self.close()\"></form>";
+    print "   <input type=\"button\" class=\"submit-large\" Value=\"Close Window\" onclick=\"self.close()\"></form>";
 
     print "<form action=edit.php method=post name=select>\n";
     print "<select name=file class=submit-large>\n";
@@ -111,7 +110,7 @@ if (($_SESSION['sm61loggedin'] === true) && (get_user_auth("CFGEDUSER"))) {
         }
     }
 
-    print "</select>   <input name=Submit type=submit class=submit-large value=\" Edit File \"></form>\n";
+    print "</select>   <input name=Submit type=submit class=submit-large value=\" Edit File \"></form>\n";
 
 } else {
     print "<br><h3>ERROR: You Must login to use the 'Configuration Editor' tool!</h3>";

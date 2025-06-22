@@ -14,32 +14,11 @@ if (!get_user_auth("GPIOUSER")) {
 ?>
 <html>
 <head>
-    <link type="text/css" rel="stylesheet" href="supermon.css">
-    <style>
-        /* Override default styles for better readability on black background */
-        select {
-            background-color: #333; /* Darker grey for select background */
-            color: white;
-            border: 1px solid #555;
-        }
-        input[type="button"], input[type="submit"] {
-             /* Keep existing styles if defined in supermon.css or add basic ones */
-            background-color: #555; /* Grey background for buttons */
-            color: white;
-            border: 1px solid #777;
-            padding: 5px 10px; /* Add some padding */
-        }
-         input[type="button"]:hover, input[type="submit"]:hover {
-            background-color: #777; /* Lighter grey on hover */
-         }
-         pre {
-            color: white; /* Ensure preformatted text is white */
-         }
-    </style>
+    <link type="text/css" rel="stylesheet" href="supermon-ng.css">
 </head>
-<body style="background-color:black; color:white;">
+<body class="gpio-page">
     <center>
-        <p style="font-size:1.5em; margin-top:0px; margin-bottom:0px;"><b>RPi GPIO Status</b></p>
+        <p class="gpio-title"><b>RPi GPIO Status</b></p>
 
         <?php
         if ((isset($_GET["direction"])) && ($_GET["direction"] != "")) {
@@ -49,7 +28,7 @@ if (!get_user_auth("GPIOUSER")) {
             $Pullup    = $_GET["pullup"];
 
             // Ensure output message is white
-            print "<p style=\"margin-left:40px;margin-bottom:0;margin-top:0px; color:white;\">Direction - <b>$Direction</b>     Bit - <b>$Bit</b>    Pullup - <b>$Pullup</b>    State - <b>$State</b></p>";
+            print "<p class=\"gpio-status\">Direction - <b>$Direction</b>     Bit - <b>$Bit</b>    Pullup - <b>$Pullup</b>    State - <b>$State</b></p>";
 
             if ($Direction == "In") {
                 // Sanitize input before using in exec is highly recommended for security
@@ -71,21 +50,21 @@ if (!get_user_auth("GPIOUSER")) {
         ?>
 
         <form action="pi-gpio.php" method="get">
-            <table cellspacing="10" style="margin-top:0; margin-bottom:0; font-size:22px;">
+            <table class="gpio-table">
                 <tr>
                     <td valign="top">
                         <b>Select Input or Output</b><br><br>
-                        <input type="radio" style="transform: scale(2);" name="direction" value="In" checked> Input
-                        <input type="radio" style="transform: scale(2); margin-left:15px;" name="direction" value="Out"> Output
+                        <input type="radio" class="gpio-radio" name="direction" value="In" checked> Input
+                        <input type="radio" class="gpio-radio gpio-radio-spaced" name="direction" value="Out"> Output
                     </td>
                     <td valign="top">
-                           <b>Pullup</b><br><br>
-                        <input type="radio" style="transform: scale(2);" name="pullup" value="No" checked> No
-                        <input type="radio" style="transform: scale(2); margin-left:15px;" name="pullup" value="Yes"> Yes
+                           <b>Pullup</b><br><br>
+                        <input type="radio" class="gpio-radio" name="pullup" value="No" checked> No
+                        <input type="radio" class="gpio-radio gpio-radio-spaced" name="pullup" value="Yes"> Yes
                     </td>
                     <td valign="top">
                         <b>Select Bit</b><br><br>
-                        <select name="bit" style="font-size:22px; margin-left:15px;">
+                        <select name="bit" class="gpio-select">
                             <option value="0"> 0</option>
                             <option value="1"> 1</option>
                             <option value="2"> 2</option>
@@ -106,22 +85,22 @@ if (!get_user_auth("GPIOUSER")) {
                         </select>
                     </td>
                     <td valign="top">
-                           <b>State</b><br><br>
-                        <input type="radio" style="transform: scale(2);" name="state" value="0" checked> 0
-                        <input type="radio" style="transform: scale(2); margin-left:15px;" name="state" value="1"> 1
+                           <b>State</b><br><br>
+                        <input type="radio" class="gpio-radio" name="state" value="0" checked> 0
+                        <input type="radio" class="gpio-radio gpio-radio-spaced" name="state" value="1"> 1
                     </td>
                 </tr>
                 <tr>
                     <td colspan="4" align="center">
                         <input type="submit" class="submit-large" value="Update">
-                         
+                         
                         <input type="button" class="submit-large" Value="Close Window" onclick="self.close()">
                     </td>
                 </tr>
             </table>
         </form>
 
-        <div style="font-size: 16px; margin-top:0;">
+        <div class="gpio-output">
             <?php
             // Execute the command and capture output
             // Using escapeshellcmd for security although 'gpio readall' is static

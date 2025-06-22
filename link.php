@@ -279,17 +279,10 @@ $(document).ready(function() {
 });
 </script>
 
-<style>
-input.submit, input.submit-large {
-    padding: 5px 10px;
-    margin: 2px;
-}
-</style>
-
 <?php
 if (($_SESSION['sm61loggedin'] ?? false) === true) {
 ?>
-    <div style="border-radius: 10px;" id="connect_form">
+    <div id="connect_form">
     <center>
 <?php
     if (count($nodes) > 0) {
@@ -305,17 +298,17 @@ if (($_SESSION['sm61loggedin'] ?? false) === true) {
         }
 
         if (get_user_auth("PERMUSER")) {
-            $perm_input_style = $isDetailed ? "margin-top:10px;font-size:16px;" : "font-size:22px; margin-top:15px;";
-            $perm_label_style = $isDetailed ? "font-size:16px;" : "font-size:22px;";
+            $perm_input_class = $isDetailed ? "perm-input-detailed" : "perm-input-large";
+            $perm_label_class = $isDetailed ? "perm-label-detailed" : "perm-label-large";
             if (!$isDetailed) print "<br>";
-            print "<input style=\"$perm_input_style\" type=\"text\" id=\"node\">";
-            print "<label style=\"$perm_label_style\"> Perm <input class=\"perm\" type=\"checkbox\"> </label><br>";
+            print "<input class=\"$perm_input_class\" type=\"text\" id=\"node\">";
+            print "<label class=\"$perm_label_class\"> Perm <input class=\"perm\" type=\"checkbox\"> </label><br>";
         } else {
              print "<input type=\"text\" id=\"node\" class=\"$TEXT_SIZE\" placeholder=\"Node to connect/DTMF\">";
              if (!$isDetailed) print "<br>";
         }
 
-        print_auth_button("CONNECTUSER", $SUBMIT_SIZE, "Connect", "connect", "style=\"margin-top:2px;\"");
+        print_auth_button("CONNECTUSER", $SUBMIT_SIZE, "Connect", "connect", "class=\"button-margin-top\"");
         print_auth_button("DISCUSER", $SUBMIT_SIZE, "Disconnect", "disconnect");
         print_auth_button("MONUSER", $SUBMIT_SIZE, "Monitor", "monitor");
         print_auth_button("LMONUSER", $SUBMIT_SIZE, "Local Monitor", "localmonitor");
@@ -331,7 +324,7 @@ if (($_SESSION['sm61loggedin'] ?? false) === true) {
         }
 
         print_auth_button("CTRLUSER", $SUBMITTER, "Control", "controlpanel");
-        print_auth_button("FAVUSER", $SUBMIT_SIZE, "Favorites", "favoritespanel", "style=\"margin-bottom:5px;\"");
+        print_auth_button("FAVUSER", $SUBMIT_SIZE, "Favorites", "favoritespanel", "class=\"button-margin-bottom\"");
 ?>
         <script>
             function OpenActiveNodes() { window.open('http://stats.allstarlink.org'); }
@@ -342,15 +335,15 @@ if (($_SESSION['sm61loggedin'] ?? false) === true) {
         </script>
 <?php
         if ($isDetailed) {
-            echo "<hr class='button-separator' style='border: none; height: 1px; background-color: white; margin: 10px 0;'>";
-            print_auth_button("CFGEDUSER", $SUBMITTER, "Configuration Editor", "", "style=\"margin-top:5px;\"", "OpenConfigEditor()");
+            echo "<hr class='button-separator'>";
+            print_auth_button("CFGEDUSER", $SUBMITTER, "Configuration Editor", "", "class=\"button-margin-top\"", "OpenConfigEditor()");
             print_auth_button("ASTRELUSER", $SUBMITTER, "Iax/Rpt/DP RELOAD", "astreload");
             print_auth_button("ASTSTRUSER", $SUBMITTER, "AST START", "astaron");
             print_auth_button("ASTSTPUSER", $SUBMITTER, "AST STOP", "astaroff");
             print_auth_button("FSTRESUSER", $SUBMITTER, "RESTART", "fastrestart");
-            print_auth_button("RBTUSER", $SUBMITTER, "Server REBOOT", "reboot", "style=\"margin-bottom:1px;\"");
+            print_auth_button("RBTUSER", $SUBMITTER, "Server REBOOT", "reboot", "class=\"button-margin-bottom\"");
             print "<br>";
-            print_auth_button("HWTOUSER", "submit", "AllStar How To's", "", "style=\"margin-top:1px;\"", "OpenHelp()");
+            print_auth_button("HWTOUSER", "submit", "AllStar How To's", "", "class=\"button-margin-top\"", "OpenHelp()");
             print_auth_button("WIKIUSER", "submit", "AllStar Wiki", "", "", "OpenWiki()");
             print_auth_button("CSTATUSER", "submit", "CPU Status", "cpustats");
             print_auth_button("ASTATUSER", "submit", "AllStar Status", "stats");
@@ -359,12 +352,12 @@ if (($_SESSION['sm61loggedin'] ?? false) === true) {
             }
             print_auth_button("NINFUSER", "submit", "Node Info", "astnodes");
             print_auth_button("ACTNUSER", "submit", "Active Nodes", "", "", "OpenActiveNodes()");
-            print_auth_button("ALLNUSER", "submit", "All Nodes", "", "style=\"margin-bottom:1px;\"", "OpenAllNodes()");
+            print_auth_button("ALLNUSER", "submit", "All Nodes", "", "class=\"button-margin-bottom\"", "OpenAllNodes()");
             if (!empty($DATABASE_TXT)) {
-                 print_auth_button("DBTUSER", "submit", "Database", "database", "style=\"margin-bottom:1px;\"");
+                 print_auth_button("DBTUSER", "submit", "Database", "database", "class=\"button-margin-bottom\"");
             }
             print "<br>";
-            print_auth_button("GPIOUSER", $SUBMITTER, "GPIO", "openpigpio", "style=\"margin-top:1px;\"");
+            print_auth_button("GPIOUSER", $SUBMITTER, "GPIO", "openpigpio", "class=\"button-margin-top\"");
             print_auth_button("LLOGUSER", "submit", "Linux Log", "linuxlog");
             print_auth_button("ASTLUSER", "submit", "AST Log", "astlog");
             if ($IRLPLOG ?? false) {
@@ -374,7 +367,7 @@ if (($_SESSION['sm61loggedin'] ?? false) === true) {
             print_auth_button("WERRUSER", "submit", "Web Error Log", "weberrlog");
         }
 
-        print_auth_button("BANUSER", $SUBMIT_SIZE, "Access List", "openbanallow", "style=\"margin-bottom:10px;\"");
+        print_auth_button("BANUSER", $SUBMIT_SIZE, "Access List", "openbanallow", "class=\"button-margin-bottom\"");
 ?>
     </center>
     </div>
@@ -384,19 +377,19 @@ if (($_SESSION['sm61loggedin'] ?? false) === true) {
 
 echo "<div id=\"list_link\"></div>";
 
-print "<p style=\"margin-bottom:5px;margin-top:5px;\">";
+print "<p class=\"button-container\">";
 
 print "<input type=\"button\" class=\"$SUBMIT_SIZE\" Value=\"Display Configuration\" onclick=\"window.open('display-config.php','DisplayConfiguration','status=no,location=no,toolbar=no,width=500,height=600,left=100,top=100')\">";
 
 if (!empty($DVM_URL)) {
     $dvm_url_safe = htmlspecialchars($DVM_URL);
-    print "  <input type=\"button\" class=\"$SUBMIT_SIZE\" Value=\"Digital Dashboard\" onclick=\"window.open('{$dvm_url_safe}','DigitalDashboard','status=no,location=no,toolbar=no,width=960,height=850,left=100,top=100')\">";
+    print "  <input type=\"button\" class=\"$SUBMIT_SIZE\" Value=\"Digital Dashboard\" onclick=\"window.open('{$dvm_url_safe}','DigitalDashboard','status=no,location=no,toolbar=no,width=960,height=850,left=100,top=100')\">";
 }
 
 if (($_SESSION['sm61loggedin'] ?? false) && get_user_auth("SYSINFUSER")) {
     $WIDTH = $isDetailed ? 950 : 650;
     $HEIGHT = $isDetailed ? 550 : 750;
-    print "  <input type=\"button\" class=\"$SUBMITTER\" Value=\"System Info\" onclick=\"window.open('system-info.php','SystemInfo','status=no,location=no,toolbar=yes,width=$WIDTH,height=$HEIGHT,left=100,top=100')\">";
+    print "  <input type=\"button\" class=\"$SUBMITTER\" Value=\"System Info\" onclick=\"window.open('system-info.php','SystemInfo','status=no,location=no,toolbar=yes,width=$WIDTH,height=$HEIGHT,left=100,top=100')\">";
 }
 print "</p>";
 
@@ -428,7 +421,7 @@ foreach($nodes as $node) {
 
     if ($is_private_or_hidden) {
         $base_title_text = "Private Node";
-        if (isset(${$custom_node_url_base})) {
+        if (isset($${custom_node_url_base})) {
             $custom_url_for_node = ${$custom_node_url_base};
              if (substr($custom_url_for_node, -1) == ">") $custom_url_for_node = substr_replace($custom_url_for_node, "", -1);
             $node_link_html = "<a href=\"" . htmlspecialchars($custom_url_for_node) . "\" " . (strpos($node_info_display, "target=\"_blank\"") ? "target=\"_blank\"" : "") . ">$node_display_name</a>";
@@ -437,14 +430,14 @@ foreach($nodes as $node) {
         $allstar_node_url = ($node < 2000) ? "" : "http://stats.allstarlink.org/nodeinfo.cgi?node=" . urlencode($node);
         if (!empty($allstar_node_url)) {
             $node_link_html = "<a href=\"" . htmlspecialchars($allstar_node_url) . "\" target=\"_blank\">$node_display_name</a>";
-        } elseif (isset(${$custom_node_url_base})) {
+        } elseif (isset($${custom_node_url_base})) {
             $custom_url_for_node = ${$custom_node_url_base};
             if (substr($custom_url_for_node, -1) == ">") $custom_url_for_node = substr_replace($custom_url_for_node, "", -1);
             $node_link_html = "<a href=\"" . htmlspecialchars($custom_url_for_node) . "\" " . (strpos($node_info_display, "target=\"_blank\"") ? "target=\"_blank\"" : "") . ">$node_display_name</a>";
         }
     }
 
-    $title = "  $base_title_text $node_link_html => $node_info_display  ";
+    $title = "  $base_title_text $node_link_html => $node_info_display  ";
     
     $links_array = [];
     if (!$is_private_or_hidden) {
@@ -469,7 +462,7 @@ foreach($nodes as $node) {
     }
 
     if (!empty($links_array)) {
-        $title .= "<br>" . implode("  ", $links_array);
+        $title .= "<br>" . implode("  ", $links_array);
     }
 
     $colspan_waiting = $isDetailed ? 7 : 5;

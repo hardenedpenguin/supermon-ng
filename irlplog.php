@@ -11,18 +11,11 @@ $is_logged_in_and_authorized = (isset($_SESSION['sm61loggedin']) && $_SESSION['s
 <head>
 <title>IRLP messages Log</title>
 <link rel="stylesheet" type="text/css" href="supermon-ng.css">
-<style>
-    pre {
-        font-size: 16px;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-    }
-</style>
 </head>
 <body>
 
 <?php if ($is_logged_in_and_authorized): ?>
-    <pre>
+    <pre class="log-viewer-pre">
 <?php
     $file = $IRLP_LOG;
     echo "File: " . htmlspecialchars($file) . "\n";
@@ -36,7 +29,7 @@ $is_logged_in_and_authorized = (isset($_SESSION['sm61loggedin']) && $_SESSION['s
 ?>
     </pre>
 <?php else: ?>
-    <p class="error-message">ERROR: You Must login to use this function!</p>
+    <p class="log-viewer-error">ERROR: You Must login to use this function!</p>
 <?php endif; ?>
 
 </body>

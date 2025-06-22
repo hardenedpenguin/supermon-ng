@@ -51,22 +51,17 @@ if (file_exists($file) && is_readable($file)) {
 <head>
     <title>Edit File: <?php echo htmlspecialchars(basename($file)); ?></title>
     <link type='text/css' rel='stylesheet' href='supermon-ng.css'>
-    <style>
-        body { background-color: black; color: white; }
-        p, h3 { font-size: 16px; }
-        .container { padding: 20px; }
-    </style>
 </head>
-<body>
+<body class="edit-page">
 <div class="container">
 
     <h2>Editing: <?php echo htmlspecialchars($file); ?></h2>
 
     <?php if (strpos($data, 'ERROR:') === 0): ?>
-        <p style="color: red;"><?php echo htmlspecialchars($data); ?></p>
+        <p class="edit-error"><?php echo htmlspecialchars($data); ?></p>
     <?php else: ?>
-        <form style="display:inline;" action="save.php" method="post" name="savefile" target="_self">
-            <textarea name="edit" style="font-size:14px; width:100%; height:75vh; background-color:#1e1e1e; color:#d4d4d4; border:1px solid #555; box-sizing: border-box;" wrap="off"><?php echo htmlspecialchars($data); ?></textarea>
+        <form class="edit-form" action="save.php" method="post" name="savefile" target="_self">
+            <textarea name="edit" class="edit-textarea" wrap="off"><?php echo htmlspecialchars($data); ?></textarea>
             <input name="filename" type="hidden" value="<?php echo htmlspecialchars($file); ?>">
             <br><br>
             <?php if (!$is_view_only): ?>
@@ -77,7 +72,7 @@ if (file_exists($file) && is_readable($file)) {
         </form>
     <?php endif; ?>
 
-    <form style='display:inline;' name="REFRESH" method="POST" action="configeditor.php">
+    <form class="edit-form" name="REFRESH" method="POST" action="configeditor.php">
         <input name="return" tabindex="50" type="submit" class="submit-large" value="Return to File List">
     </form>
 

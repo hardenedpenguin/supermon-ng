@@ -375,9 +375,9 @@ if (isset($LOGO_NAME, $LOGO_SIZE, $LOGO_POSITION_RIGHT, $LOGO_POSITION_TOP)) {
 
 <div class="clearer"></div>
 
-<div style="position:absolute;left:40%;top:35%;display:none;" id="login">
-    <form style="border-style:solid;border-radius:5px;" id="myform" action="" method="post">
-        <fieldset style="width:200px; height:240px; background-color:black;"> 
+<div style="display:none;" id="login">
+    <form id="myform" action="" method="post">
+        <fieldset> 
             <label class="exit" style="float:right;clear:both;"><input type="radio" onclick="hideLoginUi()"/><span><b>X</b></span></label>
             <p style="font-size:1.5em;color:white;margin-top:1em;margin-bottom:0.1em;text-align:center;"><b>Supermon-ng</b></p>
             <p style="font-size:1.2em;color:white;margin-top:0;margin-bottom:.5em;text-align:center;"><b>Manager Log in</b></p>

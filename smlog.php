@@ -9,12 +9,7 @@ $is_authorized = (isset($_SESSION['sm61loggedin']) && $_SESSION['sm61loggedin'] 
 <html>
 <head>
 <title>Supermon-ng Login/out Log</title>
-<style>
-    body { font-family: sans-serif; }
-    .log-file-info, .log-entry, .error-message { font-size: 14px; }
-    .log-title { font-size: 20px; font-weight: bold; text-decoration: underline; text-align: center; }
-    .error-message h3 { margin-top: 0; margin-bottom: 0; }
-</style>
+<link type="text/css" rel="stylesheet" href="supermon-ng.css">
 </head>
 <body>
 
@@ -22,9 +17,9 @@ $is_authorized = (isset($_SESSION['sm61loggedin']) && $_SESSION['sm61loggedin'] 
     <?php
     $log_file_path = $SMLOGNAME; 
     ?>
-    <p class="log-file-info">File: <?php echo htmlspecialchars($log_file_path); ?></p>
+    <p class="log-viewer-info">File: <?php echo htmlspecialchars($log_file_path); ?></p>
     
-    <div class="log-title">
+    <div class="log-viewer-title">
         <p>Supermon-ng Login/Out LOG</p>
     </div>
 
@@ -32,19 +27,19 @@ $is_authorized = (isset($_SESSION['sm61loggedin']) && $_SESSION['sm61loggedin'] 
     $log_content_array = @file($log_file_path);
 
     if ($log_content_array === false): ?>
-        <p class="error-message">Error: Could not read the log file (<?php echo htmlspecialchars($log_file_path); ?>) or it is empty.</p>
+        <p class="log-viewer-error">Error: Could not read the log file (<?php echo htmlspecialchars($log_file_path); ?>) or it is empty.</p>
     <?php else:
         $reversed_log_content = array_reverse($log_content_array);
         foreach ($reversed_log_content as $line):
     ?>
-            <p class="log-entry"><?php echo nl2br(htmlspecialchars(rtrim($line, "\r\n"))); ?></p>
+            <p class="log-viewer-entry"><?php echo nl2br(htmlspecialchars(rtrim($line, "\r\n"))); ?></p>
     <?php 
         endforeach; 
     endif; 
     ?>
 
 <?php else: ?>
-    <p class="error-message">
+    <p class="log-viewer-error">
         <br><h3>ERROR: You Must login to use this function!</h3>
     </p>
 <?php endif; ?>
