@@ -176,10 +176,10 @@ install_application() {
             *) log_info "Update cancelled."; return 0 ;;
         esac
 
-        log_info "Syncing core application files..."
+        log_info "Syncing core application files (deleting any obsolete files)..."
         rsync -a --delete --exclude='user_files/' --exclude='.htaccess' --exclude='.htpasswd' --exclude='supermon-ng.css' "${tmp_extract_path}/" "${app_path}/" || { log_error "rsync failed."; return 1; }
         
-        log_info "Syncing updatable scripts in user_files/sbin/..."
+        log_info "Syncing updatable scripts in user_files/sbin/ (deleting any obsolete scripts)..."
         mkdir -p "${app_path}/user_files/sbin"
         rsync -a --delete --exclude='node_info.ini' "${tmp_extract_path}/user_files/sbin/" "${app_path}/user_files/sbin/" || { log_error "sbin rsync failed."; return 1; }
         
