@@ -278,22 +278,28 @@ a:focus,
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
 
 #menu li {
   margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
 }
 
 #menu li a,
 #menu li a:link,
 #menu li a:visited {
-  display: block;
+  display: inline-block;
   color: white;
   text-align: center;
   padding: 8px 12px;
   text-decoration: none;
   border-radius: 5px;
   transition: background-color 0.3s ease;
+  margin: 2px;
 }
 
 #menu li a:hover {
@@ -302,6 +308,7 @@ a:focus,
 
 #menu li.dropdown {
   position: relative;
+  display: block;
 }
 
 #menu .dropdown-content {
