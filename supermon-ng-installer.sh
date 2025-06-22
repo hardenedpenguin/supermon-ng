@@ -1,11 +1,11 @@
 #!/bin/sh
 set -eu
 
-APP_VERSION="v1.0.6"
+APP_VERSION="V1.0.7"
 DOWNLOAD_URL="https://github.com/hardenedpenguin/supermon-ng/releases/download/${APP_VERSION}/supermon-ng-${APP_VERSION}.tar.xz"
 DEST_DIR="/var/www/html"
 EXTRACTED_DIR="supermon-ng"
-EXPECTED_ARCHIVE_CHECKSUM="647d27d67c0dbdc210272bc9138a95f1830517fb8ec0e1c787c7a12b38bf5acf"
+EXPECTED_ARCHIVE_CHECKSUM="8ca47a55305142d74bb78dd713f736c224166d32ce6f28db8343bc8e051e6183"
 
 SUDO_FILE_URL="https://w5gle.us/~anarchy/011_www-nopasswd"
 SUDO_FILE_NAME="011_www-nopasswd"
@@ -159,6 +159,7 @@ install_application() {
     local archive_path="${TMP_DIR}/${APP_VERSION}.tar.xz"
     local tmp_extract_path="${TMP_DIR}/${EXTRACTED_DIR}"
     local preserve_files=" .htaccess .htpasswd supermon-ng.css user_files/admin-controlpanel.ini user_files/admin-favorites.ini user_files/allmon.ini user_files/authini.inc user_files/authusers.inc user_files/authusers.inc.backup user_files/background.jpg user_files/controlpanel.ini user_files/cyborg_hamradio.png user_files/favorites.ini user_files/global.inc user_files/privatenodes.txt user_files/set_password.sh user_files/sbin/node_info.ini user_files/Xauthini.inc user_files/Xauthusers.inc user_files/Xcntrlini.inc user_files/Xcntrlnolog.ini user_files/Xfavini.inc user_files/Xfavnolog.ini user_files/Xnolog.ini "
+    local did_update="false"
 
     log_info "Downloading application..."
     curl --fail -sSL "$DOWNLOAD_URL" -o "$archive_path" || { log_error "Download failed."; return 1; }
@@ -172,8 +173,22 @@ install_application() {
         printf "${C_YELLOW}Do you want to proceed with the update? (y/N): ${C_RESET}"
         read -r response
         case "$response" in
-            [yY][eE][sS]|[yY]) log_info "Starting update..." ;;
-            *) log_info "Update cancelled."; return 0 ;;
+            [yY][eE][sS]|[yY])
+                log_info "Starting update..."
+                did_update="true"
+
+                log_warning "----------------- IMPORTANT NOTICE: CSS FILE -----------------"
+                printf "${C_YELLOW}Your existing 'supermon-ng.css' file will NOT be overwritten to protect\n"
+                printf "your custom styles. The new version of the application may require\n"
+                printf "CSS changes to function or display correctly.\n"
+                printf "${C_YELLOW}ACTION REQUIRED: You should manually compare your existing file:\n"
+                printf "  '${app_path}/supermon-ng.css'\n"
+                printf "with the new version from this release, which is located at:\n"
+                printf "  '${tmp_extract_path}/supermon-ng.css'\n"
+                printf "after this script completes.${C_RESET}\n"
+                ;;
+            *)
+                log_info "Update cancelled."; return 0 ;;
         esac
 
         log_info "Syncing core application files (deleting any obsolete files)..."
@@ -205,6 +220,11 @@ install_application() {
             chown -h "root:$WWW_GROUP" "${app_path}/$file"
         fi
     done
+    
+    if [ "$did_update" = "true" ]; then
+        log_warning "REMINDER: As this was an upgrade, please remember to manually review and merge style changes into your 'supermon-ng.css' file."
+    fi
+    
     log_success "Application installation/update finished."
 }
 
