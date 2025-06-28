@@ -42,6 +42,15 @@ sudo sed -i 's/admin/username/g' /var/www/html/supermon-ng/user_files/authusers.
 ```
 If you are using the sed method, please ensure you replace username with the username you have created for your supermon-ng login.
 
+## Themes
+
+You can find a few themes I have thrown together to speed up customizing your install
+
+```bash
+https://w5gle.us/~anarchy/supermon-ng_themes/
+```
+Once you download the file you must copy it to /var/www/html/supermon-ng/supermon-ng.css, make sure you do not leave it named as it is downloaded!
+
 ## Requirements
 
 - Debian-based Linux system
