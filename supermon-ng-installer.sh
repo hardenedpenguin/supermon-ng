@@ -61,7 +61,7 @@ verify_checksum() {
 
 check_dependencies() {
     log_info "Checking for required commands..."
-    for cmd in curl tar sha256sum visudo id getent rsync; do
+    for cmd in curl tar sha256sum visudo id getent rsync setfacl; do
         if ! command -v "$cmd" >/dev/null 2>&1; then
             log_error "Required command '$cmd' not found. Please install it and try again."
             exit 1
@@ -106,7 +106,7 @@ download_and_install_component() {
 
 install_system_dependencies() {
     log_info "--- Checking and Installing System Dependencies (for Debian/Ubuntu) ---"
-    local deps="apache2 php libapache2-mod-php libcgi-session-perl bc"
+    local deps="apache2 php libapache2-mod-php libcgi-session-perl bc acl"
     if ! command -v apt-get >/dev/null 2>&1; then
         log_warning "apt-get not found. Please ensure these packages are installed: $deps"
         return 0
@@ -205,7 +205,6 @@ install_application() {
             fi
         done
     else
-        install_system_dependencies || return 1
         log_info "Performing a fresh install."
         log_info "Extracting archive to final destination $DEST_DIR..."
         tar -xaf "$archive_path" -C "$DEST_DIR" || { log_error "Extraction failed."; return 1; }
@@ -253,6 +252,40 @@ install_cron_job() {
     log_warning "The 'ast_node_status_update.py' cron job is disabled by default."
 }
 
+configure_log_acls() {
+    local log_dir="/var/log/apache2"
+    log_info "--- Configuring Apache Log Permissions ---"
+
+    if [ ! -d "$log_dir" ]; then
+        log_warning "Apache log directory '$log_dir' not found. Skipping ACL configuration."
+        return 0
+    fi
+
+    # Check if ACL is already correctly set for the www-data group
+    local acl_set
+    acl_set=$(getfacl -p "$log_dir" 2>/dev/null | grep -E "^group:${WWW_GROUP}:r-x$")
+    local default_acl_set
+    default_acl_set=$(getfacl -pd "$log_dir" 2>/dev/null | grep -E "^default:group:${WWW_GROUP}:r-x$")
+
+    if [ -n "$acl_set" ] && [ -n "$default_acl_set" ]; then
+        log_info "ACL for '${WWW_GROUP}' on '${log_dir}' is already configured."
+        return 0
+    fi
+
+    log_info "Setting ACL for group '${WWW_GROUP}' to have read access on '${log_dir}'..."
+    if ! setfacl -R -m "g:${WWW_GROUP}:rX" "$log_dir"; then
+        log_error "Failed to set recursive ACL on $log_dir."
+        log_warning "This can happen if the filesystem does not support ACLs. You may need to remount it with the 'acl' option."
+        return 1
+    fi
+    if ! setfacl -R -d -m "g:${WWW_GROUP}:rX" "$log_dir"; then
+        log_error "Failed to set default ACL on $log_dir."
+        return 1
+    fi
+
+    log_success "ACL for Apache logs configured successfully."
+}
+
 main() {
     if [ "$(id -u)" -ne 0 ]; then log_error "This script must be run as root."; exit 1; fi
     check_dependencies
@@ -260,10 +293,12 @@ main() {
     mkdir -p "$DEST_DIR"
     TMP_DIR=$(mktemp -d)
     
+    install_system_dependencies || exit 1
     install_application || exit 1
     install_sudo_config || exit 1
     install_editor_script || exit 1
     install_cron_job || exit 1
+    configure_log_acls || exit 1
     
     log_success "Supermon-NG installation/update script finished successfully."
 }
