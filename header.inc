@@ -165,7 +165,7 @@ $(document).ready(function() {
                             Swal.fire({
                                 icon: 'success',
                                 title: 'Success!',
-                                text: result,
+                                html: result,
                                 timer: 3000,
                                 timerProgressBar: true
                             });
@@ -206,7 +206,7 @@ $(document).ready(function() {
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
-                    text: result,
+                    html: result,
                     timer: 3000,
                     timerProgressBar: true
                 });
@@ -245,7 +245,7 @@ $(document).ready(function() {
                         Swal.fire({
                             icon: 'success',
                             title: 'Success!',
-                            text: result,
+                            html: result,
                             timer: 3000,
                             timerProgressBar: true
                         });
@@ -326,7 +326,7 @@ $(document).ready(function() {
                         Swal.fire({
                             icon: 'success',
                             title: 'Success!',
-                            text: result,
+                            html: result,
                             timer: 3000,
                             timerProgressBar: true
                         });
@@ -362,7 +362,7 @@ $(document).ready(function() {
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
-                    text: result,
+                    html: result,
                     timer: 3000,
                     timerProgressBar: true
                 });

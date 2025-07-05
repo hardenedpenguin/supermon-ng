@@ -108,7 +108,7 @@ if ($_SESSION['sm61loggedin'] === true) {
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
-                        text: data,
+                        html: data,
                         timer: 3000,
                         timerProgressBar: true
                     });

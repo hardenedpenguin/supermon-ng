@@ -75,7 +75,7 @@ $cpCommands = [
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
-                    text: data,
+                    html: data,
                     timer: 3000,
                     timerProgressBar: true
                 });
