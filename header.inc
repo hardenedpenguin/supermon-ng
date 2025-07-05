@@ -1,6 +1,7 @@
 <?php
 include("user_files/global.inc");
 include("common.inc");
+include("csrf.inc");
 
 if (!isset($SHOWPW)) {
 	$SHOWPW = true;
