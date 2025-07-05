@@ -132,7 +132,10 @@ if (isset($actions_config[$button])) {
         }
 
         // Build the AMI command
-        $cmd = "ilink $localnode $remotenode $ilink";
+        $cmd = "rpt cmd $localnode *$ilink$remotenode";
+
+        // Debug logging
+        error_log("Supermon-ng Debug: Button=$button, LocalNode=$localnode, RemoteNode=$remotenode, ILink=$ilink, Command=$cmd");
 
         $result = SimpleAmiClient::command($fp, $cmd);
 
