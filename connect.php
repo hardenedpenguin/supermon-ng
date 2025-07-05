@@ -61,28 +61,34 @@ if (FALSE === SimpleAmiClient::login($fp, $config[$localnode]['user'], $config[$
     die("<h3 class='error-message'>ERROR: Could not login to Asterisk Manager for node $localnode.</h3>");
 }
 
+// Determine if this is a permanent connection based on perm parameter
+$is_permanent = ($perm_input === 'perm');
+
 $cmd = "";
 switch ($button) {
     case "connect":
-        $cmd = "rpt cmd $localnode *1$remotenode";
+        $cmd = $is_permanent ? "ilink $localnode $remotenode 13" : "ilink $localnode $remotenode 3";
         break;
     case "monitor":
-        $cmd = "rpt cmd $localnode *2$remotenode";
+        $cmd = $is_permanent ? "ilink $localnode $remotenode 12" : "ilink $localnode $remotenode 2";
         break;
     case "permanent":
-        $cmd = "rpt cmd $localnode *3$remotenode";
+        $cmd = "ilink $localnode $remotenode 13"; // Always permanent
         break;
     case "localmonitor":
-        $cmd = "rpt cmd $localnode *4$remotenode";
+        $cmd = $is_permanent ? "ilink $localnode $remotenode 18" : "ilink $localnode $remotenode 8";
         break;
     case "disconnect":
-        $cmd = "rpt cmd $localnode *0$remotenode";
+        $cmd = "ilink $localnode $remotenode 11";
         break;
     default:
         die("<h3 class='error-message'>ERROR: Invalid button action.</h3>");
 }
 
 $result = SimpleAmiClient::command($fp, $cmd);
+
+// Log the command and result for debugging
+error_log("Supermon-ng: Button=$button, LocalNode=$localnode, RemoteNode=$remotenode, Command=$cmd, Result=" . ($result ?: 'FALSE'));
 
 if ($result === FALSE) {
     SimpleAmiClient::logoff($fp);
