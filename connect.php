@@ -37,7 +37,7 @@ if (!empty($perm_input) && !in_array($perm_input, ['perm', 'temp'])) {
     die("<h3 class='error-message'>ERROR: Invalid permission type.</h3>");
 }
 
-if (!in_array($button, ['connect', 'monitor', 'permanent', 'localmonitor'])) {
+if (!in_array($button, ['connect', 'monitor', 'permanent', 'localmonitor', 'disconnect'])) {
     die("<h3 class='error-message'>ERROR: Invalid button action.</h3>");
 }
 
@@ -74,6 +74,9 @@ switch ($button) {
         break;
     case "localmonitor":
         $cmd = "rpt cmd $localnode *4$remotenode";
+        break;
+    case "disconnect":
+        $cmd = "rpt cmd $localnode *0$remotenode";
         break;
     default:
         die("<h3 class='error-message'>ERROR: Invalid button action.</h3>");
