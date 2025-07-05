@@ -1,24 +1,11 @@
 // Main application functionality
 $(document).ready(function() {
-    console.log('App.js loaded and document ready');
-    console.log('alertify available:', typeof alertify !== 'undefined');
-    console.log('csrfToken available:', typeof csrfToken !== 'undefined');
-    
-    // Debug button availability
-    console.log('Connect button exists:', $('#connect').length);
-    console.log('Disconnect button exists:', $('#disconnect').length);
-    console.log('Monitor button exists:', $('#monitor').length);
-    console.log('Local Monitor button exists:', $('#localmonitor').length);
-    console.log('DTMF button exists:', $('#dtmf').length);
-    console.log('Favorites button exists:', $('#favoritespanel').length);
 
     // Elements are now conditionally rendered on the server side
     // No need to hide/show them with JavaScript
 
     // Only run logged-in functionality if user is logged in
-    console.log('Checking login status:', window.supermonConfig);
     if (window.supermonConfig && window.supermonConfig.isLoggedIn === true) {
-        console.log('User is logged in, setting up event handlers');
 
         $('#logoutlink').click(function(event) {
             event.preventDefault();
@@ -84,15 +71,11 @@ $(document).ready(function() {
             });
         }
 
-        console.log('Setting up connect/monitor button handlers');
         $(document).on('click', '#connect, #monitor, #permanent, #localmonitor', function() {
-            console.log('Connect/Monitor button clicked:', this.id);
             var button = this.id;
             var localNode = $('#localnode').val();
             var remoteNode = $('#node').val(); 
             var perm = $('input:checkbox:checked').val() || '';
-            
-            console.log('Values:', { button, localNode, remoteNode, perm });
             
             if (remoteNode.length == 0) {
                 alertify.error('Please enter the remote node number you want node ' + localNode + ' to connect with.');
@@ -122,15 +105,11 @@ $(document).ready(function() {
             });
         });
 
-        console.log('Setting up disconnect button handler');
         $(document).on('click', '#disconnect', function() {
-            console.log('Disconnect button clicked:', this.id);
             var button = this.id;
             var localNode = $('#localnode').val();
             var remoteNode = $('#node').val();
             var perm = $('input:checkbox:checked').val() || '';
-
-            console.log('Values:', { button, localNode, remoteNode, perm });
 
             if (remoteNode.length == 0) {
                 alertify.error('Please enter the remote node number you want node ' + localNode + ' to disconnect from.');
@@ -184,9 +163,7 @@ $(document).ready(function() {
             '#smlog': ["smlog.php", "SMLog{localnode}", 1200, 560]
         };
 
-        console.log('Setting up popup button handlers');
         $.each(popups, function(selector, params) {
-            console.log('Setting up handler for:', selector);
             $(document).on('click', selector, function(event) {
                 openPopupWindow.call(this, event, ...params); 
             });
@@ -235,11 +212,8 @@ $(document).ready(function() {
         });
 
         $(document).on('click', '#dtmf', function() {
-            console.log('DTMF button clicked:', this.id);
             var localnode = $('#localnode').val();
             var dtmf_command = $('#node').val();
-
-            console.log('DTMF Values:', { localnode, dtmf_command });
 
             if (dtmf_command.length == 0) {
                 alertify.error("Please enter a DTMF command to execute on node " + localnode + '.');
