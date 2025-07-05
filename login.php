@@ -1,6 +1,7 @@
 <?php
 include_once "session.inc";
 include_once "rate_limit.inc";
+include_once "security.inc";
 
 if (!isset($_SESSION['sm61loggedin'])) {
     $_SESSION['sm61loggedin'] = false;

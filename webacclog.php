@@ -1,6 +1,7 @@
 <?php
 
 include("session.inc");
+include("security.inc");
 include("user_files/global.inc");
 include("common.inc");
 include("authusers.php");

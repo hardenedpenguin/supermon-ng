@@ -66,6 +66,18 @@ $home = ($script_dir == '/' || $script_dir == '\\') ? '/' : $script_dir;
 header('X-Content-Type-Options: nosniff');
 header('X-Frame-Options: DENY');
 header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+
+// Content Security Policy
+$csp = "default-src 'self'; " .
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
+        "style-src 'self' 'unsafe-inline'; " .
+        "img-src 'self' data:; " .
+        "font-src 'self'; " .
+        "connect-src 'self'; " .
+        "frame-ancestors 'none';";
+header("Content-Security-Policy: " . $csp);
 
 ?>
 <!DOCTYPE html>
