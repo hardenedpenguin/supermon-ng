@@ -1,118 +1,134 @@
 <?php
 
 include("session.inc");
+include("user_files/global.inc");
+include("common.inc");
 include("authusers.php");
+include("authini.php");
 
-if ($_SESSION['sm61loggedin'] !== true) {
-    die("<br><h3>ERROR: You Must login to use the 'Pi GPIO' function!</h3>");
+if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("GPIOUSER"))) {
+    die ("<br><h3 class='error-message'>ERROR: You Must login to use the 'GPIO' function!</h3>");
 }
 
-if (!get_user_auth("GPIOUSER")) {
-    die("<br><h3>ERROR: You Must be authorized to use the 'Pi GPIO' function!</h3>");
+// Safe command execution function
+function safe_exec($command, $args = '') {
+    $escaped_command = escapeshellcmd($command);
+    if (!empty($args)) {
+        $escaped_args = escapeshellarg($args);
+        $full_command = "{$escaped_command} {$escaped_args}";
+    } else {
+        $full_command = $escaped_command;
+    }
+    
+    $output = [];
+    $return_var = 0;
+    exec($full_command . " 2>/dev/null", $output, $return_var);
+    
+    if ($return_var !== 0) {
+        return false;
+    }
+    
+    return implode("\n", $output);
+}
+
+// Validate GPIO pin number
+function validate_gpio_pin($pin) {
+    return is_numeric($pin) && $pin >= 0 && $pin <= 40;
+}
+
+// Validate GPIO state
+function validate_gpio_state($state) {
+    return in_array($state, ['0', '1', 'input', 'output', 'up', 'down']);
+}
+
+// Handle GPIO operations
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $Bit = $_POST['Bit'] ?? '';
+    $State = $_POST['State'] ?? '';
+    
+    // Validate inputs
+    if (!validate_gpio_pin($Bit)) {
+        die("Invalid GPIO pin number.");
+    }
+    
+    if (!validate_gpio_state($State)) {
+        die("Invalid GPIO state.");
+    }
+    
+    $escaped_bit = escapeshellarg($Bit);
+    $escaped_state = escapeshellarg($State);
+    
+    switch ($State) {
+        case 'input':
+            safe_exec("gpio", "mode {$escaped_bit} input");
+            break;
+        case 'up':
+            safe_exec("gpio", "mode {$escaped_bit} up");
+            break;
+        case 'down':
+            safe_exec("gpio", "mode {$escaped_bit} down");
+            break;
+        case 'output':
+            safe_exec("gpio", "mode {$escaped_bit} output");
+            break;
+        case '0':
+        case '1':
+            safe_exec("gpio", "write {$escaped_bit} {$escaped_state}");
+            break;
+    }
 }
 
 ?>
 <html>
 <head>
+    <title>Pi GPIO Control</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <link type="text/css" rel="stylesheet" href="supermon-ng.css">
 </head>
-<body class="gpio-page">
-    <center>
-        <p class="gpio-title"><b>RPi GPIO Status</b></p>
-
-        <?php
-        if ((isset($_GET["direction"])) && ($_GET["direction"] != "")) {
-            $Direction = $_GET["direction"];
-            $Bit       = $_GET["bit"];
-            $State     = $_GET["state"];
-            $Pullup    = $_GET["pullup"];
-
-            // Ensure output message is white
-            print "<p class=\"gpio-status\">Direction - <b>$Direction</b>     Bit - <b>$Bit</b>    Pullup - <b>$Pullup</b>    State - <b>$State</b></p>";
-
-            if ($Direction == "In") {
-                // Sanitize input before using in exec is highly recommended for security
-                // For simplicity here, assuming $Bit is validated by the dropdown
-                exec("gpio mode " . escapeshellarg($Bit) . " input");
-                if ($Pullup == "Yes") {
-                    exec("gpio mode " . escapeshellarg($Bit) . " up");
-                } else {
-                    exec("gpio mode " . escapeshellarg($Bit) . " down");
-                }
-            } else {
-                 // Sanitize input before using in exec
-                exec("gpio mode " . escapeshellarg($Bit) . " output");
-                // Sanitize State as well (should be 0 or 1)
-                $validState = ($State == '1') ? '1' : '0';
-                exec("gpio write " . escapeshellarg($Bit) . " " . $validState);
-            }
-        }
-        ?>
-
-        <form action="pi-gpio.php" method="get">
-            <table class="gpio-table">
-                <tr>
-                    <td valign="top">
-                        <b>Select Input or Output</b><br><br>
-                        <input type="radio" class="gpio-radio" name="direction" value="In" checked> Input
-                        <input type="radio" class="gpio-radio gpio-radio-spaced" name="direction" value="Out"> Output
-                    </td>
-                    <td valign="top">
-                           <b>Pullup</b><br><br>
-                        <input type="radio" class="gpio-radio" name="pullup" value="No" checked> No
-                        <input type="radio" class="gpio-radio gpio-radio-spaced" name="pullup" value="Yes"> Yes
-                    </td>
-                    <td valign="top">
-                        <b>Select Bit</b><br><br>
-                        <select name="bit" class="gpio-select">
-                            <option value="0"> 0</option>
-                            <option value="1"> 1</option>
-                            <option value="2"> 2</option>
-                            <option value="3"> 3</option>
-                            <option value="4"> 4</option>
-                            <option value="5"> 5</option>
-                            <option value="6"> 6</option>
-                            <option value="7"> 7</option>
-                            <option value="21">21</option>
-                            <option value="22">22</option>
-                            <option value="23">23</option>
-                            <option value="24">24</option>
-                            <option value="25">25</option>
-                            <option value="26">26</option>
-                            <option value="27">27</option>
-                            <option value="28">28</option>
-                            <option value="29">29</option>
-                        </select>
-                    </td>
-                    <td valign="top">
-                           <b>State</b><br><br>
-                        <input type="radio" class="gpio-radio" name="state" value="0" checked> 0
-                        <input type="radio" class="gpio-radio gpio-radio-spaced" name="state" value="1"> 1
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="4" align="center">
-                        <input type="submit" class="submit-large" value="Update">
-                         
-                        <input type="button" class="submit-large" Value="Close Window" onclick="self.close()">
-                    </td>
-                </tr>
-            </table>
-        </form>
-
-        <div class="gpio-output">
-            <?php
-            // Execute the command and capture output
-            // Using escapeshellcmd for security although 'gpio readall' is static
-            $command = 'gpio readall';
-            $data = shell_exec(escapeshellcmd($command));
-            // Ensure the output is HTML-safe and display within pre tags
-            print "<pre>" . htmlspecialchars($data, ENT_QUOTES, 'UTF-8') . "</pre>";
-            ?>
-        </div>
-
-        <input type="button" class="submit-large" Value="View GPIO howto" onclick="window.open('http://www.crompton.com/hamradio/hamvoip-howto/GPIO_how-to.pdf')">
-
-    </center>
+<body>
+    <p class="page-title">Pi GPIO Control</p>
+    <br>
+    
+    <form method="post" action="">
+        <table class="gpio-table">
+            <tr>
+                <td>GPIO Pin:</td>
+                <td><input type="number" name="Bit" min="0" max="40" required></td>
+            </tr>
+            <tr>
+                <td>State:</td>
+                <td>
+                    <select name="State" required>
+                        <option value="">Select State</option>
+                        <option value="input">Input</option>
+                        <option value="output">Output</option>
+                        <option value="up">Pull Up</option>
+                        <option value="down">Pull Down</option>
+                        <option value="0">Write 0</option>
+                        <option value="1">Write 1</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <input type="submit" value="Execute" class="gpio-button">
+                </td>
+            </tr>
+        </table>
+    </form>
+    
+    <br>
+    <h3>GPIO Status</h3>
+    <?php
+    // Safe GPIO status check
+    $command = "gpio readall";
+    $data = safe_exec($command);
+    
+    if ($data !== false) {
+        print "<pre>" . htmlspecialchars($data, ENT_QUOTES, 'UTF-8') . "</pre>";
+    } else {
+        print "<p class='error-message'>Error: Could not read GPIO status. Make sure gpio command is available.</p>";
+    }
+    ?>
 </body>
 </html>

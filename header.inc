@@ -63,12 +63,30 @@ if (preg_match("/voter\.php\?node=(\d+)$/", $_SERVER['REQUEST_URI'], $matches)) 
 $script_dir = dirname($_SERVER['SCRIPT_NAME']);
 $home = ($script_dir == '/' || $script_dir == '\\') ? '/' : $script_dir;
 
+// Set security headers
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+
+// Content Security Policy
+$csp = "default-src 'self'; " .
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
+        "style-src 'self' 'unsafe-inline'; " .
+        "img-src 'self' data:; " .
+        "font-src 'self'; " .
+        "connect-src 'self'; " .
+        "frame-ancestors 'none';";
+header("Content-Security-Policy: " . $csp);
+
 ?>
 <!DOCTYPE html>
 <html>
 <head>
 <title><?php echo htmlspecialchars($pageTitle); ?></title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="By hand with vi text editor">
 <meta name="description" content="AllStar node manager">
 <meta name="keywords" content="allstar monitor, app_rpt, asterisk">
@@ -86,8 +104,12 @@ $home = ($script_dir == '/' || $script_dir == '\\') ? '/' : $script_dir;
 
 <!-- Set JavaScript variables from PHP -->
 <script type="text/javascript">
-window.isLoggedIn = <?php echo json_encode($_SESSION['sm61loggedin'] === true); ?>;
-window.currentUser = <?php echo json_encode($_SESSION['user'] ?? ''); ?>;
+window.supermonConfig = {
+    isLoggedIn: <?php echo json_encode($_SESSION['sm61loggedin'] ?? false); ?>,
+    currentUser: <?php echo json_encode($_SESSION['user'] ?? ''); ?>,
+    csrfToken: <?php echo json_encode($_SESSION['csrf_token'] ?? ''); ?>,
+    homeUrl: <?php echo json_encode($home); ?>
+};
 </script>
 
 <!-- Load modern CSS -->
@@ -107,6 +129,15 @@ window.currentUser = <?php echo json_encode($_SESSION['user'] ?? ''); ?>;
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Supermon-ng">
 <link rel="apple-touch-icon" href="/favicon.ico">
+
+<?php
+// Set header title variables for JavaScript
+echo "<script>\n";
+echo "var headerTitle = " . json_encode($TITLE_LOGGED ?? 'Supermon-ng') . ";\n";
+echo "var headerTitle2 = " . json_encode($TITLE2 ?? '') . ";\n";
+echo "var headerTitle3 = " . json_encode($TITLE3 ?? '') . ";\n";
+echo "</script>\n";
+?>
 </head>
 
 <body style="width: 100%; max-width: 880px; margin: auto; <?php echo isset($DISPLAY_BACKGROUND) ? "background-color:$DISPLAY_BACKGROUND;" : ""; ?>">

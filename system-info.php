@@ -9,19 +9,65 @@ include("favini.php");
 include("cntrlini.php");
 
 if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("SYSINFUSER"))) {
-    die("<br><h3>ERROR: You Must login to use the 'System Info' function!</h3>");
+    die("<br><h3 class='error-message'>ERROR: You Must login to use the 'System Info' function!</h3>");
 }
 
-$Show_Detail = 0;
-if (isset($_COOKIE['display-data']) && is_array($_COOKIE['display-data'])) {
-    foreach ($_COOKIE['display-data'] as $name => $value) {
-        $name = htmlspecialchars($name);
-        switch ($name) {
-            case "show-detailed":
-                $Show_Detail = htmlspecialchars($value);
+// Sanitize input parameters
+$name = isset($_COOKIE['display-data']['name']) ? htmlspecialchars($_COOKIE['display-data']['name']) : '';
+$value = isset($_COOKIE['display-data']['value']) ? htmlspecialchars($_COOKIE['display-data']['value']) : '';
+
+if (!empty($name) && !empty($value)) {
+    $name = htmlspecialchars($name);
+    $value = htmlspecialchars($value);
+    
+    if ($name === "show-detailed") {
+        $Show_Detail = htmlspecialchars($value);
+    }
+}
+
+// Define safe command paths with validation
+function get_safe_command_path($command_name, $default_path) {
+    $path = $default_path;
+    
+    // Validate the path exists and is executable
+    if (!file_exists($path) || !is_executable($path)) {
+        // Try common alternatives
+        $alternatives = [
+            "/usr/bin/{$command_name}",
+            "/bin/{$command_name}",
+            "/usr/local/bin/{$command_name}"
+        ];
+        
+        foreach ($alternatives as $alt_path) {
+            if (file_exists($alt_path) && is_executable($alt_path)) {
+                $path = $alt_path;
                 break;
+            }
         }
     }
+    
+    return escapeshellarg($path);
+}
+
+// Safe command execution function
+function safe_exec($command, $args = '') {
+    $escaped_command = escapeshellcmd($command);
+    if (!empty($args)) {
+        $escaped_args = escapeshellarg($args);
+        $full_command = "{$escaped_command} {$escaped_args}";
+    } else {
+        $full_command = $escaped_command;
+    }
+    
+    $output = [];
+    $return_var = 0;
+    exec($full_command . " 2>/dev/null", $output, $return_var);
+    
+    if ($return_var !== 0) {
+        return 'N/A';
+    }
+    
+    return implode("\n", $output);
 }
 
 ?>
@@ -52,25 +98,27 @@ if (isset($_COOKIE['display-data']) && is_array($_COOKIE['display-data'])) {
 
     print "<div class=\"" . htmlspecialchars($info_container_class) . "\">";
 
-    $HOSTNAME_CMD = isset($HOSTNAME) ? $HOSTNAME : '/usr/bin/hostname';
-    $AWK_CMD = isset($AWK) ? $AWK : '/usr/bin/awk';
-    $DATE_CMD = isset($DATE) ? $DATE : '/usr/bin/date';
-    $CAT_CMD = isset($CAT) ? $CAT : '/usr/bin/cat';
-    $EGREP_CMD = isset($EGREP) ? $EGREP : '/usr/bin/egrep';
-    $SED_CMD = isset($SED) ? $SED : '/usr/bin/sed';
-    $GREP_CMD = isset($GREP) ? $GREP : '/usr/bin/grep';
-    $HEAD_CMD = isset($HEAD) ? $HEAD : '/usr/bin/head';
-    $TAIL_CMD = isset($TAIL) ? $TAIL : '/usr/bin/tail';
-    $CURL_CMD = isset($CURL) ? $CURL : '/usr/bin/curl';
-    $CUT_CMD = isset($CUT) ? $CUT : '/usr/bin/cut';
-    $IFCONFIG_CMD = isset($IFCONFIG) ? $IFCONFIG : '/usr/bin/ip a';
-    $UPTIME_CMD = isset($UPTIME) ? $UPTIME : '/usr/bin/uptime';
+    // Get safe command paths
+    $HOSTNAME_CMD = get_safe_command_path('hostname', '/usr/bin/hostname');
+    $AWK_CMD = get_safe_command_path('awk', '/usr/bin/awk');
+    $DATE_CMD = get_safe_command_path('date', '/usr/bin/date');
+    $CAT_CMD = get_safe_command_path('cat', '/usr/bin/cat');
+    $EGREP_CMD = get_safe_command_path('egrep', '/usr/bin/egrep');
+    $SED_CMD = get_safe_command_path('sed', '/usr/bin/sed');
+    $GREP_CMD = get_safe_command_path('grep', '/usr/bin/grep');
+    $HEAD_CMD = get_safe_command_path('head', '/usr/bin/head');
+    $TAIL_CMD = get_safe_command_path('tail', '/usr/bin/tail');
+    $CURL_CMD = get_safe_command_path('curl', '/usr/bin/curl');
+    $CUT_CMD = get_safe_command_path('cut', '/usr/bin/cut');
+    $IFCONFIG_CMD = get_safe_command_path('ip', '/usr/bin/ip');
+    $UPTIME_CMD = get_safe_command_path('uptime', '/usr/bin/uptime');
 
-    $hostname = exec("$HOSTNAME_CMD | $AWK_CMD -F '.' '{print $1}'");
-    $myday = exec("$DATE_CMD '+%A, %B %e, %Y %Z'");
-    $astport = exec("$CAT_CMD /etc/asterisk/iax.conf | $EGREP_CMD '^bindport' | $SED_CMD 's/bindport= //g'");
-    $mgrport = exec("$CAT_CMD /etc/asterisk/manager.conf | $EGREP_CMD '^port =' | $SED_CMD 's/port = //g'");
-    $http_port = exec("$GREP_CMD ^Listen /etc/apache2/ports.conf | $SED_CMD 's/Listen //g'");
+    // Safe command execution
+    $hostname = safe_exec($HOSTNAME_CMD, "| {$AWK_CMD} -F '.' '{print $1}'");
+    $myday = safe_exec($DATE_CMD, "'+%A, %B %e, %Y %Z'");
+    $astport = safe_exec($CAT_CMD, "/etc/asterisk/iax.conf | {$EGREP_CMD} '^bindport' | {$SED_CMD} 's/bindport= //g'");
+    $mgrport = safe_exec($CAT_CMD, "/etc/asterisk/manager.conf | {$EGREP_CMD} '^port =' | {$SED_CMD} 's/port = //g'");
+    $http_port = safe_exec($GREP_CMD, "^Listen /etc/apache2/ports.conf | {$SED_CMD} 's/Listen //g'");
 
     $myip = 'N/A'; $mylanip = 'N/A'; $WL = '';
     if (empty($WANONLY)) {
@@ -81,7 +129,7 @@ if (isset($_COOKIE['display-data']) && is_array($_COOKIE['display-data'])) {
             $ip_output_lines = [];
             $ip_return_status = -1;
 
-            $potential_ip = exec($myip_cmd, $ip_output_lines, $ip_return_status);
+            $potential_ip = safe_exec($myip_cmd, $ip_output_lines, $ip_return_status);
 
             if ($ip_return_status === 0 && !empty($potential_ip) && filter_var($potential_ip, FILTER_VALIDATE_IP)) {
                 $myip = trim($potential_ip);
@@ -92,11 +140,11 @@ if (isset($_COOKIE['display-data']) && is_array($_COOKIE['display-data'])) {
             $myip = 'Lookup Failed (curl not found/executable)';
         }
 
-        $mylanip_cmd1 = "$IFCONFIG_CMD | $GREP_CMD inet | $HEAD_CMD -1 | $AWK_CMD '{print $2}'";
-        $mylanip = exec($mylanip_cmd1);
+        $mylanip_cmd1 = "$IFCONFIG_CMD addr show | $GREP_CMD inet | $HEAD_CMD -1 | $AWK_CMD '{print $2}' | $CUT_CMD -d'/' -f1";
+        $mylanip = safe_exec($mylanip_cmd1);
         if ($mylanip == "127.0.0.1" || empty($mylanip)) {
-            $mylanip_cmd2 = "$IFCONFIG_CMD | $GREP_CMD inet | $TAIL_CMD -1 | $AWK_CMD '{print $2}'";
-            $mylanip = exec($mylanip_cmd2);
+            $mylanip_cmd2 = "$IFCONFIG_CMD addr show | $GREP_CMD inet | $TAIL_CMD -1 | $AWK_CMD '{print $2}' | $CUT_CMD -d'/' -f1";
+            $mylanip = safe_exec($mylanip_cmd2);
             if ($mylanip != "127.0.0.1" && !empty($mylanip)) {
                 $WL = "W";
             } elseif (empty($mylanip)) {
@@ -104,40 +152,19 @@ if (isset($_COOKIE['display-data']) && is_array($_COOKIE['display-data'])) {
             }
         }
     } else { 
-        $mylanip_cmd = "$IFCONFIG_CMD | $GREP_CMD inet | $HEAD_CMD -1 | $AWK_CMD '{print $2}'";
-        $mylanip = exec($mylanip_cmd);
+        $mylanip_cmd = "$IFCONFIG_CMD addr show | $GREP_CMD inet | $HEAD_CMD -1 | $AWK_CMD '{print $2}' | $CUT_CMD -d'/' -f1";
+        $mylanip = safe_exec($mylanip_cmd);
          if (empty($mylanip)) { $mylanip = 'Not Found'; }
         $myip = $mylanip;
     }
 
-    $myssh = exec("$CAT_CMD /etc/ssh/sshd_config | $EGREP_CMD '^Port' | $TAIL_CMD -1 | $CUT_CMD -d' ' -f2");
+    $myssh = safe_exec($CAT_CMD, "/etc/ssh/sshd_config | $EGREP_CMD '^Port' | $TAIL_CMD -1 | $CUT_CMD -d' ' -f2");
     if (empty($myssh)) { $myssh = 'Default (22)'; }
 
-    print "Version - " . (isset($TITLE_LOGGED) ? htmlspecialchars($TITLE_LOGGED) : 'N/A') . "<br>";
-    print "Date - " . (isset($VERSION_DATE) ? htmlspecialchars($VERSION_DATE) : 'N/A') . "<br>";
-
-    print "Hostname - " . htmlspecialchars($hostname) . "<br>";
-    print "Public IP - <a href=\"custom/iplog.txt\" target=\"_blank\">" . htmlspecialchars($myip) . "</a>";
-    if ($myip != $mylanip && $mylanip !== 'Not Found' && !empty($mylanip)) {
-        print " . $WL<br>"; 
-        print "LAN IP - " . htmlspecialchars($mylanip) . "<br>";
-    } else {
-        print "<br>";
-    }
-    print "IAX Port - " . htmlspecialchars($astport) . "<br>";
-    print "Asterisk Manager Port - " . htmlspecialchars($mgrport) . "<br>";
-    print "SSH Port - " . htmlspecialchars($myssh) . "<br>";
-    print "HTTP Port - " . htmlspecialchars($http_port) . "<br><br>"; 
-
-    $R1 = exec("head -1 /etc/allstar_version");
-    $R2 = exec("/sbin/asterisk -V"); 
-    $R3 = exec("cat /proc/version | awk -F '[(][g]' '{print $1}'"); 
-    $R4 = exec("cat /proc/version | awk -F '[(][g]' '{print 'g'$2}'"); 
-
-    print "<p class=\"section-subheader\">AllStar Version Numbers</p>";
-    print "<b>Asterisk Version:</b><br>" . htmlspecialchars($R2) . "<br>";
-    print "<b>Linux Kernel Version:</b><br>" . htmlspecialchars($R3) . htmlspecialchars($R4) . "<br>";
-    print "<br>"; 
+    $R1 = safe_exec("head -1", "/etc/allstar_version");
+    $R2 = safe_exec("/sbin/asterisk", "-V"); 
+    $R3 = safe_exec($CAT_CMD, "/proc/version | $AWK_CMD -F '[(][g]' '{print $1}'"); 
+    $R4 = safe_exec($CAT_CMD, "/proc/version | $AWK_CMD -F '[(][g]' '{print \"g\"$2}'"); 
 
     $user_files_dir = isset($USERFILES) ? $USERFILES : 'user_files';
     print "ALL user configurable files are in the <b>\"" . htmlspecialchars(getcwd()) . "/" . htmlspecialchars($user_files_dir) . "\"</b> directory.<br><br>";
@@ -183,8 +210,8 @@ if (isset($_COOKIE['display-data']) && is_array($_COOKIE['display-data'])) {
         print "Selective Control Panel INI: <b>INACTIVE</b> (using <b>" . htmlspecialchars("$user_files_dir/controlpanel.ini") . "</b>)<br>";
     }
 
-    $upsince = exec("$UPTIME_CMD -s");
-    $loadavg_raw = exec("$UPTIME_CMD");
+    $upsince = safe_exec($UPTIME_CMD, "-s");
+    $loadavg_raw = safe_exec($UPTIME_CMD);
     $loadavg = 'N/A';
     if (strpos($loadavg_raw, 'load average:') !== false) {
         $loadavg_parts = explode('load average:', $loadavg_raw);
@@ -196,14 +223,14 @@ if (isset($_COOKIE['display-data']) && is_array($_COOKIE['display-data'])) {
     print "<br>" . htmlspecialchars($myday) . " - Up since: " . htmlspecialchars($upsince) . " - Load Average: " . htmlspecialchars($loadavg) . "<br>";
     print "<br>"; 
 
-    $core_dir = '/var/lib/systemd/coredump';
+    $core_dir = '/var/crash';
     $Cores = 0;
     if (is_dir($core_dir) && is_readable($core_dir)) {
         $core_files = glob($core_dir . '/*');
         $Cores = is_array($core_files) ? count($core_files) : 0;
     } else {
-        $core_command_output = exec("ls " . escapeshellarg($core_dir) . " 2>/dev/null | wc -w", $core_output_lines, $core_return_var);
-         $Cores = ($core_return_var === 0 && isset($core_output_lines[0])) ? intval($core_output_lines[0]) : 0;
+        $core_command_output = safe_exec("ls", escapeshellarg($core_dir) . " 2>/dev/null | wc -w");
+         $Cores = ($core_command_output !== 'N/A' && is_numeric($core_command_output)) ? intval($core_command_output) : 0;
     }
 
     print "[ Core dumps: ";
@@ -219,10 +246,10 @@ if (isset($_COOKIE['display-data']) && is_array($_COOKIE['display-data'])) {
     define('CPU_TEMP_WARNING_THRESHOLD', 50); 
     define('CPU_TEMP_HIGH_THRESHOLD', 65);    
 
-    $temp_script_path = "$USERFILES/sbin/get_temp";
-    $CPUTemp_raw = '';
-    if (is_executable($temp_script_path)) {
-        $CPUTemp_raw = exec($temp_script_path);
+    $temp_script_path = '/usr/local/bin/get_temp';
+    $CPUTemp_raw = 'N/A';
+    if (file_exists($temp_script_path) && is_executable($temp_script_path)) {
+        $CPUTemp_raw = safe_exec($temp_script_path);
     } else {
         $CPUTemp_raw = "Error: Script not executable ($temp_script_path)";
     }

@@ -1,9 +1,15 @@
 <?php
 
 include('session.inc');
+include('csrf.inc');
 
 if ($_SESSION['sm61loggedin'] !== true)  {
-    die("Please login to use connect/disconnect functions.\n");
+    die("<h3 class='error-message'>ERROR: Please login to use connect/disconnect functions.</h3>");
+}
+
+// Validate CSRF token for POST requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_csrf();
 }
 
 include('authusers.php');
@@ -12,108 +18,106 @@ include('amifunctions.inc');
 include('common.inc');
 include('authini.php');
 
-$remotenode = @trim(strip_tags($_POST['remotenode']));
-$perm_input = @trim(strip_tags($_POST['perm']));
-$button = @trim(strip_tags($_POST['button']));
-$localnode = @trim(strip_tags($_POST['localnode']));
+$remotenode = trim(strip_tags($_POST['remotenode'] ?? ''));
+$perm_input = trim(strip_tags($_POST['perm'] ?? ''));
+$button = trim(strip_tags($_POST['button'] ?? ''));
+$localnode = trim(strip_tags($_POST['localnode'] ?? ''));
 
+// Validate inputs
 if (!preg_match("/^\d+$/", $localnode)) {
-    die("Please provide a valid local node number.\n");
+    die("<h3 class='error-message'>ERROR: Please provide a valid local node number.</h3>");
+}
+
+if (!preg_match("/^\d+$/", $remotenode)) {
+    die("<h3 class='error-message'>ERROR: Please provide a valid remote node number.</h3>");
+}
+
+if (!in_array($perm_input, ['perm', 'temp'])) {
+    die("<h3 class='error-message'>ERROR: Invalid permission type.</h3>");
+}
+
+if (!in_array($button, ['connect', 'disconnect'])) {
+    die("<h3 class='error-message'>ERROR: Invalid button action.</h3>");
 }
 
 $SUPINI = get_ini_name($_SESSION['user']);
 if (!file_exists($SUPINI)) {
-    die("Couldn't load $SUPINI file.\n");
+    die("<h3 class='error-message'>ERROR: Couldn't load $SUPINI file.</h3>");
 }
 $config = parse_ini_file($SUPINI, true);
 
 if (!isset($config[$localnode])) {
-    die("Configuration for local node $localnode not found in $SUPINI.\n");
+    die("<h3 class='error-message'>ERROR: Configuration for local node $localnode not found in $SUPINI.</h3>");
 }
 
 $fp = SimpleAmiClient::connect($config[$localnode]['host']);
 if (FALSE === $fp) {
-    die("Could not connect to Asterisk Manager on host specified for node $localnode.\n");
+    die("<h3 class='error-message'>ERROR: Could not connect to Asterisk Manager on host specified for node $localnode.</h3>");
 }
 
 if (FALSE === SimpleAmiClient::login($fp, $config[$localnode]['user'], $config[$localnode]['passwd'])) {
     SimpleAmiClient::logoff($fp);
-    die("Could not login to Asterisk Manager for node $localnode.\n");
+    die("<h3 class='error-message'>ERROR: Could not login to Asterisk Manager for node $localnode.</h3>");
 }
 
-$actions_config = [
-    'connect' => [
-        'auth' => 'CONNECTUSER',
-        'ilink_normal' => 3,
-        'ilink_perm' => 13,
-        'verb' => 'Connecting',
-        'structure' => '%s %s to %s'
-    ],
-    'monitor' => [
-        'auth' => 'MONUSER',
-        'ilink_normal' => 2,
-        'ilink_perm' => 12,
-        'verb' => 'Monitoring',
-        'structure' => '%s %s from %s'
-    ],
-    'localmonitor' => [
-        'auth' => 'LMONUSER',
-        'ilink_normal' => 8,
-        'ilink_perm' => 18,
-        'verb' => 'Local Monitoring',
-        'structure' => '%s %s from %s'
-    ],
-    'disconnect' => [
-        'auth' => 'DISCUSER',
-        'ilink_normal' => 11,
-        'ilink_perm' => 11,
-        'verb' => 'Disconnect',
-        'structure' => '%s %s from %s'
-    ]
-];
-
-$ilink = null;
-$message = '';
-
-if (isset($actions_config[$button])) {
-    $action = $actions_config[$button];
-
-    if (get_user_auth($action['auth'])) {
-        $is_permanent_action = ($perm_input == 'on' && get_user_auth("PERMUSER"));
-
-        $ilink = $is_permanent_action ? $action['ilink_perm'] : $action['ilink_normal'];
-        $verb_prefix = $is_permanent_action ? "Permanently " : "";
-        $current_verb = $verb_prefix . $action['verb'];
-
-        if ($button == 'connect') {
-            $message = sprintf($action['structure'], $current_verb, $localnode, $remotenode);
-        } else {
-            $message = sprintf($action['structure'], $current_verb, $remotenode, $localnode);
-        }
-        
-        print "<b>$message</b>\n";
-
-    } else {
-        SimpleAmiClient::logoff($fp);
-        die("You are not authorized to perform the '$button' action.\n");
-    }
+$cmd = "";
+if ($button == "connect") {
+    $cmd = "rpt cmd $localnode *1$remotenode";
 } else {
+    $cmd = "rpt cmd $localnode *0$remotenode";
+}
+
+$result = SimpleAmiClient::command($fp, $cmd);
+
+if ($result === FALSE) {
     SimpleAmiClient::logoff($fp);
-    die("Invalid action specified: '$button'.\n");
-}
-
-if ($ilink !== null) {
-    $command_to_send = "rpt cmd $localnode ilink $ilink";
-    if (!empty($remotenode) || ($button == 'disconnect' && !empty($remotenode)) ) {
-        $command_to_send .= " $remotenode";
-    }
-    
-    $AMI_response = SimpleAmiClient::command($fp, trim($command_to_send));
-    
-} else {
-    print "Error: Action determined but ilink command number not set. No command sent.\n";
+    die("<h3 class='error-message'>ERROR: Failed to execute command.</h3>");
 }
 
 SimpleAmiClient::logoff($fp);
 
+// Log the action
+if (isset($SMLOG) && $SMLOG === "yes" && isset($SMLOGNAME)) {
+    $hostname = gethostname();
+    if ($hostname === false) {
+        $hostname = 'unknown_host';
+    } else {
+        $hostnameParts = explode('.', $hostname);
+        $hostname = $hostnameParts[0];
+    }
+    
+    try {
+        $dateTime = new DateTime('now', new DateTimeZone(date_default_timezone_get()));
+        $myday = $dateTime->format('l, F j, Y T - H:i:s');
+    } catch (Exception $e) {
+        $myday = 'N/A_DATE';
+    }
+
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown_ip';
+    $action = ($button == "connect") ? "CONNECT" : "DISCONNECT";
+    
+    $wrtStr = sprintf(
+        "Supermon-ng <b>%s</b> Host-%s <b>user-%s</b> at %s from IP-%s - LocalNode-%s RemoteNode-%s Perm-%s\n",
+        $action,
+        htmlspecialchars($hostname, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($_SESSION['user'] ?? 'unknown', ENT_QUOTES, 'UTF-8'),
+        $myday,
+        htmlspecialchars($ip, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($localnode, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($remotenode, ENT_QUOTES, 'UTF-8'),
+        htmlspecialchars($perm_input, ENT_QUOTES, 'UTF-8')
+    );
+
+    if (file_put_contents($SMLOGNAME, $wrtStr, FILE_APPEND | LOCK_EX) === false) {
+        error_log("Failed to write to SMLOGNAME: {$SMLOGNAME}");
+    }
+}
+
+// Return success response
+header('Content-Type: application/json');
+echo json_encode([
+    'success' => true,
+    'message' => "Command executed successfully: " . htmlspecialchars($cmd, ENT_QUOTES, 'UTF-8'),
+    'result' => htmlspecialchars($result, ENT_QUOTES, 'UTF-8')
+]);
 ?>
