@@ -72,13 +72,7 @@ $cpCommands = [
             var cpCommand = $('#cpSelect').val();
             
             $.get('controlserverfavs.php?node=' + encodeURIComponent(localNode) + '&cmd=' + encodeURIComponent(cpCommand), function( data ) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    html: data,
-                    timer: 3000,
-                    timerProgressBar: true
-                });
+                alertify.success(data);
             });
         });
     });    

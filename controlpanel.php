@@ -105,13 +105,7 @@ if ($_SESSION['sm61loggedin'] === true) {
                 var cpCommand = $('#cpSelect').val();
 
                 $.get('controlserver.php?node=' + localNode + '&cmd=' + cpCommand, function (data) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        html: data,
-                        timer: 3000,
-                        timerProgressBar: true
-                    });
+                    alertify.success(data);
                 });
             });
         });
