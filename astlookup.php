@@ -6,6 +6,7 @@ include("common.inc");
 include("authusers.php");
 include("authini.php");
 include("csrf.inc");
+include("nodeinfo.inc");
 
 if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("ASTLKUSER")))  {
     die ("<br><h3 class='error-message'>ERROR: You Must login to use the 'Lookup' function!</h3>");
@@ -39,6 +40,23 @@ $config = parse_ini_file($SUPINI, true);
 
 if (empty($localnode) || !isset($config[$localnode])) {
     die("<h3 class='error-message'>ERROR: Node $localnode is not in $SUPINI file or not specified.</h3>");
+}
+
+// Load the AllStar database
+$db = $ASTDB_TXT;
+$astdb = array();
+if (file_exists($db)) {
+    $fh = fopen($db, "r");
+    if ($fh && flock($fh, LOCK_SH)) {
+        while (($line = fgets($fh)) !== FALSE) {
+            $arr_db = explode('|', trim($line));
+            if (isset($arr_db[0])) {
+                 $astdb[$arr_db[0]] = $arr_db;
+            }
+        }
+        flock($fh, LOCK_UN);
+        fclose($fh);
+    }
 }
 
 if (($fp = SimpleAmiClient::connect($config[$localnode]['host'])) === FALSE) {
@@ -97,25 +115,18 @@ if (!empty($_POST["lookup_node"])) {
         echo "<div class='lookup-results'>";
         echo "<h3>Lookup Results for: " . htmlspecialchars($nodeToLookup) . "</h3>";
         
-        // Try different lookup commands
-        $lookupCommands = [
-            "rpt lookup $nodeToLookup",
-            "rpt lookup $nodeToLookup $localnode",
-            "rpt lookup $localnode $nodeToLookup"
-        ];
+        // Use the proper AllStar lookup function
+        $lookupResult = getAstInfo($fp, $nodeToLookup);
         
-        $foundResults = false;
+        echo "<div class='lookup-command'>";
+        echo "<b>Lookup Result:</b><br>";
+        echo "<pre>" . htmlspecialchars($lookupResult) . "</pre>";
+        echo "</div>";
         
-        foreach ($lookupCommands as $cmd) {
-            $result = getDataFromAMI($fp, $cmd);
-            
-            if ($result !== false && !empty(trim($result))) {
-                echo "<div class='lookup-command'>";
-                echo "<b>Command: " . htmlspecialchars($cmd) . "</b><br>";
-                echo "<pre>" . htmlspecialchars($result) . "</pre>";
-                echo "</div>";
-                $foundResults = true;
-            }
+        if ($lookupResult !== 'Node not in local database' && 
+            $lookupResult !== 'No info' && 
+            strpos($lookupResult, 'No info') === false) {
+            $foundResults = true;
         }
         
         if (!$foundResults) {
