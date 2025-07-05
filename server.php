@@ -1,4 +1,5 @@
 <?php
+@set_time_limit(0);
 session_name("supermon61");
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
