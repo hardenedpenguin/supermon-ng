@@ -132,12 +132,21 @@ if (isset($actions_config[$button])) {
         }
 
         // Build the AMI command
-        $cmd = "rpt cmd $localnode *$ilink$remotenode";
+        if ($button == 'disconnect') {
+            $cmd = "rpt cmd $localnode *0$remotenode";
+        } else {
+            $cmd = "rpt cmd $localnode *$ilink$remotenode";
+        }
 
         // Debug logging
         error_log("Supermon-ng Debug: Button=$button, LocalNode=$localnode, RemoteNode=$remotenode, ILink=$ilink, Command=$cmd");
 
         $result = SimpleAmiClient::command($fp, $cmd);
+
+        // Log the full result for debugging
+        error_log("Supermon-ng Debug: Result=" . ($result ? $result : 'FALSE'));
+        error_log("Supermon-ng Debug: Full command sent: $cmd");
+        error_log("Supermon-ng Debug: Button type: $button, ILink number: $ilink");
 
         if ($result === FALSE) {
             SimpleAmiClient::logoff($fp);
