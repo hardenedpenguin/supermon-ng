@@ -90,11 +90,23 @@ window.isLoggedIn = <?php echo json_encode($_SESSION['sm61loggedin'] === true); 
 window.currentUser = <?php echo json_encode($_SESSION['user'] ?? ''); ?>;
 </script>
 
+<!-- Load modern CSS -->
+<link rel="stylesheet" href="js/modern-styles.css"/>
+
 <!-- Load JavaScript files -->
 <script src="js/sweetalert2-config.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
+<script src="js/modern-header.js"></script>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#007bff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Supermon-ng">
+<link rel="apple-touch-icon" href="/favicon.ico">
 </head>
 
 <body style="width: 100%; max-width: 880px; margin: auto; <?php echo isset($DISPLAY_BACKGROUND) ? "background-color:$DISPLAY_BACKGROUND;" : ""; ?>">
