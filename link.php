@@ -301,10 +301,10 @@ if (($_SESSION['sm61loggedin'] ?? false) === true) {
             $perm_input_class = $isDetailed ? "perm-input-detailed" : "perm-input-large";
             $perm_label_class = $isDetailed ? "perm-label-detailed" : "perm-label-large";
             if (!$isDetailed) print "<br>";
-            print "<input class=\"$perm_input_class\" type=\"text\" id=\"node\">";
-            print "<label class=\"$perm_label_class\"> Perm <input class=\"perm\" type=\"checkbox\"> </label><br>";
+            print "<input class=\"$perm_input_class\" type=\"text\" id=\"node\" name=\"node\">";
+            print "<label class=\"$perm_label_class\"> Perm <input class=\"perm\" type=\"checkbox\" name=\"perm\"> </label><br>";
         } else {
-             print "<input type=\"text\" id=\"node\" class=\"$TEXT_SIZE\" placeholder=\"Node to connect/DTMF\">";
+             print "<input type=\"text\" id=\"node\" name=\"node\" class=\"$TEXT_SIZE\" placeholder=\"Node to connect/DTMF\">";
              if (!$isDetailed) print "<br>";
         }
 
