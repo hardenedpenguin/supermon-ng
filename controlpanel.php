@@ -82,15 +82,18 @@ if ($_SESSION['sm61loggedin'] === true) {
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
 
-    <script src="js/alertify.min.js"></script>
-    <link rel="stylesheet" href="js/alertify.core.css"/>
-    <link rel="stylesheet" href="js/alertify.default.css" id="toggleCSS"/>
+    <script src="js/sweetalert2.min.js"></script>
+    <link rel="stylesheet" href="js/sweetalert2.min.css"/>
 
     <script>
         $(document).ready(function () {
 
             <?php if ($_SESSION['sm61loggedin'] !== true) { ?>
-            alert('Must login to use the Control Panel.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Access Denied',
+                text: 'Must login to use the Control Panel.'
+            });
 
             <?php } else { ?>
             $("#cpMain").show();
@@ -102,7 +105,13 @@ if ($_SESSION['sm61loggedin'] === true) {
                 var cpCommand = $('#cpSelect').val();
 
                 $.get('controlserver.php?node=' + localNode + '&cmd=' + cpCommand, function (data) {
-                    alertify.success(data);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: data,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
                 });
             });
         });

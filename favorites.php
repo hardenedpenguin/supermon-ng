@@ -60,9 +60,8 @@ $cpCommands = [
     <link type="text/css" rel="stylesheet" href="js/jquery-ui.css">
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
-    <script src="js/alertify.min.js"></script>
-    <link rel="stylesheet" href="js/alertify.core.css"/>
-    <link rel="stylesheet" href="js/alertify.default.css" id="toggleCSS"/>
+    <script src="js/sweetalert2.min.js"></script>
+    <link rel="stylesheet" href="js/sweetalert2.min.css"/>
 
     <script>
     $(document).ready(function() {
@@ -73,7 +72,13 @@ $cpCommands = [
             var cpCommand = $('#cpSelect').val();
             
             $.get('controlserverfavs.php?node=' + encodeURIComponent(localNode) + '&cmd=' + encodeURIComponent(cpCommand), function( data ) {
-                alertify.success(data);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: data,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
             });
         });
     });    
