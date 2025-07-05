@@ -62,7 +62,10 @@ if (preg_match("/voter\.php\?node=(\d+)$/", $_SERVER['REQUEST_URI'], $matches)) 
 $script_dir = dirname($_SERVER['SCRIPT_NAME']);
 $home = ($script_dir == '/' || $script_dir == '\\') ? '/' : $script_dir;
 
-
+// Set essential security headers
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
 
 ?>
 <!DOCTYPE html>
@@ -203,8 +206,7 @@ $(document).ready(function() {
 </script>
 
 <!-- Load modern CSS -->
-<!-- Temporarily disabled for mobile testing -->
-<!-- <link rel="stylesheet" href="js/modern-styles.css"/> -->
+<link rel="stylesheet" href="js/modern-styles.css"/>
 
 <!-- Load JavaScript files -->
 <!-- Temporarily disabled for mobile testing -->

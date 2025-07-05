@@ -74,7 +74,78 @@ table tbody tr:hover {
     background-color: rgba(0,123,255,0.05);
 }
 
-/* Mobile styles are handled in supermon-ng.css to avoid conflicts */
+/* Modern enhancements - no mobile conflicts */
+:root {
+    --primary-color: #007bff;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --border-color: #dee2e6;
+    --text-color: #212529;
+    --table-header-bg: #f8f9fa;
+}
+
+/* Enhanced focus states for accessibility */
+input[type="text"]:focus, 
+input[type="password"]:focus,
+input[type="email"]:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: none;
+}
+
+/* Form validation styles */
+input.valid {
+    border-color: var(--success-color);
+}
+
+input.invalid {
+    border-color: var(--danger-color);
+}
+
+/* Enhanced button focus states */
+button:focus, 
+input[type="submit"]:focus,
+input[type="button"]:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* Loading spinner */
+.loading {
+    position: relative;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--primary-color);
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Enhanced table hover effects */
+table tbody tr:hover {
+    background-color: rgba(0, 123, 255, 0.05);
+}
 
 /* Accessibility improvements */
 @media (prefers-reduced-motion: reduce) {
