@@ -81,7 +81,6 @@ function showLoginUi() {
 
 function validateCredentials() {
     console.log('validateCredentials called');
-    alert('validateCredentials function called!'); // Temporary debug alert
     var user = document.getElementById("user").value;
     var passwd = document.getElementById("passwd").value;
 
@@ -99,6 +98,13 @@ function validateCredentials() {
     }
 
     console.log('Making AJAX request to login.php');
+    console.log('AJAX data being sent:', {user: user, passwd: '***'});
+    console.log('jQuery version:', $.fn.jquery);
+    console.log('AJAX method available:', typeof $.ajax);
+    
+    // Test if we can make a simple AJAX request
+    console.log('Testing AJAX functionality...');
+    
     $.ajax({
         type: "POST",
         url: "login.php",
@@ -107,15 +113,27 @@ function validateCredentials() {
             'X-Requested-With': 'XMLHttpRequest'
         },
         async: false,
+        beforeSend: function() {
+            console.log('AJAX request starting...');
+        },
         success: function(response) {
-            console.log('Login response:', response);
+            console.log('AJAX success - Raw response:', response);
+            console.log('Response type:', typeof response);
+            console.log('Response length:', response.length);
             
             // Try to parse as JSON first (new format)
             let jsonResponse = null;
             try {
-                jsonResponse = JSON.parse(response);
+                // If response is already an object, use it directly
+                if (typeof response === 'object' && response !== null) {
+                    jsonResponse = response;
+                    console.log('Response is already an object:', jsonResponse);
+                } else {
+                    jsonResponse = JSON.parse(response);
+                    console.log('Parsed JSON response:', jsonResponse);
+                }
             } catch (e) {
-                // Not JSON, treat as text response (original format)
+                console.log('Not JSON, treating as text response (original format)');
                 jsonResponse = null;
             }
             
@@ -144,8 +162,9 @@ function validateCredentials() {
                     alert(jsonResponse.message || "Login failed. Please check your credentials.");
                 }
             } else {
-                // Original text format
-                if (response.substr(0,5) != 'Sorry') {
+                // Original text format - only process if response is a string
+                console.log('Processing as text response');
+                if (typeof response === 'string' && response.substr(0,5) != 'Sorry') {
                     console.log('Login successful (text format)');
                     hideLoginUi();
                     if (typeof alertify !== 'undefined') {
@@ -175,8 +194,11 @@ function validateCredentials() {
             }
         },
         error: function(xhr, status, error) {
-            console.log('AJAX error:', status, error);
+            console.log('AJAX error - Status:', status);
+            console.log('AJAX error - Error:', error);
             console.log('XHR status:', xhr.status);
+            console.log('XHR responseText:', xhr.responseText);
+            console.log('XHR readyState:', xhr.readyState);
             
             // Try to parse error response as JSON
             let errorMessage = "Error communicating with server for login.";
