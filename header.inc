@@ -86,134 +86,19 @@ header('X-XSS-Protection: 1; mode=block');
 <link type="text/css" rel="stylesheet" href="js/jquery-ui.css">
 <script src="js/jquery.min.js"></script>
 <script src="js/jquery-ui.min.js"></script>
-<script src="js/alertify.min.js"></script>
-<link rel="stylesheet" href="js/alertify.core.css"/>
-<link rel="stylesheet" href="js/alertify.default.css" id="toggleCSS"/>
+<script src="js/sweetalert2.min.js"></script>
+<link rel="stylesheet" href="js/sweetalert2.min.css"/>
 
-<script type="text/javascript">
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-$(document).ready(function() {
-
-<?php if ($_SESSION['sm61loggedin'] === true) { ?>
-    $("#loginlink").hide();
-<?php } else { ?>
-    $('#connect_form').hide();
-    $('#logoutlink').hide();
-<?php } ?>
-
-<?php if ($_SESSION['sm61loggedin'] === true) { ?>
-
-    $('#logoutlink').click(function(event) {
-        event.preventDefault();
-        var user = <?php echo json_encode($_SESSION['user']); ?>;
-        alertify.success("<p style=\"font-size:28px;\"><b>Goodbye " + user + "!</b></p>");
-        $.post("logout.php", "", function(response) {
-            if (response.substr(0,5) != 'Sorry') {
-                sleep(2000).then(() => { window.location.reload(); });
-            }
-        });
-    });
-
-    function openPopupWindow(event, templateUrl, windowNameTemplate, width, height, checkNodeField = false, errorMessage = '', moveToTop = true) {
-        event.preventDefault();
-        const localNode = $('#localnode').val();
-        const nodeInput = $('#node').val();
-        const perm = $('input:checkbox:checked').val() || '';
-
-        if (checkNodeField && nodeInput.length === 0) {
-            alertify.error(errorMessage.replace('{localnode}', localNode).replace('{node}', nodeInput));
-            return;
-        }
-
-        const url = templateUrl.replace('{localnode}', localNode).replace('{node}', nodeInput).replace('{perm}', perm);
-        const windowName = windowNameTemplate.replace('{localnode}', localNode);
-        const windowSize = `height=${height},width=${width}`;
-        
-        const newWindow = window.open(url, windowName, windowSize);
-        if (newWindow && moveToTop) {
-            newWindow.moveTo(20, 20);
-        }
-    }
-
-    function confirmAndAjax(confirmMsgTemplate, ajaxUrl, dataBuilder, successHandler, errorHandlerMsg) {
-        const localNode = $('#localnode').val();
-        const confirmMsg = confirmMsgTemplate.replace('{localnode}', localNode);
-        
-        alertify.confirm(confirmMsg, function(e) {
-            if (e) {
-                const data = dataBuilder();
-                $.post(ajaxUrl, data, function(response) {
-                    if (response.substr(0,5) != 'Sorry') {
-                        successHandler(response);
-                    } else {
-                        alertify.error(errorHandlerMsg);
-                    }
-                });
-            }
-        });
-    }
-
-    function validateCredentials() {
-        var username = document.getElementById('user').value;
-        var password = document.getElementById('passwd').value;
-        
-        if (username.trim() === '' || password.trim() === '') {
-            alertify.error('Please enter both username and password.');
-            return false;
-        }
-        return true;
-    }
-
-    function showLoginUi() {
-        document.getElementById('login').style.display = 'block';
-        document.getElementById('user').focus();
-    }
-
-    function hideLoginUi() {
-        document.getElementById('login').style.display = 'none';
-    }
-
-    function togglePasswordVisibility() {
-        var pwField = document.getElementById("passwd");
-        var pwCheckbox = document.getElementById("checkbox");
-        
-        if (pwCheckbox.checked) {
-            pwField.type = "text";
-        } else {
-            pwField.type = "password";
-        }
-    }
-
-    function clearLoginForm() {
-        document.getElementById('myform').reset();
-        const pwCheckbox = document.getElementById("checkbox");
-        if (pwCheckbox) pwCheckbox.checked = false;
-        const passwdField = document.getElementById("passwd");
-        if (passwdField) passwdField.type = "password";
-    }
-
-    $("#loginlink").click(function(event) {
-        event.preventDefault();
-        clearLoginForm();
-        showLoginUi();
-    });
-
-<?php } ?>
-});
-</script>
+<!-- Modern JavaScript will handle login functionality -->
 
 <!-- Load modern CSS -->
 <link rel="stylesheet" href="js/modern-styles.css"/>
 
 <!-- Load JavaScript files -->
-<!-- Temporarily disabled for mobile testing -->
-<!-- <script src="js/sweetalert2-config.js"></script> -->
-<!-- <script src="js/utils.js"></script> -->
-<!-- <script src="js/auth.js"></script> -->
-<!-- <script src="js/app.js"></script> -->
+<script src="js/sweetalert2-config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/app.js"></script>
 <!-- <script src="js/modern-header.js"></script> -->
 
 <!-- PWA Manifest -->
