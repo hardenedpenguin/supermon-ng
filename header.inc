@@ -89,16 +89,6 @@ Swal.mixin({
         toast.addEventListener('mouseenter', Swal.stopTimer)
         toast.addEventListener('mouseleave', Swal.resumeTimer)
     }
-}).bindInputClass('form-control').bindDefaults({
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    allowEnterKey: true,
-    showClass: {
-        popup: 'animate__animated animate__fadeInDown'
-    },
-    hideClass: {
-        popup: 'animate__animated animate__fadeOutUp'
-    }
 });
 
 // Custom functions to mimic Alertify behavior
