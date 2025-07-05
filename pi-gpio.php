@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <table class="gpio-table">
             <tr>
                 <td>GPIO Pin:</td>
-                <td><input type="number" name="Bit" min="0" max="40" required></td>
+                <td><input type="number" id="gpio_pin" name="Bit" min="0" max="40" required></td>
             </tr>
             <tr>
                 <td>State:</td>
