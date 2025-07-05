@@ -3,7 +3,9 @@
 include('session.inc');
 
 if ($_SESSION['sm61loggedin'] !== true)  {
-    die("Please login to use connect/disconnect functions.\n");
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'Please login to use connect/disconnect functions.']);
+    exit;
 }
 
 include('authusers.php');
@@ -18,27 +20,37 @@ $button = @trim(strip_tags($_POST['button']));
 $localnode = @trim(strip_tags($_POST['localnode']));
 
 if (!preg_match("/^\d+$/", $localnode)) {
-    die("Please provide a valid local node number.\n");
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'Please provide a valid local node number.']);
+    exit;
 }
 
 $SUPINI = get_ini_name($_SESSION['user']);
 if (!file_exists($SUPINI)) {
-    die("Couldn't load $SUPINI file.\n");
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => "Couldn't load $SUPINI file."]);
+    exit;
 }
 $config = parse_ini_file($SUPINI, true);
 
 if (!isset($config[$localnode])) {
-    die("Configuration for local node $localnode not found in $SUPINI.\n");
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => "Configuration for local node $localnode not found in $SUPINI."]);
+    exit;
 }
 
 $fp = SimpleAmiClient::connect($config[$localnode]['host']);
 if (FALSE === $fp) {
-    die("Could not connect to Asterisk Manager on host specified for node $localnode.\n");
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => "Could not connect to Asterisk Manager on host specified for node $localnode."]);
+    exit;
 }
 
 if (FALSE === SimpleAmiClient::login($fp, $config[$localnode]['user'], $config[$localnode]['passwd'])) {
     SimpleAmiClient::logoff($fp);
-    die("Could not login to Asterisk Manager for node $localnode.\n");
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => "Could not login to Asterisk Manager for node $localnode."]);
+    exit;
 }
 
 $actions_config = [
@@ -91,15 +103,21 @@ if (isset($actions_config[$button])) {
             $message = sprintf($action['structure'], $current_verb, $remotenode, $localnode);
         }
         
-        print "<b>$message</b>\n";
+        // Success response
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'message' => $message]);
 
     } else {
         SimpleAmiClient::logoff($fp);
-        die("You are not authorized to perform the '$button' action.\n");
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => "You are not authorized to perform the '$button' action."]);
+        exit;
     }
 } else {
     SimpleAmiClient::logoff($fp);
-    die("Invalid action specified: '$button'.\n");
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => "Invalid action specified: '$button'."]);
+    exit;
 }
 
 if ($ilink !== null) {
@@ -111,7 +129,9 @@ if ($ilink !== null) {
     $AMI_response = SimpleAmiClient::command($fp, trim($command_to_send));
     
 } else {
-    print "Error: Action determined but ilink command number not set. No command sent.\n";
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'Error: Action determined but ilink command number not set. No command sent.']);
+    exit;
 }
 
 SimpleAmiClient::logoff($fp);
