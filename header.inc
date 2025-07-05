@@ -222,7 +222,7 @@ if (isset($LOGO_NAME, $LOGO_SIZE, $LOGO_POSITION_RIGHT, $LOGO_POSITION_TOP)) {
             <?php endif; ?>
             <br>
             <label style="font-weight:bold;color:white;"><input type="checkbox" style="font-weight:bold;margin-top:.5em;" onclick="clearLoginForm()">Clear</label>
-            <input class="login" style="font-weight:bold;float:right;clear:both;margin-top:.5em;" type="submit" name="submit" value="submit" onclick="return validateCredentials()">
+            <input class="login" style="font-weight:bold;float:right;clear:both;margin-top:.5em;" type="submit" name="submit" value="submit">
         </fieldset>
     </form>
 </div>

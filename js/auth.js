@@ -32,10 +32,56 @@ function hideLoginUi() {
 
 function showLoginUi() {
     document.getElementById("login").style.display = "block";
+    
+    // Re-attach event handlers when login UI is shown
+    setTimeout(function() {
+        console.log('Login UI shown, re-attaching handlers');
+        
+        const form = $('#myform');
+        const userField = $('#user');
+        const passwdField = $('#passwd');
+        
+        // Form submission handler
+        form.off('submit').on('submit', function(e) {
+            console.log('Form submit event triggered (after show)');
+            e.preventDefault();
+            validateCredentials();
+        });
+        
+        // Enter key handler for password field
+        passwdField.off('keypress').on('keypress', function(e) {
+            console.log('Password field keypress (after show):', e.which);
+            if (e.which === 13) { // Enter key
+                console.log('Enter key pressed in password field (after show)');
+                e.preventDefault();
+                validateCredentials();
+            }
+        });
+        
+        // Enter key handler for username field
+        userField.off('keypress').on('keypress', function(e) {
+            console.log('Username field keypress (after show):', e.which);
+            if (e.which === 13) { // Enter key
+                console.log('Enter key pressed in username field (after show)');
+                e.preventDefault();
+                passwdField.focus();
+            }
+        });
+        
+        // Submit button click handler
+        $('.login[type="submit"]').off('click').on('click', function(e) {
+            console.log('Submit button clicked (after show)');
+            e.preventDefault();
+            validateCredentials();
+        });
+        
+        console.log('Login form handlers re-attached after show');
+    }, 100);
 }
 
 function validateCredentials() {
     console.log('validateCredentials called');
+    alert('validateCredentials function called!'); // Temporary debug alert
     var user = document.getElementById("user").value;
     var passwd = document.getElementById("passwd").value;
 
@@ -157,25 +203,61 @@ function validateCredentials() {
 
 // Add event handlers when document is ready
 $(document).ready(function() {
+    console.log('Document ready, setting up login form handlers');
+    
+    // Check if form elements exist
+    const form = $('#myform');
+    const userField = $('#user');
+    const passwdField = $('#passwd');
+    
+    console.log('Form elements found:', {
+        form: form.length,
+        userField: userField.length,
+        passwdField: passwdField.length
+    });
+    
+    if (form.length === 0) {
+        console.error('Login form not found!');
+        return;
+    }
+    
     // Form submission handler
-    $('#myform').on('submit', function(e) {
+    form.on('submit', function(e) {
+        console.log('Form submit event triggered');
         e.preventDefault();
         validateCredentials();
     });
     
     // Enter key handler for password field
-    $('#passwd').on('keypress', function(e) {
-        if (e.which === 13) { // Enter key
-            e.preventDefault();
-            validateCredentials();
-        }
-    });
+    if (passwdField.length > 0) {
+        passwdField.on('keypress', function(e) {
+            console.log('Password field keypress:', e.which);
+            if (e.which === 13) { // Enter key
+                console.log('Enter key pressed in password field');
+                e.preventDefault();
+                validateCredentials();
+            }
+        });
+    }
     
     // Enter key handler for username field
-    $('#user').on('keypress', function(e) {
-        if (e.which === 13) { // Enter key
-            e.preventDefault();
-            $('#passwd').focus();
-        }
+    if (userField.length > 0) {
+        userField.on('keypress', function(e) {
+            console.log('Username field keypress:', e.which);
+            if (e.which === 13) { // Enter key
+                console.log('Enter key pressed in username field');
+                e.preventDefault();
+                passwdField.focus();
+            }
+        });
+    }
+    
+    // Also add click handler for submit button as backup
+    $('.login[type="submit"]').on('click', function(e) {
+        console.log('Submit button clicked');
+        e.preventDefault();
+        validateCredentials();
     });
+    
+    console.log('Login form handlers setup complete');
 }); 
