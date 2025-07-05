@@ -37,7 +37,7 @@ if (!empty($perm_input) && !in_array($perm_input, ['perm', 'temp'])) {
     die("<h3 class='error-message'>ERROR: Invalid permission type.</h3>");
 }
 
-if (!in_array($button, ['disconnect'])) {
+if (!in_array($button, ['connect', 'monitor', 'permanent', 'localmonitor'])) {
     die("<h3 class='error-message'>ERROR: Invalid button action.</h3>");
 }
 
@@ -62,10 +62,21 @@ if (FALSE === SimpleAmiClient::login($fp, $config[$localnode]['user'], $config[$
 }
 
 $cmd = "";
-if ($button == "connect") {
-    $cmd = "rpt cmd $localnode *1$remotenode";
-} else {
-    $cmd = "rpt cmd $localnode *0$remotenode";
+switch ($button) {
+    case "connect":
+        $cmd = "rpt cmd $localnode *1$remotenode";
+        break;
+    case "monitor":
+        $cmd = "rpt cmd $localnode *2$remotenode";
+        break;
+    case "permanent":
+        $cmd = "rpt cmd $localnode *3$remotenode";
+        break;
+    case "localmonitor":
+        $cmd = "rpt cmd $localnode *4$remotenode";
+        break;
+    default:
+        die("<h3 class='error-message'>ERROR: Invalid button action.</h3>");
 }
 
 $result = SimpleAmiClient::command($fp, $cmd);
@@ -95,7 +106,7 @@ if (isset($SMLOG) && $SMLOG === "yes" && isset($SMLOGNAME)) {
     }
 
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown_ip';
-    $action = ($button == "connect") ? "CONNECT" : "DISCONNECT";
+    $action = strtoupper($button);
     
     $wrtStr = sprintf(
         "Supermon-ng <b>%s</b> Host-%s <b>user-%s</b> at %s from IP-%s - LocalNode-%s RemoteNode-%s Perm-%s\n",
