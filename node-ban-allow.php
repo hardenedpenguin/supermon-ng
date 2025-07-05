@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_csrf();
 }
 
-$Node = trim(strip_tags($_GET['ban-node'] ?? ''));
+$Node = trim(strip_tags($_GET['node'] ?? $_GET['ban-node'] ?? ''));
 $localnode = trim(strip_tags($_GET['localnode'] ?? ''));
 
 // Validate inputs
@@ -83,6 +83,13 @@ if (!empty($_POST["listtype"]) && !empty($_POST["node"]) && !empty($_POST["delet
     }
     
     $ret = sendCmdToAMI($fp, $amiCmdString);
+    
+    // Show result message
+    if ($ret !== false) {
+        echo "<div class='success-message'>Command executed successfully.</div>";
+    } else {
+        echo "<div class='error-message'>Failed to execute command.</div>";
+    }
 }
 
 ?>
@@ -97,7 +104,7 @@ if (!empty($_POST["listtype"]) && !empty($_POST["node"]) && !empty($_POST["delet
 
 <center>
 <form action="node-ban-allow.php?ban-node=<?php echo htmlspecialchars($Node); ?>&localnode=<?php echo htmlspecialchars($localnode); ?>" method="post">
-    <?php echo csrf_token_field(); ?>
+    <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
     <table class="ban-allow-table">
         <tr>
             <td class="ban-allow-cell-left">
