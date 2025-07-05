@@ -63,74 +63,88 @@
 	header('Pragma: no-cache');
 	header('Expires: 0');
 
+	// Include header for consistent styling
+	include "header.inc";
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-	<title>Logged Out - Supermon-ng</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<style>
-		body { 
-			font-family: Arial, sans-serif; 
-			margin: 0; 
-			padding: 20px; 
-			background: #f5f5f5; 
-			text-align: center;
-		}
-		.logout-container { 
-			max-width: 400px; 
-			margin: 50px auto; 
-			background: white; 
-			padding: 30px; 
-			border-radius: 8px; 
-			box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
-		}
-		.logout-title { 
-			color: #333; 
-			margin-bottom: 20px; 
-		}
-		.logout-message { 
-			color: #666; 
-			margin-bottom: 30px; 
-		}
-		.btn { 
-			display: inline-block; 
-			padding: 12px 24px; 
-			background: #007cba; 
-			color: white; 
-			text-decoration: none; 
-			border-radius: 4px; 
-			font-size: 16px; 
-		}
-		.btn:hover { 
-			background: #005a87; 
-		}
-	</style>
-</head>
-<body>
-	<div class="logout-container">
-		<h2 class="logout-title">Successfully Logged Out</h2>
-		<p class="logout-message">
-			You have been successfully logged out of Supermon-ng.<br>
-			All session data has been cleared.
-		</p>
-		<a href="index.php" class="btn">Return to Login</a>
-	</div>
+
+<style>
+.logout-page {
+    max-width: 400px;
+    margin: 50px auto;
+    background: var(--container-bg);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.logout-title {
+    color: var(--text-color);
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.logout-message {
+    color: var(--text-color);
+    margin-bottom: 30px;
+    opacity: 0.9;
+    line-height: 1.5;
+}
+
+.logout-btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background: var(--primary-color);
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.logout-btn:hover {
+    background: var(--link-hover);
+    text-decoration: none;
+    color: var(--text-color);
+}
+
+@media (max-width: 768px) {
+    .logout-page {
+        margin: 20px auto;
+        padding: 20px;
+    }
+    
+    .logout-title {
+        font-size: 1.3em;
+    }
+}
+</style>
+
+<div class="logout-page">
+	<h2 class="logout-title">Successfully Logged Out</h2>
+	<p class="logout-message">
+		You have been successfully logged out of Supermon-ng.<br>
+		All session data has been cleared.
+	</p>
+	<a href="index.php" class="logout-btn">Return to Login</a>
+</div>
+
+<script>
+	// Clear any client-side storage
+	if (typeof localStorage !== 'undefined') {
+		localStorage.clear();
+	}
+	if (typeof sessionStorage !== 'undefined') {
+		sessionStorage.clear();
+	}
 	
-	<script>
-		// Clear any client-side storage
-		if (typeof localStorage !== 'undefined') {
-			localStorage.clear();
-		}
-		if (typeof sessionStorage !== 'undefined') {
-			sessionStorage.clear();
-		}
-		
-		// Redirect to login page after 3 seconds
-		setTimeout(function() {
-			window.location.href = 'index.php';
-		}, 3000);
-	</script>
-</body>
-</html>
+	// Redirect to login page after 3 seconds
+	setTimeout(function() {
+		window.location.href = 'index.php';
+	}, 3000);
+</script>
+
+<?php include "footer.inc"; ?>

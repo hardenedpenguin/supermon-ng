@@ -138,8 +138,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header('Content-Type: application/json');
                 echo json_encode(['success' => true, 'message' => 'Login successful', 'user' => $user]);
             } else {
-                // For form submissions, just show success message and let JavaScript handle the refresh
-                echo "Login succeeded.";
+                // For form submissions, redirect to main page
+                header('Location: index.php');
+                exit;
             }
             exit;
         } else {
@@ -156,55 +157,131 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Display login form
+// Include header for consistent styling
+include "header.inc";
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Supermon-ng Login</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .login-container { max-width: 400px; margin: 50px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .login-title { text-align: center; margin-bottom: 30px; color: #333; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 5px; color: #555; }
-        input[type="text"], input[type="password"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-        .btn { width: 100%; padding: 12px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        .btn:hover { background: #005a87; }
-        .error { color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 4px; margin-bottom: 20px; }
-        .attempts { color: #666; font-size: 14px; text-align: center; margin-top: 10px; }
-    </style>
-</head>
-<body>
-    <div class="login-container">
-        <h2 class="login-title">Supermon-ng Login</h2>
-        
-        <?php if (isset($error_message)): ?>
-            <div class="error"><?php echo htmlspecialchars($error_message, ENT_QUOTES, 'UTF-8'); ?></div>
-        <?php endif; ?>
-        
-        <form method="post" action="">
-            <div class="form-group">
-                <label for="user">Username:</label>
-                <input type="text" id="user" name="user" required>
-            </div>
-            
-            <div class="form-group">
-                <label for="passwd">Password:</label>
-                <input type="password" id="passwd" name="passwd" required>
-            </div>
-            
-            <button type="submit" class="btn">Login</button>
-        </form>
-        
-        <div class="attempts">
-            <?php 
-            $remaining = get_remaining_attempts('login', 5, 900);
-            echo "Remaining login attempts: {$remaining}";
-            ?>
+
+<style>
+.login-page {
+    max-width: 400px;
+    margin: 50px auto;
+    background: var(--container-bg);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    border: 1px solid var(--border-color);
+}
+
+.login-title {
+    text-align: center;
+    margin-bottom: 30px;
+    color: var(--text-color);
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--text-color);
+    font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-sizing: border-box;
+    background: var(--input-bg);
+    color: var(--input-text);
+    font-size: 16px;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="password"]:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--primary-color);
+    color: var(--text-color);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.login-btn:hover {
+    background: var(--link-hover);
+}
+
+.login-error {
+    color: var(--error-color);
+    background: rgba(211, 47, 47, 0.1);
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid var(--error-color);
+}
+
+.login-attempts {
+    color: var(--text-color);
+    font-size: 14px;
+    text-align: center;
+    margin-top: 10px;
+    opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .login-page {
+        margin: 20px auto;
+        padding: 20px;
+    }
+    
+    .login-title {
+        font-size: 1.3em;
+    }
+}
+</style>
+
+<div class="login-page">
+    <h2 class="login-title">Supermon-ng Login</h2>
+    
+    <?php if (isset($error_message)): ?>
+        <div class="login-error"><?php echo htmlspecialchars($error_message, ENT_QUOTES, 'UTF-8'); ?></div>
+    <?php endif; ?>
+    
+    <form method="post" action="">
+        <div class="form-group">
+            <label for="user">Username:</label>
+            <input type="text" id="user" name="user" required>
         </div>
+        
+        <div class="form-group">
+            <label for="passwd">Password:</label>
+            <input type="password" id="passwd" name="passwd" required>
+        </div>
+        
+        <button type="submit" class="login-btn">Login</button>
+    </form>
+    
+    <div class="login-attempts">
+        <?php 
+        $remaining = get_remaining_attempts('login', 5, 900);
+        echo "Remaining login attempts: {$remaining}";
+        ?>
     </div>
-</body>
-</html>
+</div>
+
+<?php include "footer.inc"; ?>
