@@ -1342,10 +1342,68 @@ body.cpustats pre {
     display: none;
   }
 
-  #headerLogin {
-    position: static;
+  #header {
+    min-height: 100px;
+    position: relative;
+    padding: 5px;
+  }
+  
+  #headerTitle,
+  #headerTitle-large {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    font-size: 1em;
+    margin-bottom: 5px;
+  }
+  
+  #headerTitle2,
+  #headerTitle2-large {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+  }
+  
+  #headerTag,
+  #headerTag-large {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    font-size: 0.8em;
+    margin-bottom: 5px;
+  }
+  
+  #header2Tag,
+  #header2Tag-large {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    font-size: 0.8em;
+    margin-bottom: 5px;
+  }
+  
+  #header3Tag,
+  #header4Tag {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    font-size: 0.8em;
+    margin-bottom: 5px;
+  }
+  
+  #headerLogin,
+  #headerLogout2 {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
     text-align: center;
-    margin: 10px 0;
+    margin: 5px 0;
+  }
+  
+  #headerImg {
+    display: none;
   }
 
   table.gridtable,
@@ -1362,20 +1420,20 @@ body.cpustats pre {
     margin: 5px 0;
   }
   
-  /* Enhanced mobile menu */
+  /* Enhanced mobile menu - more conservative */
   #menu {
-    padding: 10px;
+    padding: 5px;
   }
   
   #menu li {
     width: 100%;
-    margin: 2px 0;
+    margin: 1px 0;
   }
   
   #menu li a {
     width: 100%;
-    padding: 12px;
-    font-size: 16px;
+    padding: 8px;
+    font-size: 14px;
     text-align: center;
     display: block;
   }
@@ -1387,34 +1445,34 @@ body.cpustats pre {
   select,
   textarea {
     width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    margin: 5px 0;
+    padding: 8px;
+    font-size: 16px; /* Keep 16px to prevent zoom */
+    margin: 3px 0;
     box-sizing: border-box;
   }
   
   /* Mobile-friendly tables */
   table {
-    font-size: 12px;
+    font-size: 11px;
     width: 100%;
   }
   
   table th,
   table td {
-    padding: 8px 4px;
+    padding: 4px 2px;
     word-wrap: break-word;
   }
   
-  /* Improve mobile readability */
+  /* Keep original mobile readability */
   body {
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 12px;
+    line-height: 1.4;
   }
   
   /* Better mobile spacing */
   .container {
-    margin: 10px;
-    padding: 15px;
+    margin: 5px;
+    padding: 10px;
   }
 }
 
