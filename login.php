@@ -12,7 +12,13 @@ define('HTPASSWD_FILE', '.htpasswd');
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (is_rate_limited('login', 5, 900)) { // 5 attempts per 15 minutes
         http_response_code(429);
-        die("Too many login attempts. Please wait 15 minutes before trying again.");
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Too many login attempts. Please wait 15 minutes before trying again.']);
+        } else {
+            die("Too many login attempts. Please wait 15 minutes before trying again.");
+        }
+        exit;
     }
 }
 
@@ -102,10 +108,16 @@ function logUser(string $user, bool $success): void {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $user = $_POST['user'] ?? '';
     $passwd = $_POST['passwd'] ?? '';
+    $is_ajax = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
     
     // Basic input validation
     if (empty($user) || empty($passwd)) {
         $error_message = "Username and password are required.";
+        if ($is_ajax) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => $error_message]);
+            exit;
+        }
     } else {
         if (http_authenticate($user, $passwd)) {
             // Clear rate limit on successful login
@@ -121,16 +133,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             logUser($user, true);
 
-            $current_script_url = basename($_SERVER['REQUEST_URI'] ?? '');
-            $redirect_url = urldecode($current_script_url); 
-
-            echo "Login succeeded. Redirecting...";
-            echo "<meta http-equiv='REFRESH' content='0;url=" . htmlspecialchars($redirect_url, ENT_QUOTES, 'UTF-8') . "'>";
+            if ($is_ajax) {
+                // Return JSON response for AJAX requests
+                header('Content-Type: application/json');
+                echo json_encode(['success' => true, 'message' => 'Login successful', 'user' => $user]);
+            } else {
+                // For form submissions, just show success message and let JavaScript handle the refresh
+                echo "Login succeeded.";
+            }
             exit;
         } else {
             logUser($user, false);
             $remaining_attempts = get_remaining_attempts('login', 5, 900);
             $error_message = "Login failed. Remaining attempts: {$remaining_attempts}";
+            
+            if ($is_ajax) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => $error_message]);
+                exit;
+            }
         }
     }
 }

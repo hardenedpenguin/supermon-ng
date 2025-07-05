@@ -36,7 +36,6 @@ if (isset($_COOKIE['display-data'])) {
     }
 }
 
-session_start();
 if (!isset($_SESSION['sm61loggedin'])) {
     $_SESSION['sm61loggedin'] = false;
 }
@@ -177,15 +176,17 @@ if ($_SESSION['sm61loggedin'] === true) {
 }
 ?>
 
+<?php if ($_SESSION['sm61loggedin'] === true): ?>
 <div id="headerLogout">
     <div id="headerLogout2">
         <a href="#" id="logoutlink">Logout <?php echo htmlspecialchars($_SESSION["user"]); ?></span></a>
     </div>
 </div>
-
+<?php else: ?>
 <div id="headerLogin">
     <a href="#" id="loginlink">Login</a>  
 </div>
+<?php endif; ?>
 
 <div id="headerImg"><a href="https://www.allstarlink.org" target="_blank"><img src="allstarlink.jpg" width="70%" style="border: 0px;" alt="Allstar Logo"></a></div>
 

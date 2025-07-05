@@ -1,20 +1,15 @@
 // Main application functionality
 $(document).ready(function() {
 
-    // Hide/show elements based on login state
-    if (window.isLoggedIn === true) {
-        $("#loginlink").hide();
-    } else {
-        $('#connect_form').hide();
-        $('#logoutlink').hide();
-    }
+    // Elements are now conditionally rendered on the server side
+    // No need to hide/show them with JavaScript
 
     // Only run logged-in functionality if user is logged in
-    if (window.isLoggedIn === true) {
+    if (window.supermonConfig && window.supermonConfig.isLoggedIn === true) {
 
         $('#logoutlink').click(function(event) {
             event.preventDefault();
-            var user = window.currentUser || 'User';
+            var user = (window.supermonConfig && window.supermonConfig.currentUser) || 'User';
             $.post("logout.php", "", function(response) {
                 if (response.substr(0,5) != 'Sorry') {
                     alertify.success("<p style=\"font-size:28px;\"><b>Goodbye " + user + "!</b></p>");

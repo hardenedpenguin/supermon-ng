@@ -57,37 +57,98 @@ function validateCredentials() {
         type: "POST",
         url: "login.php",
         data: {'user': user, 'passwd': passwd},
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
         async: false,
         success: function(response) {
             console.log('Login response:', response);
-            hideLoginUi();
-            if (response.substr(0,5) != 'Sorry') {
-                console.log('Login successful, calling alertify.success');
+            
+            // Try to parse as JSON first (new format)
+            let jsonResponse = null;
+            try {
+                jsonResponse = JSON.parse(response);
+            } catch (e) {
+                // Not JSON, treat as text response (original format)
+                jsonResponse = null;
+            }
+            
+            if (jsonResponse && jsonResponse.success) {
+                // New JSON format
+                console.log('Login successful (JSON format)');
+                hideLoginUi();
                 if (typeof alertify !== 'undefined') {
                     alertify.success("<p style=\"font-size:28px;\"><b>Welcome " + user + "!</b></p>");
                 } else {
                     console.error('alertify is not defined!');
                     alert("Welcome " + user + "!");
                 }
-                sleep(4000).then(() => { window.location.reload(); });
-            } else {
-                console.log('Login failed, calling alertify.error');
+                // Reload the page to update the UI
+                setTimeout(function() {
+                    window.location.reload();
+                }, 2000);
+            } else if (jsonResponse && !jsonResponse.success) {
+                // JSON format with error
+                console.log('Login failed (JSON format):', jsonResponse.message);
+                hideLoginUi();
                 if (typeof alertify !== 'undefined') {
-                    alertify.error("Sorry, Login Failed!");
+                    alertify.error(jsonResponse.message || "Login failed. Please check your credentials.");
                 } else {
                     console.error('alertify is not defined!');
-                    alert("Sorry, Login Failed!");
+                    alert(jsonResponse.message || "Login failed. Please check your credentials.");
+                }
+            } else {
+                // Original text format
+                if (response.substr(0,5) != 'Sorry') {
+                    console.log('Login successful (text format)');
+                    hideLoginUi();
+                    if (typeof alertify !== 'undefined') {
+                        alertify.success("<p style=\"font-size:28px;\"><b>Welcome " + user + "!</b></p>");
+                    } else {
+                        console.error('alertify is not defined!');
+                        alert("Welcome " + user + "!");
+                    }
+                    // Use the original sleep function if available, otherwise setTimeout
+                    if (typeof sleep === 'function') {
+                        sleep(4000).then(() => { window.location.reload(); });
+                    } else {
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 4000);
+                    }
+                } else {
+                    console.log('Login failed (text format)');
+                    hideLoginUi();
+                    if (typeof alertify !== 'undefined') {
+                        alertify.error("Sorry, Login Failed!");
+                    } else {
+                        console.error('alertify is not defined!');
+                        alert("Sorry, Login Failed!");
+                    }
                 }
             }
         },
         error: function(xhr, status, error) {
             console.log('AJAX error:', status, error);
+            console.log('XHR status:', xhr.status);
+            
+            // Try to parse error response as JSON
+            let errorMessage = "Error communicating with server for login.";
+            try {
+                const errorResponse = JSON.parse(xhr.responseText);
+                if (errorResponse.message) {
+                    errorMessage = errorResponse.message;
+                }
+            } catch (e) {
+                console.log('Could not parse error response as JSON');
+            }
+            
             hideLoginUi();
             if (typeof alertify !== 'undefined') {
-                alertify.error("Error communicating with server for login.");
+                alertify.error(errorMessage);
             } else {
                 console.error('alertify is not defined!');
-                alert("Error communicating with server for login.");
+                alert(errorMessage);
             }
         }
     });
