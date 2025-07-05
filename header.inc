@@ -111,8 +111,8 @@ window.supermonConfig = {
 };
 </script>
 
-<!-- Load modern CSS - temporarily disabled for mobile testing -->
-<!-- <link rel="stylesheet" href="js/modern-styles.css"/> -->
+<!-- Load modern CSS -->
+<link rel="stylesheet" href="js/modern-styles.css"/>
 
 <!-- Load JavaScript files -->
 <script src="js/sweetalert2-config.js"></script>
@@ -139,7 +139,7 @@ echo "</script>\n";
 ?>
 </head>
 
-<body style="width: 100%; max-width: 100%; margin: auto; <?php echo isset($DISPLAY_BACKGROUND) ? "background-color:$DISPLAY_BACKGROUND;" : ""; ?>">
+<body style="width: 100%; max-width: 880px; margin: auto; <?php echo isset($DISPLAY_BACKGROUND) ? "background-color:$DISPLAY_BACKGROUND;" : ""; ?>">
 
 <?php
 $header_div_style = "margin-top:5px;";
