@@ -1325,154 +1325,30 @@ body.cpustats pre {
 /* ==========================================================================
    Responsive Design
    ========================================================================== */
-
 @media (max-width: 768px) {
-  #menu ul {
-    flex-direction: column;
-  }
-
-  #headerTitle {
-    font-size: 1em;
-  }
-
-  #headerImg,
-  #headerImg2,
-  #mytilepic,
-  #mytilepic2 {
-    display: none;
-  }
-
-  #header {
-    min-height: 100px;
-    position: relative;
-    padding: 5px;
-  }
-  
-  #headerTitle,
-  #headerTitle-large {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    font-size: 1em;
-    margin-bottom: 5px;
-  }
-  
-  #headerTitle2,
-  #headerTitle2-large {
-    position: relative !important;
-    left: auto !important;
-    top: auto !important;
-    font-size: 0.9em;
-    margin-bottom: 5px;
-  }
-  
-  #headerTag,
-  #headerTag-large {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    font-size: 0.8em;
-    margin-bottom: 5px;
-  }
-  
-  #header2Tag,
-  #header2Tag-large {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    font-size: 0.8em;
-    margin-bottom: 5px;
-  }
-  
-  #header3Tag,
-  #header4Tag {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    font-size: 0.8em;
-    margin-bottom: 5px;
-  }
-  
-  #headerLogin,
-  #headerLogout2 {
-    position: relative !important;
-    top: auto !important;
-    left: auto !important;
-    text-align: center;
-    margin: 5px 0;
-  }
-  
-  #headerImg {
-    display: none;
-  }
-
-  table.gridtable,
-  table.gridtable-large {
-    font-size: 11px;
-  }
-
-  .submit,
-  .submit-large,
-  input[type="submit"],
-  input[type="button"],
-  button {
-    width: 100%;
-    margin: 5px 0;
-  }
-  
-  /* Enhanced mobile menu - more conservative */
-  #menu {
-    padding: 5px;
-  }
-  
-  #menu li {
-    width: 100%;
-    margin: 1px 0;
-  }
-  
-  #menu li a {
-    width: 100%;
-    padding: 8px;
-    font-size: 14px;
-    text-align: center;
-    display: block;
-  }
-  
-  /* Better mobile form elements */
+  /* Mobile view - keep identical to desktop */
+  /* Only prevent zoom on input focus (iOS requirement) */
   input[type="text"],
   input[type="password"],
   input[type="email"],
   select,
   textarea {
-    width: 100%;
-    padding: 8px;
-    font-size: 16px; /* Keep 16px to prevent zoom */
-    margin: 3px 0;
-    box-sizing: border-box;
+    font-size: 16px;
   }
   
-  /* Mobile-friendly tables */
-  table {
-    font-size: 11px;
-    width: 100%;
-  }
-  
-  table th,
-  table td {
-    padding: 4px 2px;
-    word-wrap: break-word;
-  }
-  
-  /* Keep original mobile readability */
+  /* Ensure body doesn't overflow on small screens */
   body {
-    font-size: 12px;
-    line-height: 1.4;
+    min-width: auto;
+    max-width: 100%;
+    overflow-x: hidden;
   }
   
-  /* Better mobile spacing */
-  .container {
-    margin: 5px;
-    padding: 10px;
+  /* Ensure tables don't overflow */
+  table {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
   }
 }
 
