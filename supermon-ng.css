@@ -34,8 +34,8 @@ body {
   margin: 0 auto 7px;
   padding: 0 5px;
   color: var(--text-color);
-  min-width: 350px;
-  max-width: 1800px;
+  min-width: auto;
+  max-width: 100%;
   text-align: center;
   background-color: var(--background-color);
   font-family: sans-serif;
