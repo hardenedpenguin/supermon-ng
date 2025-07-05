@@ -13,6 +13,8 @@ class ModernHeader {
     }
 
     async registerServiceWorker() {
+        // Temporarily disabled for mobile testing
+        /*
         if ('serviceWorker' in navigator) {
             try {
                 const registration = await navigator.serviceWorker.register('js/sw.js');
@@ -31,6 +33,7 @@ class ModernHeader {
                 console.error('Service Worker registration failed:', error);
             }
         }
+        */
     }
 
     setupProgressiveWebApp() {

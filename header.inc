@@ -119,15 +119,15 @@ window.supermonConfig = {
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/app.js"></script>
-<script src="js/modern-header.js"></script>
+<!-- <script src="js/modern-header.js"></script> -->
 
-<!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#007bff">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Supermon-ng">
-<link rel="apple-touch-icon" href="/favicon.ico">
+<!-- PWA Manifest - temporarily disabled for mobile testing -->
+<!-- <link rel="manifest" href="manifest.json"> -->
+<!-- <meta name="theme-color" content="#007bff"> -->
+<!-- <meta name="mobile-web-app-capable" content="yes"> -->
+<!-- <meta name="apple-mobile-web-app-status-bar-style" content="default"> -->
+<!-- <meta name="apple-mobile-web-app-title" content="Supermon-ng"> -->
+<!-- <link rel="apple-touch-icon" href="/favicon.ico"> -->
 
 <?php
 // Set header title variables for JavaScript
