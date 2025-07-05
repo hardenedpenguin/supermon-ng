@@ -153,4 +153,29 @@ function validateCredentials() {
         }
     });
     return false;
-} 
+}
+
+// Add event handlers when document is ready
+$(document).ready(function() {
+    // Form submission handler
+    $('#myform').on('submit', function(e) {
+        e.preventDefault();
+        validateCredentials();
+    });
+    
+    // Enter key handler for password field
+    $('#passwd').on('keypress', function(e) {
+        if (e.which === 13) { // Enter key
+            e.preventDefault();
+            validateCredentials();
+        }
+    });
+    
+    // Enter key handler for username field
+    $('#user').on('keypress', function(e) {
+        if (e.which === 13) { // Enter key
+            e.preventDefault();
+            $('#passwd').focus();
+        }
+    });
+}); 
