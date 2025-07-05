@@ -28,7 +28,7 @@ class ModernHeader {
                     });
                 });
             } catch (error) {
-                console.error('Service Worker registration failed:', error);
+                // Service Worker registration failed silently
             }
         }
     }
@@ -68,14 +68,14 @@ class ModernHeader {
                     for (const entry of list.getEntries()) {
                         // Send to analytics if needed
                         if (entry.name === 'LCP' && entry.value > 2500) {
-                            console.warn('LCP is too slow:', entry.value);
+                            // LCP is too slow - could log to analytics
                         }
                     }
                 });
                 
                 observer.observe({ entryTypes: ['largest-contentful-paint', 'first-input', 'layout-shift'] });
             } catch (error) {
-                console.error('Performance monitoring failed:', error);
+                // Performance monitoring failed silently
             }
         }
     }
@@ -83,13 +83,11 @@ class ModernHeader {
     setupErrorHandling() {
         // Global error handler
         window.addEventListener('error', (event) => {
-            console.error('Global error:', event.error);
             this.reportError(event.error);
         });
 
         // Unhandled promise rejections
         window.addEventListener('unhandledrejection', (event) => {
-            console.error('Unhandled promise rejection:', event.reason);
             this.reportError(event.reason);
         });
     }
@@ -213,7 +211,7 @@ class ModernHeader {
 
     reportError(error) {
         // Send error to analytics or logging service
-        console.error('Error reported:', error);
+        // Error reporting disabled for production
         
         // You could send to a logging service here
         // fetch('/api/log-error', {

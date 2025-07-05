@@ -40,13 +40,11 @@ session_write_close();
                                 $("#spinner_" + node).text(data.spinner);
                             }
                         } catch (e) {
-                            console.error("Error parsing data for node " + node + ":", e);
                             $("#link_list_" + node).html("<div class='error-message'>Received invalid data from server.</div>");
                         }
                     };
 
                     source.onerror = function(error) {
-                        console.error("EventSource error for node " + node + ":", error);
                         $("#spinner_" + node).text('X');
                         $("#link_list_" + node).html("<div class='error-message'>Error receiving updates for node " + node + ". The connection was lost.</div>");
                     };

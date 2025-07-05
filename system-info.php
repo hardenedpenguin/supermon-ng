@@ -82,9 +82,9 @@ function safe_exec($command, $args = '') {
             if (window.opener && !window.opener.closed) {
                  try {
                      window.opener.location.reload();
-                 } catch (e) {
-                     console.error("Error reloading opener window:", e);
-                 }
+                                 } catch (e) {
+                    // Error reloading opener window silently ignored
+                }
             }
         }
     </script>

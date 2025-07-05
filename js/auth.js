@@ -77,7 +77,6 @@ function validateCredentials() {
         if (typeof alertify !== 'undefined') {
             alertify.error("Username and Password are required.");
         } else {
-            console.error('alertify is not defined!');
             alert("Username and Password are required.");
         }
         return false;
@@ -112,7 +111,6 @@ function validateCredentials() {
                 if (typeof alertify !== 'undefined') {
                     alertify.success("<p style=\"font-size:28px;\"><b>Welcome " + user + "!</b></p>");
                 } else {
-                    console.error('alertify is not defined!');
                     alert("Welcome " + user + "!");
                 }
                 // Reload the page to update the UI
@@ -125,7 +123,6 @@ function validateCredentials() {
                 if (typeof alertify !== 'undefined') {
                     alertify.error(jsonResponse.message || "Login failed. Please check your credentials.");
                 } else {
-                    console.error('alertify is not defined!');
                     alert(jsonResponse.message || "Login failed. Please check your credentials.");
                 }
             } else {
@@ -135,7 +132,6 @@ function validateCredentials() {
                     if (typeof alertify !== 'undefined') {
                         alertify.success("<p style=\"font-size:28px;\"><b>Welcome " + user + "!</b></p>");
                     } else {
-                        console.error('alertify is not defined!');
                         alert("Welcome " + user + "!");
                     }
                     // Use the original sleep function if available, otherwise setTimeout
@@ -151,7 +147,6 @@ function validateCredentials() {
                     if (typeof alertify !== 'undefined') {
                         alertify.error("Sorry, Login Failed!");
                     } else {
-                        console.error('alertify is not defined!');
                         alert("Sorry, Login Failed!");
                     }
                 }
@@ -173,7 +168,6 @@ function validateCredentials() {
             if (typeof alertify !== 'undefined') {
                 alertify.error(errorMessage);
             } else {
-                console.error('alertify is not defined!');
                 alert(errorMessage);
             }
         }
@@ -189,7 +183,6 @@ $(document).ready(function() {
     const passwdField = $('#passwd');
     
     if (form.length === 0) {
-        console.error('Login form not found!');
         return;
     }
     

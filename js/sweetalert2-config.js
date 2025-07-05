@@ -14,7 +14,6 @@ Swal.mixin({
 // Custom functions to mimic Alertify behavior
 window.alertify = {
     success: function(message) {
-        console.log('alertify.success called with:', message);
         Swal.fire({
             icon: 'success',
             title: 'Success!',
@@ -30,7 +29,6 @@ window.alertify = {
         });
     },
     error: function(message) {
-        console.log('alertify.error called with:', message);
         Swal.fire({
             icon: 'error',
             title: 'Error',
@@ -46,7 +44,6 @@ window.alertify = {
         });
     },
     confirm: function(message, callback) {
-        console.log('alertify.confirm called with:', message);
         Swal.fire({
             title: 'Confirm',
             html: message,
@@ -68,5 +65,4 @@ window.alertify = {
     }
 };
 
-// Ensure alertify is available globally
-console.log('alertify object defined:', typeof window.alertify); 
+// Ensure alertify is available globally 

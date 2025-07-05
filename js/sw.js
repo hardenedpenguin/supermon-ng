@@ -23,29 +23,25 @@ const STATIC_FILES = [
 
 // Install event - cache static files
 self.addEventListener('install', event => {
-    console.log('Service Worker installing...');
     event.waitUntil(
         caches.open(STATIC_CACHE)
             .then(cache => {
-                console.log('Caching static files');
                 return cache.addAll(STATIC_FILES);
             })
             .catch(error => {
-                console.error('Cache installation failed:', error);
+                // Cache installation failed silently
             })
     );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', event => {
-    console.log('Service Worker activating...');
     event.waitUntil(
         caches.keys()
             .then(cacheNames => {
                 return Promise.all(
                     cacheNames.map(cacheName => {
                         if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
-                            console.log('Deleting old cache:', cacheName);
                             return caches.delete(cacheName);
                         }
                     })
@@ -98,8 +94,6 @@ async function handleStaticRequest(request) {
 
         return networkResponse;
     } catch (error) {
-        console.error('Static request failed:', error);
-        
         // Return offline page if available
         const offlineResponse = await caches.match('./offline.html');
         if (offlineResponse) {
@@ -128,8 +122,6 @@ async function handleApiRequest(request) {
         
         return networkResponse;
     } catch (error) {
-        console.error('API request failed:', error);
-        
         // Try cache as fallback
         const cachedResponse = await caches.match(request);
         if (cachedResponse) {
@@ -162,11 +154,11 @@ async function doBackgroundSync() {
                 await fetch(request.url, request.options);
                 await removePendingRequest(request.id);
             } catch (error) {
-                console.error('Background sync failed for request:', request, error);
+                // Background sync failed for request silently
             }
         }
     } catch (error) {
-        console.error('Background sync failed:', error);
+        // Background sync failed silently
     }
 }
 
