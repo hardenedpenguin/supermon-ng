@@ -100,9 +100,11 @@ if (isset($_SESSION['sm61loggedin']) && $_SESSION['sm61loggedin'] === true && ge
         if ($logLines !== false && !empty($logLines)) {
             echo '<table class="webacclog-table">';
             echo '<thead><tr>';
-            foreach ($logTableHeaders as $header) {
-                echo '<th>' . htmlspecialchars($header) . '</th>';
-            }
+            echo '<th>Timestamp</th>';
+            echo '<th>IP Address</th>';
+            echo '<th>Request</th>';
+            echo '<th>Status</th>';
+            echo '<th>User Agent</th>';
             echo '</tr></thead>';
             echo '<tbody>';
 
@@ -111,18 +113,23 @@ if (isset($_SESSION['sm61loggedin']) && $_SESSION['sm61loggedin'] === true && ge
                 $trimmedLine = trim($line);
                 if (empty($trimmedLine)) continue;
 
-                if (preg_match(LOG_FORMAT_REGEX, $trimmedLine, $matches)) {
+                // Simple regex to parse common log format
+                if (preg_match('/^(\S+) \S+ \S+ \[([^\]]+)\] "([^"]*)" (\d+) (\d+|-) "([^"]*)" "([^"]*)"$/', $trimmedLine, $matches)) {
                     echo '<tr>';
-                    for ($i = 1; $i < count($matches); $i++) {
-                        echo '<td>' . htmlspecialchars($matches[$i]) . '</td>';
-                    }
+                    echo '<td>' . htmlspecialchars($matches[2]) . '</td>'; // Timestamp
+                    echo '<td>' . htmlspecialchars($matches[1]) . '</td>'; // IP Address
+                    echo '<td>' . htmlspecialchars($matches[3]) . '</td>'; // Request
+                    echo '<td>' . htmlspecialchars($matches[4]) . '</td>'; // Status
+                    echo '<td>' . htmlspecialchars($matches[7]) . '</td>'; // User Agent
                     echo '</tr>';
                 } else {
-                    // Ensure unparsed line text is readable on dark background
-                    echo '<tr><td colspan="' . count($logTableHeaders) . '"><em>[Unparsed Line]:</em> ' . htmlspecialchars($trimmedLine) . '</td></tr>';
+                    // Show unparsed line
+                    echo '<tr><td colspan="5"><em>[Unparsed Line]:</em> ' . htmlspecialchars($trimmedLine) . '</td></tr>';
                 }
             }
             echo '</tbody></table>';
+        } else {
+            echo '<div class="log-viewer-error">No log entries found or unable to read log file.</div>';
         }
     } else {
          echo '<div class="log-viewer-error">ERROR: The `WEB_ACCESS_LOG` path is not defined in `global.inc`.</div>';
