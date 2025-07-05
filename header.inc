@@ -62,22 +62,7 @@ if (preg_match("/voter\.php\?node=(\d+)$/", $_SERVER['REQUEST_URI'], $matches)) 
 $script_dir = dirname($_SERVER['SCRIPT_NAME']);
 $home = ($script_dir == '/' || $script_dir == '\\') ? '/' : $script_dir;
 
-// Set security headers
-header('X-Content-Type-Options: nosniff');
-header('X-Frame-Options: DENY');
-header('X-XSS-Protection: 1; mode=block');
-header('Referrer-Policy: strict-origin-when-cross-origin');
-header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
 
-// Content Security Policy
-$csp = "default-src 'self'; " .
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " .
-        "style-src 'self' 'unsafe-inline'; " .
-        "img-src 'self' data:; " .
-        "font-src 'self'; " .
-        "connect-src 'self'; " .
-        "frame-ancestors 'none';";
-header("Content-Security-Policy: " . $csp);
 
 ?>
 <!DOCTYPE html>
@@ -85,7 +70,7 @@ header("Content-Security-Policy: " . $csp);
 <head>
 <title><?php echo htmlspecialchars($pageTitle); ?></title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <meta name="generator" content="By hand with vi text editor">
 <meta name="description" content="AllStar node manager">
 <meta name="keywords" content="allstar monitor, app_rpt, asterisk">
