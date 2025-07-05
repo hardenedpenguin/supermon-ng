@@ -92,7 +92,8 @@ header('X-XSS-Protection: 1; mode=block');
 <!-- Modern JavaScript will handle login functionality -->
 
 <!-- Load modern CSS -->
-<link rel="stylesheet" href="js/modern-styles.css"/>
+<!-- Temporarily disabled to preserve original table and button styling -->
+<!-- <link rel="stylesheet" href="js/modern-styles.css"/> -->
 
 <!-- Load JavaScript files -->
 <script src="js/sweetalert2-config.js"></script>
