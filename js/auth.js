@@ -224,4 +224,23 @@ $(document).ready(function() {
         e.preventDefault();
         validateCredentials();
     });
+    
+    // Add logout functionality
+    $('#logoutlink').on('click', function(event) {
+        event.preventDefault();
+        
+        if (typeof alertify !== 'undefined') {
+            alertify.success("<p style=\"font-size:28px;\"><b>Goodbye!</b></p>");
+        } else {
+            alert("Goodbye!");
+        }
+        
+        $.post("logout.php", "", function(response) {
+            if (response.substr(0,5) != 'Sorry') {
+                setTimeout(function() {
+                    window.location.reload();
+                }, 2000);
+            }
+        });
+    });
 }); 

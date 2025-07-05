@@ -90,6 +90,29 @@ header('X-XSS-Protection: 1; mode=block');
 <link rel="stylesheet" href="js/sweetalert2.min.css"/>
 
 <!-- Modern JavaScript will handle login functionality -->
+<script type="text/javascript">
+// Add logout functionality with PHP variable access
+$(document).ready(function() {
+    $('#logoutlink').on('click', function(event) {
+        event.preventDefault();
+        var user = <?php echo json_encode($_SESSION['user'] ?? ''); ?>;
+        
+        if (typeof alertify !== 'undefined') {
+            alertify.success("<p style=\"font-size:28px;\"><b>Goodbye " + user + "!</b></p>");
+        } else {
+            alert("Goodbye " + user + "!");
+        }
+        
+        $.post("logout.php", "", function(response) {
+            if (response.substr(0,5) != 'Sorry') {
+                setTimeout(function() {
+                    window.location.reload();
+                }, 2000);
+            }
+        });
+    });
+});
+</script>
 
 <!-- Load modern CSS -->
 <!-- Temporarily disabled to preserve original table and button styling -->
