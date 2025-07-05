@@ -74,24 +74,68 @@ table tbody tr:hover {
     background-color: rgba(0,123,255,0.05);
 }
 
-/* Responsive design */
+/* Responsive design - preserve original mobile styles */
 @media (max-width: 768px) {
     .container {
         padding: 0 15px;
     }
     
-    table {
-        font-size: 0.875rem;
+    /* Preserve original table font size for mobile */
+    table.gridtable,
+    table.gridtable-large {
+        font-size: 11px;
     }
     
-    table th,
-    table td {
+    /* Only apply modern padding to non-grid tables */
+    table:not(.gridtable):not(.gridtable-large) th,
+    table:not(.gridtable):not(.gridtable-large) td {
         padding: 0.5rem;
     }
     
     input[type="text"], 
     input[type="password"] {
         font-size: 16px; /* Prevents zoom on iOS */
+    }
+    
+    /* Ensure body doesn't overflow on small screens */
+    body {
+        min-width: auto;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+    
+    /* Ensure tables don't overflow */
+    table {
+        max-width: 100%;
+        overflow-x: auto;
+    }
+    
+    /* Fix header positioning for mobile */
+    #headerTitle2,
+    #headerTitle2-large {
+        left: 10px !important;
+        top: 25px !important;
+    }
+    
+    #headerTag,
+    #headerTag-large {
+        top: 45px !important;
+    }
+    
+    #header2Tag,
+    #header2Tag-large {
+        top: 65px !important;
+    }
+    
+    #header3Tag,
+    #header4Tag {
+        top: 85px !important;
+    }
+    
+    /* Ensure header doesn't overflow */
+    #header {
+        min-height: 120px;
+        position: relative;
     }
 }
 

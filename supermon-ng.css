@@ -1,24 +1,25 @@
 /* ==========================================================================
-   Supermon-ng CSS - Consolidated Stylesheet
+   Supermon-ng CSS - Monochrome Dark Theme
    ========================================================================== */
 
 /* CSS Custom Properties (Variables) */
 :root {
-  --primary-color: #66ccff;
-  --background-color: #031224;
-  --menu-background: #191970;
-  --text-color: #a8b9a1;
-  --table-header-bg: #4a5161;
-  --light-yellow: #ffff80;
-  --light-green: #90ee90;
-  --error-color: #ff6b6b;
-  --success-color: #51cf66;
-  --warning-color: #ffd43b;
-  --border-color: #555;
-  --input-bg: #1e1e1e;
-  --input-text: #d4d4d4;
-  --link-color: limegreen;
-  --link-hover: var(--primary-color);
+  --primary-color: #E0E0E0;      /* Soft White / Primary Accent */
+  --background-color: #121212;  /* Very Dark Gray (Almost Black) */
+  --container-bg: #1E1E1E;      /* Dark Charcoal for containers */
+  --menu-background: #1C1C1C;    /* Slightly lighter dark gray for menu */
+  --text-color: #CCCCCC;        /* Light Gray for text */
+  --table-header-bg: #333333;    /* Medium-Dark Gray for headers */
+  --light-yellow: #FFA000;      /* Amber (legacy class) */
+  --light-green: #4CAF50;       /* Muted Green (legacy class) */
+  --error-color: #D32F2F;       /* Muted Red */
+  --success-color: #4CAF50;     /* Muted Green */
+  --warning-color: #FFA000;     /* Amber */
+  --border-color: #333333;      /* Medium-Dark Gray for borders */
+  --input-bg: #2a2a2a;          /* Darker Gray for inputs */
+  --input-text: #CCCCCC;        /* Same as main text color */
+  --link-color: #64B5F6;        /* A subtle, readable Blue */
+  --link-hover: #E0E0E0;        /* Soft White on hover */
 }
 
 /* ==========================================================================
@@ -36,7 +37,7 @@ body {
   min-width: 350px;
   max-width: 1800px;
   text-align: center;
-  background-color: black;
+  background-color: var(--background-color);
   font-family: sans-serif;
   line-height: 1.4;
 }
@@ -86,7 +87,7 @@ a:focus,
   margin: 0;
   font-weight: bold;
   font-size: 1.1em;
-  color: white;
+  color: var(--text-color);
   line-height: normal;
   letter-spacing: normal;
   font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
@@ -103,18 +104,18 @@ a:focus,
 #headerTitle-large a:link,
 #headerTitle-large a:visited {
   text-decoration: none;
-  color: white;
+  color: var(--text-color);
 }
 
 #headerTitle2,
 #headerTitle2-large {
   position: absolute;
   top: 5px;
-  left: 400px;
+  left: 550px;
   margin: 0;
   font-weight: bold;
   font-size: 1.1em;
-  color: #36454F;
+  color: var(--text-color);
   line-height: normal;
   font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
   letter-spacing: normal;
@@ -131,7 +132,7 @@ a:focus,
   text-align: left;
   left: 10px;
   margin: 0;
-  color: white;
+  color: var(--text-color);
   font-weight: bold;
   font-size: 1.1em;
   line-height: normal;
@@ -150,7 +151,7 @@ a:focus,
   left: 10px;
   margin: 0;
   font-size: 0.9em;
-  color: white;
+  color: var(--text-color);
   font-weight: bold;
   line-height: normal;
   font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
@@ -175,11 +176,11 @@ a:focus,
 }
 
 #header3Tag {
-  color: var(--light-green);
+  color: var(--success-color);
 }
 
 #header4Tag {
-  color: var(--light-yellow);
+  color: var(--warning-color);
 }
 
 /* Header Images */
@@ -214,7 +215,7 @@ a:focus,
   left: 92%;
   font-size: 14px;
   font-family: Verdana, Arial, sans-serif;
-  color: white;
+  color: var(--text-color);
   text-align: right;
   font-weight: bold;
   font-style: italic;
@@ -224,14 +225,14 @@ a:focus,
 #headerLogin a:link,
 #headerLogin a:visited {
   text-decoration: none;
-  color: white;
+  color: var(--text-color);
 }
 
 #headerLogin a:hover {
   text-decoration: none;
   font-size: 16px;
   font-weight: bold;
-  color: white;
+  color: var(--primary-color);
 }
 
 #headerLogout2 {
@@ -246,14 +247,14 @@ a:focus,
 #headerLogout a:visited {
   text-decoration: none;
   font-weight: bold;
-  color: white;
+  color: var(--text-color);
 }
 
 #headerLogout a:hover {
   text-decoration: none;
   font-size: 15px;
   font-weight: bold;
-  color: yellow;
+  color: var(--link-color);
 }
 
 /* ==========================================================================
@@ -293,7 +294,7 @@ a:focus,
 #menu li a:link,
 #menu li a:visited {
   display: inline-block;
-  color: white;
+  color: var(--text-color);
   text-align: center;
   padding: 8px 12px;
   text-decoration: none;
@@ -303,7 +304,7 @@ a:focus,
 }
 
 #menu li a:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(224, 224, 224, 0.1);
 }
 
 #menu li.dropdown {
@@ -322,14 +323,14 @@ a:focus,
 }
 
 #menu .dropdown-content a {
-  color: white;
+  color: var(--text-color);
   padding: 12px 16px;
   text-decoration: none;
   display: block;
 }
 
 #menu .dropdown-content a:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgba(224, 224, 224, 0.1);
 }
 
 #menu .dropdown:hover .dropdown-content {
@@ -367,14 +368,15 @@ table.rtcm td {
 table.rtcm th {
   font-size: 12px;
   padding: 5px;
-  background-color: #e0e0e0;
+  background-color: var(--table-header-bg);
+  color: var(--primary-color);
 }
 
 table.gridtable {
   font-family: verdana, arial, sans-serif;
   font-size: 12px;
   font-weight: bold;
-  color: white;
+  color: var(--text-color);
   padding: 4px;
   border-collapse: collapse;
 }
@@ -383,7 +385,7 @@ table.gridtable-large {
   font-family: verdana, arial, sans-serif;
   font-size: 22px;
   font-weight: bold;
-  color: white;
+  color: var(--text-color);
   padding: 4px;
   border-collapse: collapse;
 }
@@ -391,46 +393,47 @@ table.gridtable-large {
 table.gridtable th {
   padding: 4px;
   background-color: var(--table-header-bg);
+  color: var(--primary-color);
   font-size: 12px;
 }
 
 table.gridtable td {
   padding: 4px;
-  background-color: #666666;
+  background-color: var(--container-bg);
   font-size: 11px;
 }
 
 /* Table Row Colors */
 table.gridtable tr.rColor td {
-  background-color: #001fd7;
+  background-color: #2a2a2a; /* Darker Gray */
   font-weight: bold;
-  color: var(--light-yellow);
+  color: var(--link-color);
 }
 
 table.gridtable tr.cColor td,
 table.gridtable tr.cColor td a,
 table.gridtable tr.tColor td {
-  background-color: #007bff;
+  background-color: #2a2a2a; /* Darker Gray */
   font-weight: bold;
-  color: var(--light-yellow);
+  color: var(--link-color);
 }
 
 table.gridtable tr.bColor td {
-  background-color: var(--light-green);
+  background-color: var(--success-color);
   font-weight: bold;
-  color: black;
+  color: var(--background-color);
 }
 
 table.gridtable tr.gColor td {
-  background-color: #323ca8;
+  background-color: #404040; /* Medium Gray */
   font-weight: bold;
-  color: white;
+  color: var(--text-color);
 }
 
 table.gridtable tr.lColor td {
-  background-color: #ffa500;
+  background-color: #585858; /* Distinct Medium Gray */
   font-weight: bold;
-  color: black;
+  color: var(--text-color);
 }
 
 /* ==========================================================================
@@ -465,7 +468,7 @@ textarea:focus,
 select:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 5px rgba(102, 204, 255, 0.5);
+  box-shadow: 0 0 5px rgba(224, 224, 224, 0.2);
 }
 
 textarea {
@@ -482,9 +485,9 @@ textarea {
 .submit,
 .submit-large,
 .submit2 {
-  background-color: var(--menu-background);
-  color: white;
-  border: 1px solid var(--primary-color);
+  background-color: var(--table-header-bg);
+  color: var(--primary-color);
+  border: 1px solid var(--border-color);
   padding: 5px 10px;
   margin: 2px;
   border-radius: 15px;
@@ -497,12 +500,13 @@ textarea {
 .submit-large:hover,
 .submit2:hover {
   background-color: var(--primary-color);
-  color: black;
+  color: var(--background-color);
+  border-color: var(--primary-color);
   transform: translateY(-1px);
 }
 
 .submit2 {
-  background-color: #4a5161;
+  background-color: var(--table-header-bg);
 }
 
 .clearer {
@@ -520,7 +524,7 @@ textarea {
 }
 
 .blank {
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
   color: var(--text-color);
   padding: 10px;
   border: 1px solid var(--border-color);
@@ -548,7 +552,7 @@ textarea {
 #login form {
   border: 2px solid var(--border-color);
   border-radius: 8px;
-  background-color: var(--background-color);
+  background-color: var(--menu-background);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
 }
 
@@ -556,7 +560,7 @@ textarea {
   width: 220px;
   height: auto;
   min-height: 240px;
-  background-color: var(--background-color);
+  background-color: var(--menu-background);
   border: none;
   margin: 0;
   padding: 15px;
@@ -577,7 +581,7 @@ textarea {
 }
 
 #login-panel {
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 20px;
@@ -602,13 +606,13 @@ textarea {
 #login input[type="password"]:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 5px rgba(102, 204, 255, 0.5);
+  box-shadow: 0 0 5px rgba(224, 224, 224, 0.2);
 }
 
 #login input[type="submit"] {
-  background-color: var(--menu-background);
-  color: white;
-  border: 1px solid var(--primary-color);
+  background-color: var(--table-header-bg);
+  color: var(--primary-color);
+  border: 1px solid var(--border-color);
   padding: 8px 16px;
   border-radius: 15px;
   cursor: pointer;
@@ -618,13 +622,13 @@ textarea {
 
 #login input[type="submit"]:hover {
   background-color: var(--primary-color);
-  color: black;
+  color: var(--background-color);
 }
 
 #login label {
   display: block;
   margin: 8px 0;
-  color: white;
+  color: var(--text-color);
   font-size: 14px;
 }
 
@@ -636,7 +640,7 @@ textarea {
   position: absolute;
   top: 5px;
   right: 5px;
-  color: white;
+  color: var(--text-color);
   font-size: 12px;
 }
 
@@ -660,8 +664,8 @@ textarea {
    ========================================================================== */
 
 .success {
-  color: var(--success-color);
-  background-color: rgba(81, 207, 102, 0.1);
+  color: #a5d6a7;
+  background-color: rgba(76, 175, 80, 0.15);
   border: 1px solid var(--success-color);
   padding: 10px;
   border-radius: 5px;
@@ -669,8 +673,8 @@ textarea {
 }
 
 .error {
-  color: var(--error-color);
-  background-color: rgba(255, 107, 107, 0.1);
+  color: #ef9a9a;
+  background-color: rgba(211, 47, 47, 0.15);
   border: 1px solid var(--error-color);
   padding: 10px;
   border-radius: 5px;
@@ -678,8 +682,8 @@ textarea {
 }
 
 .error-message {
-  color: var(--error-color);
-  background-color: rgba(255, 107, 107, 0.1);
+  color: #ef9a9a;
+  background-color: rgba(211, 47, 47, 0.15);
   border: 1px solid var(--error-color);
   padding: 10px;
   border-radius: 5px;
@@ -687,9 +691,9 @@ textarea {
 }
 
 .info-message {
-  color: var(--primary-color);
-  background-color: rgba(102, 204, 255, 0.1);
-  border: 1px solid var(--primary-color);
+  color: #90caf9;
+  background-color: rgba(100, 181, 246, 0.1);
+  border: 1px solid var(--link-color);
   padding: 10px;
   border-radius: 5px;
   margin: 10px 0;
@@ -718,7 +722,7 @@ textarea {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
   border: 1px solid var(--border-color);
   border-radius: 10px;
 }
@@ -748,7 +752,7 @@ textarea {
 }
 
 .voter-info-container {
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
   border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 15px;
@@ -818,7 +822,7 @@ textarea {
 
 .info-container-summary,
 .info-container {
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
   border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 15px;
@@ -856,7 +860,7 @@ textarea {
 .coredump-error {
   color: var(--error-color);
   font-weight: bold;
-  background-color: rgba(255, 107, 107, 0.1);
+  background-color: rgba(211, 47, 47, 0.1);
   border: 1px solid var(--error-color);
   padding: 10px;
   border-radius: 5px;
@@ -877,7 +881,7 @@ textarea {
 .cpu-temp-high {
   color: var(--error-color);
   font-weight: bold;
-  background-color: rgba(255, 107, 107, 0.1);
+  background-color: rgba(211, 47, 47, 0.1);
   border: 1px solid var(--error-color);
   padding: 5px;
   border-radius: 3px;
@@ -886,7 +890,7 @@ textarea {
 .cpu-temp-unknown {
   color: var(--text-color);
   font-style: italic;
-  background-color: rgba(168, 185, 161, 0.1);
+  background-color: rgba(224, 224, 224, 0.1);
   border: 1px solid var(--text-color);
   padding: 5px;
   border-radius: 3px;
@@ -897,7 +901,7 @@ textarea {
    ========================================================================== */
 
 .supermon-log-content {
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
   border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 15px;
@@ -918,7 +922,7 @@ textarea {
 
 .supermon-message--error {
   color: var(--error-color);
-  background-color: rgba(255, 107, 107, 0.1);
+  background-color: rgba(211, 47, 47, 0.1);
 }
 
 /* ==========================================================================
@@ -926,7 +930,7 @@ textarea {
    ========================================================================== */
 
 .result-item {
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
   border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 10px;
@@ -935,7 +939,7 @@ textarea {
 }
 
 .result-item:hover {
-  background-color: rgba(102, 204, 255, 0.1);
+  background-color: rgba(224, 224, 224, 0.05);
   border-color: var(--primary-color);
 }
 
@@ -950,7 +954,7 @@ textarea {
 }
 
 .db-content {
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
   border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 15px;
@@ -964,7 +968,7 @@ textarea {
    ========================================================================== */
 
 .status-message {
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
   border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 10px;
@@ -978,11 +982,11 @@ textarea {
    ========================================================================== */
 
 .even-row {
-  background-color: rgba(102, 204, 255, 0.05);
+  background-color: rgba(224, 224, 224, 0.02);
 }
 
 .odd-row {
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
 }
 
 /* ==========================================================================
@@ -998,7 +1002,7 @@ body.cpustats pre {
   font-size: 12px;
   white-space: pre-wrap;
   word-wrap: break-word;
-  color: white;
+  color: var(--text-color);
   text-align: left;
 }
 
@@ -1007,7 +1011,7 @@ body.cpustats pre {
    ========================================================================== */
 
 .rptstatus {
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
   border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 15px;
@@ -1025,7 +1029,7 @@ body.cpustats pre {
    ========================================================================== */
 
 .ast-status-pre {
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
   border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 15px;
@@ -1039,7 +1043,7 @@ body.cpustats pre {
 }
 
 .ast-status-highlight {
-  background-color: rgba(102, 204, 255, 0.2);
+  background-color: rgba(224, 224, 224, 0.1);
 }
 
 .ast-status-header-line {
@@ -1063,7 +1067,7 @@ body.cpustats pre {
 .ast-status-none-indicator {
   color: var(--text-color);
   font-style: italic;
-  background-color: rgba(168, 185, 161, 0.1);
+  background-color: rgba(224, 224, 224, 0.05);
   border: 1px solid var(--text-color);
   padding: 5px;
   border-radius: 3px;
@@ -1074,21 +1078,21 @@ body.cpustats pre {
    ========================================================================== */
 
 .log-viewer-container {
-  background-color: var(--background-color, #1a1a1a);
-  border: 1px solid var(--border-color, #444444);
+  background-color: var(--container-bg);
+  border: 1px solid var(--border-color);
   padding: 15px;
   border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(255,255,255,0.05);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   margin-bottom: 20px;
   text-align: left;
 }
 
 .log-viewer-title {
-  color: var(--primary-color, #66ccff);
+  color: var(--primary-color);
   font-size: 1.3em;
   font-weight: bold;
   margin-bottom: 15px;
-  border-bottom: 1px solid var(--border-color, #444444);
+  border-bottom: 1px solid var(--border-color);
   padding-bottom: 8px;
   text-align: center;
 }
@@ -1096,7 +1100,7 @@ body.cpustats pre {
 .log-viewer-entry {
   font-size: 14px;
   font-family: monospace, 'Courier New', Courier;
-  color: var(--text-color, #ffffff);
+  color: var(--text-color);
   margin: 0 0 2px 0;
   text-align: left;
 }
@@ -1106,7 +1110,7 @@ body.cpustats pre {
   font-size: 14px;
   line-height: 1.4;
   background-color: transparent;
-  color: var(--text-color, #ffffff);
+  color: var(--text-color);
   border: none;
   padding: 0;
   margin: 0;
@@ -1116,28 +1120,28 @@ body.cpustats pre {
 }
 
 .log-viewer-pre {
-  background-color: #2b2b2b;
-  color: #f0f0f0;
+  background-color: var(--menu-background);
+  color: var(--text-color);
   padding: 10px;
-  border: 1px solid var(--border-color, #555555);
+  border: 1px solid var(--border-color);
   max-height: 80vh;
   overflow-y: auto;
   text-align: left;
 }
 
 .log-viewer-error, .error-message {
-  color: var(--error-color, #ff6b6b);
+  color: var(--error-color);
   font-weight: bold;
   text-align: center;
   padding: 20px 10px;
-  background-color: #1a1a1a;
-  border: 1px solid var(--error-color, #ff6b6b);
+  background-color: var(--container-bg);
+  border: 1px solid var(--error-color);
   border-radius: 4px;
   margin: 20px auto;
 }
 
 .log-viewer-info {
-  color: var(--primary-color, #66ccff);
+  color: var(--link-color);
   font-weight: bold;
   margin-bottom: 10px;
   text-align: left;
@@ -1148,8 +1152,8 @@ body.cpustats pre {
    ========================================================================== */
 
 .gpio-page {
-  background-color: black;
-  color: white;
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 .gpio-title {
@@ -1161,7 +1165,7 @@ body.cpustats pre {
 }
 
 .gpio-status {
-  background-color: var(--background-color);
+  background-color: var(--container-bg);
   border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 15px;
@@ -1195,7 +1199,7 @@ body.cpustats pre {
 }
 
 .gpio-output pre {
-  background-color: var(--background-color);
+  background-color: var(--menu-background);
   border: 1px solid var(--border-color);
   border-radius: 5px;
   padding: 10px;
@@ -1208,8 +1212,8 @@ body.cpustats pre {
    ========================================================================== */
 
 .ban-allow-page {
-  background-color: black;
-  color: white;
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 .ban-allow-title {
@@ -1288,8 +1292,8 @@ body.cpustats pre {
    ========================================================================== */
 
 .edit-page {
-  background-color: black;
-  color: white;
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 .edit-page p,
@@ -1441,7 +1445,7 @@ button:focus {
 .button-separator {
   border: none;
   height: 1px;
-  background-color: white;
+  background-color: var(--border-color);
   margin: 10px 0;
 }
 
@@ -1472,7 +1476,7 @@ button:focus {
 
 .weberrlog-table th,
 .weberrlog-table td {
-  border: 1px solid #555555;
+  border: 1px solid var(--border-color);
   padding: 5px 8px;
   text-align: left;
   vertical-align: top;
@@ -1480,8 +1484,8 @@ button:focus {
 }
 
 .weberrlog-table th {
-  background-color: #222222;
-  color: #00FF00;
+  background-color: var(--table-header-bg);
+  color: var(--primary-color);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -1508,7 +1512,7 @@ button:focus {
 .weberrlog-table .line-number {
   width: 55px;
   text-align: right;
-  color: #AAAAAA;
+  color: #888;
   user-select: none;
   white-space: nowrap;
   flex-shrink: 0;
@@ -1517,7 +1521,7 @@ button:focus {
 .weberrlog-table .log-timestamp {
   width: 260px;
   white-space: nowrap;
-  color: #cccccc;
+  color: var(--text-color);
   flex-shrink: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1525,7 +1529,7 @@ button:focus {
 
 .weberrlog-table .log-client {
   width: 175px;
-  color: #ADD8E6;
+  color: var(--link-color); /* Subtle Blue */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1541,7 +1545,7 @@ button:focus {
   white-space: nowrap;
   flex-shrink: 0;
   text-align: center;
-  color: #FFFFFF;
+  color: var(--text-color);
   font-weight: normal;
   background-color: transparent;
 }
@@ -1550,68 +1554,68 @@ button:focus {
 .weberrlog-table .log-level-crit,
 .weberrlog-table .log-level-alert,
 .weberrlog-table .log-level-emerg {
-  color: #FFBDBD;
-  background-color: #4d0000;
+  color: #ef9a9a;
+  background-color: #5f1a1a;
   font-weight: bold;
 }
 
 .weberrlog-table .log-level-warn,
 .weberrlog-table .log-level-warning {
-  color: #FFE999;
-  background-color: #594000;
+  color: #ffcc80;
+  background-color: #614f00;
   font-weight: bold;
 }
 
 .weberrlog-table .log-level-notice {
-  color: #C0E8FF;
-  background-color: #002b4d;
+  color: #90caf9;
+  background-color: #1b4f58;
   font-weight: bold;
 }
 
 .weberrlog-table .log-level-info {
-  color: #cccccc;
+  color: var(--text-color);
   font-weight: normal;
 }
 
 .weberrlog-table .log-level-debug {
-  color: #aaaaaa;
+  color: #888;
   font-weight: normal;
 }
 
 .weberrlog-table .unparsed.log-level-unparsed {
   text-align: center;
-  color: #aaaaaa;
+  color: #888;
   font-style: italic;
   background-color: transparent;
   font-weight: normal;
 }
 
 .weberrlog-table tbody tr:nth-child(odd) {
-  background-color: #111111;
+  background-color: var(--container-bg);
 }
 
 .weberrlog-table tbody tr:nth-child(even) {
-  background-color: #080808;
+  background-color: var(--background-color);
 }
 
 .weberrlog-table tbody tr:hover {
-  background-color: #333333;
+  background-color: var(--border-color);
 }
 
 .weberrlog-table tbody tr:hover td.log-level-error,
 .weberrlog-table tbody tr:hover td.log-level-crit,
 .weberrlog-table tbody tr:hover td.log-level-alert,
 .weberrlog-table tbody tr:hover td.log-level-emerg {
-  background-color: #6e0000;
+  background-color: #8c2b2b;
 }
 
 .weberrlog-table tbody tr:hover td.log-level-warn,
 .weberrlog-table tbody tr:hover td.log-level-warning {
-  background-color: #7a5f00;
+  background-color: #876b00;
 }
 
 .weberrlog-table tbody tr:hover td.log-level-notice {
-  background-color: #004475;
+  background-color: #2e7a88;
 }
 
 /* ==========================================================================
@@ -1621,7 +1625,7 @@ button:focus {
 .webacclog-table {
   border-collapse: collapse;
   width: 100%;
-  border: 1px solid #555555;
+  border: 1px solid var(--border-color);
   font-size: 0.9em;
   margin-top: 10px;
   table-layout: fixed;
@@ -1629,7 +1633,7 @@ button:focus {
 
 .webacclog-table th,
 .webacclog-table td {
-  border: 1px solid #555555;
+  border: 1px solid var(--border-color);
   padding: 6px 8px;
   text-align: left;
   vertical-align: top;
@@ -1637,17 +1641,17 @@ button:focus {
 }
 
 .webacclog-table th {
-  background-color: #2a2a2a;
+  background-color: var(--table-header-bg);
   font-weight: bold;
-  color: #00ff00;
+  color: var(--primary-color);
 }
 
 .webacclog-table tr:nth-child(even) {
-  background-color: #1a1a1a;
+  background-color: var(--container-bg);
 }
 
 .webacclog-table tr:nth-child(odd) {
-  background-color: #0f0f0f;
+  background-color: var(--background-color);
 }
 
 /* VoterServer no clients and empty bar */
@@ -1666,7 +1670,7 @@ button:focus {
 
 /* Inline error text for link.php */
 .error-inline {
-  color: red;
+  color: var(--error-color);
 }
 
 .centered-margin-bottom {
