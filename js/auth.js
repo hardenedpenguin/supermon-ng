@@ -35,24 +35,19 @@ function showLoginUi() {
     
     // Re-attach event handlers when login UI is shown
     setTimeout(function() {
-        console.log('Login UI shown, re-attaching handlers');
-        
         const form = $('#myform');
         const userField = $('#user');
         const passwdField = $('#passwd');
         
         // Form submission handler
         form.off('submit').on('submit', function(e) {
-            console.log('Form submit event triggered (after show)');
             e.preventDefault();
             validateCredentials();
         });
         
         // Enter key handler for password field
         passwdField.off('keypress').on('keypress', function(e) {
-            console.log('Password field keypress (after show):', e.which);
             if (e.which === 13) { // Enter key
-                console.log('Enter key pressed in password field (after show)');
                 e.preventDefault();
                 validateCredentials();
             }
@@ -60,9 +55,7 @@ function showLoginUi() {
         
         // Enter key handler for username field
         userField.off('keypress').on('keypress', function(e) {
-            console.log('Username field keypress (after show):', e.which);
             if (e.which === 13) { // Enter key
-                console.log('Enter key pressed in username field (after show)');
                 e.preventDefault();
                 passwdField.focus();
             }
@@ -70,24 +63,17 @@ function showLoginUi() {
         
         // Submit button click handler
         $('.login[type="submit"]').off('click').on('click', function(e) {
-            console.log('Submit button clicked (after show)');
             e.preventDefault();
             validateCredentials();
         });
-        
-        console.log('Login form handlers re-attached after show');
     }, 100);
 }
 
 function validateCredentials() {
-    console.log('validateCredentials called');
     var user = document.getElementById("user").value;
     var passwd = document.getElementById("passwd").value;
 
-    console.log('User:', user, 'Passwd length:', passwd.length);
-
     if (!user || !passwd) {
-        console.log('Missing credentials, calling alertify.error');
         if (typeof alertify !== 'undefined') {
             alertify.error("Username and Password are required.");
         } else {
@@ -97,14 +83,6 @@ function validateCredentials() {
         return false;
     }
 
-    console.log('Making AJAX request to login.php');
-    console.log('AJAX data being sent:', {user: user, passwd: '***'});
-    console.log('jQuery version:', $.fn.jquery);
-    console.log('AJAX method available:', typeof $.ajax);
-    
-    // Test if we can make a simple AJAX request
-    console.log('Testing AJAX functionality...');
-    
     $.ajax({
         type: "POST",
         url: "login.php",
@@ -113,33 +91,23 @@ function validateCredentials() {
             'X-Requested-With': 'XMLHttpRequest'
         },
         async: false,
-        beforeSend: function() {
-            console.log('AJAX request starting...');
-        },
         success: function(response) {
-            console.log('AJAX success - Raw response:', response);
-            console.log('Response type:', typeof response);
-            console.log('Response length:', response.length);
-            
             // Try to parse as JSON first (new format)
             let jsonResponse = null;
             try {
                 // If response is already an object, use it directly
                 if (typeof response === 'object' && response !== null) {
                     jsonResponse = response;
-                    console.log('Response is already an object:', jsonResponse);
                 } else {
                     jsonResponse = JSON.parse(response);
-                    console.log('Parsed JSON response:', jsonResponse);
                 }
             } catch (e) {
-                console.log('Not JSON, treating as text response (original format)');
+                // Not JSON, treat as text response (original format)
                 jsonResponse = null;
             }
             
             if (jsonResponse && jsonResponse.success) {
                 // New JSON format
-                console.log('Login successful (JSON format)');
                 hideLoginUi();
                 if (typeof alertify !== 'undefined') {
                     alertify.success("<p style=\"font-size:28px;\"><b>Welcome " + user + "!</b></p>");
@@ -153,7 +121,6 @@ function validateCredentials() {
                 }, 2000);
             } else if (jsonResponse && !jsonResponse.success) {
                 // JSON format with error
-                console.log('Login failed (JSON format):', jsonResponse.message);
                 hideLoginUi();
                 if (typeof alertify !== 'undefined') {
                     alertify.error(jsonResponse.message || "Login failed. Please check your credentials.");
@@ -163,9 +130,7 @@ function validateCredentials() {
                 }
             } else {
                 // Original text format - only process if response is a string
-                console.log('Processing as text response');
                 if (typeof response === 'string' && response.substr(0,5) != 'Sorry') {
-                    console.log('Login successful (text format)');
                     hideLoginUi();
                     if (typeof alertify !== 'undefined') {
                         alertify.success("<p style=\"font-size:28px;\"><b>Welcome " + user + "!</b></p>");
@@ -182,7 +147,6 @@ function validateCredentials() {
                         }, 4000);
                     }
                 } else {
-                    console.log('Login failed (text format)');
                     hideLoginUi();
                     if (typeof alertify !== 'undefined') {
                         alertify.error("Sorry, Login Failed!");
@@ -194,12 +158,6 @@ function validateCredentials() {
             }
         },
         error: function(xhr, status, error) {
-            console.log('AJAX error - Status:', status);
-            console.log('AJAX error - Error:', error);
-            console.log('XHR status:', xhr.status);
-            console.log('XHR responseText:', xhr.responseText);
-            console.log('XHR readyState:', xhr.readyState);
-            
             // Try to parse error response as JSON
             let errorMessage = "Error communicating with server for login.";
             try {
@@ -208,7 +166,7 @@ function validateCredentials() {
                     errorMessage = errorResponse.message;
                 }
             } catch (e) {
-                console.log('Could not parse error response as JSON');
+                // Could not parse error response as JSON
             }
             
             hideLoginUi();
@@ -225,18 +183,10 @@ function validateCredentials() {
 
 // Add event handlers when document is ready
 $(document).ready(function() {
-    console.log('Document ready, setting up login form handlers');
-    
     // Check if form elements exist
     const form = $('#myform');
     const userField = $('#user');
     const passwdField = $('#passwd');
-    
-    console.log('Form elements found:', {
-        form: form.length,
-        userField: userField.length,
-        passwdField: passwdField.length
-    });
     
     if (form.length === 0) {
         console.error('Login form not found!');
@@ -245,7 +195,6 @@ $(document).ready(function() {
     
     // Form submission handler
     form.on('submit', function(e) {
-        console.log('Form submit event triggered');
         e.preventDefault();
         validateCredentials();
     });
@@ -253,9 +202,7 @@ $(document).ready(function() {
     // Enter key handler for password field
     if (passwdField.length > 0) {
         passwdField.on('keypress', function(e) {
-            console.log('Password field keypress:', e.which);
             if (e.which === 13) { // Enter key
-                console.log('Enter key pressed in password field');
                 e.preventDefault();
                 validateCredentials();
             }
@@ -265,9 +212,7 @@ $(document).ready(function() {
     // Enter key handler for username field
     if (userField.length > 0) {
         userField.on('keypress', function(e) {
-            console.log('Username field keypress:', e.which);
             if (e.which === 13) { // Enter key
-                console.log('Enter key pressed in username field');
                 e.preventDefault();
                 passwdField.focus();
             }
@@ -276,10 +221,7 @@ $(document).ready(function() {
     
     // Also add click handler for submit button as backup
     $('.login[type="submit"]').on('click', function(e) {
-        console.log('Submit button clicked');
         e.preventDefault();
         validateCredentials();
     });
-    
-    console.log('Login form handlers setup complete');
 }); 

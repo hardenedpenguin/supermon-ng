@@ -16,7 +16,6 @@ class ModernHeader {
         if ('serviceWorker' in navigator) {
             try {
                 const registration = await navigator.serviceWorker.register('js/sw.js');
-                console.log('Service Worker registered successfully:', registration);
                 
                 // Handle updates
                 registration.addEventListener('updatefound', () => {
@@ -46,7 +45,6 @@ class ModernHeader {
 
         // Handle successful installation
         window.addEventListener('appinstalled', () => {
-            console.log('PWA was installed');
             this.hideInstallPrompt();
         });
     }
@@ -68,8 +66,6 @@ class ModernHeader {
             try {
                 const observer = new PerformanceObserver((list) => {
                     for (const entry of list.getEntries()) {
-                        console.log(`${entry.name}: ${entry.value}`);
-                        
                         // Send to analytics if needed
                         if (entry.name === 'LCP' && entry.value > 2500) {
                             console.warn('LCP is too slow:', entry.value);
@@ -187,9 +183,9 @@ class ModernHeader {
                         window.deferredPrompt.prompt();
                         window.deferredPrompt.userChoice.then((choiceResult) => {
                             if (choiceResult.outcome === 'accepted') {
-                                console.log('User accepted the install prompt');
+                                // User accepted the install prompt
                             } else {
-                                console.log('User dismissed the install prompt');
+                                // User dismissed the install prompt
                             }
                             window.deferredPrompt = null;
                         });
