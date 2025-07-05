@@ -15,7 +15,7 @@ class ModernHeader {
     async registerServiceWorker() {
         if ('serviceWorker' in navigator) {
             try {
-                const registration = await navigator.serviceWorker.register('/js/sw.js');
+                const registration = await navigator.serviceWorker.register('js/sw.js');
                 console.log('Service Worker registered successfully:', registration);
                 
                 // Handle updates
