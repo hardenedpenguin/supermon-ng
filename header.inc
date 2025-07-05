@@ -130,7 +130,7 @@ if (isset($MY_URL)) {
 print "<div id=\"$headerTagClass\"><i>$LOCATION<br>$TITLE2</i></div>";
 
 if ($_SESSION['sm61loggedin'] === true) {
-   print "<div id=\"$headerTitle2Class\"><i>$TITLE3</i></div>";
+   print "<div id=\"$header2TagClass\"><i>$TITLE3</i></div>";
 }
 ?>
 
