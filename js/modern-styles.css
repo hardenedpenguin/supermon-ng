@@ -137,6 +137,82 @@ table tbody tr:hover {
         min-height: 120px;
         position: relative;
     }
+    
+    /* Enhanced mobile styling */
+    #menu {
+        flex-direction: column;
+        padding: 10px;
+    }
+    
+    #menu ul {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    #menu li {
+        width: 100%;
+        margin: 2px 0;
+    }
+    
+    #menu li a {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        text-align: center;
+    }
+    
+    /* Make buttons more touch-friendly */
+    .submit,
+    .submit-large,
+    input[type="submit"],
+    input[type="button"],
+    button {
+        width: 100%;
+        margin: 5px 0;
+        padding: 12px;
+        font-size: 16px;
+        min-height: 44px; /* Touch target size */
+    }
+    
+    /* Improve form elements for mobile */
+    input[type="text"],
+    input[type="password"],
+    input[type="email"],
+    select,
+    textarea {
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        margin: 5px 0;
+        box-sizing: border-box;
+    }
+    
+    /* Make tables more mobile-friendly */
+    table {
+        font-size: 12px;
+        width: 100%;
+    }
+    
+    table th,
+    table td {
+        padding: 8px 4px;
+        word-wrap: break-word;
+    }
+    
+    /* Improve readability on mobile */
+    body {
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    
+    /* Better spacing for mobile */
+    .container,
+    .login-page,
+    .logout-page,
+    .astnodes-page {
+        margin: 10px;
+        padding: 15px;
+    }
 }
 
 /* Accessibility improvements */

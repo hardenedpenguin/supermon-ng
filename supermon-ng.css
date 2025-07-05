@@ -1361,6 +1361,61 @@ body.cpustats pre {
     width: 100%;
     margin: 5px 0;
   }
+  
+  /* Enhanced mobile menu */
+  #menu {
+    padding: 10px;
+  }
+  
+  #menu li {
+    width: 100%;
+    margin: 2px 0;
+  }
+  
+  #menu li a {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    text-align: center;
+    display: block;
+  }
+  
+  /* Better mobile form elements */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    margin: 5px 0;
+    box-sizing: border-box;
+  }
+  
+  /* Mobile-friendly tables */
+  table {
+    font-size: 12px;
+    width: 100%;
+  }
+  
+  table th,
+  table td {
+    padding: 8px 4px;
+    word-wrap: break-word;
+  }
+  
+  /* Improve mobile readability */
+  body {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  /* Better mobile spacing */
+  .container {
+    margin: 10px;
+    padding: 15px;
+  }
 }
 
 /* ==========================================================================
