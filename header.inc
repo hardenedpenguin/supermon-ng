@@ -178,10 +178,12 @@ $(document).ready(function() {
     $('#logoutlink').click(function(event) {
         event.preventDefault();
         var user = <?php echo json_encode($_SESSION['user']); ?>;
-        alertify.success("<p style=\"font-size:28px;\"><b>Goodbye " + user + "!</b></p>");
         $.post("logout.php", "", function(response) {
             if (response.substr(0,5) != 'Sorry') {
-                sleep(2000).then(() => { window.location.reload(); });
+                alertify.success("<p style=\"font-size:28px;\"><b>Goodbye " + user + "!</b></p>");
+                setTimeout(function() {
+                    window.location.reload();
+                }, 2000); // Wait 2 seconds before reload
             }
         });
     });
