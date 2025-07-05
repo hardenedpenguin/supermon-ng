@@ -15,29 +15,14 @@
     --focus-shadow: 0 0 0 0.2rem rgba(0,123,255,0.25);
 }
 
-/* Modern form styling */
-input[type="text"], 
-input[type="password"], 
-input[type="email"],
-select,
-textarea {
-    border: 1px solid #ced4da;
-    border-radius: var(--border-radius);
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    transition: border-color var(--transition-speed) ease-in-out, 
-                box-shadow var(--transition-speed) ease-in-out;
-}
-
+/* Preserve original form styling - only add modern focus states */
 input[type="text"]:focus, 
 input[type="password"]:focus, 
 input[type="email"]:focus,
 select:focus,
 textarea:focus {
-    border-color: var(--primary-color);
-    outline: 0;
-    box-shadow: var(--focus-shadow);
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 /* Form validation styles */
@@ -51,35 +36,12 @@ input.invalid {
     box-shadow: 0 0 0 0.2rem rgba(220,53,69,0.25);
 }
 
-/* Modern button styling */
-button, 
-input[type="submit"], 
-input[type="button"] {
-    border: 1px solid transparent;
-    border-radius: var(--border-radius);
-    padding: 0.375rem 0.75rem;
-    font-size: 1rem;
-    line-height: 1.5;
-    cursor: pointer;
-    transition: all var(--transition-speed) ease-in-out;
-    background-color: var(--primary-color);
-    color: white;
-}
-
-button:hover, 
-input[type="submit"]:hover, 
-input[type="button"]:hover {
-    background-color: #0056b3;
-    transform: translateY(-1px);
-    box-shadow: var(--box-shadow);
-}
-
-button:disabled, 
-input[type="submit"]:disabled, 
-input[type="button"]:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-    transform: none;
+/* Preserve original button styling - only add modern focus states */
+button:focus, 
+input[type="submit"]:focus, 
+input[type="button"]:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
 }
 
 /* Loading states */
@@ -107,28 +69,7 @@ input[type="button"]:disabled {
     100% { transform: rotate(360deg); }
 }
 
-/* Modern table styling */
-table {
-    border-collapse: collapse;
-    width: 100%;
-    margin-bottom: 1rem;
-    background-color: transparent;
-}
-
-table th,
-table td {
-    padding: 0.75rem;
-    vertical-align: top;
-    border-top: 1px solid #dee2e6;
-}
-
-table thead th {
-    vertical-align: bottom;
-    border-bottom: 2px solid #dee2e6;
-    background-color: var(--light-color);
-    font-weight: 600;
-}
-
+/* Preserve original table styling - only add subtle hover effect */
 table tbody tr:hover {
     background-color: rgba(0,123,255,0.05);
 }
@@ -178,36 +119,10 @@ table tbody tr:hover {
     }
 }
 
-/* Dark mode support */
+/* Dark mode support - preserve original styling */
 @media (prefers-color-scheme: dark) {
-    :root {
-        --light-color: #343a40;
-        --dark-color: #f8f9fa;
-    }
-    
-    body {
-        background-color: #121212;
-        color: #ffffff;
-    }
-    
-    input[type="text"], 
-    input[type="password"] {
-        background-color: #2d2d2d;
-        color: #ffffff;
-        border-color: #555;
-    }
-    
-    table {
-        color: #ffffff;
-    }
-    
-    table th {
-        background-color: #2d2d2d;
-    }
-    
-    table tbody tr:hover {
-        background-color: rgba(255,255,255,0.1);
-    }
+    /* Only apply dark mode if user explicitly prefers it */
+    /* Original styling will be preserved by default */
 }
 
 /* Print styles */
