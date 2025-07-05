@@ -83,9 +83,25 @@ $(document).ready(function() {
             }
             $.ajax({
                 url:'connect.php',
-                data: { 'remotenode': remoteNode, 'perm': perm, 'button': button, 'localnode': localNode },
+                data: { 
+                    'remotenode': remoteNode, 
+                    'perm': perm, 
+                    'button': button, 
+                    'localnode': localNode,
+                    'csrf_token': csrfToken
+                },
                 type:'post',
-                success: function(result) { alertify.success(result); }
+                dataType: 'json',
+                success: function(result) { 
+                    if (result.success) {
+                        alertify.success(result.message);
+                    } else {
+                        alertify.error(result.message || 'Operation failed');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alertify.error('Connection failed: ' + (xhr.responseJSON?.message || error));
+                }
             });
         });
 
@@ -103,9 +119,25 @@ $(document).ready(function() {
                 if (e) {
                     $.ajax({
                         url:'disconnect.php',
-                        data: { 'remotenode': remoteNode, 'perm': perm, 'button': button, 'localnode': localNode },
+                        data: { 
+                            'remotenode': remoteNode, 
+                            'perm': perm, 
+                            'button': button, 
+                            'localnode': localNode,
+                            'csrf_token': csrfToken
+                        },
                         type:'post',
-                        success: function(result) { alertify.success(result); }
+                        dataType: 'json',
+                        success: function(result) { 
+                            if (result.success) {
+                                alertify.success(result.message);
+                            } else {
+                                alertify.error(result.message || 'Operation failed');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            alertify.error('Disconnect failed: ' + (xhr.responseJSON?.message || error));
+                        }
                     });
                 }
             });

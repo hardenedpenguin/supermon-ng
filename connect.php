@@ -32,11 +32,12 @@ if (!preg_match("/^\d+$/", $remotenode)) {
     die("<h3 class='error-message'>ERROR: Please provide a valid remote node number.</h3>");
 }
 
-if (!in_array($perm_input, ['perm', 'temp'])) {
+// Validate perm input - can be empty, 'perm', or 'temp'
+if (!empty($perm_input) && !in_array($perm_input, ['perm', 'temp'])) {
     die("<h3 class='error-message'>ERROR: Invalid permission type.</h3>");
 }
 
-if (!in_array($button, ['connect', 'disconnect'])) {
+if (!in_array($button, ['disconnect'])) {
     die("<h3 class='error-message'>ERROR: Invalid button action.</h3>");
 }
 
