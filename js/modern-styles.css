@@ -69,10 +69,7 @@ input[type="button"]:focus {
     100% { transform: rotate(360deg); }
 }
 
-/* Preserve original table styling - only add subtle hover effect */
-table tbody tr:hover {
-    background-color: rgba(0,123,255,0.05);
-}
+/* Original table styling preserved - no modern enhancements */
 
 /* Modern enhancements - no mobile conflicts */
 :root {
@@ -85,7 +82,6 @@ table tbody tr:hover {
     --dark-color: #343a40;
     --border-color: #dee2e6;
     --text-color: #212529;
-    --table-header-bg: #f8f9fa;
 }
 
 /* Enhanced focus states for accessibility */
@@ -142,10 +138,7 @@ input[type="button"]:focus {
     100% { transform: rotate(360deg); }
 }
 
-/* Enhanced table hover effects */
-table tbody tr:hover {
-    background-color: rgba(0, 123, 255, 0.05);
-}
+/* Original table styling preserved - no modern enhancements */
 
 /* Accessibility improvements */
 @media (prefers-reduced-motion: reduce) {
