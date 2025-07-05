@@ -1360,6 +1360,15 @@ body.cpustats pre {
     width: 100%;
     margin: 5px 0;
   }
+  
+  /* Prevent iOS zoom on input focus */
+  input[type="text"],
+  input[type="password"],
+  input[type="email"],
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }
 
 /* ==========================================================================

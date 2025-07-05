@@ -74,25 +74,7 @@ table tbody tr:hover {
     background-color: rgba(0,123,255,0.05);
 }
 
-@media (max-width: 768px) {
-    .container {
-        padding: 0 15px;
-    }
-    
-    table {
-        font-size: 0.875rem;
-    }
-    
-    table th,
-    table td {
-        padding: 0.5rem;
-    }
-    
-    input[type="text"], 
-    input[type="password"] {
-        font-size: 16px; /* Prevents zoom on iOS */
-    }
-}
+/* Mobile styles are handled in supermon-ng.css to avoid conflicts */
 
 /* Accessibility improvements */
 @media (prefers-reduced-motion: reduce) {
@@ -214,8 +196,4 @@ table tbody tr:hover {
 .grid-3 { grid-template-columns: repeat(3, 1fr); }
 .grid-4 { grid-template-columns: repeat(4, 1fr); }
 
-@media (max-width: 768px) {
-    .grid-2, .grid-3, .grid-4 {
-        grid-template-columns: 1fr;
-    }
-} 
+/* Grid mobile styles handled in supermon-ng.css */ 
