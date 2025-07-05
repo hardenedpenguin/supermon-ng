@@ -133,9 +133,9 @@ if (isset($actions_config[$button])) {
 
         // Build the AMI command
         if ($button == 'disconnect') {
-            $cmd = "rpt cmd $localnode *0$remotenode";
+            $cmd = "rpt fun $localnode *0$remotenode";
         } else {
-            $cmd = "rpt cmd $localnode *$ilink$remotenode";
+            $cmd = "rpt fun $localnode *$ilink$remotenode";
         }
 
         // Debug logging
