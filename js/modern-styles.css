@@ -74,28 +74,23 @@ table tbody tr:hover {
     background-color: rgba(0,123,255,0.05);
 }
 
-/* Mobile view - keep identical to desktop */
 @media (max-width: 768px) {
-    /* Only prevent zoom on input focus (iOS requirement) */
-    input[type="text"],
-    input[type="password"],
-    input[type="email"],
-    select,
-    textarea {
-        font-size: 16px;
+    .container {
+        padding: 0 15px;
     }
     
-    /* Ensure body doesn't overflow on small screens */
-    body {
-        min-width: auto;
-        max-width: 100%;
-        overflow-x: hidden;
-    }
-    
-    /* Ensure tables don't overflow */
     table {
-        max-width: 100%;
-        overflow-x: auto;
+        font-size: 0.875rem;
+    }
+    
+    table th,
+    table td {
+        padding: 0.5rem;
+    }
+    
+    input[type="text"], 
+    input[type="password"] {
+        font-size: 16px; /* Prevents zoom on iOS */
     }
 }
 
