@@ -74,9 +74,8 @@ $home = ($script_dir == '/' || $script_dir == '\\') ? '/' : $script_dir;
 <link type="text/css" rel="stylesheet" href="js/jquery-ui.css">
 <script src="js/jquery.min.js"></script>
 <script src="js/jquery-ui.min.js"></script>
-<script src="js/alertify.min.js"></script>
-<link rel="stylesheet" href="js/alertify.core.css"/>
-<link rel="stylesheet" href="js/alertify.default.css" id="toggleCSS"/>
+<script src="js/sweetalert2.min.js"></script>
+<link rel="stylesheet" href="js/sweetalert2.min.css"/>
 
 <script type="text/javascript">
 function sleep(ms) {
@@ -97,7 +96,13 @@ $(document).ready(function() {
     $('#logoutlink').click(function(event) {
         event.preventDefault();
         var user = <?php echo json_encode($_SESSION['user']); ?>;
-        alertify.success("<p style=\"font-size:28px;\"><b>Goodbye " + user + "!</b></p>");
+        Swal.fire({
+            icon: 'success',
+            title: 'Goodbye!',
+            html: "<p style=\"font-size:28px;\"><b>Goodbye " + user + "!</b></p>",
+            timer: 2000,
+            timerProgressBar: true
+        });
         $.post("logout.php", "", function(response) {
             if (response.substr(0,5) != 'Sorry') {
                 sleep(2000).then(() => { window.location.reload(); });
@@ -112,7 +117,11 @@ $(document).ready(function() {
         const perm = $('input:checkbox:checked').val() || '';
 
         if (checkNodeField && nodeInput.length === 0) {
-            alertify.error(errorMessage.replace('{localnode}', localNode).replace('{node}', nodeInput));
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: errorMessage.replace('{localnode}', localNode).replace('{node}', nodeInput)
+            });
             return;
         }
 
@@ -135,8 +144,15 @@ $(document).ready(function() {
             .replace('{localnode}', localNode)
             .replace('{node}', nodeInput);
 
-        alertify.confirm(confirmMessage, function(e) {
-            if (e) {
+        Swal.fire({
+            title: 'Confirm Action',
+            html: confirmMessage,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
                 const ajaxData = dataBuilder(nodeInput, localNode, buttonId);
                 $.ajax({
                     url: ajaxUrl,
@@ -146,12 +162,24 @@ $(document).ready(function() {
                         if (typeof successHandler === 'function') {
                             successHandler(result);
                         } else {
-                            alertify.success(result);
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: result,
+                                timer: 3000,
+                                timerProgressBar: true
+                            });
                         }
                     }
                 });
             } else {
-                if (errorHandlerMsg) alertify.error(errorHandlerMsg);
+                if (errorHandlerMsg) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Action Cancelled',
+                        text: errorHandlerMsg
+                    });
+                }
             }
         });
     }
@@ -163,14 +191,26 @@ $(document).ready(function() {
         var perm = $('input:checkbox:checked').val() || '';
         
         if (remoteNode.length == 0) {
-            alertify.error('Please enter the remote node number you want node ' + localNode + ' to connect with.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please enter the remote node number you want node ' + localNode + ' to connect with.'
+            });
             return;
         }
         $.ajax({
             url:'connect.php',
             data: { 'remotenode': remoteNode, 'perm': perm, 'button': button, 'localnode': localNode },
             type:'post',
-            success: function(result) { alertify.success(result); }
+            success: function(result) { 
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: result,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            }
         });
     });
 
@@ -181,16 +221,35 @@ $(document).ready(function() {
         var perm = $('input:checkbox:checked').val() || '';
 
         if (remoteNode.length == 0) {
-            alertify.error('Please enter the remote node number you want node ' + localNode + ' to disconnect from.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Please enter the remote node number you want node ' + localNode + ' to disconnect from.'
+            });
             return;
         }
-        alertify.confirm("Disconnect " + remoteNode + " from " + localNode + "?", function (e) {
-            if (e) {
+        Swal.fire({
+            title: 'Confirm Disconnect',
+            text: "Disconnect " + remoteNode + " from " + localNode + "?",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
                 $.ajax({
                     url:'disconnect.php',
                     data: { 'remotenode': remoteNode, 'perm': perm, 'button': button, 'localnode': localNode },
                     type:'post',
-                    success: function(result) { alertify.success(result); }
+                    success: function(result) { 
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: result,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                    }
                 });
             }
         });
@@ -252,14 +311,33 @@ $(document).ready(function() {
             "Perform Shutdown of AllStar system software?" : 
             "Perform Startup of AllStar system software?";
         
-        alertify.confirm(confirmMsg, function(e) {
-            if (e) {
+        Swal.fire({
+            title: 'Confirm Action',
+            text: confirmMsg,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
                 $.ajax({
                     url: 'astaronoff.php', data: { 'button': button }, type: 'post',
-                    success: function(result) { alertify.success(result); }
+                    success: function(result) { 
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: result,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                    }
                 });
             } else {
-                alertify.error("NO Action performed");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Action Cancelled',
+                    text: "NO Action performed"
+                });
             }
         });
     });
@@ -269,14 +347,26 @@ $(document).ready(function() {
         var dtmf_command = $('#node').val();
 
         if (dtmf_command.length == 0) {
-            alertify.error("Please enter a DTMF command to execute on node " + localnode + '.');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: "Please enter a DTMF command to execute on node " + localnode + '.'
+            });
             return;
         }
         $.ajax({
             url:'dtmf.php',
             data: { 'node': dtmf_command, 'button': this.id, 'localnode': localnode },
             type:'post',
-            success: function(result) { alertify.success(result); }
+            success: function(result) { 
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: result,
+                    timer: 3000,
+                    timerProgressBar: true
+                });
+            }
         });
     });
 
@@ -436,7 +526,11 @@ function validateCredentials() {
     var passwd = document.getElementById("passwd").value;
 
     if (!user || !passwd) {
-        alertify.error("Username and Password are required.");
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: "Username and Password are required."
+        });
         return false;
     }
 
@@ -448,15 +542,29 @@ function validateCredentials() {
         success: function(response) {
             hideLoginUi();
             if (response.substr(0,5) != 'Sorry') {
-                alertify.success("<p style=\"font-size:28px;\"><b>Welcome " + user + "!</b></p>");
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Welcome!',
+                    html: "<p style=\"font-size:28px;\"><b>Welcome " + user + "!</b></p>",
+                    timer: 4000,
+                    timerProgressBar: true
+                });
                 sleep(4000).then(() => { window.location.reload(); });
             } else {
-                alertify.error("Sorry, Login Failed!");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Login Failed',
+                    text: "Sorry, Login Failed!"
+                });
             }
         },
         error: function() {
             hideLoginUi();
-            alertify.error("Error communicating with server for login.");
+            Swal.fire({
+                icon: 'error',
+                title: 'Connection Error',
+                text: "Error communicating with server for login."
+            });
         }
     });
     return false;
