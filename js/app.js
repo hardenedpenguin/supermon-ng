@@ -82,7 +82,7 @@ $(document).ready(function() {
             });
         }
 
-        $('#connect, #monitor, #permanent, #localmonitor').click(function() {
+        $(document).on('click', '#connect, #monitor, #permanent, #localmonitor', function() {
             console.log('Connect/Monitor button clicked:', this.id);
             var button = this.id;
             var localNode = $('#localnode').val();
@@ -119,7 +119,7 @@ $(document).ready(function() {
             });
         });
 
-        $('#disconnect').click(function() {
+        $(document).on('click', '#disconnect', function() {
             console.log('Disconnect button clicked:', this.id);
             var button = this.id;
             var localNode = $('#localnode').val();
@@ -181,12 +181,12 @@ $(document).ready(function() {
         };
 
         $.each(popups, function(selector, params) {
-            $(selector).click(function(event) {
+            $(document).on('click', selector, function(event) {
                 openPopupWindow.call(this, event, ...params); 
             });
         });
 
-        $('#astreload').click(function() {
+        $(document).on('click', '#astreload', function() {
             confirmAndAjax.call(this, "Execute the Asterisk \"iax2, rpt, & extensions Reload\" for node - {localnode}", 'ast_reload.php',
                 function(nodeInput, localnode, buttonId) { return { 'node': nodeInput, 'localnode': localnode, 'button': buttonId }; },
                 null,
@@ -194,7 +194,7 @@ $(document).ready(function() {
             );
         });
         
-        $('#reboot').click(function() {
+        $(document).on('click', '#reboot', function() {
             confirmAndAjax.call(this, "Perform a full Reboot of the AllStar server?<br><br>You can only Reboot the main server from Supermon-ng not remote servers", 'reboot.php',
                 function(nodeInput, localnode, buttonId) { return { 'node': nodeInput, 'button': buttonId }; },
                 null, 
@@ -202,7 +202,7 @@ $(document).ready(function() {
             );
         });
 
-        $('#fastrestart').click(function() {
+        $(document).on('click', '#fastrestart', function() {
             confirmAndAjax.call(this, "Perform a Fast-Restart of the AllStar system software at node {localnode}?", 'fastrestart.php',
                 function(nodeInput, localnode, buttonId) { return { 'button': buttonId, 'localnode': localnode }; },
                 null, 
@@ -210,7 +210,7 @@ $(document).ready(function() {
             );
         });
 
-        $('#astaroff, #astaron').click(function() {
+        $(document).on('click', '#astaroff, #astaron', function() {
             var button = this.id;
             var confirmMsg = (button == 'astaroff') ? 
                 "Perform Shutdown of AllStar system software?" : 
@@ -228,7 +228,7 @@ $(document).ready(function() {
             });
         });
 
-        $('#dtmf').click(function() {
+        $(document).on('click', '#dtmf', function() {
             console.log('DTMF button clicked:', this.id);
             var localnode = $('#localnode').val();
             var dtmf_command = $('#node').val();
