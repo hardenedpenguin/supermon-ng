@@ -153,6 +153,10 @@ echo "var headerTitle = " . json_encode($TITLE_LOGGED ?? 'Supermon-ng') . ";\n";
 echo "var headerTitle2 = " . json_encode($TITLE2 ?? '') . ";\n";
 echo "var headerTitle3 = " . json_encode($TITLE3 ?? '') . ";\n";
 echo "var csrfToken = " . json_encode(generate_csrf_token()) . ";\n";
+echo "var supermonConfig = {\n";
+echo "    isLoggedIn: " . json_encode($_SESSION['sm61loggedin'] ?? false) . ",\n";
+echo "    currentUser: " . json_encode($_SESSION['user'] ?? '') . "\n";
+echo "};\n";
 echo "</script>\n";
 ?>
 </head>

@@ -16,7 +16,9 @@ $(document).ready(function() {
     // No need to hide/show them with JavaScript
 
     // Only run logged-in functionality if user is logged in
+    console.log('Checking login status:', window.supermonConfig);
     if (window.supermonConfig && window.supermonConfig.isLoggedIn === true) {
+        console.log('User is logged in, setting up event handlers');
 
         $('#logoutlink').click(function(event) {
             event.preventDefault();
@@ -82,6 +84,7 @@ $(document).ready(function() {
             });
         }
 
+        console.log('Setting up connect/monitor button handlers');
         $(document).on('click', '#connect, #monitor, #permanent, #localmonitor', function() {
             console.log('Connect/Monitor button clicked:', this.id);
             var button = this.id;
@@ -119,6 +122,7 @@ $(document).ready(function() {
             });
         });
 
+        console.log('Setting up disconnect button handler');
         $(document).on('click', '#disconnect', function() {
             console.log('Disconnect button clicked:', this.id);
             var button = this.id;
@@ -180,7 +184,9 @@ $(document).ready(function() {
             '#smlog': ["smlog.php", "SMLog{localnode}", 1200, 560]
         };
 
+        console.log('Setting up popup button handlers');
         $.each(popups, function(selector, params) {
+            console.log('Setting up handler for:', selector);
             $(document).on('click', selector, function(event) {
                 openPopupWindow.call(this, event, ...params); 
             });
