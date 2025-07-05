@@ -19,9 +19,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $Node = trim(strip_tags($_GET['node'] ?? $_GET['ban-node'] ?? ''));
 $localnode = trim(strip_tags($_GET['localnode'] ?? ''));
 
-// Validate inputs
-if (!preg_match('/^\d+$/', $Node) || !preg_match('/^\d+$/', $localnode)) {
-    die("<h3 class='error-message'>ERROR: Invalid node parameters.</h3>");
+// Debug: Show what parameters we received
+error_log("Node-ban-allow Debug: Node='$Node', localnode='$localnode'");
+
+// Validate inputs - only require localnode to be numeric, Node can be empty initially
+if (!preg_match('/^\d+$/', $localnode)) {
+    die("<h3 class='error-message'>ERROR: Invalid local node parameter.</h3>");
+}
+
+// Node parameter is optional (can be empty when page loads)
+if (!empty($Node) && !preg_match('/^\d+$/', $Node)) {
+    die("<h3 class='error-message'>ERROR: Invalid node parameter.</h3>");
 }
 
 $SUPINI = get_ini_name($_SESSION['user']);
