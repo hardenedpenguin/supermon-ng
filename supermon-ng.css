@@ -1806,3 +1806,60 @@ button:focus {
   color: var(--warning-color);
   font-style: italic;
 }
+
+.lookup-results-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  background-color: var(--container-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+}
+
+.lookup-results-table td {
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  text-align: left;
+  color: var(--text-color);
+}
+
+.lookup-section-header {
+  background-color: var(--table-header-bg);
+  color: var(--primary-color);
+  font-weight: bold;
+  text-align: center;
+  padding: 10px;
+}
+
+.lookup-result-row:hover {
+  background-color: var(--border-color);
+}
+
+.lookup-node {
+  font-weight: bold;
+  color: var(--link-color);
+}
+
+.lookup-callsign {
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.lookup-description {
+  color: var(--text-color);
+}
+
+.lookup-location {
+  color: var(--text-color);
+  font-style: italic;
+}
+
+.lookup-status {
+  color: var(--warning-color);
+  font-weight: bold;
+}
+
+.lookup-ip {
+  color: var(--text-color);
+  font-family: monospace;
+}

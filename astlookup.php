@@ -6,7 +6,6 @@ include("common.inc");
 include("authusers.php");
 include("authini.php");
 include("csrf.inc");
-include("nodeinfo.inc");
 
 if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("ASTLKUSER")))  {
     die ("<br><h3 class='error-message'>ERROR: You Must login to use the 'Lookup' function!</h3>");
@@ -110,30 +109,263 @@ function getDataFromAMI($fp, $cmd)
 <?php
 if (!empty($_POST["lookup_node"])) {
     $nodeToLookup = trim(strip_tags($_POST["lookup_node"]));
+    $nodeToLookup = strtoupper($nodeToLookup);
+    $intnode = (int)$nodeToLookup;
     
     if (!empty($nodeToLookup)) {
         echo "<div class='lookup-results'>";
         echo "<h3>Lookup Results for: " . htmlspecialchars($nodeToLookup) . "</h3>";
         
-        // Use the proper AllStar lookup function
-        $lookupResult = getAstInfo($fp, $nodeToLookup);
-        
         echo "<div class='lookup-command'>";
-        echo "<b>Lookup Result:</b><br>";
-        echo "<pre>" . htmlspecialchars($lookupResult) . "</pre>";
-        echo "</div>";
+        echo "<table class='lookup-results-table'>";
         
-        if ($lookupResult !== 'Node not in local database' && 
-            $lookupResult !== 'No info' && 
-            strpos($lookupResult, 'No info') === false) {
-            $foundResults = true;
+        if ("$intnode" != "$nodeToLookup") {
+            // Do lookup by callsign
+            do_allstar_callsign_search($fp, $nodeToLookup, $localnode);
+            
+            if ($perm != "on") {
+                do_echolink_callsign_search($fp, $nodeToLookup);
+                do_irlp_callsign_search($nodeToLookup);
+            }
+        } else if ($intnode > 80000 && $intnode < 90000) {
+            // Lookup by IRLP node number
+            do_irlp_number_search($intnode);
+        } else if ($intnode > 3000000) {
+            // Lookup by echolink node number
+            do_echolink_number_search($fp, $intnode);
+        } else {
+            // Lookup by AllStar node number
+            do_allstar_number_search($fp, $intnode, $localnode);
         }
         
-        if (!$foundResults) {
-            echo "<p class='lookup-no-results'>No results found for " . htmlspecialchars($nodeToLookup) . "</p>";
-        }
+        echo "</table>";
+        echo "</div>";
         
         echo "</div>";
+    }
+}
+
+// Local Functions...
+
+function do_allstar_callsign_search($fp, $lookup, $localnode) {
+    global $ASTDB_TXT, $CAT, $AWK;
+
+    $text = "AllStar Callsign Search for: \"$lookup\"";
+    echo "<tr><td colspan='5' class='lookup-section-header'>$text</td></tr>";
+
+    $res = `$CAT $ASTDB_TXT | $AWK '-F|' 'BEGIN{IGNORECASE=1} $2 ~ /$lookup/ {printf ("%s\x18", $0);}'`;
+
+    process_allstar_result($fp, $res, $localnode);
+}
+
+function do_allstar_number_search($fp, $lookup, $localnode) {
+    global $ASTDB_TXT, $CAT, $AWK;
+
+    $text = "AllStar Node Number Search for: \"$lookup\"";
+    echo "<tr><td colspan='5' class='lookup-section-header'>$text</td></tr>";
+
+    $res = `$CAT $ASTDB_TXT | $AWK '-F|' 'BEGIN{IGNORECASE=1} $1 ~ /$lookup/ {printf ("%s\x18", $0);}'`;
+
+    process_allstar_result($fp, $res, $localnode);
+}
+
+function process_allstar_result($fp, $res, $localnode) {
+    global $HEAD, $SED, $AWK, $GREP, $DNSQUERY;
+
+    if ("$res" == "") {
+        echo "<tr><td colspan='5' class='lookup-no-results'>....Nothing Found....</td></tr>";
+        return;
+    }
+
+    $table = explode("\x18", $res);
+    array_pop($table);
+
+    foreach ($table as $row) {
+        echo "<tr class='lookup-result-row'>";
+
+        $column = explode("|", $row);
+        $node = trim($column[0]);
+        $call = trim($column[1]);
+        $desc = trim($column[2]);
+        $qth = trim($column[3]);
+        
+        $AMI2 = `$DNSQUERY $node`;
+        $N = `echo -n "$AMI2" | $AWK -F "," '{printf $1}'`;
+
+        $G = `echo -n "$N" | $GREP 'NOT-FOUND'`;
+        if (strlen("$G") >= 9)
+            $N = "NOT FOUND";
+
+        echo "<td class='lookup-node'>$node</td>";
+        echo "<td class='lookup-callsign'>$call</td>";
+        echo "<td class='lookup-description'>$desc</td>";
+        echo "<td class='lookup-location'>$qth</td>";
+        echo "<td class='lookup-status'>$N</td>";
+        echo "</tr>";
+    }
+}
+
+function do_echolink_callsign_search($fp, $lookup) {
+    global $AWK, $GREP, $MBUFFER;
+
+    $AMI = SimpleAmiClient::command($fp, "echolink dbdump");
+
+    $descriptorspec = array(
+        0 => array("pipe", "r"),
+        1 => array("pipe", "w"),
+        2 => array("file", "/dev/null", "w")
+    );
+
+    $cmd = "$GREP 'No such command' | $MBUFFER -q -Q -m 1M";
+
+    $process = proc_open($cmd, $descriptorspec, $pipes);
+
+    fwrite($pipes[0], $AMI);
+    fclose($pipes[0]);
+
+    $G = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+
+    proc_close($process);
+
+    if (strlen("$G") < 14) {
+        $text = "EchoLink Callsign Search for: \"$lookup\"";
+        echo "<tr><td colspan='5' class='lookup-section-header'>$text</td></tr>";
+
+        $cmd = "$AWK '-F|' 'BEGIN{IGNORECASE=1} $2 ~ /$lookup/ {printf (\"%s\x18\", $0);}' | $MBUFFER -q -Q -m 1M";
+
+        $process = proc_open($cmd, $descriptorspec, $pipes);
+
+        fwrite($pipes[0], $AMI);
+        fclose($pipes[0]);
+
+        $res = stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+
+        proc_close($process);
+
+        process_echolink_result($res);
+    }
+}
+
+function do_echolink_number_search($fp, $echonode) {
+    global $AWK, $GREP, $MBUFFER;
+
+    $lookup = (int)substr("$echonode", 1);
+
+    $AMI = SimpleAmiClient::command($fp, "echolink dbdump");
+
+    $descriptorspec = array(
+        0 => array("pipe", "r"),
+        1 => array("pipe", "w"),
+        2 => array("file", "/dev/null", "w")
+    );
+
+    $cmd = "$GREP 'No such command' | $MBUFFER -q -Q -m 1M";
+
+    $process = proc_open($cmd, $descriptorspec, $pipes);
+
+    fwrite($pipes[0], $AMI);
+    fclose($pipes[0]);
+
+    $G = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+
+    proc_close($process);
+
+    if (strlen("$G") < 14) {
+        $text = "EchoLink Node Number Search for: \"$lookup\"";
+        echo "<tr><td colspan='5' class='lookup-section-header'>$text</td></tr>";
+
+        $cmd = "$AWK '-F|' 'BEGIN{IGNORECASE=1} $1 ~ /$lookup/ {printf (\"%s\x18\", $0);}' | $MBUFFER -q -Q -m 1M";
+
+        $process = proc_open($cmd, $descriptorspec, $pipes);
+
+        fwrite($pipes[0], $AMI);
+        fclose($pipes[0]);
+
+        $res = stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+
+        proc_close($process);
+
+        process_echolink_result($res);
+    }
+}
+
+function process_echolink_result($res) {
+    if ("$res" == "") {
+        echo "<tr><td colspan='5' class='lookup-no-results'>....Nothing Found....</td></tr>";
+        return;
+    }
+
+    $table = explode("\x18", $res);
+    array_pop($table);
+
+    foreach ($table as $row) {
+        echo "<tr class='lookup-result-row'>";
+
+        $column = explode("|", $row);
+        $node = trim($column[0]);
+        $call = trim($column[1]);
+        $ipaddr = trim($column[2]);
+
+        echo "<td colspan='2' class='lookup-node'>$node</td>";
+        echo "<td colspan='2' class='lookup-callsign'>$call</td>";
+        echo "<td colspan='1' class='lookup-ip'>$ipaddr</td>";
+        echo "</tr>";
+    }
+}
+
+function do_irlp_callsign_search($lookup) {
+    global $IRLP_CALLS, $IRLP, $ZCAT, $AWK;
+
+    if ($IRLP) {
+        $text = "IRLP Callsign Search for: \"$lookup\"";
+        echo "<tr><td colspan='5' class='lookup-section-header'>$text</td></tr>";
+
+        $res = `$ZCAT $IRLP_CALLS | $AWK '-F|' 'BEGIN{IGNORECASE=1} $2 ~ /$lookup/ {printf ("%s\x18", $0);}'`;
+
+        process_irlp_result($res);
+    }
+}
+
+function do_irlp_number_search($irlpnode) {
+    global $IRLP_CALLS, $IRLP, $ZCAT, $AWK;
+
+    if ($IRLP) {
+        $lookup = (int)substr("$irlpnode", 1);
+
+        $text = "IRLP Node Number Search for: \"$lookup\"";
+        echo "<tr><td colspan='5' class='lookup-section-header'>$text</td></tr>";
+
+        $res = `$ZCAT $IRLP_CALLS | $AWK '-F|' 'BEGIN{IGNORECASE=1} $1 ~ /$lookup/ {printf ("%s\x18", $0);}'`;
+
+        process_irlp_result($res);
+    }
+}
+
+function process_irlp_result($res) {
+    if ("$res" == "") {
+        echo "<tr><td colspan='5' class='lookup-no-results'>....Nothing Found....</td></tr>";
+        return;
+    }
+
+    $table = explode("\x18", $res);
+    array_pop($table);
+
+    foreach ($table as $row) {
+        echo "<tr class='lookup-result-row'>";
+
+        $column = explode("|", $row);
+        $node = trim($column[0]);
+        $call = trim($column[1]);
+        $qth = trim($column[2] . ", " . $column[3] . " " . $column[4]);
+
+        echo "<td colspan='2' class='lookup-node'>$node</td>";
+        echo "<td colspan='2' class='lookup-callsign'>$call</td>";
+        echo "<td colspan='1' class='lookup-location'>$qth</td>";
+        echo "</tr>";
     }
 }
 ?>
