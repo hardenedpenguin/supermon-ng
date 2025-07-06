@@ -45,27 +45,15 @@ if (empty($localnode) || !isset($config[$localnode])) {
 }
 
 if (($fp = SimpleAmiClient::connect($config[$localnode]['host'])) === FALSE) {
-    die("<h3 class='error-message'>ERROR: Could not connect to Asterisk Manager at {$config[$localnode]['host']}.</h3>");
+    die("<h3 class='error-message'>ERROR: Could not connect to Asterisk Manager.</h3>");
 }
 
 if (SimpleAmiClient::login($fp, $config[$localnode]['user'], $config[$localnode]['passwd']) === FALSE) {
     SimpleAmiClient::logoff($fp);
-    die("<h3 class='error-message'>ERROR: Could not login to Asterisk Manager with user '{$config[$localnode]['user']}' and password '{$config[$localnode]['passwd']}'.</h3>");
+    die("<h3 class='error-message'>ERROR: Could not login to Asterisk Manager.</h3>");
 }
 
-// Test AMI connection with a simple command
-$testResult = SimpleAmiClient::command($fp, "core show version");
-if ($testResult === false) {
-    SimpleAmiClient::logoff($fp);
-    die("<h3 class='error-message'>ERROR: AMI connection test failed. Cannot execute commands.</h3>");
-}
 
-// Test database functionality
-$dbTestResult = SimpleAmiClient::command($fp, "database show");
-if ($dbTestResult === false) {
-    SimpleAmiClient::logoff($fp);
-    die("<h3 class='error-message'>ERROR: Database functionality not available. Cannot manage allow/deny lists.</h3>");
-}
 
 function sendCmdToAMI($fp, $cmd)
 {
@@ -82,9 +70,6 @@ if (!empty($_POST["listtype"]) && !empty($_POST["node"]) && !empty($_POST["delet
     $nodeToModify = trim(strip_tags($_POST["node"]));
     $comment = trim(strip_tags($_POST["comment"] ?? ''));
     $deleteadd = trim(strip_tags($_POST["deleteadd"]));
-
-    // Debug: Log the form data
-    error_log("Node-ban-allow form submission: listtype=$listtype_base, node=$nodeToModify, comment=$comment, deleteadd=$deleteadd");
 
     // Validate inputs
     if (!in_array($listtype_base, ['allowlist', 'denylist'])) {
@@ -104,16 +89,10 @@ if (!empty($_POST["listtype"]) && !empty($_POST["node"]) && !empty($_POST["delet
 
     $amiCmdString = "database $cmdAction $DBname $nodeToModify";
     if ($cmdAction == "put" && !empty($comment)) {
-        $amiCmdString .= " " . escapeshellarg($comment);
+        $amiCmdString .= " \"" . addslashes($comment) . "\"";
     }
     
-    // Debug: Log the AMI command
-    error_log("Node-ban-allow AMI command: $amiCmdString");
-    
     $ret = sendCmdToAMI($fp, $amiCmdString);
-    
-    // Debug: Log the result
-    error_log("Node-ban-allow AMI result: " . ($ret !== false ? "success" : "failed"));
     
     // Show result message
     if ($ret !== false) {
@@ -132,17 +111,6 @@ if (!empty($_POST["listtype"]) && !empty($_POST["node"]) && !empty($_POST["delet
 <body class="ban-allow-page">
 
 <p class="ban-allow-title"><b>Allow/Deny AllStar Nodes at node <?php echo htmlspecialchars($localnode); ?></b></p>
-
-<?php
-// Debug information
-echo "<div style='background-color: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; padding: 10px; margin: 10px 0; border-radius: 4px;'>";
-echo "<strong>Debug Info:</strong><br>";
-echo "Local Node: " . htmlspecialchars($localnode) . "<br>";
-echo "AMI Host: " . htmlspecialchars($config[$localnode]['host']) . "<br>";
-echo "AMI User: " . htmlspecialchars($config[$localnode]['user']) . "<br>";
-echo "AMI Password: " . (empty($config[$localnode]['passwd']) ? "EMPTY" : "SET") . "<br>";
-echo "</div>";
-?>
 
 <center>
 <form action="node-ban-allow.php?localnode=<?php echo htmlspecialchars($localnode); ?>" method="post">
