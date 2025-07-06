@@ -5,20 +5,20 @@ const DYNAMIC_CACHE = 'supermon-ng-dynamic-v1';
 
 // Files to cache immediately
 const STATIC_FILES = [
-    './',
-    './index.php',
-    './supermon-ng.css',
-    './js/jquery.min.js',
-    './js/jquery-ui.min.js',
-    './js/sweetalert2.min.js',
-    './js/sweetalert2.min.css',
-    './js/sweetalert2-config.js',
-    './js/utils.js',
-    './js/auth.js',
-    './js/app.js',
-    './js/modern-styles.css',
-    './favicon.ico',
-    './allstarlink.jpg'
+    '../',
+    '../index.php',
+    '../supermon-ng.css',
+    './jquery.min.js',
+    './jquery-ui.min.js',
+    './sweetalert2.min.js',
+    './sweetalert2.min.css',
+    './sweetalert2-config.js',
+    './utils.js',
+    './auth.js',
+    './app.js',
+    './modern-styles.css',
+    '../favicon.ico',
+    '../allstarlink.jpg'
 ];
 
 // Install event - cache static files
@@ -95,7 +95,7 @@ async function handleStaticRequest(request) {
         return networkResponse;
     } catch (error) {
         // Return offline page if available
-        const offlineResponse = await caches.match('./offline.html');
+        const offlineResponse = await caches.match('../offline.html');
         if (offlineResponse) {
             return offlineResponse;
         }
