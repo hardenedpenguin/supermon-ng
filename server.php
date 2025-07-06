@@ -224,9 +224,9 @@ while (TRUE) {
 
         $hostFp = $fp[$nodeConfig['host']];
         
-        // Check if socket is still valid before using it
-        if (!is_resource($hostFp) || get_resource_type($hostFp) !== 'stream') {
-            error_log("Main loop: Socket for node $node is not a valid resource, skipping");
+        // Check if socket is still valid and healthy before using it
+        if (!isConnectionHealthy($hostFp)) {
+            error_log("Main loop: Socket for node $node is not healthy, skipping");
             continue;
         }
         
@@ -334,6 +334,29 @@ foreach ($fp as $host => $socket) {
 }
 exit;
 
+function isConnectionHealthy($fp) {
+    if (!is_resource($fp) || get_resource_type($fp) !== 'stream') {
+        return false;
+    }
+    
+    $socketStatus = stream_get_meta_data($fp);
+    if ($socketStatus['eof'] || $socketStatus['timed_out']) {
+        return false;
+    }
+    
+    // Test with a simple ping command
+    $testCommand = "Action: Ping\r\nActionID: health" . mt_rand() . "\r\n\r\n";
+    $testResult = @fwrite($fp, $testCommand);
+    if ($testResult === false) {
+        $error = error_get_last();
+        if (($error['errno'] ?? 0) === 32) { // Broken pipe
+            return false;
+        }
+    }
+    
+    return true;
+}
+
 function getNode($fp, $node) {
     // Check if socket is still valid
     if (!is_resource($fp) || get_resource_type($fp) !== 'stream') {
@@ -348,6 +371,8 @@ function getNode($fp, $node) {
         return parseNode($fp, $node, '', '');
     }
     
+
+    
     $actionRand = mt_rand();
     $rptStatus = '';
     $sawStatus = '';
@@ -358,7 +383,15 @@ function getNode($fp, $node) {
     
     $xstatBytesWritten = @fwrite($fp, $xstatCommand);
     if ($xstatBytesWritten === false || $xstatBytesWritten === 0) {
-        error_log("getNode: XStat fwrite FAILED for node $node - bytes written: " . ($xstatBytesWritten === false ? 'false' : $xstatBytesWritten));
+        $error = error_get_last();
+        $errno = $error['errno'] ?? 0;
+        $errstr = $error['errstr'] ?? 'Unknown error';
+        
+        if ($errno === 32) { // Broken pipe
+            error_log("getNode: XStat fwrite FAILED for node $node - BROKEN PIPE (errno=32)");
+        } else {
+            error_log("getNode: XStat fwrite FAILED for node $node - bytes written: " . ($xstatBytesWritten === false ? 'false' : $xstatBytesWritten) . ", errno: $errno, error: $errstr");
+        }
         return parseNode($fp, $node, '', '');
     }
     
@@ -373,7 +406,15 @@ function getNode($fp, $node) {
     
     $sawStatBytesWritten = @fwrite($fp, $sawStatCommand);
     if ($sawStatBytesWritten === false || $sawStatBytesWritten === 0) {
-        error_log("getNode: SawStat fwrite FAILED for node $node - bytes written: " . ($sawStatBytesWritten === false ? 'false' : $sawStatBytesWritten));
+        $error = error_get_last();
+        $errno = $error['errno'] ?? 0;
+        $errstr = $error['errstr'] ?? 'Unknown error';
+        
+        if ($errno === 32) { // Broken pipe
+            error_log("getNode: SawStat fwrite FAILED for node $node - BROKEN PIPE (errno=32)");
+        } else {
+            error_log("getNode: SawStat fwrite FAILED for node $node - bytes written: " . ($sawStatBytesWritten === false ? 'false' : $sawStatBytesWritten) . ", errno: $errno, error: $errstr");
+        }
         return parseNode($fp, $node, $rptStatus, '');
     }
     
