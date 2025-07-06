@@ -5,6 +5,7 @@ include('user_files/global.inc');
 include('authusers.php');
 include('common.inc');
 include('authini.php');
+include('csrf.inc');
 
 if (!isset($_SESSION['sm61loggedin']) || $_SESSION['sm61loggedin'] !== true) {
     die("<br><h3>ERROR: You Must login to use this function!</h3>");
@@ -12,6 +13,9 @@ if (!isset($_SESSION['sm61loggedin']) || $_SESSION['sm61loggedin'] !== true) {
 if (!function_exists('get_user_auth') || !get_user_auth("DTMFUSER")) {
     die("<br><h3>ERROR: You are not authorized to use the 'DTMF' function!</h3>");
 }
+
+// Validate CSRF token
+require_csrf();
 
 $dtmf = trim(strip_tags($_POST['node'] ?? ''));
 $localnode = trim(strip_tags($_POST['localnode'] ?? ''));
@@ -70,7 +74,13 @@ try {
         die("Error executing DTMF command '" . htmlspecialchars($dtmf) . "' on node " . htmlspecialchars($localnode) . ". Asterisk reported an error or timed out.\n");
     }
 
-    print "<b>Executing DTMF command '" . htmlspecialchars($dtmf) . "' on node " . htmlspecialchars($localnode) . "</b>";
+    // Check if the command was successful
+    if (empty(trim($commandOutput))) {
+        print "<b>DTMF command '" . htmlspecialchars($dtmf) . "' executed successfully on node " . htmlspecialchars($localnode) . "</b>";
+    } else {
+        print "<b>DTMF command '" . htmlspecialchars($dtmf) . "' executed on node " . htmlspecialchars($localnode) . "</b><br>";
+        print "<pre>" . htmlspecialchars($commandOutput) . "</pre>";
+    }
 
 } catch (Exception $e) {
     die("An unexpected error occurred during AMI communication: " . htmlspecialchars($e->getMessage()) . "\n");

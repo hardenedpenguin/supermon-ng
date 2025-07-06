@@ -221,9 +221,17 @@ $(document).ready(function() {
             }
             $.ajax({
                 url:'dtmf.php',
-                data: { 'node': dtmf_command, 'button': this.id, 'localnode': localnode },
+                data: { 
+                    'node': dtmf_command, 
+                    'button': this.id, 
+                    'localnode': localnode,
+                    'csrf_token': csrfToken
+                },
                 type:'post',
-                success: function(result) { alertify.success(result); }
+                success: function(result) { alertify.success(result); },
+                error: function(xhr, status, error) {
+                    alertify.error('DTMF command failed: ' + (xhr.responseText || error));
+                }
             });
         });
 
