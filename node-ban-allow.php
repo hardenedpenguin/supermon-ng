@@ -45,12 +45,26 @@ if (empty($localnode) || !isset($config[$localnode])) {
 }
 
 if (($fp = SimpleAmiClient::connect($config[$localnode]['host'])) === FALSE) {
-    die("<h3 class='error-message'>ERROR: Could not connect to Asterisk Manager.</h3>");
+    die("<h3 class='error-message'>ERROR: Could not connect to Asterisk Manager at {$config[$localnode]['host']}.</h3>");
 }
 
 if (SimpleAmiClient::login($fp, $config[$localnode]['user'], $config[$localnode]['passwd']) === FALSE) {
     SimpleAmiClient::logoff($fp);
-    die("<h3 class='error-message'>ERROR: Could not login to Asterisk Manager.</h3>");
+    die("<h3 class='error-message'>ERROR: Could not login to Asterisk Manager with user '{$config[$localnode]['user']}' and password '{$config[$localnode]['passwd']}'.</h3>");
+}
+
+// Test AMI connection with a simple command
+$testResult = SimpleAmiClient::command($fp, "core show version");
+if ($testResult === false) {
+    SimpleAmiClient::logoff($fp);
+    die("<h3 class='error-message'>ERROR: AMI connection test failed. Cannot execute commands.</h3>");
+}
+
+// Test database functionality
+$dbTestResult = SimpleAmiClient::command($fp, "database show");
+if ($dbTestResult === false) {
+    SimpleAmiClient::logoff($fp);
+    die("<h3 class='error-message'>ERROR: Database functionality not available. Cannot manage allow/deny lists.</h3>");
 }
 
 function sendCmdToAMI($fp, $cmd)
@@ -69,6 +83,9 @@ if (!empty($_POST["listtype"]) && !empty($_POST["node"]) && !empty($_POST["delet
     $comment = trim(strip_tags($_POST["comment"] ?? ''));
     $deleteadd = trim(strip_tags($_POST["deleteadd"]));
 
+    // Debug: Log the form data
+    error_log("Node-ban-allow form submission: listtype=$listtype_base, node=$nodeToModify, comment=$comment, deleteadd=$deleteadd");
+
     // Validate inputs
     if (!in_array($listtype_base, ['allowlist', 'denylist'])) {
         die("<h3 class='error-message'>ERROR: Invalid list type.</h3>");
@@ -86,17 +103,23 @@ if (!empty($_POST["listtype"]) && !empty($_POST["node"]) && !empty($_POST["delet
     $cmdAction = ($deleteadd == "add") ? "put" : "del";
 
     $amiCmdString = "database $cmdAction $DBname $nodeToModify";
-    if ($cmdAction == "put") {
+    if ($cmdAction == "put" && !empty($comment)) {
         $amiCmdString .= " " . escapeshellarg($comment);
     }
     
+    // Debug: Log the AMI command
+    error_log("Node-ban-allow AMI command: $amiCmdString");
+    
     $ret = sendCmdToAMI($fp, $amiCmdString);
+    
+    // Debug: Log the result
+    error_log("Node-ban-allow AMI result: " . ($ret !== false ? "success" : "failed"));
     
     // Show result message
     if ($ret !== false) {
-        echo "<div class='success-message'>Command executed successfully.</div>";
+        echo "<div style='background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 10px; margin: 10px 0; border-radius: 4px;'>Command executed successfully.</div>";
     } else {
-        echo "<div class='error-message'>Failed to execute command.</div>";
+        echo "<div style='background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 10px; margin: 10px 0; border-radius: 4px;'>Failed to execute command. Check Asterisk logs for details.</div>";
     }
 }
 
@@ -110,8 +133,19 @@ if (!empty($_POST["listtype"]) && !empty($_POST["node"]) && !empty($_POST["delet
 
 <p class="ban-allow-title"><b>Allow/Deny AllStar Nodes at node <?php echo htmlspecialchars($localnode); ?></b></p>
 
+<?php
+// Debug information
+echo "<div style='background-color: #e2e3e5; color: #383d41; border: 1px solid #d6d8db; padding: 10px; margin: 10px 0; border-radius: 4px;'>";
+echo "<strong>Debug Info:</strong><br>";
+echo "Local Node: " . htmlspecialchars($localnode) . "<br>";
+echo "AMI Host: " . htmlspecialchars($config[$localnode]['host']) . "<br>";
+echo "AMI User: " . htmlspecialchars($config[$localnode]['user']) . "<br>";
+echo "AMI Password: " . (empty($config[$localnode]['passwd']) ? "EMPTY" : "SET") . "<br>";
+echo "</div>";
+?>
+
 <center>
-<form action="node-ban-allow.php?ban-node=<?php echo htmlspecialchars($Node); ?>&localnode=<?php echo htmlspecialchars($localnode); ?>" method="post">
+<form action="node-ban-allow.php?localnode=<?php echo htmlspecialchars($localnode); ?>" method="post">
     <?php if (function_exists('csrf_token_field')) echo csrf_token_field(); ?>
     <table class="ban-allow-table">
         <tr>
