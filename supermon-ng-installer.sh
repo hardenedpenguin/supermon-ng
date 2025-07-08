@@ -59,15 +59,55 @@ verify_checksum() {
     log_success "Checksum for $file_name verified."
 }
 
-check_dependencies() {
-    log_info "Checking for required commands..."
-    for cmd in curl tar sha256sum visudo id getent rsync setfacl; do
-        if ! command -v "$cmd" >/dev/null 2>&1; then
-            log_error "Required command '$cmd' not found. Please install it and try again."
-            exit 1
+install_system_dependencies() {
+    log_info "--- Checking and Installing System Dependencies ---"
+    
+    if ! command -v apt-get >/dev/null 2>&1; then
+        log_warning "apt-get not found. This script can only auto-install dependencies on Debian/Ubuntu systems."
+        log_warning "Please ensure all required packages are installed manually before proceeding."
+        printf "${C_YELLOW}Required commands: curl, tar, sha256sum, visudo, rsync, setfacl, bc.${C_RESET}\n"
+        printf "${C_YELLOW}Do you want to continue anyway? (y/N): ${C_RESET}"
+        read -r response
+        case "$response" in
+            [yY][eE][sS]|[yY]) 
+                log_info "Continuing without automatic dependency installation."
+                return 0 
+                ;;
+            *) 
+                log_error "Aborting."
+                return 1 
+                ;;
+        esac
+    fi
+
+    if ! command -v dpkg-query >/dev/null 2>&1; then
+        log_info "dpkg-query not found, attempting to install the 'dpkg' package..."
+        apt-get update
+        apt-get install -y dpkg || { log_error "Failed to install dpkg. Cannot check dependencies."; return 1; }
+    fi
+
+    local required_packages="apache2 php libapache2-mod-php libcgi-session-perl bc acl curl tar coreutils sudo rsync"
+    local missing_packages=""
+
+    log_info "Checking for required packages..."
+    for pkg in $required_packages; do
+        if ! dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "ok installed"; then
+            missing_packages="$missing_packages $pkg"
         fi
     done
-    log_success "All required commands are present."
+
+    if [ -n "$missing_packages" ]; then
+        missing_packages=$(echo "$missing_packages" | sed 's/^ *//')
+        log_info "The following required packages are missing and will be installed: $missing_packages"
+        log_info "Updating package lists..."
+        apt-get update || { log_error "apt-get update failed."; return 1; }
+        
+        log_info "Attempting to install packages..."
+        apt-get install -y $missing_packages || { log_error "Failed to install one or more required packages."; return 1; }
+        log_success "System dependencies installed successfully."
+    else
+        log_success "All required system dependencies are already installed."
+    fi
 }
 
 download_and_install_component() {
@@ -102,20 +142,6 @@ download_and_install_component() {
     chmod "$perms" "$dest_path"
     chown "$owner" "$dest_path"
     log_success "$name installed."
-}
-
-install_system_dependencies() {
-    log_info "--- Checking and Installing System Dependencies (for Debian/Ubuntu) ---"
-    local deps="apache2 php libapache2-mod-php libcgi-session-perl bc acl"
-    if ! command -v apt-get >/dev/null 2>&1; then
-        log_warning "apt-get not found. Please ensure these packages are installed: $deps"
-        return 0
-    fi
-    log_info "Updating package lists..."
-    apt-get update || { log_error "apt-get update failed."; return 1; }
-    log_info "Attempting to install: $deps"
-    apt-get install -y $deps || { log_error "Failed to install dependencies."; return 1; }
-    log_success "System dependencies installed successfully."
 }
 
 manage_optional_auth() {
@@ -228,6 +254,10 @@ install_application() {
 }
 
 install_sudo_config() {
+    if ! command -v visudo > /dev/null 2>&1; then
+        log_error "'visudo' command not found, cannot safely install sudoers file. Skipping."
+        return 1
+    fi
     chmod 0750 "$SUDO_DIR"
     download_and_install_component "Sudoers File" "$SUDO_FILE_URL" "$EXPECTED_SUDO_CHECKSUM" "$SUDO_FILE_PATH" "0440" "root:root" visudo -c -f
 }
@@ -256,12 +286,16 @@ configure_log_acls() {
     local log_dir="/var/log/apache2"
     log_info "--- Configuring Apache Log Permissions ---"
 
+    if ! command -v setfacl > /dev/null 2>&1; then
+        log_error "'setfacl' command not found, cannot configure log permissions. Skipping."
+        return 1
+    fi
+
     if [ ! -d "$log_dir" ]; then
         log_warning "Apache log directory '$log_dir' not found. Skipping ACL configuration."
         return 0
     fi
 
-    # Check if ACL is already correctly set for the www-data group
     local acl_set
     acl_set=$(getfacl -p "$log_dir" 2>/dev/null | grep -E "^group:${WWW_GROUP}:r-x$")
     local default_acl_set
@@ -288,12 +322,13 @@ configure_log_acls() {
 
 main() {
     if [ "$(id -u)" -ne 0 ]; then log_error "This script must be run as root."; exit 1; fi
-    check_dependencies
+    
+    install_system_dependencies || { log_error "Dependency installation failed. Aborting."; exit 1; }
+
     if ! getent group "$WWW_GROUP" >/dev/null 2>&1; then log_error "Group '$WWW_GROUP' does not exist."; exit 1; fi
     mkdir -p "$DEST_DIR"
     TMP_DIR=$(mktemp -d)
     
-    install_system_dependencies || exit 1
     install_application || exit 1
     install_sudo_config || exit 1
     install_editor_script || exit 1
