@@ -421,7 +421,7 @@ foreach($nodes as $node) {
 
     if ($is_private_or_hidden) {
         $base_title_text = "Private Node";
-        if (isset($${custom_node_url_base})) {
+        if (isset(${$custom_node_url_base})) {
             $custom_url_for_node = ${$custom_node_url_base};
              if (substr($custom_url_for_node, -1) == ">") $custom_url_for_node = substr_replace($custom_url_for_node, "", -1);
             $node_link_html = "<a href=\"" . htmlspecialchars($custom_url_for_node) . "\" " . (strpos($node_info_display, "target=\"_blank\"") ? "target=\"_blank\"" : "") . ">$node_display_name</a>";
@@ -430,7 +430,7 @@ foreach($nodes as $node) {
         $allstar_node_url = ($node < 2000) ? "" : "http://stats.allstarlink.org/nodeinfo.cgi?node=" . urlencode($node);
         if (!empty($allstar_node_url)) {
             $node_link_html = "<a href=\"" . htmlspecialchars($allstar_node_url) . "\" target=\"_blank\">$node_display_name</a>";
-        } elseif (isset($${custom_node_url_base})) {
+        } elseif (isset(${$custom_node_url_base})) {
             $custom_url_for_node = ${$custom_node_url_base};
             if (substr($custom_url_for_node, -1) == ">") $custom_url_for_node = substr_replace($custom_url_for_node, "", -1);
             $node_link_html = "<a href=\"" . htmlspecialchars($custom_url_for_node) . "\" " . (strpos($node_info_display, "target=\"_blank\"") ? "target=\"_blank\"" : "") . ">$node_display_name</a>";
