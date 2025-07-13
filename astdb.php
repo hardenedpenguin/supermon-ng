@@ -21,12 +21,21 @@ function script_log(string $message): void {
 }
 
 if (file_exists(PRIVATE_NODES_FILE)) {
-    $content = @file_get_contents(PRIVATE_NODES_FILE);
-    if ($content === false) {
+    $lines = @file(PRIVATE_NODES_FILE, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines === false) {
         script_log("Warning: Could not read private nodes file: " . PRIVATE_NODES_FILE);
     } else {
-        $privateNodesContent = $content;
-        script_log("Loaded " . strlen($privateNodesContent) . " bytes from " . PRIVATE_NODES_FILE);
+        $validLines = [];
+        foreach ($lines as $idx => $line) {
+            $parts = explode('|', $line);
+            if (count($parts) >= 4 && trim($parts[0]) !== '') {
+                $validLines[] = $line;
+            } else {
+                script_log("Warning: Skipping malformed private node entry on line " . ($idx+1) . ": $line");
+            }
+        }
+        $privateNodesContent = implode("\n", $validLines) . (count($validLines) ? "\n" : "");
+        script_log("Loaded " . strlen($privateNodesContent) . " bytes from valid entries in " . PRIVATE_NODES_FILE);
     }
 }
 
