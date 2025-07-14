@@ -96,7 +96,7 @@ def get_disk_usage():
                 return f'"Disk - {used} {percent} used, {available} remains"'
     return '"Disk - N/A"'
 
-def get_autosky_alerts(alert_ini, warnings_file, master_enable):
+def get_autosky_alerts(alert_ini, warnings_file, master_enable, custom_link=""):
     github_link = '<a href=\'https://github.com/mason10198/SkywarnPlus\' style=\'color: inherit; text-decoration: none;\'>SkywarnPlus</a>'
     enabled_text = f'<span style=\'color: SpringGreen;\'><b><u>{github_link} Enabled</u></b></span>'
     disabled_text = f'<span style=\'color: darkorange;\'><b><u>{github_link} Disabled</u></b></span>'
@@ -112,6 +112,11 @@ def get_autosky_alerts(alert_ini, warnings_file, master_enable):
     if os.path.exists(warnings_file):
         alert_url_command = f"grep '^OFILE=' \"{alert_ini}\" | sed 's/OFILE=//' | sed 's/&y=0/&y=1/' | sed 's/\"//g'"
         alert_url = run_command(alert_url_command)
+        
+        # Use custom_link if AUTOSKY alert_url is not available
+        if not alert_url and custom_link:
+            alert_url = custom_link
+            
         alert_url_link = f"<a target='WX ALERT' href='{alert_url}' style='color: inherit;'>" if alert_url else ""
         alert_url_link_end = "</a>" if alert_url else ""
         alert_content = ""
@@ -181,13 +186,14 @@ if __name__ == "__main__":
     master_enable = config.get("autosky", "MASTER_ENABLE", fallback="no")
     alert_ini = config.get("autosky", "ALERT_INI", fallback="/usr/local/bin/AUTOSKY/AutoSky.ini")
     warnings_file = config.get("autosky", "WARNINGS_FILE", fallback="/var/www/html/AUTOSKY/warnings.txt")
+    custom_link = config.get("autosky", "CUSTOM_LINK", fallback="")
 
     cpu_up = get_uptime()
     cpu_load = get_cpu_load()
     cpu_temp_dsp = get_cpu_temperature(temp_unit)
     wx = get_weather(wx_code, wx_location)
     disk_usage_info = get_disk_usage()
-    alert = get_autosky_alerts(alert_ini, warnings_file, master_enable)
+    alert = get_autosky_alerts(alert_ini, warnings_file, master_enable, custom_link)
 
     if nodes:
         for node in nodes:
