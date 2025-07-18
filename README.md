@@ -15,7 +15,7 @@
 First, ensure `rsync` and other necessary tools are installed:
 
 ```bash
-sudo apt update && sudo apt install -y rsync
+sudo apt update && sudo apt install -y rsync acl
 ```
 
 Then, download and run the installer script:
@@ -27,6 +27,7 @@ sudo ./supermon-ng-installer.sh
 ```
 
 > ⚠️ **Note:** This installer is designed for Debian-based systems (e.g., Debian, Ubuntu, or AllStarLink distributions). Run as root or with `sudo`.
+> ⚠️ **Note:** authusers.inc can be enabled/disabled during initial install, you will be prompted for a response.
 
 ## Post-Installation
 
@@ -50,14 +51,8 @@ You can find a few themes I have thrown together to speed up customizing your in
 https://w5gle.us/~anarchy/supermon-ng_themes/
 ```
 Once you download the file you must copy it to /var/www/html/supermon-ng/supermon-ng.css, make sure you do not leave it named as it is downloaded!
-
-## Requirements
-
-- Debian-based Linux system
-- Apache2 or other compatible web server
-- Asterisk with AllStarLink node configured
-- PHP 7.4 or later
-- Rsync
+> ⚠️ **Note:** Themese do not contain the most up to date changes in supermon_ng.css, you can diff the file to see what has been updated.
+> 
 
 ## Contributions
 
