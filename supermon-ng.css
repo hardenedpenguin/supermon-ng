@@ -1427,6 +1427,7 @@ button:focus {
 .perm-input-detailed {
   margin-top: 10px;
   font-size: 16px;
+  border-radius: 15px;
 }
 
 .perm-input-large {
