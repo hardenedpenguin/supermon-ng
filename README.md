@@ -51,7 +51,7 @@ You can find a few themes I have thrown together to speed up customizing your in
 https://w5gle.us/~anarchy/supermon-ng_themes/
 ```
 Once you download the file you must copy it to /var/www/html/supermon-ng/supermon-ng.css, make sure you do not leave it named as it is downloaded!
-> ⚠️ **Note:** Themese do not contain the most up to date changes in supermon_ng.css, you can diff the file to see what has been updated.
+> ⚠️ **Note:** Themes are being updated to have full support, Everything but seafoamgreen themese have been updated already..
 > 
 
 ## Contributions
