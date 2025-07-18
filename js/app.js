@@ -40,7 +40,7 @@ $(document).ready(function() {
             let popupHeight = height;
             if (bannerPopups.some(name => windowName.startsWith(name))) {
                 popupWidth = 880;
-                popupHeight = 200;
+                popupHeight = 550;
             } else {
                 // Responsive for others
                 popupWidth = Math.max(320, Math.min(1200, Math.floor(window.innerWidth * 0.8)));
