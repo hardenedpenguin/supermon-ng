@@ -1310,8 +1310,8 @@ body.cpustats pre {
 }
 
 .edit-textarea {
-  width: 80%;
-  height: 80vh;
+  width: 100%;
+  height: 75vh;
   background-color: var(--input-bg);
   color: var(--input-text);
   border: 1px solid var(--border-color);
