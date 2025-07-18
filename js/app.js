@@ -33,12 +33,22 @@ $(document).ready(function() {
 
             const url = templateUrl.replace('{localnode}', localNode).replace('{node}', nodeInput).replace('{perm}', perm);
             const windowName = windowNameTemplate.replace('{localnode}', localNode);
-            // Responsive sizing: 80% of viewport, min/max constraints
-            const responsiveWidth = Math.max(320, Math.min(1200, Math.floor(window.innerWidth * 0.8)));
-            const responsiveHeight = Math.max(200, Math.min(900, Math.floor(window.innerHeight * 0.8)));
-            const left = Math.floor((window.innerWidth - responsiveWidth) / 2);
-            const top = Math.floor((window.innerHeight - responsiveHeight) / 2);
-            const windowSize = `width=${responsiveWidth},height=${responsiveHeight},left=${left},top=${top},resizable=yes,scrollbars=yes`;
+
+            // Use fixed banner size for certain popups
+            const bannerPopups = ["FavoritesPanel", "ControlPanel"];
+            let popupWidth = width;
+            let popupHeight = height;
+            if (bannerPopups.some(name => windowName.startsWith(name))) {
+                popupWidth = 880;
+                popupHeight = 200;
+            } else {
+                // Responsive for others
+                popupWidth = Math.max(320, Math.min(1200, Math.floor(window.innerWidth * 0.8)));
+                popupHeight = Math.max(200, Math.min(900, Math.floor(window.innerHeight * 0.8)));
+            }
+            const left = Math.floor((window.innerWidth - popupWidth) / 2);
+            const top = Math.floor((window.innerHeight - popupHeight) / 2);
+            const windowSize = `width=${popupWidth},height=${popupHeight},left=${left},top=${top},resizable=yes,scrollbars=yes`;
             const newWindow = window.open(url, windowName, windowSize);
             if (newWindow && moveToTop) {
                 newWindow.moveTo(20, 20);
