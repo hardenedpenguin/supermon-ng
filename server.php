@@ -395,10 +395,10 @@ function getNode($fp, $node) {
         return parseNode($fp, $node, '', '');
     }
     
-    $rptStatus = SimpleAmiClient::getResponse($fp, $actionID_xstat);
-    if ($rptStatus === false) {
-         error_log("getNode: XStat SimpleAmiClient::getResponse FAILED or timed out for node $node, actionID $actionID_xstat");
-         $rptStatus = '';
+        $rptStatus = SimpleAmiClient::getResponse($fp, $actionID_xstat);
+        if ($rptStatus === false) {
+             error_log("getNode: XStat SimpleAmiClient::getResponse FAILED or timed out for node $node, actionID $actionID_xstat");
+             $rptStatus = '';
     }
 
     $actionID_sawstat = 'sawstat' . $actionRand;
@@ -418,11 +418,11 @@ function getNode($fp, $node) {
         return parseNode($fp, $node, $rptStatus, '');
     }
     
-    $sawStatus = SimpleAmiClient::getResponse($fp, $actionID_sawstat);
-    if ($sawStatus === false) {
-        error_log("getNode: SawStat SimpleAmiClient::getResponse FAILED or timed out for node $node, actionID $actionID_sawstat");
-        $sawStatus = '';
-    }
+        $sawStatus = SimpleAmiClient::getResponse($fp, $actionID_sawstat);
+        if ($sawStatus === false) {
+            error_log("getNode: SawStat SimpleAmiClient::getResponse FAILED or timed out for node $node, actionID $actionID_sawstat");
+            $sawStatus = '';
+        }
     
     return parseNode($fp, $node, $rptStatus, $sawStatus);
 }
