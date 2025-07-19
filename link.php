@@ -329,7 +329,7 @@ if (($_SESSION['sm61loggedin'] ?? false) === true) {
         <script>
             function OpenActiveNodes() { window.open('http://stats.allstarlink.org'); }
             function OpenAllNodes() { window.open('https://www.allstarlink.org/nodelist'); }
-            function OpenHelp() { window.open('http://www.crompton.com/hamradio/hamvoip-howto/'); }
+            function OpenHelp() { window.open('https://wiki.allstarlink.org/wiki/Category:How_to'); }
             function OpenConfigEditor() { window.open('configeditor.php'); }
             function OpenWiki() { window.open('http://wiki.allstarlink.org'); }
         </script>
