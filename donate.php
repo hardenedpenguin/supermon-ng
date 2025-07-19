@@ -15,7 +15,7 @@ $title = "Support Supermon-ng Development";
     <meta name="generator" content="By hand with a text editor">
     <meta name="description" content="SuperMon-ng Donation Options">
     <meta name="keywords" content="allstar monitor, app_rpt, asterisk">
-    <meta name="author" content="Tim Sawyer, WD6AWP">
+    <meta name="author" content="Jory A. Pratt, W5GLE">
     <meta name="mods" content="New features, IRLP capability, Paul Aidukas, KN2R">
     <link type="text/css" rel="stylesheet" href="supermon-ng.css">
     <link type="text/css" rel="stylesheet" href="js/jquery-ui.css">
