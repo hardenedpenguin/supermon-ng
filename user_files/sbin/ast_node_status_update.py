@@ -68,13 +68,13 @@ def get_cpu_temperature(temp_unit):
             else:
                 return f'"<span style=\'background-color:#fa4c2d;\'><b><span style=\'{temp_style}\'>{temp_display}</span></b></span>"'
     else:
-        return '"CPU Temp N/A"'
+        return '"N/A"'
 
 def get_weather(wx_code, wx_location):
     if not wx_code or not wx_location:
         return '" "'
-    elif os.access("/usr/local/sbin/weather.pl", os.X_OK):
-        wx_raw = run_command(f"/usr/local/sbin/weather.pl \"{wx_code}\" v")
+    elif os.access("/usr/sbin/weather.pl", os.X_OK):
+        wx_raw = run_command(f"/usr/sbin/weather.pl \"{wx_code}\" v")
         if wx_raw:
             return f'"<b>{wx_location}   ({wx_raw})</b>"'
     elif os.access("/usr/local/sbin/weather.sh", os.X_OK):
