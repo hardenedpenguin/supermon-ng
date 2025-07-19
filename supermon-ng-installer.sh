@@ -1,11 +1,11 @@
 #!/bin/sh
 set -eu
 
-APP_VERSION="V2.0.1"
+APP_VERSION="V2.0.2"
 DOWNLOAD_URL="https://github.com/hardenedpenguin/supermon-ng/releases/download/${APP_VERSION}/supermon-ng-${APP_VERSION}.tar.xz"
 DEST_DIR="/var/www/html"
 EXTRACTED_DIR="supermon-ng"
-EXPECTED_ARCHIVE_CHECKSUM="cece0176ae595849c1a74ea7769b263e5b3c722aaae016375676abc0514cde14"
+EXPECTED_ARCHIVE_CHECKSUM="0ff4a722a8ad28eedfdacdb7bea98b1ba003f57258948972d94142d6b5022fa0"
 
 SUDO_FILE_URL="https://w5gle.us/~anarchy/011_www-nopasswd"
 SUDO_FILE_NAME="011_www-nopasswd"
@@ -20,6 +20,9 @@ EXPECTED_EDITOR_SCRIPT_CHECKSUM="113afda03ba1053b08a25fe2efd44161396fe7c931de0ac
 
 WWW_GROUP="www-data"
 CRON_FILE_PATH="/etc/cron.d/supermon-ng"
+
+# Correctly define the Asterisk log directory
+ASTERISK_LOG_DIR="/var/log/asterisk"
 
 TMP_DIR=""
 SCRIPT_NAME="$(basename "$0")"
@@ -282,9 +285,11 @@ install_cron_job() {
     log_warning "The 'ast_node_status_update.py' cron job is disabled by default."
 }
 
-configure_log_acls() {
-    local log_dir="/var/log/apache2"
-    log_info "--- Configuring Apache Log Permissions ---"
+# General function to configure ACLs on a directory
+configure_acl_on_dir() {
+    local log_dir="$1"
+    local dir_purpose="$2"
+    log_info "--- Configuring ${dir_purpose} Log Permissions ---"
 
     if ! command -v setfacl > /dev/null 2>&1; then
         log_error "'setfacl' command not found, cannot configure log permissions. Skipping."
@@ -292,7 +297,7 @@ configure_log_acls() {
     fi
 
     if [ ! -d "$log_dir" ]; then
-        log_warning "Apache log directory '$log_dir' not found. Skipping ACL configuration."
+        log_warning "${dir_purpose} log directory '$log_dir' not found. Skipping ACL configuration."
         return 0
     fi
 
@@ -317,7 +322,7 @@ configure_log_acls() {
         return 1
     fi
 
-    log_success "ACL for Apache logs configured successfully."
+    log_success "ACL for ${dir_purpose} logs configured successfully."
 }
 
 main() {
@@ -333,7 +338,10 @@ main() {
     install_sudo_config || exit 1
     install_editor_script || exit 1
     install_cron_job || exit 1
-    configure_log_acls || exit 1
+    
+    # Configure ACLs for both Apache and Asterisk
+    configure_acl_on_dir "/var/log/apache2" "Apache" || exit 1
+    configure_acl_on_dir "$ASTERISK_LOG_DIR" "Asterisk" || exit 1
     
     log_success "Supermon-NG installation/update script finished successfully."
 }
