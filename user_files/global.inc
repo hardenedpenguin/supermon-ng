@@ -31,8 +31,6 @@ $BACKGROUND_COLOR = "black";
 // Height of background - matches image height
 $BACKGROUND_HEIGHT = "164px";
 //
-
-//
 // Prefix to Name in Page title. Often Supermon
 // "Node# -"
 $SMSERVERNAME = "";
