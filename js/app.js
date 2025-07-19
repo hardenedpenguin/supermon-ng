@@ -174,7 +174,8 @@ $(document).ready(function() {
             '#weberrlog': ["weberrlog.php", "WebErrorLog{localnode}", 1400, 560],
             '#openpigpio': ["pi-gpio.php", "Pi-GPIO{localnode}", 900, 900],
             '#openbanallow': ["node-ban-allow.php?node={node}&localnode={localnode}", "Ban-Allow{localnode}", 1050, 700],
-            '#smlog': ["smlog.php", "SMLog{localnode}", 1200, 560]
+            '#smlog': ["smlog.php", "SMLog{localnode}", 1200, 560],
+            '#donatebutton': ["donate.php", "Donate", 600, 700]
         };
 
         $.each(popups, function(selector, params) {
