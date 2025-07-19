@@ -247,7 +247,7 @@ function safe_exec($command, $args = '') {
     define('CPU_TEMP_WARNING_THRESHOLD', 50); 
     define('CPU_TEMP_HIGH_THRESHOLD', 65);    
 
-    $temp_script_path = '/usr/local/bin/get_temp';
+    $temp_script_path = 'user_files/sbin/get_temp';
     $CPUTemp_raw = 'N/A';
     if (file_exists($temp_script_path) && is_executable($temp_script_path)) {
         $CPUTemp_raw = safe_exec($temp_script_path);
