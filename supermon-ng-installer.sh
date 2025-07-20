@@ -33,10 +33,10 @@ C_GREEN='\033[0;32m'
 C_YELLOW='\033[0;33m'
 C_BLUE='\033[0;34m'
 
-log_error() { printf "${C_RED}Error: ${SCRIPT_NAME}: %s\n${C_RESET}" "$1" >&2; }
+log_error() { printf "${C_RED}Error: ${SCRIPT_NAME}: %s\n${C_RESET}" "$1"; }
 log_warning() { printf "${C_YELLOW}Warning: ${SCRIPT_NAME}: %s\n${C_RESET}" "$1" >&2; }
-log_info() { printf "${C_BLUE}Info: ${SCRIPT_NAME}: %s\n${C_RESET}" "$1"; }
-log_success() { printf "${C_GREEN}Success: ${SCRIPT_NAME}: %s\n${C_RESET}" "$1"; }
+log_info() { :; }
+log_success() { :; }
 
 cleanup() {
     if [ -n "$TMP_DIR" ] && [ -d "$TMP_DIR" ]; then
@@ -85,8 +85,8 @@ install_system_dependencies() {
 
     if ! command -v dpkg-query >/dev/null 2>&1; then
         log_info "dpkg-query not found, attempting to install the 'dpkg' package..."
-        apt-get update
-        apt-get install -y dpkg || { log_error "Failed to install dpkg. Cannot check dependencies."; return 1; }
+        apt-get update >/dev/null 2>&1
+        apt-get install -y dpkg >/dev/null 2>&1 || { log_error "Failed to install dpkg. Cannot check dependencies."; return 1; }
     fi
 
     local required_packages="apache2 php libapache2-mod-php libcgi-session-perl bc acl curl tar coreutils sudo rsync"
@@ -103,10 +103,10 @@ install_system_dependencies() {
         missing_packages=$(echo "$missing_packages" | sed 's/^ *//')
         log_info "The following required packages are missing and will be installed: $missing_packages"
         log_info "Updating package lists..."
-        apt-get update || { log_error "apt-get update failed."; return 1; }
+        apt-get update >/dev/null 2>&1 || { log_error "apt-get update failed."; return 1; }
         
         log_info "Attempting to install packages..."
-        apt-get install -y $missing_packages || { log_error "Failed to install one or more required packages."; return 1; }
+        apt-get install -y $missing_packages >/dev/null 2>&1 || { log_error "Failed to install one or more required packages."; return 1; }
         log_success "System dependencies installed successfully."
     else
         log_success "All required system dependencies are already installed."
@@ -207,25 +207,27 @@ install_application() {
                 did_update="true"
 
                 log_warning "----------------- IMPORTANT NOTICE: CSS FILE -----------------"
-                printf "${C_YELLOW}Your existing 'supermon-ng.css' file will NOT be overwritten to protect\n"
-                printf "your custom styles. The new version of the application may require\n"
-                printf "CSS changes to function or display correctly.\n"
-                printf "${C_YELLOW}ACTION REQUIRED: You should manually compare your existing file:\n"
-                printf "  '${app_path}/supermon-ng.css'\n"
-                printf "with the new version from this release, which is located at:\n"
-                printf "  '${tmp_extract_path}/supermon-ng.css'\n"
-                printf "after this script completes.${C_RESET}\n"
+                {
+                    printf "${C_YELLOW}Your existing 'supermon-ng.css' file will NOT be overwritten to protect\n"
+                    printf "your custom styles. The new version of the application may require\n"
+                    printf "CSS changes to function or display correctly.\n"
+                    printf "${C_YELLOW}ACTION REQUIRED: You should manually compare your existing file:\n"
+                    printf "  '${app_path}/supermon-ng.css'\n"
+                    printf "with the new version from this release, which is located at:\n"
+                    printf "  '${tmp_extract_path}/supermon-ng.css'\n"
+                    printf "after this script completes.${C_RESET}\n"
+                } >/dev/null
                 ;;
             *)
                 log_info "Update cancelled."; return 0 ;;
         esac
 
         log_info "Syncing core application files (deleting any obsolete files)..."
-        rsync -a --delete --exclude='user_files/' --exclude='.htaccess' --exclude='.htpasswd' --exclude='supermon-ng.css' "${tmp_extract_path}/" "${app_path}/" || { log_error "rsync failed."; return 1; }
+        rsync -a --delete --exclude='user_files/' --exclude='.htaccess' --exclude='.htpasswd' --exclude='supermon-ng.css' "${tmp_extract_path}/" "${app_path}/" >/dev/null 2>&1 || { log_error "rsync failed."; return 1; }
         
         log_info "Syncing updatable scripts in user_files/sbin/ (deleting any obsolete scripts)..."
         mkdir -p "${app_path}/user_files/sbin"
-        rsync -a --delete --exclude='node_info.ini' "${tmp_extract_path}/user_files/sbin/" "${app_path}/user_files/sbin/" || { log_error "sbin rsync failed."; return 1; }
+        rsync -a --delete --exclude='node_info.ini' "${tmp_extract_path}/user_files/sbin/" "${app_path}/user_files/sbin/" >/dev/null 2>&1 || { log_error "sbin rsync failed."; return 1; }
         
         log_info "Checking for other missing user-configurable files..."
         for file in $preserve_files; do
