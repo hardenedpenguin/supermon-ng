@@ -84,13 +84,14 @@ $DISPLAY_BACKGROUND = "black";
 // Log Supermon2 login/out sessions
 // Set to yes or no or make line a comment for no.
 $SMLOG = "yes";
-
 // Enable or Disable hamclock, set url to use to embed
 // NOTE: Hamclock MUST be configured with a reverse proxy to be displayed properly
 // in Supermon-ng. Direct access to hamclock without a reverse proxy will not work.
 $HAMCLOCK_ENABLED = "False";
-$HAMCLOCK_URL = "";
-
+// URL for users accessing from your local network (e.g., 192.168.x.x)
+$HAMCLOCK_URL_INTERNAL = "http://YOUR_INTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
+// URL for users accessing from the internet
+$HAMCLOCK_URL_EXTERNAL = "http://YOUR_EXTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
 // Provide a url for the Digital Dashboard
 // Dashboard button will not displayed if not configured!!
 // $DVM_URL = "../dvswitch";

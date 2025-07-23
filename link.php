@@ -494,12 +494,47 @@ foreach($nodes as $node) {
 </div>
 
 <?php
-if (filter_var($HAMCLOCK_ENABLED ?? false, FILTER_VALIDATE_BOOLEAN) && !empty($HAMCLOCK_URL)) {
+if (filter_var($HAMCLOCK_ENABLED ?? false, FILTER_VALIDATE_BOOLEAN)) {
+    /**
+     * Checks if a given IP address is in a private (internal) or reserved range.
+     * @param string $ip The IP address to check.
+     * @return bool True if the IP is internal, false otherwise.
+     */
+    function is_internal_ip($ip) {
+        // The loopback address is always internal.
+        if ($ip === '127.0.0.1' || $ip === '::1') {
+            return true;
+        }
+        
+        // Use PHP's built-in filter to check if the IP is NOT a public IP.
+        // The FILTER_FLAG_NO_PRIV_RANGE and FILTER_FLAG_NO_RES_RANGE flags cause filter_var to return false
+        // for private or reserved IPs. We return the opposite (!).
+        return !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
+    }
+
+    // Get the connecting client's IP address
+    $client_ip = $_SERVER['REMOTE_ADDR'];
+    $selected_hamclock_url = '';
+
+    // Check if the client IP is internal and select the appropriate URL
+    if (is_internal_ip($client_ip)) {
+        if (!empty($HAMCLOCK_URL_INTERNAL)) {
+            $selected_hamclock_url = $HAMCLOCK_URL_INTERNAL;
+        }
+    } else {
+        if (!empty($HAMCLOCK_URL_EXTERNAL)) {
+            $selected_hamclock_url = $HAMCLOCK_URL_EXTERNAL;
+        }
+    }
+
+    // Only display the iframe if a valid URL has been selected
+    if (!empty($selected_hamclock_url)) {
 ?>
     <div class="centered-margin-bottom">
-        <iframe src="<?php echo htmlspecialchars($HAMCLOCK_URL); ?>" width="800" height="480" class="iframe-borderless"></iframe>
+        <iframe src="<?php echo htmlspecialchars($selected_hamclock_url); ?>" width="800" height="480" class="iframe-borderless"></iframe>
     </div>
 <?php
+    }
 }
 
 if ($isDetailed) {
