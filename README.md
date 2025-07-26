@@ -25,6 +25,7 @@ ADD custom link for SkyWarn Alerts to user_files/sbin/node_info.ini, add to bott
 ```bash
 CUSTOM_LINK = https://alerts.weather.gov/cap/wwaatmget.php?x=TXC039&y=1
 ```
+You will want to update TX039 for your county code, this should match the county code used in SkyWarn Plus
 
 ## Quick Install
 
