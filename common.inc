@@ -12,17 +12,17 @@ $SMLOGNAME = "/tmp/SMLOG.txt";
 /**
  * @var string Title in header when logged in.
  */
-$TITLE_LOGGED = "Supermon-ng V2.0.2 AllStar Manager";
+$TITLE_LOGGED = "Supermon-ng V2.0.3 AllStar Manager";
 
 /**
  * @var string Version date of the Supermon-ng software.
  */
-$VERSION_DATE = "July 18, 2025";
+$VERSION_DATE = "July 25, 2025";
 
 /**
  * @var string Title in header when not logged in.
  */
-$TITLE_NOT_LOGGED = "Supermon-ng V2.0.2 AllStar Monitor";
+$TITLE_NOT_LOGGED = "Supermon-ng V2.0.3 AllStar Monitor";
 
 /**
  * @var string Path to the webserver access log.
