@@ -1,11 +1,11 @@
 #!/bin/sh
 set -eu
 
-APP_VERSION="V2.0.2"
+APP_VERSION="V2.0.3"
 DOWNLOAD_URL="https://github.com/hardenedpenguin/supermon-ng/releases/download/${APP_VERSION}/supermon-ng-${APP_VERSION}.tar.xz"
 DEST_DIR="/var/www/html"
 EXTRACTED_DIR="supermon-ng"
-EXPECTED_ARCHIVE_CHECKSUM="0ff4a722a8ad28eedfdacdb7bea98b1ba003f57258948972d94142d6b5022fa0"
+EXPECTED_ARCHIVE_CHECKSUM="5815bd42b0efa7cf266bbfa8890b0dae240b530101589a8d974724b1a90e42aa"
 
 SUDO_FILE_URL="https://w5gle.us/~anarchy/011_www-nopasswd"
 SUDO_FILE_NAME="011_www-nopasswd"
