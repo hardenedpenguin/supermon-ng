@@ -10,6 +10,22 @@
 - Easily customizable and extendable
 - Compatible with Debian-based systems
 
+## Upgrading from <2.0.3 instructions
+If you are updating from anything before 2.0.3 you will need to modify two config files, these are global.inc and node_info.ini
+
+$HAMCLOCK_URL is no longer and should be updated to the following, user_files/global.inc
+```bash
+// URL for users accessing from your local network (e.g., 192.168.x.x)
+$HAMCLOCK_URL_INTERNAL = "http://YOUR_INTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
+// URL for users accessing from the internet
+$HAMCLOCK_URL_EXTERNAL = "http://YOUR_EXTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
+```
+
+ADD custom link for SkyWarn Alerts to user_files/sbin/node_info.ini, add to bottom of autosky stanza
+```bash
+CUSTOM_LINK = https://alerts.weather.gov/cap/wwaatmget.php?x=TXC039&y=1
+```
+
 ## Quick Install
 
 First, ensure `rsync` and other necessary tools are installed:
