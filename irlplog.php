@@ -1,7 +1,7 @@
 <?php
-include("session.inc");
+include("includes/session.inc");
 include("user_files/global.inc");
-include("common.inc");
+include("includes/common.inc");
 include("authusers.php");
 
 $is_logged_in_and_authorized = (isset($_SESSION['sm61loggedin']) && $_SESSION['sm61loggedin'] === true && get_user_auth("IRLPLOGUSER"));

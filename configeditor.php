@@ -1,8 +1,8 @@
 <?php
-include("session.inc");
+include("includes/session.inc");
 include("authusers.php");
 include("user_files/global.inc");
-include("common.inc");
+include("includes/common.inc");
 
 $SUPERMON_DIR = "/var/www/html/supermon-ng";
 

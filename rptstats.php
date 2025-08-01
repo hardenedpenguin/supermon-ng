@@ -1,9 +1,9 @@
 <?php
 
-include("session.inc");
+include("includes/session.inc");
 require_once("amifunctions.inc");
 include("authusers.php");
-include("common.inc");
+include("includes/common.inc");
 include("authini.php");
 
 function show_rpt_stats($fp, $node)

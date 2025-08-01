@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-include('session.inc');
+include('includes/session.inc');
 
 if (!isset($_SESSION['sm61loggedin']) || $_SESSION['sm61loggedin'] !== true) {
     die("<br><h3>ERROR: You must login to use these functions!</h3>");
 }
 
-include('amifunctions.inc');
-include('common.inc');
+include('includes/amifunctions.inc');
+include('includes/common.inc');
 include('authini.php');
 
 $node = trim(strip_tags(filter_input(INPUT_GET, 'node', FILTER_SANITIZE_STRING) ?? ''));

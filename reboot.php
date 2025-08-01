@@ -1,5 +1,5 @@
 <?php
-include("session.inc");
+include("includes/session.inc");
 include("authusers.php");
 
 if (isset($_SESSION['sm61loggedin']) && $_SESSION['sm61loggedin'] === true && get_user_auth("RBTUSER")) {

@@ -1,11 +1,11 @@
 <?php
 
-include("session.inc");
-include('amifunctions.inc');
-include("common.inc");
+include("includes/session.inc");
+include('includes/amifunctions.inc');
+include("includes/common.inc");
 include("authusers.php");
 include("authini.php");
-include("csrf.inc");
+include("includes/csrf.inc");
 
 if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("BANUSER")))  {
     die ("<br><h3 class='error-message'>ERROR: You Must login to use the 'Restrict' function!</h3>");

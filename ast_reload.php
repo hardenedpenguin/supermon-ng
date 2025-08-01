@@ -3,8 +3,8 @@ if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }
 
-include('session.inc');
-include('amifunctions.inc');
+include('includes/session.inc');
+include('includes/amifunctions.inc');
 include('authusers.php');
 include('authini.php');
 

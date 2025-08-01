@@ -1,8 +1,8 @@
 <?php
-include("session.inc");
+include("includes/session.inc");
 
 include("user_files/global.inc");
-include("common.inc");
+include("includes/common.inc");
 include_once("authusers.php");
 include_once("authini.php");
 
@@ -76,7 +76,7 @@ if (file_exists($db)) {
     }
 }
 
-include("header.inc");
+include("includes/header.inc");
 
 $nodes = $nodes_check;
 

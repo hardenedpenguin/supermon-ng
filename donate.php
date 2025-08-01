@@ -1,7 +1,7 @@
 <?php
-include("session.inc");
+include("includes/session.inc");
 include("authusers.php");
-include("common.inc");
+include("includes/common.inc");
 include("user_files/global.inc");
 
 $title = "Support Supermon-ng Development";

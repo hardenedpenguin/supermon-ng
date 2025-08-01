@@ -1,9 +1,9 @@
 <?php
 
-include("session.inc");
-include("amifunctions.inc");
+include("includes/session.inc");
+include("includes/amifunctions.inc");
 include("user_files/global.inc");
-include("common.inc");
+include("includes/common.inc");
 include("authusers.php");
 include("authini.php");
 

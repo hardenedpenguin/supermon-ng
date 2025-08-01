@@ -1,6 +1,6 @@
 <?php
 
-include('session.inc');
+include('includes/session.inc');
 
 if ($_SESSION['sm61loggedin'] !== true)  {
     header('Content-Type: application/json');
@@ -9,9 +9,9 @@ if ($_SESSION['sm61loggedin'] !== true)  {
 }
 
 include('authusers.php');
-include('user_files/global.inc');
-include('amifunctions.inc');
-include('common.inc');
+include('includes/global.inc');
+include('includes/amifunctions.inc');
+include('includes/common.inc');
 include('authini.php');
 
 $remotenode = @trim(strip_tags($_POST['remotenode']));

@@ -26,7 +26,7 @@
  *              not in the specific button's list in authusers.inc.
  */
 function get_user_auth($button) {
-    include("common.inc");
+    include("includes/common.inc");
 
     $auth_file_path = "$USERFILES/authusers.inc";
 

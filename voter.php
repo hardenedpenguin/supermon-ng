@@ -1,5 +1,5 @@
 <?php
-include("session.inc");
+include("includes/session.inc");
 include "header.inc";
 
 $nodeInput = isset($_GET['node']) ? trim(strip_tags($_GET['node'])) : '';

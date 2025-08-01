@@ -8,7 +8,7 @@
  * its status/bubble chart. If the `node` parameter is used, a brief
  * message is displayed on the current page before the popup opens.
  */
-include("session.inc");
+include("includes/session.inc");
 include("authusers.php");
 
 if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("BUBLUSER"))) {

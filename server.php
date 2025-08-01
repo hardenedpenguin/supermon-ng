@@ -19,10 +19,10 @@ include("authini.php");
 
 define('ECHOLINK_NODE_THRESHOLD', 3000000);
 
-include('amifunctions.inc');
-include('nodeinfo.inc');
+include('includes/amifunctions.inc');
+include('includes/nodeinfo.inc');
 include("user_files/global.inc");
-include("common.inc");
+include("includes/common.inc");
 
 if (empty($_GET['nodes'])) {
     error_log("Unknown request! Missing nodes parameter in server.php.");

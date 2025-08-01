@@ -1,7 +1,7 @@
 <?php
-include("session.inc");
+include("includes/session.inc");
 include("user_files/global.inc");
-include("common.inc");
+include("includes/common.inc");
 include("authusers.php");
 ?>
 <!DOCTYPE html>

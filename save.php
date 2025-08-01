@@ -1,8 +1,8 @@
 <?php
-include("session.inc");
+include("includes/session.inc");
 include("authusers.php");
 include("user_files/global.inc");
-include("common.inc");
+include("includes/common.inc");
 
 if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("CFGEDUSER"))) {
     die ("<br><h3>ERROR: You Must login to use the 'Save' function!</h3>");

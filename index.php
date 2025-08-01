@@ -1,5 +1,5 @@
-<?php include("session.inc"); ?>
-<?php include "header.inc"; ?>
+<?php include("includes/session.inc"); ?>
+<?php include "includes/header.inc"; ?>
 <p>
 Welcome to <b><i><?php echo $CALL; ?></i></b> and associated AllStar nodes.   This Bridge runs on the lastest <a href="https://allstarlink.org">ASL3+ Distribution</a> of AllStar Link.
 <br><br>
@@ -55,4 +55,4 @@ Some changes to note. Please see the manual for complete install and update info
     <li>For the latest changes see the Supermon2 manual.</li>
 </ul>
 <br>
-<?php include "footer.inc"; ?>
+<?php include "includes/footer.inc"; ?>

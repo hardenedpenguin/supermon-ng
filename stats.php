@@ -1,8 +1,8 @@
 <?php
 
-include("session.inc");
-include("amifunctions.inc");
-include("common.inc");
+include("includes/session.inc");
+include("includes/amifunctions.inc");
+include("includes/common.inc");
 include("authusers.php");
 include("authini.php");
 

@@ -1,8 +1,8 @@
 <?php
 
-include("session.inc");
-include("security.inc");
-include("common.inc");
+include("includes/session.inc");
+include("includes/security.inc");
+include("includes/common.inc");
 include("user_files/global.inc");
 include("authusers.php");
 include("authini.php");

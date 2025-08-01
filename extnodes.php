@@ -1,6 +1,6 @@
 <?php
-include("session.inc");
-include("common.inc");
+include("includes/session.inc");
+include("includes/common.inc");
 include("authusers.php");
 
 if (

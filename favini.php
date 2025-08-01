@@ -1,7 +1,7 @@
 <?php
 
 function get_fav_ini_name($user) {
-    include("common.inc");
+    include("includes/common.inc");
 
     if (file_exists("$USERFILES/favini.inc")) {
         include("$USERFILES/favini.inc");
@@ -30,7 +30,7 @@ function checkfavini($fdir, $fname) {
 }
 
 function faviniValid() {
-    include("common.inc");
+    include("includes/common.inc");
 
     if (file_exists("$USERFILES/favini.inc")) {
         include("$USERFILES/favini.inc");

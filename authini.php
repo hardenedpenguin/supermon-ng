@@ -7,7 +7,7 @@
  * @return string The path to the determined INI file.
  */
 function get_ini_name($user) {
-    include("common.inc");
+    include("includes/common.inc");
 
     if (file_exists("$USERFILES/authini.inc")) {
         include("$USERFILES/authini.inc");
@@ -49,7 +49,7 @@ function checkini($fdir, $fname) {
  * @return bool True if $ININAME is set, false otherwise.
  */
 function iniValid() {
-    include("common.inc");
+    include("includes/common.inc");
 
     if (file_exists("$USERFILES/authini.inc")) {
         include("$USERFILES/authini.inc");

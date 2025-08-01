@@ -1,11 +1,11 @@
 <?php
-include("session.inc");
-include('amifunctions.inc');
+include("includes/session.inc");
+include('includes/amifunctions.inc');
 include('user_files/global.inc');
 include('authusers.php');
-include('common.inc');
+include('includes/common.inc');
 include('authini.php');
-include('csrf.inc');
+include('includes/csrf.inc');
 
 if (!isset($_SESSION['sm61loggedin']) || $_SESSION['sm61loggedin'] !== true) {
     die("<br><h3>ERROR: You Must login to use this function!</h3>");
