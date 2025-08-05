@@ -160,37 +160,32 @@ if (!empty($_POST["listtype"]) && !empty($_POST["node"]) && !empty($_POST["delet
 <tr>
 <td class="ban-allow-cell-left">Current Nodes in the Denied - denylist (for node <?php echo htmlspecialchars($localnode); ?>):
 <?php
+// For denylist table
 $denylistDBFamily = "denylist/" . $localnode;
 $rawDataDeny = getDataFromAMI($fp, "database show " . $denylistDBFamily);
-
 if ($rawDataDeny === false || trim($rawDataDeny) === "") {
     print "<p>---NONE---</p>";
 } else {
     $lines = explode("\n", $rawDataDeny);
-    $outputLines = [];
+    $headers = ['Node', 'Comment'];
+    $rows = [];
     foreach ($lines as $line) {
         $processedLine = trim($line);
         if (strpos($processedLine, "Output: ") === 0) {
             $processedLine = substr($processedLine, strlen("Output: "));
-            $processedLine = trim($processedLine); 
+            $processedLine = trim($processedLine);
         }
-        
         if (preg_match('/^\d+\s+results found\.?$/i', $processedLine)) {
-            continue; 
+            continue;
         }
-
-        if (trim($processedLine) !== "") {
-            $processedLine = str_replace('          ', ' ', $processedLine);
-            $outputLines[] = $processedLine;
-        }
+        $parts = explode(' ', $processedLine, 2);
+        $rows[] = [
+            htmlspecialchars($parts[0] ?? ''),
+            htmlspecialchars($parts[1] ?? '')
+        ];
     }
-
-    if (empty($outputLines)) {
-        print "<p>---NONE---</p>";
-    } else {
-        $finalOutput = implode("\n", $outputLines);
-        print "<pre>" . htmlspecialchars(trim($finalOutput)) . "</pre>";
-    }
+    $table_class = 'ban-allow-table';
+    include 'includes/table.inc';
 } 
 ?>
 </td></tr>

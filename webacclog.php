@@ -106,37 +106,18 @@ if (isset($_SESSION['sm61loggedin']) && $_SESSION['sm61loggedin'] === true && ge
         }
 
         // --- Process and display $logLines if successfully read ---
-        if ($logLines !== false && !empty($logLines)) {
-            echo '<table class="webacclog-table">';
-            echo '<thead><tr>';
-            echo '<th>Timestamp</th>';
-            echo '<th>IP Address</th>';
-            echo '<th>Request</th>';
-            echo '<th>Status</th>';
-            echo '<th>User Agent</th>';
-            echo '</tr></thead>';
-            echo '<tbody>';
-
-            foreach ($logLines as $line) {
-                // Should already be trimmed if using explode, but good practice if using file()
-                $trimmedLine = trim($line);
-                if (empty($trimmedLine)) continue;
-
-                // Simple regex to parse common log format
-                if (preg_match('/^(\S+) \S+ \S+ \[([^\]]+)\] "([^"]*)" (\d+) (\d+|-) "([^"]*)" "([^"]*)"$/', $trimmedLine, $matches)) {
-                    echo '<tr>';
-                    echo '<td>' . htmlspecialchars($matches[2]) . '</td>'; // Timestamp
-                    echo '<td>' . htmlspecialchars($matches[1]) . '</td>'; // IP Address
-                    echo '<td>' . htmlspecialchars($matches[3]) . '</td>'; // Request
-                    echo '<td>' . htmlspecialchars($matches[4]) . '</td>'; // Status
-                    echo '<td>' . htmlspecialchars($matches[7]) . '</td>'; // User Agent
-                    echo '</tr>';
-                } else {
-                    // Show unparsed line
-                    echo '<tr><td colspan="5"><em>[Unparsed Line]:</em> ' . htmlspecialchars($trimmedLine) . '</td></tr>';
-                }
+        if ($logLines && count($logLines) > 0) {
+            $headers = ['Line', 'Log Entry'];
+            $rows = [];
+            foreach ($logLines as $index => $line) {
+                $lineNumber = $index + 1;
+                $rows[] = [
+                    $lineNumber,
+                    htmlspecialchars($line)
+                ];
             }
-            echo '</tbody></table>';
+            $table_class = 'webacclog-table';
+            include 'includes/table.inc';
         } else {
             echo '<div class="log-viewer-error">No log entries found or unable to read log file.</div>';
         }

@@ -467,6 +467,36 @@ foreach($nodes as $node) {
 
     $colspan_waiting = $isDetailed ? 7 : 5;
     $table_class = $isDetailed ? 'gridtable' : 'gridtable-large';
+
+    $headers = [
+        ['Node', 'Node Information'],
+        ['', ''],
+        ['Received', 'Link'],
+        ['Dir', ''],
+        ['Connected', 'Mode']
+    ];
+
+    $rows = [];
+    if (isset($astdb[$node]) && isset($astdb[$node][1]) && isset($astdb[$node][2]) && isset($astdb[$node][3])) {
+        $info_row = [
+            $node_display_name,
+            $node_info_display
+        ];
+        $rows[] = $info_row;
+    }
+
+    if ($isDetailed) {
+        $headers[] = ['Received'];
+        $rows[] = [
+            '<div id="lkey' . $node . '"></div>'
+        ];
+        $headers[] = ['Connected'];
+        $rows[] = [
+            '<div id="elap' . $node . '"></div>'
+        ];
+    }
+
+    include 'includes/table.inc';
 ?>
     <tr><td>
     <table class="<?php echo $table_class; ?>" id="table_<?php echo htmlspecialchars($node); ?>">

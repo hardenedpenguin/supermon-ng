@@ -135,7 +135,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = safe_exec($command);
     
     if ($data !== false) {
-        print "<pre>" . htmlspecialchars($data, ENT_QUOTES, 'UTF-8') . "</pre>";
+        // Prepare data for the table
+        $lines = explode("\n", $data);
+        $headers = ['Pin', 'Mode', 'Value'];
+        $rows = [];
+        foreach ($lines as $line) {
+            if (preg_match('/^(\d+)\s+(\w+)\s+(\w+)$/', $line, $matches)) {
+                $rows[] = [
+                    'pin' => $matches[1],
+                    'mode' => $matches[2],
+                    'value' => $matches[3]
+                ];
+            }
+        }
+        
+        // Set table class
+        $table_class = 'gpio-table';
+        
+        // Include the table partial
+        include 'includes/table.inc';
+        
     } else {
         print "<p class='error-message'>Error: Could not read GPIO status. Make sure gpio command is available.</p>";
     }
