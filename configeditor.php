@@ -6,7 +6,7 @@ include("includes/common.inc");
 
 $SUPERMON_DIR = "/var/www/html/supermon-ng";
 
-print "<html>\n<head>\n<link type='text/css' rel='stylesheet' href='supermon-ng.css'>\n</head>\n<body class=\"configeditor-page\">\n";
+print "<html>\n<head>\n<!-- Modular CSS Files -->\n<link type='text/css' rel='stylesheet' href='css/base.css'>\n<link type='text/css' rel='stylesheet' href='css/layout.css'>\n<link type='text/css' rel='stylesheet' href='css/menu.css'>\n<link type='text/css' rel='stylesheet' href='css/tables.css'>\n<link type='text/css' rel='stylesheet' href='css/forms.css'>\n<link type='text/css' rel='stylesheet' href='css/widgets.css'>\n<link type='text/css' rel='stylesheet' href='css/responsive.css'>\n<!-- Custom CSS (load last to override defaults) -->\n<link type='text/css' rel='stylesheet' href='css/custom.css'>\n</head>\n<body class=\"configeditor-page\">\n";
 print "<p class=\"configeditor-text\">";
 
 if (($_SESSION['sm61loggedin'] === true) && (get_user_auth("CFGEDUSER"))) {

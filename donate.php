@@ -17,7 +17,16 @@ $title = "Support Supermon-ng Development";
     <meta name="keywords" content="allstar monitor, app_rpt, asterisk">
     <meta name="author" content="Jory A. Pratt, W5GLE">
     <meta name="mods" content="New features, IRLP capability, Paul Aidukas, KN2R">
-    <link type="text/css" rel="stylesheet" href="supermon-ng.css">
+    <!-- Modular CSS Files -->
+<link type="text/css" rel="stylesheet" href="css/base.css">
+<link type="text/css" rel="stylesheet" href="css/layout.css">
+<link type="text/css" rel="stylesheet" href="css/menu.css">
+<link type="text/css" rel="stylesheet" href="css/tables.css">
+<link type="text/css" rel="stylesheet" href="css/forms.css">
+<link type="text/css" rel="stylesheet" href="css/widgets.css">
+<link type="text/css" rel="stylesheet" href="css/responsive.css">
+<!-- Custom CSS (load last to override defaults) -->
+<link type="text/css" rel="stylesheet" href="css/custom.css">
     <link type="text/css" rel="stylesheet" href="js/jquery-ui.css">
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>

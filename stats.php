@@ -10,7 +10,16 @@ include("authini.php");
 <html>
 <head>
     <title>AllStar Status</title>
-    <link rel="stylesheet" type="text/css" href="supermon-ng.css">
+    <!-- Modular CSS Files -->
+    <link rel="stylesheet" type="text/css" href="css/base.css">
+    <link rel="stylesheet" type="text/css" href="css/layout.css">
+    <link rel="stylesheet" type="text/css" href="css/menu.css">
+    <link rel="stylesheet" type="text/css" href="css/tables.css">
+    <link rel="stylesheet" type="text/css" href="css/forms.css">
+    <link rel="stylesheet" type="text/css" href="css/widgets.css">
+    <link rel="stylesheet" type="text/css" href="css/responsive.css">
+    <!-- Custom CSS (load last to override defaults) -->
+    <link rel="stylesheet" type="text/css" href="css/custom.css">
     <style>
         html {
             background-color: #000000 !important;

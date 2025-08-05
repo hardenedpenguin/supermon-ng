@@ -10,7 +10,16 @@ $is_logged_in_and_authorized = (isset($_SESSION['sm61loggedin']) && $_SESSION['s
 <html>
 <head>
 <title>IRLP messages Log</title>
-<link rel="stylesheet" type="text/css" href="supermon-ng.css">
+<!-- Modular CSS Files -->
+<link type="text/css" rel="stylesheet" href="css/base.css">
+<link type="text/css" rel="stylesheet" href="css/layout.css">
+<link type="text/css" rel="stylesheet" href="css/menu.css">
+<link type="text/css" rel="stylesheet" href="css/tables.css">
+<link type="text/css" rel="stylesheet" href="css/forms.css">
+<link type="text/css" rel="stylesheet" href="css/widgets.css">
+<link type="text/css" rel="stylesheet" href="css/responsive.css">
+<!-- Custom CSS (load last to override defaults) -->
+<link type="text/css" rel="stylesheet" href="css/custom.css">
 </head>
 <body>
 

@@ -76,7 +76,16 @@ function safe_exec($command, $args = '') {
 <html>
 <head>
     <meta charset="UTF-8"> 
-    <link type="text/css" rel="stylesheet" href="supermon-ng.css"> 
+    <!-- Modular CSS Files -->
+<link type="text/css" rel="stylesheet" href="css/base.css">
+<link type="text/css" rel="stylesheet" href="css/layout.css">
+<link type="text/css" rel="stylesheet" href="css/menu.css">
+<link type="text/css" rel="stylesheet" href="css/tables.css">
+<link type="text/css" rel="stylesheet" href="css/forms.css">
+<link type="text/css" rel="stylesheet" href="css/widgets.css">
+<link type="text/css" rel="stylesheet" href="css/responsive.css">
+<!-- Custom CSS (load last to override defaults) -->
+<link type="text/css" rel="stylesheet" href="css/custom.css"> 
     <script>
         function refreshParent() {
             if (window.opener && !window.opener.closed) {

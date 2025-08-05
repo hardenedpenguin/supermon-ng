@@ -1,7 +1,7 @@
 <?php
-include_once "session.inc";
-include_once "rate_limit.inc";
-include_once "security.inc";
+include_once "includes/session.inc";
+include_once "includes/rate_limit.inc";
+include_once "includes/security.inc";
 
 if (!isset($_SESSION['sm61loggedin'])) {
     $_SESSION['sm61loggedin'] = false;
@@ -62,7 +62,7 @@ function http_authenticate(string $user, string $pass, string $pass_file = HTPAS
 
 function logUser(string $user, bool $success): void {
     include_once "user_files/global.inc";
-    include_once "common.inc";
+    include_once "includes/common.inc";
     include_once "authini.php";
 
     if (isset($SMLOG) && $SMLOG === "yes" && isset($SMLOGNAME)) {

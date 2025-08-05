@@ -1,0 +1,54 @@
+/* Base Styles, Variables, Resets, Typography, Links */
+/* Extracted from supermon-ng.css */
+
+:root {
+  --primary-color: #E0E0E0;
+  --background-color: #121212;
+  --container-bg: #1E1E1E;
+  --menu-background: #1C1C1C;
+  --text-color: #CCCCCC;
+  --table-header-bg: #333333;
+  --light-yellow: #FFA000;
+  --light-green: #4CAF50;
+  --error-color: #D32F2F;
+  --success-color: #4CAF50;
+  --warning-color: #FFA000;
+  --border-color: #333333;
+  --input-bg: #2a2a2a;
+  --input-text: #CCCCCC;
+  --link-color: #64B5F6;
+  --link-hover: #E0E0E0;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0 auto 7px;
+  padding: 0 5px;
+  color: var(--text-color);
+  min-width: 350px;
+  max-width: 1800px;
+  text-align: center;
+  background-color: var(--background-color);
+  font-family: sans-serif;
+  line-height: 1.4;
+}
+
+a,
+a:link,
+a:visited,
+.nodeNum {
+  color: var(--link-color);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+a:hover,
+a:focus,
+.nodeNum:hover {
+  color: var(--link-hover);
+  font-weight: bold;
+}
+.nodeNum {
+  margin: 5px;
+  cursor: pointer;
+}

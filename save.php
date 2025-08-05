@@ -54,7 +54,16 @@ if (is_resource($process)) {
 <html>
 <head>
     <title>Save File Status</title>
-    <link type='text/css' rel='stylesheet' href='supermon-ng.css'>
+    <!-- Modular CSS Files -->
+    <link type='text/css' rel='stylesheet' href='css/base.css'>
+    <link type='text/css' rel='stylesheet' href='css/layout.css'>
+    <link type='text/css' rel='stylesheet' href='css/menu.css'>
+    <link type='text/css' rel='stylesheet' href='css/tables.css'>
+    <link type='text/css' rel='stylesheet' href='css/forms.css'>
+    <link type='text/css' rel='stylesheet' href='css/widgets.css'>
+    <link type='text/css' rel='stylesheet' href='css/responsive.css'>
+    <!-- Custom CSS (load last to override defaults) -->
+    <link type='text/css' rel='stylesheet' href='css/custom.css'>
 </head>
 <body>
 <div class="log-viewer-container">

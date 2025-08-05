@@ -14,7 +14,16 @@ $log_description = "System Log (journalctl, last 24 hours, sudo lines filtered)"
     <meta charset="UTF-8">
     <!-- Set the title shown in the browser tab -->
     <title><?php echo htmlspecialchars($log_description); ?></title>
-    <link type="text/css" rel="stylesheet" href="supermon-ng.css">
+    <!-- Modular CSS Files -->
+<link type="text/css" rel="stylesheet" href="css/base.css">
+<link type="text/css" rel="stylesheet" href="css/layout.css">
+<link type="text/css" rel="stylesheet" href="css/menu.css">
+<link type="text/css" rel="stylesheet" href="css/tables.css">
+<link type="text/css" rel="stylesheet" href="css/forms.css">
+<link type="text/css" rel="stylesheet" href="css/widgets.css">
+<link type="text/css" rel="stylesheet" href="css/responsive.css">
+<!-- Custom CSS (load last to override defaults) -->
+<link type="text/css" rel="stylesheet" href="css/custom.css">
 </head>
 <body>
 

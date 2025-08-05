@@ -50,7 +50,16 @@ if (file_exists($file) && is_readable($file)) {
 <html>
 <head>
     <title>Edit File: <?php echo htmlspecialchars(basename($file)); ?></title>
-    <link type='text/css' rel='stylesheet' href='supermon-ng.css'>
+    <!-- Modular CSS Files -->
+    <link type='text/css' rel='stylesheet' href='css/base.css'>
+    <link type='text/css' rel='stylesheet' href='css/layout.css'>
+    <link type='text/css' rel='stylesheet' href='css/menu.css'>
+    <link type='text/css' rel='stylesheet' href='css/tables.css'>
+    <link type='text/css' rel='stylesheet' href='css/forms.css'>
+    <link type='text/css' rel='stylesheet' href='css/widgets.css'>
+    <link type='text/css' rel='stylesheet' href='css/responsive.css'>
+    <!-- Custom CSS (load last to override defaults) -->
+    <link type='text/css' rel='stylesheet' href='css/custom.css'>
 </head>
 <body class="edit-page">
 <div class="container">

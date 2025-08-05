@@ -22,7 +22,16 @@ $logRegex = '/^\[(?<timestamp>.*?)\] (?:\[(?<module>[^:]+):(?<level_m>[^\]]+)\]|
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Server error_log Viewer</title>
-    <link type="text/css" rel="stylesheet" href="supermon-ng.css">
+    <!-- Modular CSS Files -->
+<link type="text/css" rel="stylesheet" href="css/base.css">
+<link type="text/css" rel="stylesheet" href="css/layout.css">
+<link type="text/css" rel="stylesheet" href="css/menu.css">
+<link type="text/css" rel="stylesheet" href="css/tables.css">
+<link type="text/css" rel="stylesheet" href="css/forms.css">
+<link type="text/css" rel="stylesheet" href="css/widgets.css">
+<link type="text/css" rel="stylesheet" href="css/responsive.css">
+<!-- Custom CSS (load last to override defaults) -->
+<link type="text/css" rel="stylesheet" href="css/custom.css">
 </head>
 <body>
 

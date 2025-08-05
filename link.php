@@ -551,5 +551,5 @@ if (empty($_SESSION['user'])) {
     print "<p class=\"$TEXT_SIZE\"><i>You are logged as <b>{$current_user}</b> from IP-<b>{$remote_addr}</b> using ini file - '<b>{$user_ini_file}</b>'</i></p>";
 }
 
-include "footer.inc";
+include "includes/footer.inc";
 ?>
