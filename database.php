@@ -139,17 +139,13 @@ if (!empty($processedOutput)) {
             echo "<p class='status-message'>--- NO KEY-VALUE PAIRS FOUND IN DATABASE OUTPUT ---</p>";
         }
     } else {
-        echo "<table class='db-table'>";
-        echo "<thead><tr><th>Key</th><th>Value</th></tr></thead>";
-        echo "<tbody>";
-        foreach ($dbEntries as $entry) {
-            echo "<tr>";
-            echo "<td class='db-key'>" . htmlspecialchars($entry['key']) . "</td>";
-            echo "<td class='db-value'>" . htmlspecialchars($entry['value']) . "</td>";
-            echo "</tr>";
-        }
-        echo "</tbody>";
-        echo "</table>";
+        // Refactored: Use reusable table include
+        $headers = ['Key', 'Value'];
+        $rows = array_map(function($entry) {
+            return [ $entry['key'], $entry['value'] ];
+        }, $dbEntries);
+        $table_class = 'db-table';
+        include 'includes/table.inc';
     }
     ?>
 </div>

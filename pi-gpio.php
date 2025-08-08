@@ -99,8 +99,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <p class="page-title">Pi GPIO Control</p>
     <br>
     
-    <form method="post" action="">
-        <table class="gpio-table">
+    <?php
+    // Setup form data for GPIO control
+    $fields = [
+        [
+            'type' => 'number',
+            'name' => 'Bit',
+            'value' => '',
+            'label' => 'GPIO Pin:',
+            'attrs' => 'id="gpio_pin" min="0" max="40" required',
+            'wrapper_class' => 'gpio-row'
+        ],
+        [
+            'type' => 'select',
+            'name' => 'State',
+            'value' => '',
+            'label' => 'State:',
+            'attrs' => 'required',
+            'wrapper_class' => 'gpio-row',
+            'options' => [
+                '' => 'Select State',
+                'input' => 'Input',
+                'output' => 'Output',
+                'up' => 'Pull Up',
+                'down' => 'Pull Down',
+                '0' => 'Write 0',
+                '1' => 'Write 1'
+            ]
+        ]
+    ];
+    $action = '';
+    $method = 'post';
+    $submit_label = 'Execute';
+    $form_class = 'gpio-form';
+    $submit_class = 'gpio-button';
+    ?>
+    <table class="gpio-table">
+        <form method="post" action="">
             <tr>
                 <td>GPIO Pin:</td>
                 <td><input type="number" id="gpio_pin" name="Bit" min="0" max="40" required></td>
@@ -124,8 +159,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="submit" value="Execute" class="gpio-button">
                 </td>
             </tr>
-        </table>
-    </form>
+        </form>
+    </table>
     
     <br>
     <h3>GPIO Status</h3>

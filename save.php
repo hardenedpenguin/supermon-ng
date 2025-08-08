@@ -86,13 +86,36 @@ if (is_resource($process)) {
     <?php endif; ?>
 
     <br>
-    <form class="save-form" name="EDIT_AGAIN" method="POST" action="edit.php">
-        <input type="hidden" name="file" value="<?php echo htmlspecialchars($target_filepath); ?>">
-        <input name="edit_again" type="submit" class="submit-large" value="Edit This File Again">
-    </form>
-    <form class="save-form" name="RETURN_TO_LIST" method="POST" action="configeditor.php">
-        <input name="return_list" type="submit" class="submit-large" value="Return to File List">
-    </form>
+    <?php
+    // Setup form data for "Edit Again" button
+    $fields = [
+        [
+            'type' => 'hidden',
+            'name' => 'file',
+            'value' => $target_filepath,
+            'label' => '',
+            'attrs' => '',
+            'wrapper_class' => ''
+        ]
+    ];
+    $action = 'edit.php';
+    $method = 'POST';
+    $submit_label = 'Edit This File Again';
+    $form_class = 'save-form';
+    $submit_class = 'submit-large';
+    ?>
+    <?php include 'includes/form.inc'; ?>
+    
+    <?php
+    // Setup form data for "Return to List" button
+    $fields = [];
+    $action = 'configeditor.php';
+    $method = 'POST';
+    $submit_label = 'Return to File List';
+    $form_class = 'save-form';
+    $submit_class = 'submit-large';
+    ?>
+    <?php include 'includes/form.inc'; ?>
 </div>
 </body>
 </html>

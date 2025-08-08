@@ -69,21 +69,57 @@ if (file_exists($file) && is_readable($file)) {
     <?php if (strpos($data, 'ERROR:') === 0): ?>
         <p class="edit-error"><?php echo htmlspecialchars($data); ?></p>
     <?php else: ?>
-        <form class="edit-form" action="save.php" method="post" name="savefile" target="_self">
-            <textarea name="edit" class="edit-textarea" wrap="off"><?php echo htmlspecialchars($data); ?></textarea>
-            <input name="filename" type="hidden" value="<?php echo htmlspecialchars($file); ?>">
-            <br><br>
-            <?php if (!$is_view_only): ?>
-                <input name="Submit" type="submit" class="submit-large" value=" WRITE Edits to File ">
-            <?php else: ?>
-                <p><b>This file is for viewing only. Changes cannot be saved through this interface.</b></p>
-            <?php endif; ?>
-        </form>
+        <?php
+        // Setup form data for reusable form include
+        $fields = [
+            [
+                'type' => 'textarea',
+                'name' => 'edit',
+                'value' => $data,
+                'label' => '',
+                'attrs' => 'class="edit-textarea" wrap="off"',
+                'wrapper_class' => ''
+            ],
+            [
+                'type' => 'hidden',
+                'name' => 'filename',
+                'value' => $file,
+                'label' => '',
+                'attrs' => '',
+                'wrapper_class' => ''
+            ]
+        ];
+        $action = 'save.php';
+        $method = 'post';
+        $submit_label = $is_view_only ? false : ' WRITE Edits to File ';
+        $form_class = 'edit-form';
+        $submit_class = 'submit-large';
+        ?>
+        <?php include 'includes/form.inc'; ?>
+        <?php if ($is_view_only): ?>
+            <p><b>This file is for viewing only. Changes cannot be saved through this interface.</b></p>
+        <?php endif; ?>
     <?php endif; ?>
 
-    <form class="edit-form" name="REFRESH" method="POST" action="configeditor.php">
-        <input name="return" tabindex="50" type="submit" class="submit-large" value="Return to File List">
-    </form>
+    <?php
+    // Setup form data for return button
+    $fields = [
+        [
+            'type' => 'hidden',
+            'name' => 'return',
+            'value' => '1',
+            'label' => '',
+            'attrs' => 'tabindex="50"',
+            'wrapper_class' => ''
+        ]
+    ];
+    $action = 'configeditor.php';
+    $method = 'POST';
+    $submit_label = 'Return to File List';
+    $form_class = 'edit-form';
+    $submit_class = 'submit-large';
+    ?>
+    <?php include 'includes/form.inc'; ?>
 
 </div>
 </body>

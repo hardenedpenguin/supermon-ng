@@ -263,19 +263,35 @@ include "header.inc";
         <div class="login-error"><?php echo htmlspecialchars($error_message, ENT_QUOTES, 'UTF-8'); ?></div>
     <?php endif; ?>
     
-    <form method="post" action="">
-        <div class="form-group">
-            <label for="user">Username:</label>
-            <input type="text" id="user" name="user" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="passwd">Password:</label>
-            <input type="password" id="passwd" name="passwd" required>
-        </div>
-        
-        <button type="submit" class="login-btn">Login</button>
-    </form>
+    <?php
+    // Setup form data for reusable form include
+    $fields = [
+        [
+            'type' => 'text',
+            'name' => 'user',
+            'value' => '',
+            'label' => 'Username:',
+            'attrs' => 'id="user" required',
+            'wrapper_class' => 'form-group',
+            'label_for' => 'user'
+        ],
+        [
+            'type' => 'password',
+            'name' => 'passwd',
+            'value' => '',
+            'label' => 'Password:',
+            'attrs' => 'id="passwd" required',
+            'wrapper_class' => 'form-group',
+            'label_for' => 'passwd'
+        ]
+    ];
+    $action = '';
+    $method = 'post';
+    $submit_label = 'Login';
+    $form_class = 'login-form';
+    $submit_class = 'login-btn';
+    ?>
+    <?php include 'includes/form.inc'; ?>
     
     <div class="login-attempts">
         <?php 
