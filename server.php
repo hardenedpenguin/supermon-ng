@@ -1,4 +1,32 @@
 <?php
+/**
+ * Supermon-ng Real-Time Server (Server-Sent Events)
+ * 
+ * This script provides real-time node monitoring data via Server-Sent Events (SSE).
+ * It connects to Asterisk Manager Interface (AMI) to fetch live node status,
+ * connection information, and activity data for AllStar Link nodes.
+ * 
+ * Features:
+ * - Real-time node status updates
+ * - Connected node information
+ * - Activity monitoring (RX/TX status)
+ * - EchoLink and IRLP integration
+ * - Automatic data refresh
+ * - Connection status monitoring
+ * 
+ * Protocol: Server-Sent Events (SSE)
+ * Content-Type: text/event-stream
+ * 
+ * Query Parameters:
+ * - nodes: Comma-separated list of node IDs to monitor
+ * 
+ * Security: Uses session-based authentication
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
+ */
+
 @set_time_limit(0);
 session_name("supermon61");
 if (session_status() == PHP_SESSION_NONE) {
@@ -8,7 +36,6 @@ if (session_status() == PHP_SESSION_NONE) {
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 ini_set('log_errors', 1);
-
 
 header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache');
