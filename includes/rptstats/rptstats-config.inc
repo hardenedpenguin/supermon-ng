@@ -14,7 +14,7 @@
 function initializeRPTStatsConfig() {
     // Include required dependencies
     include("includes/session.inc");
-    require_once("amifunctions.inc");
+    require_once("includes/amifunctions.inc");
     include("authusers.php");
     include("includes/common.inc");
     include("authini.php");
