@@ -27,21 +27,6 @@
  * @since 1.0.0
  */
 
-@set_time_limit(0);
-session_name("supermon61");
-if (session_status() == PHP_SESSION_NONE) {
-    session_start();
-}
-
-ini_set('display_errors', 0);
-error_reporting(E_ALL);
-ini_set('log_errors', 1);
-
-header('Content-Type: text/event-stream');
-header('Cache-Control: no-cache');
-header('X-Accel-Buffering: no');
-date_default_timezone_set('America/New_York');
-
 include("authini.php");
 
 define('ECHOLINK_NODE_THRESHOLD', 3000000);
@@ -49,178 +34,20 @@ define('ECHOLINK_NODE_THRESHOLD', 3000000);
 include('includes/amifunctions.inc');
 include('includes/nodeinfo.inc');
 include('includes/server-functions.inc');
+include('includes/server-config.inc');
+include('includes/server-ami.inc');
 include("user_files/global.inc");
 include("includes/common.inc");
 
-if (empty($_GET['nodes'])) {
-    error_log("Unknown request! Missing nodes parameter in server.php.");
-    $data = ['status' => 'Unknown request! Missing nodes parameter.'];
-    echo "event: error\n";
-    echo 'data: ' . json_encode($data) . "\n\n";
-    ob_flush();
-    flush();
-    if (session_status() == PHP_SESSION_ACTIVE) { session_write_close(); }
-    exit;
-}
-
-$passedNodes = explode(',', trim(strip_tags($_GET['nodes'])));
-$passedNodes = array_filter(array_map('trim', $passedNodes), 'strlen');
-
-if (empty($passedNodes)) {
-    error_log("No valid nodes in 'nodes' parameter after parsing in server.php.");
-    $data = ['status' => 'No valid nodes provided in the request.'];
-    echo "event: error\n";
-    echo 'data: ' . json_encode($data) . "\n\n";
-    ob_flush();
-    flush();
-    if (session_status() == PHP_SESSION_ACTIVE) { session_write_close(); }
-    exit;
-}
-
-$db = $ASTDB_TXT ?? null;
-$astdb = [];
-if (isset($db) && file_exists($db)) {
-    $fh = fopen($db, "r");
-    if ($fh && flock($fh, LOCK_SH)) {
-        while (($line = fgets($fh)) !== FALSE) {
-            $arr = preg_split("/\|/", trim($line));
-            if (isset($arr[0])) {
-                $astdb[$arr[0]] = $arr;
-            }
-        }
-        flock($fh, LOCK_UN);
-        fclose($fh);
-    } elseif ($fh) {
-        error_log("ASTDB_TXT: Opened but flock failed for $db.");
-        fclose($fh);
-    } else {
-         error_log("ASTDB_TXT: Could not open file $db for reading.");
-    }
-} else {
-    error_log("ASTDB_TXT ('" . ($db ?? 'Not defined') . "') not defined or file does not exist.");
-}
-
+// Initialize global caches
 $elnk_cache = [];
 $irlp_cache = [];
 
-$SUPINI = get_ini_name($_SESSION['user'] ?? '');
+// Initialize server and get configuration
+list($nodes, $config, $astdb) = initializeServer();
 
-if (!file_exists($SUPINI)) {
-    $data = ['status' => "Critical Error: Couldn't load $SUPINI file."];
-    error_log("CRITICAL ERROR: SUPINI file '$SUPINI' for user '" . ($_SESSION['user'] ?? 'Unknown') . "' does NOT exist.");
-    echo "event: error\n";
-    echo 'data: ' . json_encode($data) . "\n\n";
-    ob_flush();
-    flush();
-    if (session_status() == PHP_SESSION_ACTIVE) { session_write_close(); }
-    exit;
-}
-
-$config = parse_ini_file($SUPINI, true);
-if ($config === false) {
-    error_log("CRITICAL ERROR: parse_ini_file failed for '$SUPINI'. PHP error: " . print_r(error_get_last(), true));
-    $data = ['status' => "Critical Error: Couldn't parse $SUPINI file. Check INI syntax."];
-    echo "event: error\n";
-    echo 'data: ' . json_encode($data) . "\n\n";
-    ob_flush();
-    flush();
-    if (session_status() == PHP_SESSION_ACTIVE) { session_write_close(); }
-    exit;
-}
-
-if (session_status() == PHP_SESSION_ACTIVE) {
-    session_write_close();
-}
-
-$nodes = [];
-foreach ($passedNodes as $node) {
-    $trimmedNode = trim($node);
-    if (isset($config[$trimmedNode])) {
-        $nodes[] = $trimmedNode;
-    } else {
-        $data = ['node' => $trimmedNode, 'status' => "Node $trimmedNode is not in $SUPINI file"];
-        error_log("Node '$trimmedNode' IS NOT VALID. Not found in $SUPINI.");
-        echo "event: nodes\n";
-        echo 'data: ' . json_encode([$trimmedNode => $data]) . "\n\n";
-        ob_flush();
-        flush();
-    }
-}
-
-if (empty($nodes)) {
-    error_log("No valid nodes to process after checking config.");
-    $data = ['status' => 'No valid nodes configured or passed.'];
-    echo "event: error\n";
-    echo 'data: ' . json_encode($data) . "\n\n";
-    ob_flush();
-    flush();
-    exit;
-}
-
-$servers = [];
-$fp = [];
-
-foreach ($nodes as $node) {
-    $nodeConfig = $config[$node] ?? null;
-    if (!$nodeConfig || !isset($nodeConfig['host'], $nodeConfig['user'], $nodeConfig['passwd'])) {
-        $errMsg = "Missing critical configuration (host, user, or passwd) for node '$node' in $SUPINI.";
-        $data = ['host' => ($nodeConfig['host'] ?? 'UnknownHost'), 'node' => $node, 'status' => '   ' . $errMsg];
-        error_log("AMI_SETUP_ERROR: $errMsg.");
-        echo "event: connection\n";
-        echo 'data: ' . json_encode($data) . "\n\n";
-        ob_flush();
-        flush();
-        continue;
-    }
-
-    $host = $nodeConfig['host'];
-
-    if (!array_key_exists($host, $servers)) {
-        $connectMsg = "Connecting to Asterisk Manager for node '$node' on host '$host'...";
-        $data = ['host' => $host, 'node' => $node, 'status' => '   ' . $connectMsg];
-        echo "event: connection\n";
-        echo 'data: ' . json_encode($data) . "\n\n";
-        ob_flush();
-        flush();
-
-        $socket = SimpleAmiClient::connect($host);
-        if ($socket === FALSE) {
-            $errMsg = "Could not connect to Asterisk Manager for node '$node' on host '$host'.";
-            $data = ['host' => $host, 'node' => $node, 'status' => '   ' . $errMsg];
-            error_log("AMI_CONNECT_FAIL: $errMsg");
-        } else {
-            if (SimpleAmiClient::login($socket, $nodeConfig['user'], $nodeConfig['passwd'])) {
-                $servers[$host] = 'y';
-                $fp[$host] = $socket;
-                $successData = ['host' => $host, 'node' => $node, 'status' => '   Connected to Asterisk Manager.'];
-                echo "event: connection\n";
-                echo 'data: ' . json_encode($successData) . "\n\n";
-                ob_flush();
-                flush();
-                continue;
-            } else {
-                $errMsg = "Could not login to Asterisk Manager for node '$node' on host '$host' with user '{$nodeConfig['user']}'.";
-                $data = ['host' => $host, 'node' => $node, 'status' => '   ' . $errMsg];
-                error_log("AMI_LOGIN_FAIL: $errMsg");
-                SimpleAmiClient::logoff($socket);
-            }
-        }
-        echo "event: connection\n";
-        echo 'data: ' . json_encode($data) . "\n\n";
-        ob_flush();
-        flush();
-    }
-}
-
-if (empty($servers)) {
-    error_log("No AMI servers successfully connected in server.php. Exiting.");
-    $data = ['status' => 'Failed to connect to any Asterisk Managers.'];
-    echo "event: error\n";
-    echo 'data: ' . json_encode($data) . "\n\n";
-    ob_flush();
-    flush();
-    exit;
-}
+// Establish AMI connections
+list($fp, $servers) = establishAmiConnections($nodes, $config);
 
 $current = [];
 $saved = [];
@@ -355,10 +182,7 @@ while (TRUE) {
     }
 }
 
-foreach ($fp as $host => $socket) {
-    if ($socket && is_resource($socket) && isset($servers[$host]) && $servers[$host] === 'y') {
-        SimpleAmiClient::logoff($socket);
-    }
-}
+// Cleanup AMI connections
+cleanupAmiConnections($fp, $servers);
 exit;
 
