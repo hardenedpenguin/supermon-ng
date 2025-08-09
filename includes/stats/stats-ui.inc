@@ -28,19 +28,63 @@ function renderStatsHead() {
     <style>
         html {
             background-color: #000000 !important;
+            margin: 0;
+            padding: 0;
         }
         body {
-             color: white;
-             padding: 10px;
-             background-color: #000000 !important;
+            color: white;
+            padding: 15px;
+            background-color: #000000 !important;
+            font-family: 'Courier New', Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.4;
+            margin: 0;
+            width: 100%;
+            min-height: 100vh;
+            box-sizing: border-box;
         }
-        .ast-status-pre {
-             background-color: #000000 !important;
+        .stats-container {
+            width: 100%;
+            max-width: none;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .ast-status-header-line {
+            color: #888;
+        }
+        .ast-status-highlight {
+            color: #00ff00;
+            font-weight: bold;
+        }
+        .ast-status-section-title {
+            color: #ffff00;
+            font-weight: bold;
+        }
+        .ast-status-error-msg {
+            color: #ff4444;
+            font-weight: bold;
+        }
+        .ast-status-none-indicator {
+            color: #888;
+            font-style: italic;
+        }
+        .ast-status-count {
+            color: #00ffff;
+            font-weight: bold;
+        }
+        .nodeNum {
+            color: #00ff00;
+            font-weight: bold;
+        }
+        .error-message {
+            color: #ff4444;
+            font-weight: bold;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
-<pre class="ast-status-pre">
+<div class="stats-container">
 <?php
 }
 
@@ -63,7 +107,7 @@ function renderStatsContent($fp) {
  */
 function renderStatsFooter() {
 ?>
-</pre>
+</div>
 </body>
 </html>
 <?php
