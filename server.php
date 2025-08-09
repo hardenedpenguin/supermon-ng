@@ -33,10 +33,10 @@ define('ECHOLINK_NODE_THRESHOLD', 3000000);
 
 include('includes/amifunctions.inc');
 include('includes/nodeinfo.inc');
-include('includes/server-functions.inc');
-include('includes/server-config.inc');
-include('includes/server-ami.inc');
-include('includes/server-monitor.inc');
+include('includes/sse/server-functions.inc');
+include('includes/sse/server-config.inc');
+include('includes/sse/server-ami.inc');
+include('includes/sse/server-monitor.inc');
 include("user_files/global.inc");
 include("includes/common.inc");
 
