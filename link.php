@@ -5,80 +5,19 @@ include("user_files/global.inc");
 include("includes/common.inc");
 include_once("authusers.php");
 include_once("authini.php");
+include("includes/link/link-functions.inc");
+include("includes/link/link-config.inc");
 
-$raw_nodes_param = trim(strip_tags($_GET['nodes'] ?? ''));
-if (empty($raw_nodes_param)) {
-    die ("Please provide a properly formated URI. (ie link.php?nodes=1234 | link.php?nodes=1234,2345)");
-}
-$passedNodes = array_filter(array_map('trim', explode(',', $raw_nodes_param)), 'strlen');
-if (empty($passedNodes)) {
-    die ("Please provide a properly formated URI. (ie link.php?nodes=1234 | link.php?nodes=1234,2345) - No valid nodes found after parsing.");
-}
-$parms = implode(',', $passedNodes);
+// Initialize link page and get configuration
+list($nodes, $config, $astdb, $displayPrefs, $parms) = initializeLinkPage();
 
-$expiretime = 2147483645;
-
-if (!isset($_SESSION['user'])) {
-    $_SESSION['user'] = "";
-}
-
-$cookie_data = $_COOKIE['display-data'] ?? [];
-
-$Displayed_Nodes = isset($cookie_data['number-displayed']) ? htmlspecialchars($cookie_data['number-displayed']) : null;
-$Display_Count   = isset($cookie_data['show-number']) ? htmlspecialchars($cookie_data['show-number']) : null;
-$Show_All        = isset($cookie_data['show-all']) ? htmlspecialchars($cookie_data['show-all']) : null;
-$Show_Detail     = isset($cookie_data['show-detailed']) ? htmlspecialchars($cookie_data['show-detailed']) : null;
-
-if ($Displayed_Nodes === null || $Displayed_Nodes === "0") {
-    $Displayed_Nodes = "999";
-}
-if ($Display_Count === null) {
-    $Display_Count = 0;
-}
-if ($Show_All === null) {
-    $Show_All = "1";
-}
-if ($Show_Detail === null) {
-    $Show_Detail = "1";
-}
-setcookie("display-data[show-detailed]", $Show_Detail, $expiretime);
-
-$SUPINI = get_ini_name($_SESSION['user']);
-
-if (!file_exists($SUPINI)) {
-    die("Couldn't load $SUPINI file.\n");
-}
-$config = parse_ini_file($SUPINI, true);
-
-$nodes_check = array();
-foreach ($passedNodes as $node_item) {
-    if (isset($config[$node_item])) {
-        $nodes_check[] = $node_item;
-    }
-}
-if (empty($nodes_check)) {
-    die("None of the provided nodes were found in the configuration file: $SUPINI");
-}
-
-$db = $ASTDB_TXT;
-$astdb = array();
-if (file_exists($db)) {
-    $fh = fopen($db, "r");
-    if ($fh && flock($fh, LOCK_SH)) {
-        while (($line = fgets($fh)) !== FALSE) {
-            $arr_db = explode('|', trim($line));
-            if (isset($arr_db[0])) {
-                 $astdb[$arr_db[0]] = $arr_db;
-            }
-        }
-        flock($fh, LOCK_UN);
-        fclose($fh);
-    }
-}
+// Extract display preferences
+$Displayed_Nodes = $displayPrefs['Displayed_Nodes'];
+$Display_Count = $displayPrefs['Display_Count'];
+$Show_All = $displayPrefs['Show_All'];
+$Show_Detail = $displayPrefs['Show_Detail'];
 
 include("includes/header.inc");
-
-$nodes = $nodes_check;
 
 $isDetailed = ($Show_Detail == 1);
 $SUBMITTER   = $isDetailed ? "submit" : "submit-large";
@@ -96,14 +35,7 @@ if (!($_SESSION['sm61loggedin'] ?? false)) {
     }
 }
 
-function print_auth_button($auth_perm, $css_class, $value, $id = "", $extra_attrs = "", $onclick_action = "") {
-    if (get_user_auth($auth_perm)) {
-        $id_attr = $id ? "id=\"$id\"" : "";
-        $onclick_attr = $onclick_action ? "OnClick=\"$onclick_action\"" : "";
-        $extra_attrs_spaced = ($extra_attrs && substr($extra_attrs, 0, 1) !== ' ') ? " " . $extra_attrs : $extra_attrs;
-        print "<input type=\"button\" class=\"$css_class\" value=\"$value\" $id_attr{$extra_attrs_spaced} $onclick_attr>";
-    }
-}
+
 
 ?>
 
@@ -495,22 +427,7 @@ foreach($nodes as $node) {
 
 <?php
 if (filter_var($HAMCLOCK_ENABLED ?? false, FILTER_VALIDATE_BOOLEAN)) {
-    /**
-     * Checks if a given IP address is in a private (internal) or reserved range.
-     * @param string $ip The IP address to check.
-     * @return bool True if the IP is internal, false otherwise.
-     */
-    function is_internal_ip($ip) {
-        // The loopback address is always internal.
-        if ($ip === '127.0.0.1' || $ip === '::1') {
-            return true;
-        }
-        
-        // Use PHP's built-in filter to check if the IP is NOT a public IP.
-        // The FILTER_FLAG_NO_PRIV_RANGE and FILTER_FLAG_NO_RES_RANGE flags cause filter_var to return false
-        // for private or reserved IPs. We return the opposite (!).
-        return !filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE);
-    }
+
 
     // Get the connecting client's IP address
     $client_ip = $_SERVER['REMOTE_ADDR'];
