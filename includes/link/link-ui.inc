@@ -30,6 +30,8 @@ function renderWelcomeMessage() {
  * @param array $displaySettings Display configuration
  */
 function renderControlPanel($nodes, $astdb, $displaySettings) {
+    global $EXTN, $DATABASE_TXT, $IRLPLOG;
+    
     $isDetailed = ($displaySettings['Show_Detail'] == 1);
     $SUBMITTER = $isDetailed ? "submit" : "submit-large";
     $SUBMIT_SIZE = $isDetailed ? "submit" : "submit-large";
