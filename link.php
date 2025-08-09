@@ -7,6 +7,9 @@ include_once("authusers.php");
 include_once("authini.php");
 include("includes/link/link-functions.inc");
 include("includes/link/link-config.inc");
+include("includes/link/link-ui.inc");
+include("includes/link/link-javascript.inc");
+include("includes/link/link-tables.inc");
 
 // Initialize link page and get configuration
 list($nodes, $config, $astdb, $displayPrefs, $parms) = initializeLinkPage();
@@ -25,15 +28,8 @@ $SUBMIT_SIZE = $isDetailed ? "submit" : "submit-large";
 $TEXT_SIZE   = $isDetailed ? "text-normal" : "text-large";
 
 
-if (!($_SESSION['sm61loggedin'] ?? false)) {
-    if (isset($WELCOME_MSG)) {
-        print $WELCOME_MSG;
-    }
-} else {
-    if (isset($WELCOME_MSG_LOGGED)) {
-        print $WELCOME_MSG_LOGGED;
-    }
-}
+// Render welcome message
+renderWelcomeMessage();
 
 
 
