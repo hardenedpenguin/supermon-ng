@@ -22,8 +22,10 @@ Welcome to the Supermon-ng project! This guide will help you get started contrib
 ```
 supermon-ng/
 ├── docs/              # Documentation
-├── includes/          # Shared PHP functions and classes
-├── components/        # Reusable PHP components
+├── includes/          # Shared PHP functions and modules
+│   ├── sse/           # Server-Sent Events modules (server.php)
+│   ├── link/          # Link page modules (link.php)
+│   └── *.inc          # Core includes (session, common, etc.)
 ├── templates/         # Templates for creating new files
 ├── scripts/           # Development and maintenance scripts
 ├── css/               # Modular stylesheets
@@ -47,7 +49,7 @@ supermon-ng/
 
 ### 2. **New Features**
 - **New pages**: Use templates in `templates/` directory
-- **New components**: Follow existing patterns in `components/`
+- **New modules**: Create function modules in `includes/` subdirectories
 - **API endpoints**: Extend server-side functionality
 
 **Process:**
@@ -69,7 +71,7 @@ supermon-ng/
 #### PHP Files
 - **Main pages**: Root directory (`*.php`)
 - **Shared functions**: `includes/` directory
-- **Reusable components**: `components/` directory
+- **Modular functions**: `includes/sse/` (server.php modules), `includes/link/` (link.php modules)
 - **User config**: `user_files/` directory (don't edit core files here)
 
 #### CSS Files (Load in order)
@@ -80,7 +82,7 @@ supermon-ng/
 5. `css/forms.css` - Forms and buttons
 6. `css/widgets.css` - Specific components
 7. `css/responsive.css` - Mobile and print styles
-8. `css/custom.css` - User customizations (loads last)
+8. `css/custom.css` - User customizations (copy from custom.css.example)
 
 ### Coding Standards
 
@@ -107,9 +109,10 @@ function connectToNode($nodeId) {
     // Implementation
 }
 
-// Use helper classes when available
-$nodeId = ValidationHelper::validateNodeId($_GET['node']);
-$connection = AMIHelper::connectToNode($nodeId);
+// Use core functions for validation and connections
+include_once 'includes/common.inc';
+$nodeId = filter_var($_GET['node'], FILTER_VALIDATE_INT);
+// Use AMI functions from amifunctions.inc
 ```
 
 #### CSS
@@ -182,39 +185,55 @@ function updateNodeDisplay(nodeId, data) {
 
 ### Working with AMI (Asterisk Manager Interface)
 ```php
-// Use the AMI helper for consistency
-$connection = AMIHelper::connectToNode($nodeId);
-if (!$connection) {
-    return ErrorHandler::handleAMIError("Failed to connect to node $nodeId");
+// Use the AMI functions for consistency
+include_once 'includes/amifunctions.inc';
+$fp = SimpleAmiClient::connect($host);
+if (!$fp) {
+    error_log("Failed to connect to node $nodeId");
+    echo "Connection failed. Please try again.";
+    exit;
 }
 
-$result = AMIHelper::executeCommand($connection, $command);
-AMIHelper::disconnect($connection);
+SimpleAmiClient::login($fp, $user, $password);
+$result = SimpleAmiClient::command($fp, $command);
+SimpleAmiClient::logoff($fp);
 ```
 
 ### Adding Database/Configuration Access
 ```php
-// Use the Config helper
-Config::load('user_files/global.inc');
-$setting = Config::get('SOME_SETTING', 'default_value');
+// Include configuration files directly
+include_once 'user_files/global.inc';
+include_once 'includes/common.inc';
+
+// Access global variables
+$setting = $SOME_SETTING ?? 'default_value';
+
+// Parse INI files
+$config = parse_ini_file('user_files/allmon.ini', true);
 ```
 
 ### Error Handling
 ```php
 // Log errors for debugging
-ErrorHandler::logError("Failed to process node data", ['node' => $nodeId]);
+error_log("Failed to process node data for node: $nodeId");
 
 // Show user-friendly messages
-echo ErrorHandler::displayUserError("Unable to connect to node. Please try again.");
+echo "<div class='error'>Unable to connect to node. Please try again.</div>";
+
+// Validate input
+if (!filter_var($nodeId, FILTER_VALIDATE_INT)) {
+    echo "<div class='error'>Invalid node ID provided.</div>";
+    exit;
+}
 ```
 
 ## 🔐 Security Guidelines
 
-- **Always validate input**: Use `ValidationHelper` functions
+- **Always validate input**: Use `filter_var()` and input validation
 - **Escape output**: Use `htmlspecialchars()` for HTML output
-- **Check permissions**: Verify user authorization before sensitive operations
-- **Use CSRF protection**: Include CSRF tokens in forms
-- **Log security events**: Use `ErrorHandler::logError()` for security-related errors
+- **Check permissions**: Use `get_user_auth()` to verify user authorization
+- **Use CSRF protection**: Include CSRF tokens in forms (`csrf_token_field()`)
+- **Log security events**: Use `error_log()` for security-related errors
 
 ## 📚 Resources
 

@@ -4,7 +4,7 @@ This guide provides detailed information about the Supermon-ng architecture, des
 
 ## 🏗️ Architecture Overview
 
-Supermon-ng follows a modular, component-based architecture designed for maintainability and extensibility.
+Supermon-ng follows a modular, function-based architecture designed for maintainability and extensibility.
 
 ### Core Components
 
@@ -34,17 +34,23 @@ Supermon-ng follows a modular, component-based architecture designed for maintai
 
 ```
 supermon-ng/
-├── includes/          # Shared PHP libraries
+├── includes/          # Shared PHP libraries and modules
 │   ├── session.inc    # Session management
 │   ├── common.inc     # Global variables & constants
-│   ├── security.inc   # Security utilities
 │   ├── amifunctions.inc # AMI client library
 │   ├── form.inc       # Form rendering
 │   ├── table.inc      # Table rendering
-│   └── ...
-├── components/        # Reusable PHP classes
-│   ├── NodeDisplay.php
-│   ├── TableRenderer.php
+│   ├── sse/           # Server-Sent Events modules
+│   │   ├── server-functions.inc
+│   │   ├── server-config.inc
+│   │   ├── server-ami.inc
+│   │   └── server-monitor.inc
+│   ├── link/          # Link page modules
+│   │   ├── link-functions.inc
+│   │   ├── link-config.inc
+│   │   ├── link-ui.inc
+│   │   ├── link-javascript.inc
+│   │   └── link-tables.inc
 │   └── ...
 ├── css/              # Modular stylesheets
 │   ├── base.css      # Variables & base styles
