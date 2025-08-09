@@ -1,0 +1,66 @@
+# Supermon-ng .gitignore
+
+# User customizations (users should copy from .example files)
+css/custom.css
+
+# Logs
+*.log
+*.log.*
+user_files/*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup~
+*~
+
+# Patch files
+*.patch
+*.diff
+
+# Development/Debug files
+debug*.php
+test*.php
+admin_clear_cache.php
+clear_opcache.php
+opcache_reset.php
+debug.php
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# PHP/Composer
+vendor/
+composer.lock
+.phpunit.result.cache
+
+# Node.js (if any future frontend tooling)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local development
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Configuration overrides (users should create from examples)
+user_files/custom_*
+user_files/local_*
