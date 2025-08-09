@@ -44,7 +44,9 @@ if (!$isAuthenticated) {
 <link type="text/css" rel="stylesheet" href="css/widgets.css">
 <link type="text/css" rel="stylesheet" href="css/responsive.css">
 <!-- Custom CSS (load last to override defaults) -->
+<?php if (file_exists('css/custom.css')): ?>
 <link type="text/css" rel="stylesheet" href="css/custom.css">
+<?php endif; ?>
 </head>
 <body>
     <br><h3>ERROR: You Must login to use this function!</h3>
@@ -71,7 +73,9 @@ if ($node_param > 0) {
 <link type="text/css" rel="stylesheet" href="css/widgets.css">
 <link type="text/css" rel="stylesheet" href="css/responsive.css">
 <!-- Custom CSS (load last to override defaults) -->
+<?php if (file_exists('css/custom.css')): ?>
 <link type="text/css" rel="stylesheet" href="css/custom.css">
+<?php endif; ?>
 <title><?php echo $title; ?></title>
 </head>
 <body>
@@ -136,7 +140,9 @@ if ($node_param > 0) {
 <link type="text/css" rel="stylesheet" href="css/widgets.css">
 <link type="text/css" rel="stylesheet" href="css/responsive.css">
 <!-- Custom CSS (load last to override defaults) -->
+<?php if (file_exists('css/custom.css')): ?>
 <link type="text/css" rel="stylesheet" href="css/custom.css">
+<?php endif; ?>
 <title><?php echo htmlspecialchars($title); ?></title>
 </head>
 <body>

@@ -94,7 +94,9 @@ try {
     <link type="text/css" rel="stylesheet" href="css/widgets.css">
     <link type="text/css" rel="stylesheet" href="css/responsive.css">
     <!-- Custom CSS (always load last) -->
+    <?php if (file_exists('css/custom.css')): ?>
     <link type="text/css" rel="stylesheet" href="css/custom.css">
+    <?php endif; ?>
     
     <!-- Optional: Include JavaScript if needed -->
     <script src="js/jquery.min.js"></script>

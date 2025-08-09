@@ -6,7 +6,24 @@ include("includes/common.inc");
 
 $SUPERMON_DIR = "/var/www/html/supermon-ng";
 
-print "<html>\n<head>\n<!-- Modular CSS Files -->\n<link type='text/css' rel='stylesheet' href='css/base.css'>\n<link type='text/css' rel='stylesheet' href='css/layout.css'>\n<link type='text/css' rel='stylesheet' href='css/menu.css'>\n<link type='text/css' rel='stylesheet' href='css/tables.css'>\n<link type='text/css' rel='stylesheet' href='css/forms.css'>\n<link type='text/css' rel='stylesheet' href='css/widgets.css'>\n<link type='text/css' rel='stylesheet' href='css/responsive.css'>\n<!-- Custom CSS (load last to override defaults) -->\n<link type='text/css' rel='stylesheet' href='css/custom.css'>\n</head>\n<body class=\"configeditor-page\">\n";
+?>
+<html>
+<head>
+<!-- Modular CSS Files -->
+<link type='text/css' rel='stylesheet' href='css/base.css'>
+<link type='text/css' rel='stylesheet' href='css/layout.css'>
+<link type='text/css' rel='stylesheet' href='css/menu.css'>
+<link type='text/css' rel='stylesheet' href='css/tables.css'>
+<link type='text/css' rel='stylesheet' href='css/forms.css'>
+<link type='text/css' rel='stylesheet' href='css/widgets.css'>
+<link type='text/css' rel='stylesheet' href='css/responsive.css'>
+<!-- Custom CSS (load last to override defaults) -->
+<?php if (file_exists('css/custom.css')): ?>
+<link type='text/css' rel='stylesheet' href='css/custom.css'>
+<?php endif; ?>
+</head>
+<body class="configeditor-page">
+<?php
 print "<p class=\"configeditor-text\">";
 
 if (($_SESSION['sm61loggedin'] === true) && (get_user_auth("CFGEDUSER"))) {

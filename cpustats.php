@@ -15,7 +15,9 @@ include("includes/common.inc");
 <link rel="stylesheet" type="text/css" href="css/widgets.css">
 <link rel="stylesheet" type="text/css" href="css/responsive.css">
 <!-- Custom CSS (load last to override defaults) -->
+<?php if (file_exists('css/custom.css')): ?>
 <link rel="stylesheet" type="text/css" href="css/custom.css">
+<?php endif; ?>
 </head>
 <body class="cpustats">
 <?php

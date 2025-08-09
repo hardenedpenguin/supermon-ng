@@ -23,7 +23,9 @@ $log_description = "System Log (journalctl, last 24 hours, sudo lines filtered)"
 <link type="text/css" rel="stylesheet" href="css/widgets.css">
 <link type="text/css" rel="stylesheet" href="css/responsive.css">
 <!-- Custom CSS (load last to override defaults) -->
+<?php if (file_exists('css/custom.css')): ?>
 <link type="text/css" rel="stylesheet" href="css/custom.css">
+<?php endif; ?>
 </head>
 <body>
 

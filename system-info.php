@@ -85,7 +85,9 @@ function safe_exec($command, $args = '') {
 <link type="text/css" rel="stylesheet" href="css/widgets.css">
 <link type="text/css" rel="stylesheet" href="css/responsive.css">
 <!-- Custom CSS (load last to override defaults) -->
-<link type="text/css" rel="stylesheet" href="css/custom.css"> 
+<?php if (file_exists('css/custom.css')): ?>
+<link type="text/css" rel="stylesheet" href="css/custom.css">
+<?php endif; ?> 
     <script>
         function refreshParent() {
             if (window.opener && !window.opener.closed) {

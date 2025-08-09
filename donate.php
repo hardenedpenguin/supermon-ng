@@ -26,7 +26,9 @@ $title = "Support Supermon-ng Development";
 <link type="text/css" rel="stylesheet" href="css/widgets.css">
 <link type="text/css" rel="stylesheet" href="css/responsive.css">
 <!-- Custom CSS (load last to override defaults) -->
+<?php if (file_exists('css/custom.css')): ?>
 <link type="text/css" rel="stylesheet" href="css/custom.css">
+<?php endif; ?>
     <link type="text/css" rel="stylesheet" href="js/jquery-ui.css">
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
