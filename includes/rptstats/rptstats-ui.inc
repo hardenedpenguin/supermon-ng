@@ -69,6 +69,36 @@ function renderStatsPageHeader($localnode_param) {
 <link type="text/css" rel="stylesheet" href="css/custom.css">
 <?php endif; ?>
 <title><?php echo $title; ?></title>
+<style>
+html, body {
+    margin: 0;
+    padding: 10px;
+    height: 100vh;
+    width: 100%;
+    box-sizing: border-box;
+    background-color: #000000;
+    color: white;
+    font-family: 'Courier New', Consolas, monospace;
+    overflow: auto;
+}
+
+.rptstatus {
+    width: 100%;
+    height: calc(100vh - 20px);
+    max-width: none;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow: auto;
+    padding: 0;
+    margin: 0;
+    background-color: #000000;
+    color: white;
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.3;
+    border: none;
+}
+</style>
 </head>
 <body>
 <pre class="rptstatus">
