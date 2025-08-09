@@ -106,164 +106,174 @@ function getNode($fp, $node) {
 }
 
 function sortNodes($nodes_to_sort) {
-    if (!is_array($nodes_to_sort) || empty($nodes_to_sort)) {
+    $arr = [];
+    $never_heard = [];
+    $sortedNodesResult = [];
+
+    if (!is_array($nodes_to_sort)) {
         return [];
     }
 
-    uksort($nodes_to_sort, function($a, $b) {
-        // Handle numeric comparison for most nodes
-        if (is_numeric($a) && is_numeric($b)) {
-            return intval($a) - intval($b);
+    foreach ($nodes_to_sort as $nodeNum => $row) {
+        if (!is_array($row) || !isset($row['last_keyed'])) {
+            continue;
         }
-        
-        // Handle mixed or string comparison
-        return strcasecmp($a, $b);
-    });
+        if ($row['last_keyed'] == '-1' || $row['last_keyed'] === 'Never') {
+            $never_heard[$nodeNum] = 'Never heard';
+        } else {
+            $arr[$nodeNum] = (int)$row['last_keyed'];
+        }
+    }
 
-    return $nodes_to_sort;
+    if (count($arr) > 0) {
+        asort($arr, SORT_NUMERIC);
+    }
+    
+    $merged_for_sorting = $arr;
+    if (count($never_heard) > 0) {
+        ksort($never_heard, SORT_NUMERIC);
+        foreach ($never_heard as $nodeNum => $status_text) {
+            $merged_for_sorting[$nodeNum] = -1; 
+        }
+    }
+    
+    foreach ($merged_for_sorting as $nodeNum => $last_keyed_seconds_or_flag) {
+        if (!isset($nodes_to_sort[$nodeNum])) {
+            error_log("sortNodes: Mismatch - nodeNum '$nodeNum' from sorted keys not in original \$nodes_to_sort.");
+            continue;
+        }
+        $originalNodeData = $nodes_to_sort[$nodeNum];
+        if ($last_keyed_seconds_or_flag > -1 && isset($originalNodeData['last_keyed']) && is_numeric($originalNodeData['last_keyed'])) {
+            $t = (int)$originalNodeData['last_keyed'];
+            $h = floor($t / 3600);
+            $m = floor(($t / 60) % 60);
+            $s = $t % 60;
+            $originalNodeData['last_keyed'] = sprintf("%03d:%02d:%02d", $h, $m, $s);
+        } else {
+            $originalNodeData['last_keyed'] = "Never";
+        }
+        $sortedNodesResult[$nodeNum] = $originalNodeData;
+    }
+    return $sortedNodesResult;
 }
 
 function parseNode($fp, $queriedNode, $rptStatus, $sawStatus) {
-    global $elnk_cache, $irlp_cache, $astdb;
+    global $astdb, $elnk_cache, $irlp_cache;
+    $curNodes = [];
+    $conns = [];
+    $parsedVars = [];
 
-    if (empty($queriedNode)) {
-        error_log("parseNode: queriedNode is empty");
-        return [];
-    }
-
-    $remote_nodes = array();
-    $retData = array();
-
-    $keyed = 'No';
-    $mode = '';
-    $local_tx_keyed = '';
-    $totaltx = 0;
-    $totalrx = 0;
-    $totalkeyups = 0;
-    $rpt_uptime = '';
-    
-    if (!empty($rptStatus)) {
-        $lines = explode("\n", $rptStatus);
-        foreach ($lines as $line) {
-            if (strpos($line, "Rpt Stats") !== false) {
-                continue;
-            }
-            if (strpos($line, "XMIT") !== false) {
-                $local_tx_keyed = (strpos($line, " Keyed") !== false) ? 'Yes' : 'No';
-                $keyed = $local_tx_keyed;
-            }
-            if (strpos($line, "MODE") !== false) {
-                if (strpos($line, "Warm Standby") !== false) {
-                    $mode = 'Warm Standby';
-                } elseif (strpos($line, "Standby") !== false) {
-                    $mode = 'Standby';
-                } elseif (strpos($line, "Normal") !== false) {
-                    $mode = 'Normal';
-                } else {
-                    $mode = 'Unknown';
+    $linesRpt = explode("\n", $rptStatus ?? '');
+    foreach ($linesRpt as $line) {
+        $line = trim($line);
+        if (preg_match('/^Var: ([^=]+)=(.*)/', $line, $varMatch)) {
+            $parsedVars[trim($varMatch[1])] = trim($varMatch[2]);
+        } elseif (preg_match('/Conn: (.*)/', $line, $matches)) {
+            $arr = preg_split("/\s+/", trim($matches[1]));
+            if (isset($arr[0]) && is_numeric($arr[0]) && $arr[0] > ECHOLINK_NODE_THRESHOLD) {
+                if (count($arr) >= 4) {
+                     $conns[] = [
+                        $arr[0], "", $arr[1] ?? null, $arr[2] ?? null, $arr[3] ?? null, $arr[4] ?? null
+                    ];
                 }
-            }
-            if (preg_match('/TOTALS:\s+(\d+)\s+(\d+)\s+(\d+)/', $line, $matches)) {
-                $totaltx = intval($matches[1]);
-                $totalrx = intval($matches[2]); 
-                $totalkeyups = intval($matches[3]);
-            }
-            if (preg_match('/Rpt Uptime\s*:\s*(.+)/', $line, $matches)) {
-                $rpt_uptime = trim($matches[1]);
+            } else {
+                if (count($arr) >= 1) $conns[] = $arr;
             }
         }
     }
 
-    $connected_nodes = array();
-    if (!empty($sawStatus)) {
-        $lines = explode("\n", $sawStatus);
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line) || strpos($line, "Remote") !== false) continue;
+    $keyups = [];
+    $linesSaw = explode("\n", $sawStatus ?? '');
+    foreach ($linesSaw as $line) {
+        if (preg_match('/Conn: (.*)/', trim($line), $matches)) {
+            $arr = preg_split("/\s+/", trim($matches[1]));
+            if (isset($arr[0]) && isset($arr[1]) && isset($arr[2]) && isset($arr[3])) {
+                $keyups[$arr[0]] = ['node' => $arr[0], 'isKeyed' => $arr[1], 'keyed' => $arr[2], 'unkeyed' => $arr[3]];
+            }
+        }
+    }
+
+    $modes = [];
+    if (!empty($rptStatus) && preg_match("/LinkedNodes: (.*)/", $rptStatus, $matches)) {
+        $longRangeLinks = preg_split("/, /", trim($matches[1]));
+        foreach ($longRangeLinks as $line) {
+            if (!empty($line)) {
+                $n_val = substr($line, 1);
+                $modes[$n_val]['mode'] = substr($line, 0, 1);
+            }
+        }
+    }
+
+    $mainNodeCpuTemp = $parsedVars['cpu_temp'] ?? null;
+    $mainNodeCpuUp = $parsedVars['cpu_up'] ?? null;
+    $mainNodeCpuLoad = $parsedVars['cpu_load'] ?? null;
+    $mainNodeALERT = $parsedVars['ALERT'] ?? null;
+    $mainNodeWX = $parsedVars['WX'] ?? null;
+    $mainNodeDISK = $parsedVars['DISK'] ?? null;
+
+    if (count($conns) > 0) {
+        foreach ($conns as $connData) {
+            $n = $connData[0];
+            if (empty($n)) continue;
+
+            $isEcholink = (is_numeric($n) && $n > ECHOLINK_NODE_THRESHOLD && ($connData[1] ?? '') === "");
+
+            $curNodes[$n]['node'] = $n;
+            $curNodes[$n]['info'] = getAstInfo($fp, $n);
+            $curNodes[$n]['ip'] = $isEcholink ? "" : ($connData[1] ?? null);
+            $curNodes[$n]['direction'] = $isEcholink ? ($connData[2] ?? null) : ($connData[3] ?? null);
+            $curNodes[$n]['elapsed'] = $isEcholink ? ($connData[3] ?? null) : ($connData[4] ?? null);
+            $curNodes[$n]['link'] = $isEcholink ? ($connData[4] ?? 'UNKNOWN') : ($connData[5] ?? null);
+
+            if ($isEcholink) {
+                if (isset($modes[$n]['mode'])) {
+                    $curNodes[$n]['link'] = ($modes[$n]['mode'] == 'C') ? "CONNECTING" : "ESTABLISHED";
+                }
+            }
             
-            if (preg_match('/^(\d+)\s+(.*?)\s+([\d:]+|\*)\s+(\w+)\s+(\w+)\s+([\w\s]+)$/', $line, $matches)) {
-                $nodeNum = trim($matches[1]);
-                $info = trim($matches[2]);
-                $elapsed = trim($matches[3]);
-                $direction = trim($matches[4]);
-                $nodeKeyed = trim($matches[5]);
-                $mode_info = trim($matches[6]);
-                
-                $remote_nodes[$nodeNum] = array(
-                    'elapsed' => $elapsed,
-                    'node' => $nodeNum,
-                    'info' => $info,
-                    'keyed' => $nodeKeyed,
-                    'mode' => $mode_info,
-                    'direction' => $direction,
-                    'last_keyed' => 'Never'
-                );
-                
-                if ($nodeKeyed === 'YES' || $nodeKeyed === 'Yes') {
-                    $keyed = 'Yes';
-                }
+            $curNodes[$n]['keyed'] = 'n/a';
+            $curNodes[$n]['last_keyed'] = '-1';
+
+            if (isset($keyups[$n])) {
+                $curNodes[$n]['keyed'] = ($keyups[$n]['isKeyed'] == 1) ? 'yes' : 'no';
+                $curNodes[$n]['last_keyed'] = $keyups[$n]['keyed'];
+            }
+
+            if (isset($modes[$n])) {
+                $curNodes[$n]['mode'] = $modes[$n]['mode'];
+            } else {
+                $curNodes[$n]['mode'] = $isEcholink ? 'Echolink' : 'Allstar';
             }
         }
     }
-
-    // Process each connected node
-    foreach ($remote_nodes as $nodeNum => $nodeData) {
-        $nodeInfo = '';
-        $nodeLink = '';
-        $nodeIp = '';
-        
-        // Get node info from ASTDB
-        if (isset($astdb[$nodeNum]) && is_array($astdb[$nodeNum])) {
-            $nodeInfo = implode(' ', array_slice($astdb[$nodeNum], 1, 3));
-        }
-
-        // Handle EchoLink nodes
-        if (intval($nodeNum) >= ECHOLINK_NODE_THRESHOLD) {
-            if (!isset($elnk_cache[$nodeNum])) {
-                $nodeInfoTemp = getEchoLinkInfo($nodeNum);
-                $elnk_cache[$nodeNum] = $nodeInfoTemp;
-            }
-            $nodeInfo = $elnk_cache[$nodeNum];
-            $nodeLink = "http://echolink.org/logins.jsp?callsign=" . urlencode($nodeInfo);
-        }
-
-        // Handle IRLP nodes (9-prefix)
-        if (substr($nodeNum, 0, 1) === '9') {
-            if (!isset($irlp_cache[$nodeNum])) {
-                $nodeInfoTemp = getIrlpInfo($nodeNum);
-                $irlp_cache[$nodeNum] = $nodeInfoTemp;
-            }
-            $nodeInfo = $irlp_cache[$nodeNum];
-            $nodeLink = "http://status.irlp.net/index.php?CALLSIGN=" . urlencode($nodeInfo);
-        }
-        
-        $connected_nodes[$nodeNum] = array(
-            'node' => $nodeNum,
-            'info' => $nodeInfo,
-            'link' => $nodeLink,
-            'ip' => $nodeIp,
-            'direction' => $nodeData['direction'],
-            'elapsed' => $nodeData['elapsed'],
-            'keyed' => $nodeData['keyed'],
-            'mode' => $nodeData['mode'],
-            'last_keyed' => $nodeData['last_keyed']
-        );
+    
+    $localStatsKey = 1; 
+    if (!isset($curNodes[$localStatsKey])) {
+        $curNodes[$localStatsKey] = [];
     }
+    $curNodes[$localStatsKey]['node'] = $curNodes[$localStatsKey]['node'] ?? $queriedNode;
+    $curNodes[$localStatsKey]['info'] = $curNodes[$localStatsKey]['info'] ?? getAstInfo($fp, $queriedNode);
 
-    $connected_nodes = sortNodes($connected_nodes);
 
-    $retData = array(
-        'node' => $queriedNode,
-        'keyed' => $keyed,
-        'mode' => $mode,
-        'local_tx_keyed' => $local_tx_keyed,
-        'total_tx' => $totaltx,
-        'total_rx' => $totalrx,
-        'total_keyups' => $totalkeyups,
-        'uptime' => $rpt_uptime,
-        'remote_nodes' => $connected_nodes
-    );
+    $curNodes[$localStatsKey]['cos_keyed'] = (($parsedVars['RPT_RXKEYED'] ?? '0') === '1') ? 1 : 0;
+    $curNodes[$localStatsKey]['tx_keyed'] = (($parsedVars['RPT_TXKEYED'] ?? '0') === '1') ? 1 : 0;
+    
+    $curNodes[$localStatsKey]['cpu_temp'] = $mainNodeCpuTemp;
+    $curNodes[$localStatsKey]['cpu_up'] = $mainNodeCpuUp;
+    $curNodes[$localStatsKey]['cpu_load'] = $mainNodeCpuLoad;
+    $curNodes[$localStatsKey]['ALERT'] = $mainNodeALERT;
+    $curNodes[$localStatsKey]['WX'] = $mainNodeWX;
+    $curNodes[$localStatsKey]['DISK'] = $mainNodeDISK;
 
-    return $retData;
+    if (empty($conns) && count($curNodes) === 1 && isset($curNodes[$localStatsKey])) {
+         $curNodes[$localStatsKey]['info'] = "NO CONNECTIONS";
+    } elseif (empty($curNodes) && !empty($queriedNode)) {
+        $curNodes[$localStatsKey]['node'] = $queriedNode;
+        $curNodes[$localStatsKey]['info'] = "NO CONNECTIONS";
+        $curNodes[$localStatsKey]['cos_keyed'] = 0;
+        $curNodes[$localStatsKey]['tx_keyed'] = 0;
+    }
+    
+    return $curNodes;
 }
 ?>
