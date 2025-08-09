@@ -190,6 +190,17 @@ if grep -r "include.*session\.inc" "$PROJECT_ROOT" --include="*.php" | grep -v "
     INCLUDE_ISSUES=$((INCLUDE_ISSUES + 1))
 fi
 
+# Check for proper modular include usage
+if grep -r "include.*server-functions\.inc" "$PROJECT_ROOT" --include="*.php" | grep -v "includes/sse/server-functions.inc"; then
+    print_warning "Found server-functions.inc includes that should use includes/sse/ path"
+    INCLUDE_ISSUES=$((INCLUDE_ISSUES + 1))
+fi
+
+if grep -r "include.*link-config\.inc" "$PROJECT_ROOT" --include="*.php" | grep -v "includes/link/link-config.inc"; then
+    print_warning "Found link-config.inc includes that should use includes/link/ path"
+    INCLUDE_ISSUES=$((INCLUDE_ISSUES + 1))
+fi
+
 # Check for hardcoded paths
 if grep -r "/var/www/html" "$PROJECT_ROOT" --include="*.php" | grep -v "# Example\|// Example\|common.inc"; then
     print_warning "Found hardcoded paths that might need to be configurable"

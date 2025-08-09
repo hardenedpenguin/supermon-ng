@@ -89,7 +89,6 @@ print_status "Setting up directory structure..."
 DIRECTORIES=(
     "logs"
     "tmp"
-    "user_files/plugins"
     "user_files/backups"
     "docs/examples"
 )

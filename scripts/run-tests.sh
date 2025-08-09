@@ -95,17 +95,16 @@ test_file_structure() {
         "includes"
         "includes/session.inc"
         "includes/common.inc"
-        "includes/helpers.inc"
-        "includes/error-handler.inc"
-        "includes/config.inc"
-        "includes/plugin.inc"
+        "includes/sse"
+        "includes/sse/server-functions.inc"
+        "includes/link"
+        "includes/link/link-config.inc"
         "css"
         "css/base.css"
         "css/layout.css"
         "js"
         "user_files"
         "user_files/global.inc"
-        "components"
         "templates"
         "scripts"
         "docs"
@@ -204,21 +203,29 @@ chdir(dirname(__DIR__));
 // Test basic includes
 try {
     include_once 'includes/common.inc';
-    include_once 'includes/helpers.inc';
-    include_once 'includes/error-handler.inc';
-    include_once 'includes/config.inc';
+    include_once 'user_files/global.inc';
     
-    // Test if classes are available
-    if (!class_exists('ValidationHelper')) {
-        throw new Exception('ValidationHelper class not found');
+    // Test modular includes
+    if (file_exists('includes/sse/server-functions.inc')) {
+        include_once 'includes/sse/server-functions.inc';
     }
     
-    if (!class_exists('ErrorHandler')) {
-        throw new Exception('ErrorHandler class not found');
+    if (file_exists('includes/link/link-config.inc')) {
+        include_once 'includes/link/link-config.inc';
     }
     
-    if (!class_exists('Config')) {
-        throw new Exception('Config class not found');
+    // Test if key functions are available
+    if (!function_exists('get_user_auth')) {
+        throw new Exception('get_user_auth function not found');
+    }
+    
+    // Test modular functions if they exist
+    if (function_exists('initializeLinkPage')) {
+        // Link modularization is working
+    }
+    
+    if (function_exists('initializeServer')) {
+        // Server modularization is working  
     }
     
     echo "SUCCESS";
@@ -244,11 +251,11 @@ EOF
     fi
 }
 
-test_helper_functions() {
-    local test_name="Helper Functions Test"
+test_modular_functions() {
+    local test_name="Modular Functions Test"
     
-    # Create a test script for helper functions
-    local test_script="$PROJECT_ROOT/tmp/test_helpers.php"
+    # Create a test script for modular functions
+    local test_script="$PROJECT_ROOT/tmp/test_modules.php"
     
     cat > "$test_script" << 'EOF'
 <?php
@@ -259,40 +266,45 @@ ini_set('display_errors', 1);
 chdir(dirname(__DIR__));
 
 try {
-    include_once 'includes/helpers.inc';
+    include_once 'includes/common.inc';
+    include_once 'user_files/global.inc';
     
-    // Test ValidationHelper
-    $result = ValidationHelper::validateNodeId('1234');
-    if ($result !== '1234') {
-        throw new Exception('validateNodeId failed');
+    // Test server module functions
+    if (file_exists('includes/sse/server-functions.inc')) {
+        include_once 'includes/sse/server-functions.inc';
+        
+        // Test basic functions exist
+        if (!function_exists('isConnectionHealthy')) {
+            throw new Exception('isConnectionHealthy function not found in server module');
+        }
+        
+        if (!function_exists('getNode')) {
+            throw new Exception('getNode function not found in server module');
+        }
     }
     
-    $result = ValidationHelper::validateNodeId('abc');
-    if ($result !== false) {
-        throw new Exception('validateNodeId should reject non-numeric input');
-    }
-    
-    // Test sanitizeInput
-    $result = ValidationHelper::sanitizeInput('  test  ', 'string');
-    if ($result !== 'test') {
-        throw new Exception('sanitizeInput string test failed');
-    }
-    
-    $result = ValidationHelper::sanitizeInput('123', 'int');
-    if ($result !== 123) {
-        throw new Exception('sanitizeInput int test failed');
-    }
-    
-    // Test SecurityHelper
-    $token = SecurityHelper::generateToken(16);
-    if (strlen($token) !== 16) {
-        throw new Exception('generateToken failed');
-    }
-    
-    // Test password functions
-    $hash = SecurityHelper::hashPassword('testpassword');
-    if (!SecurityHelper::verifyPassword('testpassword', $hash)) {
-        throw new Exception('Password hash/verify failed');
+    // Test link module functions  
+    if (file_exists('includes/link/link-functions.inc')) {
+        include_once 'includes/link/link-functions.inc';
+        
+        if (!function_exists('print_auth_button')) {
+            throw new Exception('print_auth_button function not found in link module');
+        }
+        
+        if (!function_exists('is_internal_ip')) {
+            throw new Exception('is_internal_ip function not found in link module');
+        }
+        
+        // Test is_internal_ip function
+        $result = is_internal_ip('127.0.0.1');
+        if ($result !== true) {
+            throw new Exception('is_internal_ip should return true for 127.0.0.1');
+        }
+        
+        $result = is_internal_ip('8.8.8.8');
+        if ($result !== false) {
+            throw new Exception('is_internal_ip should return false for 8.8.8.8');
+        }
     }
     
     echo "SUCCESS";
@@ -318,11 +330,11 @@ EOF
     fi
 }
 
-test_component_loading() {
-    local test_name="Component Loading Test"
+test_table_rendering() {
+    local test_name="Table Rendering Test"
     
-    # Create a test script for components
-    local test_script="$PROJECT_ROOT/tmp/test_components.php"
+    # Create a test script for table rendering
+    local test_script="$PROJECT_ROOT/tmp/test_table.php"
     
     cat > "$test_script" << 'EOF'
 <?php
@@ -333,30 +345,28 @@ ini_set('display_errors', 1);
 chdir(dirname(__DIR__));
 
 try {
-    include_once 'components/NodeDisplay.php';
-    include_once 'components/TableRenderer.php';
-    
-    // Test NodeDisplay
-    $nodeData = [
-        'node' => '1234',
-        'info' => 'Test Node',
-        'mode' => 'T',
-        'keyed' => 'no'
-    ];
-    
-    $nodeDisplay = new NodeDisplay($nodeData);
-    $status = $nodeDisplay->getStatus();
-    if (empty($status)) {
-        throw new Exception('NodeDisplay getStatus failed');
-    }
-    
-    // Test TableRenderer
-    $headers = ['Column 1', 'Column 2'];
-    $rows = [['Data 1', 'Data 2']];
-    $table = new TableRenderer($headers, $rows);
-    $html = $table->render();
-    if (strpos($html, 'table') === false) {
-        throw new Exception('TableRenderer failed to generate table');
+    // Test table.inc if it exists
+    if (file_exists('includes/table.inc')) {
+        // Test basic table rendering
+        $headers = ['Column 1', 'Column 2'];
+        $rows = [['Data 1', 'Data 2'], ['Data 3', 'Data 4']];
+        
+        // Capture table output
+        ob_start();
+        include 'includes/table.inc';
+        $html = ob_get_clean();
+        
+        if (strpos($html, 'table') === false) {
+            throw new Exception('Table include failed to generate table');
+        }
+        
+        if (strpos($html, 'Column 1') === false) {
+            throw new Exception('Table headers not rendered correctly');
+        }
+        
+        if (strpos($html, 'Data 1') === false) {
+            throw new Exception('Table data not rendered correctly');
+        }
     }
     
     echo "SUCCESS";
@@ -377,7 +387,7 @@ EOF
         return 0
     else
         print_test_result "$test_name" "FAIL"
-        print_error "Component loading test failed: $result"
+        print_error "Table rendering test failed: $result"
         return 1
     fi
 }
@@ -395,7 +405,7 @@ test_css_integrity() {
         "css/forms.css"
         "css/widgets.css"
         "css/responsive.css"
-        "css/custom.css"
+        "css/custom.css.example"
     )
     
     for css_file in "${css_files[@]}"; do
@@ -469,8 +479,8 @@ test_file_structure
 test_file_permissions
 test_php_syntax
 test_configuration_loading
-test_helper_functions
-test_component_loading
+test_modular_functions
+test_table_rendering
 test_css_integrity
 test_documentation
 

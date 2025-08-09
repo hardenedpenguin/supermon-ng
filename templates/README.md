@@ -102,15 +102,15 @@ Templates follow these standards:
 - **Consistency** - Standard file structure and naming conventions
 - **Accessibility** - Proper HTML semantics and ARIA attributes
 
-### Using Helper Classes
+### Using Includes and Functions
 
 Templates demonstrate usage of:
-- `SecurityHelper` - Authentication and authorization
-- `ValidationHelper` - Input validation and sanitization
-- `ErrorHandler` - Error logging and user error display
-- `Config` - Configuration management
-- `TableRenderer` - Advanced table rendering
-- `PluginManager` - Plugin system integration
+- `includes/common.inc` - Core functions and utilities
+- `includes/session.inc` - Session management
+- `includes/table.inc` - Simple table rendering
+- `includes/form.inc` - Form rendering helpers
+- Modular functions from `includes/sse/` and `includes/link/`
+- Authentication functions like `get_user_auth()`
 
 ## Customization Guide
 
@@ -130,7 +130,9 @@ Templates demonstrate usage of:
 3. **Set permissions**:
    ```php
    // Change ADMIN to required permission
-   SecurityHelper::requirePermission("ADMIN");
+   if (!get_user_auth("ADMIN")) {
+       die("Permission denied");
+   }
    ```
 
 4. **Add your content**:
@@ -171,8 +173,10 @@ Templates demonstrate usage of:
 2. **Update authentication**:
    ```php
    // Change permission as needed
-   if (!SecurityHelper::hasPermission('ASTLKUSER')) {
-       sendError('Insufficient permissions', 403);
+   if (!get_user_auth('ASTLKUSER')) {
+       http_response_code(403);
+       echo json_encode(['error' => 'Insufficient permissions']);
+       exit;
    }
    ```
 
@@ -186,7 +190,7 @@ Templates demonstrate usage of:
 
 ### File Organization
 - Place pages in the root directory
-- Place components in `components/` directory
+- Place helper functions in `includes/` subdirectories (e.g., `includes/myfeature/`)
 - Place API endpoints in the root directory with `api-` prefix
 - Use descriptive filenames (e.g., `node-management.php`, `api-user-settings.php`)
 
