@@ -30,24 +30,30 @@ function renderStatsHead() {
             background-color: #000000 !important;
             margin: 0;
             padding: 0;
+            height: 100%;
+            overflow: hidden;
         }
         body {
             color: white;
-            padding: 15px;
+            padding: 10px;
             background-color: #000000 !important;
             font-family: 'Courier New', Consolas, monospace;
-            font-size: 13px;
-            line-height: 1.4;
+            font-size: 12px;
+            line-height: 1.3;
             margin: 0;
             width: 100%;
-            min-height: 100vh;
+            height: 100vh;
             box-sizing: border-box;
+            overflow: auto;
         }
         .stats-container {
             width: 100%;
+            height: calc(100vh - 20px);
             max-width: none;
             white-space: pre-wrap;
             word-wrap: break-word;
+            overflow: auto;
+            padding-bottom: 20px;
         }
         .ast-status-header-line {
             color: #888;
