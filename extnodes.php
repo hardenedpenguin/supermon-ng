@@ -1,46 +1,44 @@
 <?php
+/**
+ * Supermon-ng ExtNodes
+ * 
+ * Provides a web-based viewer for AllStar external nodes configuration.
+ * Displays the contents of the rpt_extnodes file with proper formatting
+ * and access control for authorized users.
+ * 
+ * Features:
+ * - Secure file content display with HTML escaping
+ * - User authentication and permission validation (EXNUSER)
+ * - Simple HTML page with pre-formatted content
+ * - File existence validation and error handling
+ * - Clean, readable output format
+ * - Access denied page for unauthorized users
+ * 
+ * Security:
+ * - Requires valid session and EXNUSER permission
+ * - File path validation and existence checks
+ * - HTML escaping for safe content display
+ * - Access control with proper messaging
+ * 
+ * Display:
+ * - Clean HTML page with pre-formatted content
+ * - File path header with separator line
+ * - Raw file content display
+ * - Error message for missing files
+ * - Access denied page for unauthorized access
+ * 
+ * Dependencies: session.inc, common.inc (for EXTNODES), authusers.php
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
+ */
+
 include("includes/session.inc");
 include("includes/common.inc");
 include("authusers.php");
+include("includes/extnodes/extnodes-controller.inc");
 
-if (
-    !isset($_SESSION['sm61loggedin']) ||
-    $_SESSION['sm61loggedin'] !== true ||
-    !get_user_auth("EXNUSER")
-) {
+// Run the extnodes system
+runExtnodes();
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Access Denied</title>
-</head>
-<body>
-    <h3>ERROR: You Must login to use this function!</h3>
-</body>
-</html>
-<?php
-    exit;
-}
-
-$filePath = $EXTNODES;
-?>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>AllStar rpt_extnodes contents</title>
-</head>
-<body>
-<pre>
-<?php
-    echo "File: " . htmlspecialchars($filePath, ENT_QUOTES, 'UTF-8') . "\n";
-    echo "-----------------------------------------------------------------\n";
-
-    if (file_exists($filePath)) {
-        echo file_get_contents($filePath);
-    } else {
-        echo "\n\nAllStar rpt_extnodes table is not available.\n";
-    }
-?>
-</pre>
-</body>
-</html>
