@@ -1,4 +1,26 @@
 <?php
+/**
+ * Supermon-ng Web Access Log Viewer
+ * 
+ * Provides a web-based interface for viewing web server access logs with secure access.
+ * Allows authenticated users to view web server access logs through a secure interface
+ * with fallback methods for file access and comprehensive security validation.
+ * 
+ * Features:
+ * - User authentication and authorization (WLOGUSER permission required)
+ * - Secure file path validation with whitelist approach
+ * - Fallback methods for log file access (direct read + sudo)
+ * - Safe command execution with proper escaping
+ * - Tabular display with line numbers and log entries
+ * - Last 100 lines display with reverse chronological order
+ * - Comprehensive error handling and user feedback
+ * 
+ * Security: Requires WLOGUSER permission and secure file path validation
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
+ */
 
 include("includes/session.inc");
 include("includes/security.inc");
@@ -6,131 +28,7 @@ include("user_files/global.inc");
 include("includes/common.inc");
 include("authusers.php");
 include("authini.php");
+include("includes/webacclog/webacclog-controller.inc");
 
-if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("WLOGUSER"))) {
-    die ("<br><h3 class='error-message'>ERROR: You Must login to use the 'Web Access Log' function!</h3>");
-}
-
-// Safe command execution function
-function safe_exec($command, $args = '') {
-    $escaped_command = escapeshellcmd($command);
-    if (!empty($args)) {
-        $escaped_args = escapeshellarg($args);
-        $full_command = "{$escaped_command} {$escaped_args}";
-    } else {
-        $full_command = $escaped_command;
-    }
-    
-    $output = [];
-    $return_var = 0;
-    exec($full_command . " 2>/dev/null", $output, $return_var);
-    
-    if ($return_var !== 0) {
-        return false;
-    }
-    
-    return implode("\n", $output);
-}
-
-// Validate file path
-function is_safe_file_path($path) {
-    // Only allow specific log files
-    $allowed_paths = [
-        '/var/log/apache2/access.log',
-        '/var/log/httpd/access_log',
-        '/var/log/nginx/access.log'
-    ];
-    
-    return in_array($path, $allowed_paths) && file_exists($path);
-}
-
-$file = $WEB_ACCESS_LOG ?? '/var/log/apache2/access.log';
-
-if (!is_safe_file_path($file)) {
-    die("<h3 class='error-message'>ERROR: Invalid or inaccessible log file path.</h3>");
-}
-
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Web Server access_log Viewer</title>
-    <!-- Modular CSS Files -->
-<link type="text/css" rel="stylesheet" href="css/base.css">
-<link type="text/css" rel="stylesheet" href="css/layout.css">
-<link type="text/css" rel="stylesheet" href="css/menu.css">
-<link type="text/css" rel="stylesheet" href="css/tables.css">
-<link type="text/css" rel="stylesheet" href="css/forms.css">
-<link type="text/css" rel="stylesheet" href="css/widgets.css">
-<link type="text/css" rel="stylesheet" href="css/responsive.css">
-<!-- Custom CSS (load last to override defaults) -->
-<?php if (file_exists('css/custom.css')): ?>
-<link type="text/css" rel="stylesheet" href="css/custom.css">
-<?php endif; ?>
-</head>
-<body>
-
-<h1 class="log-viewer-title">Web Server Access Log</h1>
-
-<div class="log-viewer-info">Viewing Log File: <?php echo htmlspecialchars($file); ?></div>
-
-<?php
-// Check if user is logged in and authorized
-if (isset($_SESSION['sm61loggedin']) && $_SESSION['sm61loggedin'] === true && get_user_auth("WLOGUSER")) {
-
-    // Check if $WEB_ACCESS_LOG is defined
-    if (isset($WEB_ACCESS_LOG) && !empty($WEB_ACCESS_LOG)) {
-        $logLines = false; // Initialize logLines variable
-
-        // Try to read the file directly first
-        if (is_readable($file)) {
-            $logContent = file_get_contents($file);
-            if ($logContent !== false) {
-                $logLines = explode("\n", $logContent);
-                $logLines = array_slice($logLines, -100); // Show last 100 lines
-                $logLines = array_reverse($logLines); // Most recent first
-            } else {
-                $logLines = [];
-            }
-        } else {
-            // Fallback to sudo if direct read fails
-            $sudo_command = "sudo tail -100 " . escapeshellarg($file);
-            echo "<p><i>Attempting to read via: <code>" . htmlspecialchars($sudo_command) . "</code></i></p>";
-            
-            $logContent = safe_exec("sudo", "tail -100 " . escapeshellarg($file));
-            if ($logContent !== false) {
-                $logLines = explode("\n", $logContent);
-                $logLines = array_reverse($logLines); // Most recent first
-            } else {
-                $logLines = [];
-            }
-        }
-
-        // --- Process and display $logLines if successfully read ---
-        if ($logLines && count($logLines) > 0) {
-            $headers = ['Line', 'Log Entry'];
-            $rows = [];
-            foreach ($logLines as $index => $line) {
-                $lineNumber = $index + 1;
-                $rows[] = [
-                    $lineNumber,
-                    htmlspecialchars($line)
-                ];
-            }
-            $table_class = 'webacclog-table';
-            include 'includes/table.inc';
-        } else {
-            echo '<div class="log-viewer-error">No log entries found or unable to read log file.</div>';
-        }
-    } else {
-         echo '<div class="log-viewer-error">ERROR: The `WEB_ACCESS_LOG` path is not defined in `global.inc`.</div>';
-    }
-
-} else {
-    echo '<div class="log-viewer-error">ERROR: You must login with sufficient privileges to use this function!</div>';
-}
-?>
-
-</body>
-</html>
+// Run the web access log system
+runWebacclog();
