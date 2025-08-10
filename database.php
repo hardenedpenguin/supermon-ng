@@ -1,4 +1,24 @@
 <?php
+/**
+ * Supermon-ng Database Viewer
+ * 
+ * Provides a web-based interface for viewing AllStar node database contents.
+ * Connects to Asterisk Manager Interface (AMI) to retrieve and display
+ * database key-value pairs from specified nodes.
+ * 
+ * Features:
+ * - User authentication and authorization (DBTUSER permission required)
+ * - AMI connection and authentication
+ * - Database content retrieval and parsing
+ * - Structured key-value pair display
+ * - Error handling and status reporting
+ * 
+ * Security: Requires DBTUSER permission
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
+ */
 
 include("includes/session.inc");
 include("includes/amifunctions.inc");
@@ -6,151 +26,7 @@ include("user_files/global.inc");
 include("includes/common.inc");
 include("authusers.php");
 include("authini.php");
+include("includes/database/database-controller.inc");
 
-if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("DBTUSER"))) {
-    die ("<br><h3 class='error-message'>ERROR: You Must login to use the 'Database' function!</h3>");
-}
-
-$localnode = trim(strip_tags($_GET['localnode'] ?? ''));
-
-$supIniFile = get_ini_name($_SESSION['user']);
-
-if (!file_exists($supIniFile)) {
-    die("<h3 class='error-message'>ERROR: Configuration file '" . htmlspecialchars($supIniFile) . "' could not be loaded.</h3>");
-}
-
-$config = parse_ini_file($supIniFile, true);
-
-if (empty($localnode)) {
-    die("<h3 class='error-message'>ERROR: 'localnode' parameter is required.</h3>");
-}
-
-if (!isset($config[$localnode])) {
-    die("<h3 class='error-message'>ERROR: Node '" . htmlspecialchars($localnode) . "' is not defined in '" . htmlspecialchars($supIniFile) . "'.</h3>");
-}
-
-$amiConfig = $config[$localnode];
-
-if (!isset($amiConfig['host']) || !isset($amiConfig['user']) || !isset($amiConfig['passwd'])) {
-    die("<h3 class='error-message'>ERROR: AMI configuration for node '" . htmlspecialchars($localnode) . "' is incomplete (missing host, user, or passwd).</h3>");
-}
-
-$fp = SimpleAmiClient::connect($amiConfig['host']);
-if ($fp === false) {
-    die("<h3 class='error-message'>ERROR: Could not connect to Asterisk Manager on host '" . htmlspecialchars($amiConfig['host']) . "'.</h3>");
-}
-
-if (SimpleAmiClient::login($fp, $amiConfig['user'], $amiConfig['passwd']) === false) {
-    SimpleAmiClient::logoff($fp);
-    die("<h3 class='error-message'>ERROR: Could not login to Asterisk Manager on host '" . htmlspecialchars($amiConfig['host']) . "' with user '" . htmlspecialchars($amiConfig['user']) . "'.</h3>");
-}
-
-$databaseOutput = SimpleAmiClient::command($fp, "database show");
-
-SimpleAmiClient::logoff($fp);
-
-$processedOutput = ($databaseOutput === false) ? "" : trim($databaseOutput);
-$dbEntries = [];
-
-if (!empty($processedOutput)) {
-    $processedOutput = preg_replace('/^Output: /m', '', $processedOutput);
-    $lines = explode("\n", trim($processedOutput));
-
-    foreach ($lines as $line) {
-        $line = trim($line);
-        if (empty($line)) {
-            continue;
-        }
-        $parts = explode(':', $line, 2);
-        if (count($parts) === 2) {
-            $dbEntries[] = [
-                'key' => trim($parts[0]),
-                'value' => trim($parts[1])
-            ];
-        }
-    }
-}
-
-?>
-<html>
-<head>
-<title>AllStar Node Database Contents - <?php echo htmlspecialchars($localnode); ?></title>
-<!-- Modular CSS Files -->
-<link type="text/css" rel="stylesheet" href="css/base.css">
-<link type="text/css" rel="stylesheet" href="css/layout.css">
-<link type="text/css" rel="stylesheet" href="css/menu.css">
-<link type="text/css" rel="stylesheet" href="css/tables.css">
-<link type="text/css" rel="stylesheet" href="css/forms.css">
-<link type="text/css" rel="stylesheet" href="css/widgets.css">
-<link type="text/css" rel="stylesheet" href="css/responsive.css">
-<!-- Custom CSS (load last to override defaults) -->
-<?php if (file_exists('css/custom.css')): ?>
-<link type="text/css" rel="stylesheet" href="css/custom.css">
-<?php endif; ?>
-<style>
-.db-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-family: monospace;
-    font-size: 0.9em;
-}
-.db-table th, .db-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-    vertical-align: top;
-}
-.db-table th {
-    background-color: #f2f2f2;
-    font-weight: bold;
-    color: #333;
-}
-.db-table tbody tr {
-    background-color: #39FF14;
-    color: #000000;
-}
-.db-table tbody tr:hover {
-    background-color: #00C000;
-    color: #FFFFFF;
-}
-.db-table td.db-key {
-}
-.db-table td.db-value {
-    word-break: break-word;
-}
-</style>
-</head>
-<body>
-
-<div class="container">
-    <?php
-    $today = date("D M j G:i:s T Y");
-    ?>
-    <div class="db-header">
-        <b><u><?php echo htmlspecialchars($today); ?> - Database from node - <?php echo htmlspecialchars($localnode); ?></u></b>
-    </div>
-
-    <?php
-    if ($databaseOutput === false) {
-        echo "<p class='status-message error-message'>ERROR: Could not retrieve database content from AMI.</p>";
-    } elseif (empty($dbEntries)) {
-        if (empty(trim($processedOutput))) {
-            echo "<p class='status-message'>--- NO DATABASE CONTENT RETURNED (or output was empty after cleaning) ---</p>";
-        } else {
-            echo "<p class='status-message'>--- NO KEY-VALUE PAIRS FOUND IN DATABASE OUTPUT ---</p>";
-        }
-    } else {
-        // Refactored: Use reusable table include
-        $headers = ['Key', 'Value'];
-        $rows = array_map(function($entry) {
-            return [ $entry['key'], $entry['value'] ];
-        }, $dbEntries);
-        $table_class = 'db-table';
-        include 'includes/table.inc';
-    }
-    ?>
-</div>
-
-</body>
-</html>
+// Run the database system
+runDatabase();
