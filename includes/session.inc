@@ -1,4 +1,38 @@
 <?php
+/**
+ * Supermon-ng Session Management
+ * 
+ * Provides comprehensive session management functionality for Supermon-ng.
+ * Handles session initialization, security configuration, timeout management,
+ * and CSRF token generation for secure web application operation.
+ * 
+ * Features:
+ * - Secure session initialization with HTTPS detection
+ * - Configurable session timeout (8 hours default)
+ * - CSRF token generation and management
+ * - Secure cookie configuration with SameSite protection
+ * - Automatic session cleanup and regeneration
+ * - Multiple HTTPS detection methods for proxy environments
+ * 
+ * Security:
+ * - HTTPS-only cookies when available
+ * - HttpOnly flag for XSS protection
+ * - SameSite=Strict for CSRF protection
+ * - Session timeout with automatic cleanup
+ * - Secure session naming and configuration
+ * 
+ * Configuration:
+ * - Session name: 'supermon61'
+ * - Default timeout: 8 hours (28800 seconds)
+ * - Cookie security: HTTPS detection, HttpOnly, SameSite=Strict
+ * - CSRF token: 32-byte random hex string
+ * 
+ * Dependencies: None (core session functionality)
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
+ */
 
 if (session_status() == PHP_SESSION_NONE) {
 

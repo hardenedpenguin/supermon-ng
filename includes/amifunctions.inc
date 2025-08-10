@@ -1,4 +1,46 @@
 <?php
+/**
+ * Supermon-ng AMI (Asterisk Manager Interface) Functions
+ * 
+ * Provides comprehensive AMI client functionality for Supermon-ng.
+ * Handles connection management, authentication, command execution,
+ * and response processing for Asterisk Manager Interface operations.
+ * 
+ * Features:
+ * - Secure AMI connection establishment
+ * - Authentication and login management
+ * - Command execution with response handling
+ * - Automatic connection cleanup and logout
+ * - Timeout management and error handling
+ * - Response parsing and validation
+ * 
+ * Security:
+ * - Secure socket connections with timeout protection
+ * - Authentication validation and error handling
+ * - Connection cleanup and resource management
+ * - Input validation and sanitization
+ * - Error reporting without information disclosure
+ * 
+ * AMI Operations:
+ * - Connection establishment and validation
+ * - User authentication and login
+ * - Command execution with ActionID tracking
+ * - Response parsing and timeout handling
+ * - Graceful connection termination
+ * 
+ * Error Handling:
+ * - Connection timeout management
+ * - Authentication failure handling
+ * - Command execution error reporting
+ * - Resource cleanup in error conditions
+ * - Comprehensive error logging
+ * 
+ * Dependencies: None (core AMI functionality)
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
+ */
 
 class SimpleAmiClient
 {

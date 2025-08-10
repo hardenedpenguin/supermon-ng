@@ -1,7 +1,52 @@
 <?php
 /**
- * Rate Limiting Utilities
- * Provides functions to implement rate limiting for security
+ * Supermon-ng Rate Limiting Utilities
+ * 
+ * Provides comprehensive rate limiting functionality for Supermon-ng.
+ * Handles IP-based rate limiting, attempt tracking, and security
+ * enforcement to prevent brute force attacks and abuse.
+ * 
+ * Features:
+ * - IP-based rate limiting with configurable thresholds
+ * - Time-window based attempt tracking
+ * - Automatic cleanup of expired attempts
+ * - File-based storage for persistence across requests
+ * - Configurable maximum attempts and time windows
+ * - Remaining attempts calculation and reporting
+ * - Rate limit clearing functionality
+ * 
+ * Security:
+ * - IP address tracking for rate limiting
+ * - Time-window based attempt expiration
+ * - File locking for concurrent access safety
+ * - JSON-based attempt storage with validation
+ * - Automatic cleanup of stale data
+ * - Configurable security thresholds
+ * 
+ * Usage:
+ * - Check rate limit: is_rate_limited('login', 5, 300);
+ * - Get remaining attempts: get_remaining_attempts('login');
+ * - Clear rate limit: clear_rate_limit('login');
+ * - Custom actions: is_rate_limited('command', 10, 600);
+ * 
+ * Configuration:
+ * - Default max attempts: 5 per time window
+ * - Default time window: 300 seconds (5 minutes)
+ * - Storage location: System temporary directory
+ * - File format: JSON with timestamps
+ * - Lock mechanism: File locking for concurrency
+ * 
+ * File Storage:
+ * - Location: sys_get_temp_dir() / rate_limit_{action}_{ip}.txt
+ * - Format: JSON array of timestamps
+ * - Locking: LOCK_EX for concurrent access safety
+ * - Cleanup: Automatic removal of expired timestamps
+ * 
+ * Dependencies: None (core rate limiting functionality)
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
  */
 
 /**

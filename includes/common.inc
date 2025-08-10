@@ -1,5 +1,41 @@
 <?php
 /**
+ * Supermon-ng Common Configuration
+ * 
+ * Provides centralized configuration and constants for Supermon-ng.
+ * Contains file paths, system settings, version information, and
+ * global variables used throughout the application.
+ * 
+ * Features:
+ * - Centralized file path configuration
+ * - System version and date information
+ * - Log file path definitions
+ * - Database and configuration file locations
+ * - Asterisk version detection and caching
+ * - System type identification (AllStar/HamVOIP)
+ * - User interface text and titles
+ * 
+ * Configuration:
+ * - User files directory: user_files/
+ * - Log files: Various system and application logs
+ * - Database files: Asterisk, Echolink, IRLP data
+ * - Version information: Asterisk and system versions
+ * - UI text: Titles and display strings
+ * 
+ * File Paths:
+ * - Log files: Apache, Asterisk, IRLP logs
+ * - Database files: ASTDB, Echolink, Private nodes
+ * - Configuration: User files and system configs
+ * - Temporary files: Version caches and data
+ * 
+ * Dependencies: None (core configuration)
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
+ */
+
+/**
  * @var string Location of all user configurable files.
  */
 $USERFILES="user_files";

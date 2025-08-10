@@ -1,7 +1,45 @@
 <?php
 /**
- * CSRF Protection Utilities
- * Provides functions to generate and validate CSRF tokens
+ * Supermon-ng CSRF Protection Utilities
+ * 
+ * Provides comprehensive CSRF (Cross-Site Request Forgery) protection
+ * functionality for Supermon-ng. Handles token generation, validation,
+ * and form integration for secure web application operation.
+ * 
+ * Features:
+ * - Secure CSRF token generation using cryptographically secure random bytes
+ * - Token validation with timing-safe comparison
+ * - Automatic form field generation for CSRF protection
+ * - POST request validation and enforcement
+ * - Session-based token storage and management
+ * - Comprehensive error handling and user feedback
+ * 
+ * Security:
+ * - 32-byte random token generation (256-bit security)
+ * - Timing-safe token comparison to prevent timing attacks
+ * - Session-based token storage for persistence
+ * - Automatic token regeneration for new sessions
+ * - HTML escaping for safe form field generation
+ * - HTTP 403 response for validation failures
+ * 
+ * Usage:
+ * - Include in forms: <?php echo csrf_token_field(); ?>
+ * - Validate requests: require_csrf();
+ * - Manual validation: validate_csrf_token($token);
+ * - Generate tokens: generate_csrf_token();
+ * 
+ * Integration:
+ * - Automatic session integration
+ * - Form field generation for easy inclusion
+ * - POST request validation enforcement
+ * - Error handling with user-friendly messages
+ * - HTTP status code management
+ * 
+ * Dependencies: session.inc (for session management)
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
  */
 
 /**
