@@ -1,52 +1,31 @@
 <?php
+/**
+ * Supermon-ng CPU Statistics Viewer
+ * 
+ * Provides a web-based interface for viewing CPU and system statistics.
+ * Allows authenticated users to view comprehensive system information including
+ * date/time, system info, network interfaces, disk usage, and process status.
+ * 
+ * Features:
+ * - User authentication and authorization (CSTATUSER permission required)
+ * - Multiple system command execution for comprehensive statistics
+ * - Real-time system information display
+ * - Network interface status and configuration
+ * - Disk usage and filesystem information
+ * - Process and system load information
+ * - Formatted output with proper command identification
+ * 
+ * Security: Requires CSTATUSER permission for system command execution
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
+ */
+
 include("includes/session.inc");
 include("authusers.php");
 include("includes/common.inc");
-?>
-<html>
-<head>
-<title>CPU and System Status</title>
-<!-- Modular CSS Files -->
-<link rel="stylesheet" type="text/css" href="css/base.css">
-<link rel="stylesheet" type="text/css" href="css/layout.css">
-<link rel="stylesheet" type="text/css" href="css/menu.css">
-<link rel="stylesheet" type="text/css" href="css/tables.css">
-<link rel="stylesheet" type="text/css" href="css/forms.css">
-<link rel="stylesheet" type="text/css" href="css/widgets.css">
-<link rel="stylesheet" type="text/css" href="css/responsive.css">
-<!-- Custom CSS (load last to override defaults) -->
-<?php if (file_exists('css/custom.css')): ?>
-<link rel="stylesheet" type="text/css" href="css/custom.css">
-<?php endif; ?>
-</head>
-<body class="cpustats">
-<?php
-    if (isset($_SESSION['sm61loggedin']) && $_SESSION['sm61loggedin'] === true && get_user_auth("CSTATUSER")) {
-        echo "<pre>";
+include("includes/cpustats/cpustats-controller.inc");
 
-        $commands_to_run = [
-            "/usr/bin/date",
-            "export TERM=vt100 && sudo $USERFILES/sbin/ssinfo - ",
-            "/usr/bin/ip a",
-            "$USERFILES/sbin/din",
-            "/usr/bin/df -hT",
-            "export TERM=vt100 && sudo /usr/bin/top -b -n1"
-        ];
-
-        foreach ($commands_to_run as $cmd) {
-            echo "Command: " . htmlspecialchars($cmd) . "\n";
-            echo "-----------------------------------------------------------------\n";
-            ob_start();
-            passthru($cmd);
-            $output = ob_get_clean();
-            echo htmlspecialchars($output);
-            echo "\n\n";
-        }
-        echo "</pre>";
-
-    } else {
-        echo ("<br><h3>ERROR: You Must login to use this function!</h3>");
-    }
-?>
-</body>
-</html>
+// Run the CPU statistics system
+runCpustats();
