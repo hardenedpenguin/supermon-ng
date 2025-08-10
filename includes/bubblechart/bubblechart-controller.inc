@@ -6,7 +6,7 @@
  * parameter validation, and bubble chart display.
  * 
  * @author Supermon-ng Team
- * @version 2.0.3
+ * @version 3.0.0
  * @since 1.0.0
  */
 

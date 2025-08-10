@@ -6,7 +6,7 @@
  * Handles command result display and error message formatting with enhanced styling.
  * 
  * @author Supermon-ng Team
- * @version 2.0.3
+ * @version 3.0.0
  * @since 1.0.0
  */
 

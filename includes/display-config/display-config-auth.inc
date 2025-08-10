@@ -6,7 +6,7 @@
  * Provides default settings, validation logic, and cookie management.
  * 
  * @author Supermon-ng Team
- * @version 2.0.3
+ * @version 3.0.0
  * @since 1.0.0
  */
 

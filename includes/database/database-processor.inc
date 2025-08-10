@@ -6,7 +6,7 @@
  * Converts raw AMI output into structured key-value pairs for display.
  * 
  * @author Supermon-ng Team
- * @version 2.0.3
+ * @version 3.0.0
  * @since 1.0.0
  */
 

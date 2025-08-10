@@ -6,7 +6,7 @@
  * Provides centralized configuration for donation methods and display options.
  * 
  * @author Supermon-ng Team
- * @version 2.0.3
+ * @version 3.0.0
  * @since 1.0.0
  */
 
