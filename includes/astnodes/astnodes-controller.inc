@@ -37,15 +37,24 @@ function runAstnodes(): void {
     if (validateAstnodesAccess()) {
         $filePath = getAstnodesFilePath();
         
-        // Generate file header
-        generateAstnodesFileHeader($filePath);
+        // Check if we're showing active nodes or all nodes
+        $showActive = isset($_GET['active']) && $_GET['active'] == '1';
         
-        // Validate and read file
-        if (validateAstnodesFile($filePath)) {
-            $fileContent = readAstnodesFileContent($filePath);
-            generateAstnodesFileContent($filePath, $fileContent);
+        if ($showActive) {
+            // Show active nodes
+            $activeNodes = getActiveNodes();
+            generateAstnodesActiveContent($activeNodes);
         } else {
-            generateAstnodesFileNotFoundError($filePath);
+            // Show all nodes from file
+            generateAstnodesFileHeader($filePath);
+            
+            // Validate and read file
+            if (validateAstnodesFile($filePath)) {
+                $fileContent = readAstnodesFileContent($filePath);
+                generateAstnodesFileContent($filePath, $fileContent);
+            } else {
+                generateAstnodesFileNotFoundError($filePath);
+            }
         }
     } else {
         generateAstnodesAccessDenied();
