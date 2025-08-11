@@ -84,11 +84,31 @@ function renderControlPanel($nodes, $astdb, $displaySettings) {
         print_auth_button("CTRLUSER", $SUBMITTER, "Control", "controlpanel");
         print_auth_button("FAVUSER", $SUBMIT_SIZE, "Favorites", "favoritespanel", "class=\"button-margin-bottom\"");
         
-        // JavaScript for favorites panel
+        // JavaScript for popup windows
         ?>
         <script>
         function OpenFavoritesPanel() {
             window.open('favorites.php', 'FavoritesPanel', 'status=no,location=no,toolbar=no,width=500,height=600,left=100,top=100');
+        }
+        
+        function OpenConfigEditor() {
+            window.open('configeditor.php', 'ConfigEditor', 'status=no,location=no,toolbar=no,width=800,height=700,left=100,top=100');
+        }
+        
+        function OpenHelp() {
+            window.open('https://allstarlink.org/howto.html', 'AllStarHelp', 'status=no,location=no,toolbar=yes,width=800,height=600,left=100,top=100');
+        }
+        
+        function OpenWiki() {
+            window.open('https://wiki.allstarlink.org', 'AllStarWiki', 'status=no,location=no,toolbar=yes,width=800,height=600,left=100,top=100');
+        }
+        
+        function OpenActiveNodes() {
+            window.open('astnodes.php?active=1', 'ActiveNodes', 'status=no,location=no,toolbar=no,width=800,height=600,left=100,top=100');
+        }
+        
+        function OpenAllNodes() {
+            window.open('astnodes.php', 'AllNodes', 'status=no,location=no,toolbar=no,width=800,height=600,left=100,top=100');
         }
         </script>
         <?php
