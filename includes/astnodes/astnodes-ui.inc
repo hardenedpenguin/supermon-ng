@@ -116,20 +116,9 @@ function generateAstnodesStyles(): void {
  * Generate astnodes page header
  */
 function generateAstnodesHeader(): void {
-    $view = $_GET['view'] ?? 'all';
-    $title = ($view === 'active') ? "Active AllStar Nodes" : "AllStar Asterisk DB File Viewer";
     ?>
     <div class="astnodes-page">
-        <h1 class="astnodes-title"><?php echo htmlspecialchars($title); ?></h1>
-    <?php
-}
-
-/**
- * Generate active nodes header
- */
-function generateAstnodesActiveHeader(): void {
-    ?>
-    <div class="file-header">Displaying currently active nodes from your configured systems</div>
+        <h1 class="astnodes-title">AllStar Asterisk DB File Viewer</h1>
     <?php
 }
 
@@ -181,85 +170,6 @@ function generateAstnodesAccessDenied(): void {
         <p>You must be logged in and have the required permissions ("NINFUSER") to view this page.</p>
     </div>
     <?php
-}
-
-/**
- * Get active nodes from the current system
- * 
- * @return array Array of active node information
- */
-function getActiveNodes(): array {
-    $activeNodes = [];
-    
-    // Include necessary files for node monitoring
-    if (!isset($_SESSION['user'])) {
-        return $activeNodes;
-    }
-    
-    $iniFilePath = get_ini_name($_SESSION['user']);
-    if (!file_exists($iniFilePath)) {
-        return $activeNodes;
-    }
-    
-    $config = parse_ini_file($iniFilePath, true);
-    if ($config === false) {
-        return $activeNodes;
-    }
-    
-    // Check each configured node
-    foreach ($config as $nodeId => $nodeConfig) {
-        if (!isset($nodeConfig['host']) || !isset($nodeConfig['user']) || !isset($nodeConfig['passwd'])) {
-            continue;
-        }
-        
-        // Try to connect to the node
-        if (class_exists('SimpleAmiClient')) {
-            $fp = SimpleAmiClient::connect($nodeConfig['host']);
-            if ($fp !== false) {
-                if (SimpleAmiClient::login($fp, $nodeConfig['user'], $nodeConfig['passwd']) !== false) {
-                    // Node is active, get its info
-                    $astInfo = SimpleAmiClient::command($fp, "rpt cmd $nodeId info");
-                    SimpleAmiClient::logoff($fp);
-                    
-                    if ($astInfo !== false) {
-                        $activeNodes[] = [
-                            'node' => $nodeId,
-                            'host' => $nodeConfig['host'],
-                            'info' => $astInfo
-                        ];
-                    }
-                } else {
-                    SimpleAmiClient::logoff($fp);
-                }
-            }
-        }
-    }
-    
-    return $activeNodes;
-}
-
-/**
- * Generate active nodes content display
- * 
- * @param array $activeNodes Array of active node information
- */
-function generateAstnodesActiveContent(array $activeNodes): void {
-    echo '<div class="file-content">';
-    
-    if (empty($activeNodes)) {
-        echo '<span class="error-in-pre">No active nodes found. Check your configuration and AMI connections.</span>';
-    } else {
-        echo "Active Nodes (" . count($activeNodes) . "):\n\n";
-        
-        foreach ($activeNodes as $node) {
-            echo "Node: " . htmlspecialchars($node['node']) . "\n";
-            echo "Host: " . htmlspecialchars($node['host']) . "\n";
-            echo "Info: " . htmlspecialchars($node['info']) . "\n";
-            echo str_repeat("-", 50) . "\n";
-        }
-    }
-    
-    echo '</div>';
 }
 
 /**
