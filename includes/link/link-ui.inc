@@ -104,7 +104,7 @@ function renderControlPanel($nodes, $astdb, $displaySettings) {
         }
         
         function OpenActiveNodes() {
-            window.open('astnodes.php?active=1', 'ActiveNodes', 'status=no,location=no,toolbar=no,width=800,height=600,left=100,top=100');
+            window.open('https://stats.allstarlink.org/', 'ActiveNodes', 'status=no,location=no,toolbar=yes,width=1200,height=800,left=100,top=100');
         }
         
         function OpenAllNodes() {
