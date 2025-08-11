@@ -122,8 +122,8 @@ function processAddFavoriteForm($user, $node, $nodeInfo) {
             $config['general']['cmd'] = array();
         }
         
-        $config['general']['label'][] = $customLabel;
-        $config['general']['cmd'][] = $command;
+        array_push($config['general']['label'], $customLabel);
+        array_push($config['general']['cmd'], $command);
     } else {
         // Add to node-specific section
         if (!isset($config[$node])) {
@@ -136,8 +136,8 @@ function processAddFavoriteForm($user, $node, $nodeInfo) {
             $config[$node]['cmd'] = array();
         }
         
-        $config[$node]['label'][] = $customLabel;
-        $config[$node]['cmd'][] = $command;
+        array_push($config[$node]['label'], $customLabel);
+        array_push($config[$node]['cmd'], $command);
     }
     
     // Write back to file

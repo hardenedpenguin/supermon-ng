@@ -89,13 +89,13 @@ function getAllUserFavorites($user) {
         $cmds = $config['general']['cmd'];
         
         for ($i = 0; $i < count($labels); $i++) {
-            $favorites[] = array(
+            array_push($favorites, array(
                 'section' => 'general',
                 'index' => $i,
                 'label' => $labels[$i],
                 'command' => isset($cmds[$i]) ? $cmds[$i] : '',
                 'node' => extractNodeFromCommand(isset($cmds[$i]) ? $cmds[$i] : '')
-            );
+            ));
         }
     }
 
@@ -110,13 +110,13 @@ function getAllUserFavorites($user) {
             $cmds = $sectionData['cmd'];
             
             for ($i = 0; $i < count($labels); $i++) {
-                $favorites[] = array(
+                array_push($favorites, array(
                     'section' => $section,
                     'index' => $i,
                     'label' => $labels[$i],
                     'command' => isset($cmds[$i]) ? $cmds[$i] : '',
                     'node' => extractNodeFromCommand(isset($cmds[$i]) ? $cmds[$i] : '')
-                );
+                ));
             }
         }
     }
