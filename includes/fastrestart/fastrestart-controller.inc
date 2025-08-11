@@ -37,27 +37,7 @@ function runFastrestart(): void {
     $nodeConfig = loadFastrestartNodeConfig($localnode);
     if ($nodeConfig === false) {
         $iniFilePath = getFastrestartIniPath();
-        
-        if (!file_exists($iniFilePath)) {
-            outputFastrestartIniNotFoundError($iniFilePath);
-        }
-        
-        $config = parse_ini_file($iniFilePath, true);
-        if ($config === false) {
-            outputFastrestartIniParseError($iniFilePath);
-        }
-        
-        if (!isset($config[$localnode])) {
-            outputFastrestartNodeNotFoundError($localnode, $iniFilePath);
-        }
-        
-        $nodeConfig = $config[$localnode];
-        $requiredKeys = ['host', 'user', 'passwd'];
-        foreach ($requiredKeys as $key) {
-            if (!isset($nodeConfig[$key]) || $nodeConfig[$key] === '') {
-                outputFastrestartIncompleteConfigError($localnode, $iniFilePath, $key);
-            }
-        }
+        outputFastrestartNodeNotFoundError($localnode, $iniFilePath);
     }
 
     $fp = null;
@@ -66,10 +46,7 @@ function runFastrestart(): void {
         // Connect to AMI
         $fp = connectToFastrestartAmi($nodeConfig);
         if ($fp === false) {
-            if (SimpleAmiClient::connect($nodeConfig['host']) === false) {
-                outputFastrestartAmiConnectionError($nodeConfig['host']);
-            }
-            outputFastrestartAmiLoginError($localnode);
+            outputFastrestartAmiConnectionError($nodeConfig['host']);
         }
 
         // Execute restart command
@@ -86,7 +63,7 @@ function runFastrestart(): void {
         outputFastrestartUnexpectedError($e->getMessage());
     } finally {
         // Clean up AMI connection
-        if ($fp && is_resource($fp)) {
+        if ($fp && $fp !== false) {
             SimpleAmiClient::logoff($fp);
         }
     }
