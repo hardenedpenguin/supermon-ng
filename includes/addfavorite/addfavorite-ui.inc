@@ -77,13 +77,15 @@ function outputAddFavoriteHead(string $title): void {
             background-color: #4A90E2;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             cursor: pointer;
-            margin: 0 10px;
+            margin: 0 8px;
             font-weight: bold;
             transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            min-width: 120px;
+            max-width: 200px;
         }
         input[type="submit"]:hover, input[type="button"]:hover {
             background-color: #5BA0F2;
