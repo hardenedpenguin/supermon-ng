@@ -176,7 +176,7 @@ function writeIniFile($filename, $config) {
             foreach ($values as $key => $value) {
                 if (is_array($value)) {
                     foreach ($value as $item) {
-                        $content .= "$key[] = \"$item\"\n";
+                        $content .= $key . "[] = \"$item\"\n";
                     }
                 } else {
                     $content .= "$key = \"$value\"\n";

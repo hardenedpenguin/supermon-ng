@@ -130,7 +130,7 @@ function getAllUserFavorites($user) {
  * @param string $command Command string
  * @return string|false Node number or false if not found
  */
-function extractNodeFromCommand(string $command): string|false {
+function extractNodeFromCommand($command) {
     // Look for patterns like "ilink 13 12345" or "ilink 3 12345"
     if (preg_match('/ilink\s+\d+\s+(\d+)/', $command, $matches)) {
         return $matches[1];
@@ -147,7 +147,7 @@ function extractNodeFromCommand(string $command): string|false {
  * @param int $index Index of the favorite to delete
  * @return bool True on success, false on failure
  */
-function deleteFavoriteEntry(string $user, string $section, int $index): bool {
+function deleteFavoriteEntry($user, $section, $index) {
     $favoritesFile = getUserFavoritesFile($user);
     $config = loadUserFavorites($user);
     
@@ -194,7 +194,7 @@ function writeIniFile($filename, $config) {
             foreach ($values as $key => $value) {
                 if (is_array($value)) {
                     foreach ($value as $item) {
-                        $content .= "$key[] = \"$item\"\n";
+                        $content .= $key . "[] = \"$item\"\n";
                     }
                 } else {
                     $content .= "$key = \"$value\"\n";
