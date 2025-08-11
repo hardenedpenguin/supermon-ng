@@ -76,9 +76,9 @@ function loadControlserverNodeConfig(string $node): array|false {
  * Connect to AMI and authenticate
  * 
  * @param array $nodeConfig Node configuration array
- * @return \resource|false AMI connection resource or false on failure
+ * @return mixed AMI connection resource or false on failure
  */
-function connectToControlserverAmi(array $nodeConfig): \resource|false {
+function connectToControlserverAmi(array $nodeConfig): mixed {
     $fp = SimpleAmiClient::connect($nodeConfig['host']);
     if (!$fp) {
         return false;
@@ -95,12 +95,12 @@ function connectToControlserverAmi(array $nodeConfig): \resource|false {
 /**
  * Execute command on AMI connection
  * 
- * @param \resource $fp AMI connection resource
+ * @param mixed $fp AMI connection resource
  * @param string $node Node name
  * @param string $cmd Command to execute
  * @return string|false Command result or false on failure
  */
-function executeControlserverCommand($fp, string $node, string $cmd): string|false {
+function executeControlserverCommand(mixed $fp, string $node, string $cmd): string|false {
     $cmdString = str_replace("%node%", $node, $cmd);
     return SimpleAmiClient::command($fp, $cmdString);
 }

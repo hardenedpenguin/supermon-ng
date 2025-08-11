@@ -74,9 +74,9 @@ function loadDatabaseConfig(string $user, string $localnode): array|false {
  * Establish AMI connection and authenticate
  * 
  * @param array $amiConfig AMI configuration data
- * @return \resource|false File pointer to AMI connection or false on failure
+ * @return mixed File pointer to AMI connection or false on failure
  */
-function connectToAsteriskManager(array $amiConfig): \resource|false {
+function connectToAsteriskManager(array $amiConfig): mixed {
     $fp = SimpleAmiClient::connect($amiConfig['host']);
     if ($fp === false) {
         return false;
@@ -93,10 +93,10 @@ function connectToAsteriskManager(array $amiConfig): \resource|false {
 /**
  * Retrieve database content from AMI
  * 
- * @param \resource $fp AMI connection file pointer
+ * @param mixed $fp AMI connection file pointer
  * @return string|false Database output or false on failure
  */
-function retrieveDatabaseContent(\resource $fp): string|false {
+function retrieveDatabaseContent(mixed $fp): string|false {
     $databaseOutput = SimpleAmiClient::command($fp, "database show");
     SimpleAmiClient::logoff($fp);
     

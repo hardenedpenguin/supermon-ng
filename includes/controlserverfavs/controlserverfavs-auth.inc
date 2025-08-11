@@ -71,10 +71,10 @@ function loadControlserverfavsNodeConfig(string $node): array|false {
  * 
  * @param array $nodeConfig Node configuration array
  * @param string $node Node name
- * @return \resource|false AMI connection resource or false on failure
+ * @return mixed AMI connection resource or false on failure
  * @throws RuntimeException On connection or authentication failure
  */
-function connectToControlserverfavsAmi(array $nodeConfig, string $node): \resource|false {
+function connectToControlserverfavsAmi(array $nodeConfig, string $node): mixed {
     $fp = SimpleAmiClient::connect($nodeConfig['host']);
     if ($fp === false) {
         throw new RuntimeException("Could not connect to AMI host '{$nodeConfig['host']}' for node '$node'.");
@@ -91,13 +91,13 @@ function connectToControlserverfavsAmi(array $nodeConfig, string $node): \resour
 /**
  * Execute command on AMI connection with enhanced error handling
  * 
- * @param \resource $fp AMI connection resource
+ * @param mixed $fp AMI connection resource
  * @param string $node Node name
  * @param string $cmd Command to execute
  * @return string|false Command result or false on failure
  * @throws RuntimeException On command execution failure
  */
-function executeControlserverfavsCommand($fp, string $node, string $cmd): string|false {
+function executeControlserverfavsCommand(mixed $fp, string $node, string $cmd): string|false {
     $cmdString = str_replace("%node%", $node, $cmd);
     $commandOutput = SimpleAmiClient::command($fp, $cmdString);
 

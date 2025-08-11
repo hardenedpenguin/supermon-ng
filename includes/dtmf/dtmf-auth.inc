@@ -89,9 +89,9 @@ function loadDtmfNodeConfig(string $localnode): array|false {
  * Connect to AMI and authenticate
  * 
  * @param array $nodeConfig Node configuration array
- * @return \resource|false AMI connection resource or false on failure
+ * @return mixed AMI connection resource or false on failure
  */
-function connectToDtmfAmi(array $nodeConfig): \resource|false {
+function connectToDtmfAmi(array $nodeConfig): mixed {
     if (!class_exists('SimpleAmiClient')) {
         return false;
     }
@@ -112,12 +112,12 @@ function connectToDtmfAmi(array $nodeConfig): \resource|false {
 /**
  * Execute DTMF command
  * 
- * @param \resource $amiSocket AMI connection resource
+ * @param mixed $amiSocket AMI connection resource
  * @param string $localnode Local node identifier
  * @param string $dtmf DTMF command
  * @return string|false Command output or false on failure
  */
-function executeDtmfCommand($amiSocket, string $localnode, string $dtmf): string|false {
+function executeDtmfCommand(mixed $amiSocket, string $localnode, string $dtmf): string|false {
     $asteriskCommand = "rpt fun " . $localnode . " " . $dtmf;
     return SimpleAmiClient::command($amiSocket, $asteriskCommand);
 }

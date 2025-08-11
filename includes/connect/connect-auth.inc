@@ -72,9 +72,9 @@ function loadConnectNodeConfig(string $localnode): array|false {
  * 
  * @param array $nodeConfig Node configuration array
  * @param string $localnode Local node number
- * @return \resource|false AMI connection resource or false on failure
+ * @return mixed AMI connection resource or false on failure
  */
-function connectToAmi(array $nodeConfig, string $localnode): \resource|false {
+function connectToAmi(array $nodeConfig, string $localnode): mixed {
     $fp = SimpleAmiClient::connect($nodeConfig['host']);
     if (FALSE === $fp) {
         return false;
@@ -170,14 +170,14 @@ function processConnectAction(string $button, string $perm_input, string $localn
 /**
  * Execute AMI command
  * 
- * @param \resource $fp AMI connection resource
+ * @param mixed $fp AMI connection resource
  * @param int $ilink ILink command number
  * @param string $localnode Local node number
  * @param string $remotenode Remote node number
  * @param string $button Action button
  * @return string|false Command response or false on failure
  */
-function executeConnectCommand($fp, int $ilink, string $localnode, string $remotenode, string $button): string|false {
+function executeConnectCommand(mixed $fp, int $ilink, string $localnode, string $remotenode, string $button): string|false {
     $command_to_send = "rpt cmd $localnode ilink $ilink";
     if (!empty($remotenode) || ($button == 'disconnect' && !empty($remotenode))) {
         $command_to_send .= " $remotenode";

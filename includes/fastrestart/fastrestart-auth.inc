@@ -74,9 +74,9 @@ function loadFastrestartNodeConfig(string $localnode): array|false {
  * Connect to AMI and authenticate
  * 
  * @param array $nodeConfig Node configuration array
- * @return \resource|false AMI connection resource or false on failure
+ * @return mixed AMI connection resource or false on failure
  */
-function connectToFastrestartAmi(array $nodeConfig): \resource|false {
+function connectToFastrestartAmi(array $nodeConfig): mixed {
     $fp = SimpleAmiClient::connect($nodeConfig['host']);
     if ($fp === false) {
         return false;
@@ -93,10 +93,10 @@ function connectToFastrestartAmi(array $nodeConfig): \resource|false {
 /**
  * Execute restart command
  * 
- * @param \resource $fp AMI connection resource
+ * @param mixed $fp AMI connection resource
  * @return string|false Command response or false on failure
  */
-function executeFastrestartCommand($fp): string|false {
+function executeFastrestartCommand(mixed $fp): string|false {
     return SimpleAmiClient::command($fp, "restart now");
 }
 
