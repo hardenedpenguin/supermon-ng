@@ -94,35 +94,41 @@ function outputFavoritesHeader(string $title): void {
  */
 function outputFavoritesMain(string $node, array $cpCommands): void {
     ?>
-    <div id="cpMain">
-        <br>
-        <center>Sending Command to node <?php echo htmlspecialchars($node); ?></center>
-        <br>
-        Favorite (select one): 
-        <select class="submit-large" name="cpSelection" id="cpSelect">
-        <?php 
-        if (!empty($cpCommands['label']) && is_array($cpCommands['label']) && 
-            !empty($cpCommands['cmd']) && is_array($cpCommands['cmd']) &&
-            count($cpCommands['label']) === count($cpCommands['cmd'])) {
-            
-            for($i=0; $i < count($cpCommands['label']); $i++) {
-                $cmdValue = htmlspecialchars($cpCommands['cmd'][$i], ENT_QUOTES, 'UTF-8');
-                $labelDisplay = htmlspecialchars($cpCommands['label'][$i], ENT_NOQUOTES, 'UTF-8');
-                echo "<option value=\"{$cmdValue}\">{$labelDisplay}</option>\n";
-            }
-        } else {
-            if (empty($cpCommands['label']) && empty($cpCommands['cmd'])) {
-                echo "<option value=\"\">No favorites configured.</option>\n";
+    <div id="cpMain" style="padding: 20px; margin-bottom: 20px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h3>Sending Command to node <?php echo htmlspecialchars($node); ?></h3>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label for="cpSelect" style="display: block; margin-bottom: 5px; font-weight: bold;">Favorite (select one):</label>
+            <select class="submit-large" name="cpSelection" id="cpSelect" style="width: 100%; max-width: 400px;">
+            <?php 
+            if (!empty($cpCommands['label']) && is_array($cpCommands['label']) && 
+                !empty($cpCommands['cmd']) && is_array($cpCommands['cmd']) &&
+                count($cpCommands['label']) === count($cpCommands['cmd'])) {
+                
+                for($i=0; $i < count($cpCommands['label']); $i++) {
+                    $cmdValue = htmlspecialchars($cpCommands['cmd'][$i], ENT_QUOTES, 'UTF-8');
+                    $labelDisplay = htmlspecialchars($cpCommands['label'][$i], ENT_NOQUOTES, 'UTF-8');
+                    echo "<option value=\"{$cmdValue}\">{$labelDisplay}</option>\n";
+                }
             } else {
-                echo "<option value=\"\">Error: Favorites configuration mismatch.</option>\n";
+                if (empty($cpCommands['label']) && empty($cpCommands['cmd'])) {
+                    echo "<option value=\"\">No favorites configured.</option>\n";
+                } else {
+                    echo "<option value=\"\">Error: Favorites configuration mismatch.</option>\n";
+                }
             }
-        }
-        ?>
-        </select>
+            ?>
+            </select>
+        </div>
+        
         <input type="hidden" id="localnode" value="<?php echo htmlspecialchars($node, ENT_QUOTES, 'UTF-8'); ?>">
-        <input type="button" class="submit-large" value="Send Command" id="cpExecute">
-        <br/><br>
-        <div id="cpResult">
+        <div style="text-align: center; margin-top: 15px;">
+            <input type="button" class="submit-large" value="Send Command" id="cpExecute">
+        </div>
+        
+        <div id="cpResult" style="margin-top: 20px;">
         </div>
     </div>
     <?php
@@ -135,15 +141,13 @@ function outputFavoritesMain(string $node, array $cpCommands): void {
  */
 function outputFavoritesFooter(string $FAVINI): void {
     ?>
-    <div class="bottom-left-30">
-        <center>
-            <input type="button" class="submit-large" Value="Close Window" onclick="self.close()">
-            <br><br>
-            <center>
-                Using the <?php echo htmlspecialchars($FAVINI); ?> file
-            </center><br>
-            <?php include "footer.inc"; ?>
-        </center>
+    <div style="margin-top: 20px; text-align: center; padding: 10px; border-top: 1px solid #374151;">
+        <input type="button" class="submit-large" Value="Close Window" onclick="self.close()">
+        <br><br>
+        <div style="font-size: 12px; color: #9CA3AF;">
+            Using the <?php echo htmlspecialchars($FAVINI); ?> file
+        </div><br>
+        <?php include "footer.inc"; ?>
     </div>
     <?php
 }
