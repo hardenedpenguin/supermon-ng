@@ -104,11 +104,11 @@ function renderControlPanel($nodes, $astdb, $displaySettings) {
         }
         
         function OpenActiveNodes() {
-            window.open('astnodes.php?active=1', 'ActiveNodes', 'status=no,location=no,toolbar=no,width=800,height=600,left=100,top=100');
+            window.open('astnodes.php?view=active', 'ActiveNodes', 'status=no,location=no,toolbar=no,width=800,height=600,left=100,top=100');
         }
         
         function OpenAllNodes() {
-            window.open('astnodes.php', 'AllNodes', 'status=no,location=no,toolbar=no,width=800,height=600,left=100,top=100');
+            window.open('astnodes.php?view=all', 'AllNodes', 'status=no,location=no,toolbar=no,width=800,height=600,left=100,top=100');
         }
         </script>
         <?php
