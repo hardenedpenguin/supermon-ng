@@ -82,7 +82,9 @@ function renderControlPanel($nodes, $astdb, $displaySettings) {
         }
 
         print_auth_button("CTRLUSER", $SUBMITTER, "Control", "controlpanel");
-        print_auth_button("FAVUSER", $SUBMIT_SIZE, "Favorites", "favoritespanel", "class=\"button-margin-bottom\"");
+        print_auth_button("FAVUSER", $SUBMIT_SIZE, "Favorites", "favoritespanel");
+        print_auth_button("FAVUSER", $SUBMIT_SIZE, "Add Favorite", "", "", "OpenAddFavorite()");
+        print_auth_button("FAVUSER", $SUBMIT_SIZE, "Delete Favorite", "", "class=\"button-margin-bottom\"", "OpenDeleteFavorite()");
         
         // JavaScript for popup windows
         ?>
@@ -109,6 +111,24 @@ function renderControlPanel($nodes, $astdb, $displaySettings) {
         
         function OpenAllNodes() {
             window.open('https://www.allstarlink.org/nodelist/', 'AllNodes', 'status=no,location=no,toolbar=yes,width=1200,height=800,left=100,top=100');
+        }
+        
+        function OpenAddFavorite() {
+            const nodeInput = $('#node').val();
+            if (!nodeInput || nodeInput.trim() === '') {
+                alert('Please enter a node number in the input box first.');
+                return;
+            }
+            window.open('addfavorite.php?node=' + encodeURIComponent(nodeInput), 'AddFavorite', 'status=no,location=no,toolbar=no,width=600,height=500,left=100,top=100');
+        }
+        
+        function OpenDeleteFavorite() {
+            const nodeInput = $('#node').val();
+            if (!nodeInput || nodeInput.trim() === '') {
+                alert('Please enter a node number in the input box first.');
+                return;
+            }
+            window.open('deletefavorite.php?node=' + encodeURIComponent(nodeInput), 'DeleteFavorite', 'status=no,location=no,toolbar=no,width=600,height=500,left=100,top=100');
         }
         </script>
         <?php
