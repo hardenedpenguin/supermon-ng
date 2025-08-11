@@ -78,12 +78,17 @@ function outputAddFavoriteHead(string $title): void {
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
-            margin: 0 5px;
+            margin: 0 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
         input[type="submit"]:hover, input[type="button"]:hover {
             background-color: #5BA0F2;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         .node-info {
             background-color: #2A2A2A;
@@ -176,10 +181,6 @@ function outputAddFavoriteForm($node, $nodeInfo, $alreadyExists) {
     $user = isset($_SESSION['user']) ? $_SESSION['user'] : 'admin';
     $favoritesFile = getUserFavoritesFile($user);
     $fileName = basename($favoritesFile);
-    
-    // Debug information
-    $faviniExists = file_exists("$USERFILES/favini.inc");
-    $userFileExists = file_exists("$USERFILES/anarchy-favorites.ini");
     ?>
         <div class="node-info">
             <h3>Node Information</h3>
@@ -194,8 +195,6 @@ function outputAddFavoriteForm($node, $nodeInfo, $alreadyExists) {
             <p><strong>User:</strong> <?php echo htmlspecialchars($user); ?></p>
             <p><strong>File:</strong> <?php echo htmlspecialchars($fileName); ?></p>
             <p><strong>Path:</strong> <?php echo htmlspecialchars($favoritesFile); ?></p>
-            <p><strong>Debug - favini.inc exists:</strong> <?php echo $faviniExists ? 'Yes' : 'No'; ?></p>
-            <p><strong>Debug - anarchy-favorites.ini exists:</strong> <?php echo $userFileExists ? 'Yes' : 'No'; ?></p>
         </div>
 
         <?php if ($alreadyExists): ?>
@@ -222,8 +221,8 @@ function outputAddFavoriteForm($node, $nodeInfo, $alreadyExists) {
             </div>
 
             <div class="button-group">
-                <input type="submit" value="Add to Favorites">
-                <input type="button" value="Cancel" onclick="closeWindow()">
+                <input type="submit" value="Add to Favorites" style="background-color: #10B981;">
+                <input type="button" value="Cancel" onclick="closeWindow()" style="background-color: #6B7280;">
             </div>
         </form>
     <?php
@@ -252,9 +251,9 @@ function outputAddFavoriteResult($result) {
 
         <div class="button-group">
             <?php if ($result['success']): ?>
-            <input type="button" value="Refresh Parent Window" onclick="refreshParent(); closeWindow();">
+            <input type="button" value="Refresh Parent Window" onclick="refreshParent(); closeWindow();" style="background-color: #10B981;">
             <?php endif; ?>
-            <input type="button" value="Close" onclick="closeWindow()">
+            <input type="button" value="Close" onclick="closeWindow()" style="background-color: #6B7280;">
         </div>
     <?php
 }

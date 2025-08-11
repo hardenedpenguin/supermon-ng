@@ -103,12 +103,17 @@ function outputDeleteFavoriteHead(string $title): void {
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
-            margin: 0 5px;
+            margin: 0 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
         input[type="button"]:hover {
             background-color: #5BA0F2;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
         .success {
             background-color: rgba(16, 185, 129, 0.1);
@@ -260,8 +265,8 @@ function outputDeleteFavoriteForm(array $favorites, string $currentNode): void {
         </form>
 
         <div class="button-group">
-            <input type="button" value="Refresh Parent Window" onclick="refreshParent(); closeWindow();">
-            <input type="button" value="Close" onclick="closeWindow()">
+            <input type="button" value="Refresh Parent Window" onclick="refreshParent(); closeWindow();" style="background-color: #10B981;">
+            <input type="button" value="Close" onclick="closeWindow()" style="background-color: #6B7280;">
         </div>
     <?php
 }
@@ -295,7 +300,7 @@ function outputDeleteFavoriteEmpty(): void {
         </div>
 
         <div class="button-group">
-            <input type="button" value="Close" onclick="closeWindow()">
+            <input type="button" value="Close" onclick="closeWindow()" style="background-color: #6B7280;">
         </div>
     <?php
 }
