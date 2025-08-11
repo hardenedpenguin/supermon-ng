@@ -123,12 +123,7 @@ function renderControlPanel($nodes, $astdb, $displaySettings) {
         }
         
         function OpenDeleteFavorite() {
-            const nodeInput = $('#node').val();
-            if (!nodeInput || nodeInput.trim() === '') {
-                alert('Please enter a node number in the input box first.');
-                return;
-            }
-            window.open('deletefavorite.php?node=' + encodeURIComponent(nodeInput), 'DeleteFavorite', 'status=no,location=no,toolbar=no,width=600,height=500,left=100,top=100');
+            window.open('deletefavorite.php', 'DeleteFavorite', 'status=no,location=no,toolbar=no,width=600,height=500,left=100,top=100');
         }
         </script>
         <?php

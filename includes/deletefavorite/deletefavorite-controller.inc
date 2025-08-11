@@ -27,13 +27,7 @@ function runDeleteFavorite(): void {
         die("<br><h3>ERROR: You Must login to use the 'Delete Favorite' function!</h3>");
     }
 
-    // Get and validate node parameter
-    $node = getValidatedNode();
-    if ($node === false) {
-        die ("Please provide a properly formatted URI. (ie deletefavorite.php?node=1234)");
-    }
-
-    $title = "Delete Favorite - Node $node";
+    $title = "Delete Favorite";
     $user = isset($_SESSION['user']) ? $_SESSION['user'] : 'admin';
 
     // Load user's favorites
@@ -71,7 +65,7 @@ function runDeleteFavorite(): void {
     if (empty($favorites)) {
         outputDeleteFavoriteEmpty();
     } else {
-        outputDeleteFavoriteForm($favorites, $node);
+        outputDeleteFavoriteForm($favorites);
     }
     
     outputDeleteFavoriteFooter();

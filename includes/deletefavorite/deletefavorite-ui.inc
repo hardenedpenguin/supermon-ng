@@ -212,10 +212,9 @@ function outputDeleteFavoriteHeader($title) {
  * Output the delete favorite form
  * 
  * @param array $favorites Array of user favorites
- * @param string $currentNode Current node number
  * @return void
  */
-function outputDeleteFavoriteForm(array $favorites, string $currentNode): void {
+function outputDeleteFavoriteForm($favorites) {
     ?>
         <form id="deleteForm" method="POST" action="">
             <input type="hidden" id="section" name="section" value="">
