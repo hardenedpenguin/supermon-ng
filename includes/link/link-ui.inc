@@ -108,7 +108,7 @@ function renderControlPanel($nodes, $astdb, $displaySettings) {
         }
         
         function OpenAllNodes() {
-            window.open('astnodes.php', 'AllNodes', 'status=no,location=no,toolbar=no,width=800,height=600,left=100,top=100');
+            window.open('https://www.allstarlink.org/nodelist/', 'AllNodes', 'status=no,location=no,toolbar=yes,width=1200,height=800,left=100,top=100');
         }
         </script>
         <?php
