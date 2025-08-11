@@ -34,5 +34,6 @@
 
 $FAVININAME['admin'] = "admin-favorites.ini";
 $FAVININAME['user1'] = "user1-favorites.ini";
+$FAVININAME['anarchy'] = "anarchy-favorites.ini";
 
 ?>

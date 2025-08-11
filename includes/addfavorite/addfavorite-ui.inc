@@ -176,6 +176,10 @@ function outputAddFavoriteForm($node, $nodeInfo, $alreadyExists) {
     $user = isset($_SESSION['user']) ? $_SESSION['user'] : 'admin';
     $favoritesFile = getUserFavoritesFile($user);
     $fileName = basename($favoritesFile);
+    
+    // Debug information
+    $faviniExists = file_exists("$USERFILES/favini.inc");
+    $userFileExists = file_exists("$USERFILES/anarchy-favorites.ini");
     ?>
         <div class="node-info">
             <h3>Node Information</h3>
@@ -190,6 +194,8 @@ function outputAddFavoriteForm($node, $nodeInfo, $alreadyExists) {
             <p><strong>User:</strong> <?php echo htmlspecialchars($user); ?></p>
             <p><strong>File:</strong> <?php echo htmlspecialchars($fileName); ?></p>
             <p><strong>Path:</strong> <?php echo htmlspecialchars($favoritesFile); ?></p>
+            <p><strong>Debug - favini.inc exists:</strong> <?php echo $faviniExists ? 'Yes' : 'No'; ?></p>
+            <p><strong>Debug - anarchy-favorites.ini exists:</strong> <?php echo $userFileExists ? 'Yes' : 'No'; ?></p>
         </div>
 
         <?php if ($alreadyExists): ?>
