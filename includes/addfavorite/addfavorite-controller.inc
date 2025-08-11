@@ -85,10 +85,10 @@ function runAddFavorite(): void {
  * @param array $nodeInfo Node information from astdb.txt
  * @return array Result of the operation
  */
-function processAddFavoriteForm(string $user, string $node, array $nodeInfo): array {
+function processAddFavoriteForm($user, $node, $nodeInfo) {
     $favoritesFile = getUserFavoritesFile($user);
-    $customLabel = trim($_POST['custom_label'] ?? '');
-    $addToGeneral = ($_POST['add_to_general'] ?? '') === '1';
+    $customLabel = trim(isset($_POST['custom_label']) ? $_POST['custom_label'] : '');
+    $addToGeneral = (isset($_POST['add_to_general']) ? $_POST['add_to_general'] : '') === '1';
     
     // Use custom label if provided, otherwise generate from node info
     if (empty($customLabel)) {
@@ -99,27 +99,27 @@ function processAddFavoriteForm(string $user, string $node, array $nodeInfo): ar
     $command = "rpt cmd %node% ilink 13 " . $node;
     
     // Load existing favorites
-    $config = [];
+    $config = array();
     if (file_exists($favoritesFile)) {
         $config = parse_ini_file($favoritesFile, true);
         if ($config === false) {
-            $config = [];
+            $config = array();
         }
     }
     
     // Ensure general section exists
     if (!isset($config['general'])) {
-        $config['general'] = [];
+        $config['general'] = array();
     }
     
     // Add to favorites
     if ($addToGeneral) {
         // Add to general section
         if (!isset($config['general']['label'])) {
-            $config['general']['label'] = [];
+            $config['general']['label'] = array();
         }
         if (!isset($config['general']['cmd'])) {
-            $config['general']['cmd'] = [];
+            $config['general']['cmd'] = array();
         }
         
         $config['general']['label'][] = $customLabel;
@@ -127,13 +127,13 @@ function processAddFavoriteForm(string $user, string $node, array $nodeInfo): ar
     } else {
         // Add to node-specific section
         if (!isset($config[$node])) {
-            $config[$node] = [];
+            $config[$node] = array();
         }
         if (!isset($config[$node]['label'])) {
-            $config[$node]['label'] = [];
+            $config[$node]['label'] = array();
         }
         if (!isset($config[$node]['cmd'])) {
-            $config[$node]['cmd'] = [];
+            $config[$node]['cmd'] = array();
         }
         
         $config[$node]['label'][] = $customLabel;
@@ -144,18 +144,18 @@ function processAddFavoriteForm(string $user, string $node, array $nodeInfo): ar
     $result = writeIniFile($favoritesFile, $config);
     
     if ($result) {
-        return [
+        return array(
             'success' => true,
             'message' => "Node $node has been successfully added to your favorites as \"$customLabel\".",
             'node' => $node,
             'label' => $customLabel
-        ];
+        );
     } else {
-        return [
+        return array(
             'success' => false,
             'message' => "Error: Could not write to favorites file. Please check file permissions.",
             'node' => $node
-        ];
+        );
     }
 }
 
@@ -166,7 +166,7 @@ function processAddFavoriteForm(string $user, string $node, array $nodeInfo): ar
  * @param array $config Configuration array
  * @return bool True on success, false on failure
  */
-function writeIniFile(string $filename, array $config): bool {
+function writeIniFile($filename, $config) {
     $content = "";
     
     foreach ($config as $section => $values) {

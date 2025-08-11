@@ -87,15 +87,15 @@ function runDeleteFavorite(): void {
  * @param string $user User identifier
  * @return array Result of the operation
  */
-function processDeleteFavoriteForm(string $user): array {
-    $section = $_POST['section'] ?? '';
-    $index = $_POST['index'] ?? '';
+function processDeleteFavoriteForm($user) {
+    $section = isset($_POST['section']) ? $_POST['section'] : '';
+    $index = isset($_POST['index']) ? $_POST['index'] : '';
     
     if (empty($section) || !is_numeric($index)) {
-        return [
+        return array(
             'success' => false,
             'message' => 'Invalid selection. Please try again.'
-        ];
+        );
     }
     
     $index = (int)$index;
@@ -112,26 +112,26 @@ function processDeleteFavoriteForm(string $user): array {
     }
     
     if ($deletedFavorite === null) {
-        return [
+        return array(
             'success' => false,
             'message' => 'Favorite not found. It may have been already deleted.'
-        ];
+        );
     }
     
     // Delete the favorite
     $result = deleteFavoriteEntry($user, $section, $index);
     
     if ($result) {
-        return [
+        return array(
             'success' => true,
             'message' => "Successfully deleted favorite: \"" . htmlspecialchars($deletedFavorite['label']) . "\"",
             'deleted_label' => $deletedFavorite['label']
-        ];
+        );
     } else {
-        return [
+        return array(
             'success' => false,
             'message' => 'Error: Could not delete favorite. Please check file permissions.'
-        ];
+        );
     }
 }
 ?>

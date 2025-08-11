@@ -75,9 +75,9 @@ function loadUserFavorites(string $user): array|false {
  * @param string $user User identifier
  * @return array Array of favorites with section, index, label, and command
  */
-function getAllUserFavorites(string $user): array {
+function getAllUserFavorites($user) {
     $config = loadUserFavorites($user);
-    $favorites = [];
+    $favorites = array();
     
     if ($config === false) {
         return $favorites;
@@ -89,13 +89,13 @@ function getAllUserFavorites(string $user): array {
         $cmds = $config['general']['cmd'];
         
         for ($i = 0; $i < count($labels); $i++) {
-            $favorites[] = [
+            $favorites[] = array(
                 'section' => 'general',
                 'index' => $i,
                 'label' => $labels[$i],
-                'command' => $cmds[$i] ?? '',
-                'node' => extractNodeFromCommand($cmds[$i] ?? '')
-            ];
+                'command' => isset($cmds[$i]) ? $cmds[$i] : '',
+                'node' => extractNodeFromCommand(isset($cmds[$i]) ? $cmds[$i] : '')
+            );
         }
     }
 
@@ -110,13 +110,13 @@ function getAllUserFavorites(string $user): array {
             $cmds = $sectionData['cmd'];
             
             for ($i = 0; $i < count($labels); $i++) {
-                $favorites[] = [
+                $favorites[] = array(
                     'section' => $section,
                     'index' => $i,
                     'label' => $labels[$i],
-                    'command' => $cmds[$i] ?? '',
-                    'node' => extractNodeFromCommand($cmds[$i] ?? '')
-                ];
+                    'command' => isset($cmds[$i]) ? $cmds[$i] : '',
+                    'node' => extractNodeFromCommand(isset($cmds[$i]) ? $cmds[$i] : '')
+                );
             }
         }
     }
@@ -184,7 +184,7 @@ function deleteFavoriteEntry(string $user, string $section, int $index): bool {
  * @param array $config Configuration array
  * @return bool True on success, false on failure
  */
-function writeIniFile(string $filename, array $config): bool {
+function writeIniFile($filename, $config) {
     $content = "";
     
     foreach ($config as $section => $values) {

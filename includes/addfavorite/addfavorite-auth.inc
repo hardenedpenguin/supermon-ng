@@ -43,14 +43,14 @@ function getValidatedNode(): string|false {
  * 
  * @return array|false Parsed astdb data or false on failure
  */
-function loadAstdbData(): array|false {
+function loadAstdbData() {
     global $ASTDB_TXT;
     
     if (!file_exists($ASTDB_TXT)) {
         return false;
     }
 
-    $astdb = [];
+    $astdb = array();
     $lines = file($ASTDB_TXT, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
     
     if ($lines === false) {
@@ -65,12 +65,12 @@ function loadAstdbData(): array|false {
             $description = trim($parts[2]);
             $location = trim($parts[3]);
             
-            $astdb[$node] = [
+            $astdb[$node] = array(
                 'node' => $node,
                 'callsign' => $callsign,
                 'description' => $description,
                 'location' => $location
-            ];
+            );
         }
     }
 
@@ -83,14 +83,14 @@ function loadAstdbData(): array|false {
  * @param string $node Node number to look up
  * @return array|false Node information or false if not found
  */
-function lookupNodeInfo(string $node): array|false {
+function lookupNodeInfo($node) {
     $astdb = loadAstdbData();
     
     if ($astdb === false) {
         return false;
     }
 
-    return $astdb[$node] ?? false;
+    return isset($astdb[$node]) ? $astdb[$node] : false;
 }
 
 /**
