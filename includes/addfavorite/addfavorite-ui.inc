@@ -171,7 +171,11 @@ function outputAddFavoriteHeader(string $title): void {
  * @param bool $alreadyExists Whether node already exists in favorites
  * @return void
  */
-function outputAddFavoriteForm(string $node, array $nodeInfo, bool $alreadyExists): void {
+function outputAddFavoriteForm($node, $nodeInfo, $alreadyExists) {
+    global $USERFILES;
+    $user = isset($_SESSION['user']) ? $_SESSION['user'] : 'admin';
+    $favoritesFile = getUserFavoritesFile($user);
+    $fileName = basename($favoritesFile);
     ?>
         <div class="node-info">
             <h3>Node Information</h3>
@@ -179,6 +183,13 @@ function outputAddFavoriteForm(string $node, array $nodeInfo, bool $alreadyExist
             <p><strong>Callsign:</strong> <?php echo htmlspecialchars($nodeInfo['callsign']); ?></p>
             <p><strong>Description:</strong> <?php echo htmlspecialchars($nodeInfo['description']); ?></p>
             <p><strong>Location:</strong> <?php echo htmlspecialchars($nodeInfo['location']); ?></p>
+        </div>
+
+        <div class="node-info" style="margin-top: 15px;">
+            <h3>Favorites File</h3>
+            <p><strong>User:</strong> <?php echo htmlspecialchars($user); ?></p>
+            <p><strong>File:</strong> <?php echo htmlspecialchars($fileName); ?></p>
+            <p><strong>Path:</strong> <?php echo htmlspecialchars($favoritesFile); ?></p>
         </div>
 
         <?php if ($alreadyExists): ?>
@@ -218,12 +229,20 @@ function outputAddFavoriteForm(string $node, array $nodeInfo, bool $alreadyExist
  * @param array $result Result array from form processing
  * @return void
  */
-function outputAddFavoriteResult(array $result): void {
+function outputAddFavoriteResult($result) {
     $cssClass = $result['success'] ? 'success' : 'error';
     ?>
         <div class="<?php echo $cssClass; ?>">
             <?php echo htmlspecialchars($result['message']); ?>
         </div>
+
+        <?php if ($result['success'] && isset($result['file'])): ?>
+        <div class="node-info" style="margin-top: 15px;">
+            <h3>File Updated</h3>
+            <p><strong>File:</strong> <?php echo htmlspecialchars($result['file']); ?></p>
+            <p><strong>Label:</strong> <?php echo htmlspecialchars($result['label']); ?></p>
+        </div>
+        <?php endif; ?>
 
         <div class="button-group">
             <?php if ($result['success']): ?>

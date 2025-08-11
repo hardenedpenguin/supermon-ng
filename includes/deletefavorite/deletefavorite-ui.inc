@@ -182,11 +182,21 @@ function outputDeleteFavoriteScript(): void {
  * @param string $title Page title
  * @return void
  */
-function outputDeleteFavoriteHeader(string $title): void {
+function outputDeleteFavoriteHeader($title) {
+    $user = isset($_SESSION['user']) ? $_SESSION['user'] : 'admin';
+    $favoritesFile = getUserFavoritesFile($user);
+    $fileName = basename($favoritesFile);
     ?>
     <div class="container">
         <div class="header">
             <h2><?php echo htmlspecialchars($title); ?></h2>
+        </div>
+        
+        <div class="node-info" style="margin-bottom: 20px;">
+            <h3>Favorites File</h3>
+            <p><strong>User:</strong> <?php echo htmlspecialchars($user); ?></p>
+            <p><strong>File:</strong> <?php echo htmlspecialchars($fileName); ?></p>
+            <p><strong>Path:</strong> <?php echo htmlspecialchars($favoritesFile); ?></p>
         </div>
     <?php
 }

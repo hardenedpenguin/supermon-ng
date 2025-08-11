@@ -99,7 +99,7 @@ function lookupNodeInfo($node) {
  * @param string $user User identifier
  * @return string Path to user's favorites file
  */
-function getUserFavoritesFile(string $user): string {
+function getUserFavoritesFile($user) {
     return get_fav_ini_name($user);
 }
 

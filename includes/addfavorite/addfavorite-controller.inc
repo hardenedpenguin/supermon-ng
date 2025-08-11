@@ -42,7 +42,7 @@ function runAddFavorite(): void {
     }
 
     // Check if node already exists in favorites
-    $user = $_SESSION['user'] ?? 'admin';
+    $user = isset($_SESSION['user']) ? $_SESSION['user'] : 'admin';
     $alreadyExists = nodeExistsInFavorites($user, $node);
 
     // Process form submission
@@ -144,16 +144,18 @@ function processAddFavoriteForm($user, $node, $nodeInfo) {
     $result = writeIniFile($favoritesFile, $config);
     
     if ($result) {
+        $fileName = basename($favoritesFile);
         return array(
             'success' => true,
-            'message' => "Node $node has been successfully added to your favorites as \"$customLabel\".",
+            'message' => "Node $node has been successfully added to your favorites as \"$customLabel\" in $fileName.",
             'node' => $node,
-            'label' => $customLabel
+            'label' => $customLabel,
+            'file' => $fileName
         );
     } else {
         return array(
             'success' => false,
-            'message' => "Error: Could not write to favorites file. Please check file permissions.",
+            'message' => "Error: Could not write to favorites file ($favoritesFile). Please check file permissions.",
             'node' => $node
         );
     }

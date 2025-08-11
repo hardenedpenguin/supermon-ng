@@ -34,7 +34,7 @@ function runDeleteFavorite(): void {
     }
 
     $title = "Delete Favorite - Node $node";
-    $user = $_SESSION['user'] ?? 'admin';
+    $user = isset($_SESSION['user']) ? $_SESSION['user'] : 'admin';
 
     // Load user's favorites
     $favorites = getAllUserFavorites($user);
