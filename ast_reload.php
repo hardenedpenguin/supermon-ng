@@ -1,4 +1,60 @@
 <?php
+/**
+ * Supermon-ng Asterisk Configuration Reload
+ * 
+ * Provides functionality to reload Asterisk configuration files remotely
+ * through AMI (Asterisk Manager Interface). Allows authenticated users to
+ * reload rpt.conf, iax.conf, and extensions.conf without direct server access.
+ * 
+ * Features:
+ * - Remote Asterisk configuration reload
+ * - User authentication and authorization (ASTRELUSER permission required)
+ * - AMI connection management and authentication
+ * - Multiple configuration file reload support
+ * - Real-time status reporting
+ * - Secure command execution
+ * - Comprehensive error handling
+ * 
+ * Configuration Files Reloaded:
+ * - rpt.conf: AllStar repeater configuration
+ * - iax.conf: IAX2 protocol configuration
+ * - extensions.conf: Dialplan configuration
+ * 
+ * Security:
+ * - Session validation and authentication required
+ * - ASTRELUSER permission validation
+ * - Input sanitization and validation
+ * - Secure AMI connections
+ * - Command execution validation
+ * - Comprehensive error reporting
+ * 
+ * AMI Commands:
+ * - "rpt reload": Reloads rpt.conf configuration
+ * - "iax2 reload": Reloads iax.conf configuration
+ * - "extensions reload": Reloads extensions.conf configuration
+ * 
+ * Process Flow:
+ * 1. User authentication and permission validation
+ * 2. Input parameter validation (localnode, button action)
+ * 3. Configuration file loading and validation
+ * 4. AMI connection establishment
+ * 5. Configuration reload execution
+ * 6. Status reporting and cleanup
+ * 
+ * Dependencies:
+ * - session.inc: Session management
+ * - amifunctions.inc: AMI connection functions
+ * - authusers.php: User authentication
+ * - authini.php: Authentication configuration
+ * 
+ * Warning: This function can cause temporary service interruption
+ * during configuration reload. Use with caution.
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
+ */
+
 if (session_status() == PHP_SESSION_NONE) {
     session_start();
 }

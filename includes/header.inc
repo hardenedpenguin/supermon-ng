@@ -1,4 +1,71 @@
 <?php
+/**
+ * Supermon-ng Header Template System
+ * 
+ * Provides the main HTML header template for Supermon-ng web interface.
+ * Handles page title generation, security headers, CSS/JS includes,
+ * session management, and display preferences for the entire application.
+ * 
+ * Features:
+ * - Dynamic page title generation based on current page
+ * - Comprehensive security headers and CSP implementation
+ * - Session management and user authentication
+ * - Display preferences management via cookies
+ * - Modular CSS and JavaScript includes
+ * - Responsive meta tags and viewport configuration
+ * - CSRF protection integration
+ * - SEO and accessibility meta tags
+ * 
+ * Security Headers:
+ * - X-Content-Type-Options: nosniff
+ * - X-Frame-Options: DENY
+ * - X-XSS-Protection: 1; mode=block
+ * - Referrer-Policy: strict-origin-when-cross-origin
+ * - Permissions-Policy: geolocation=(), microphone=(), camera=()
+ * - Content Security Policy (CSP) with comprehensive rules
+ * 
+ * Page Title Logic:
+ * - Voter pages: "RTCM [node]"
+ * - Index pages: Node list from URL
+ * - Link pages: Node list from URL
+ * - About pages: "About"
+ * - Default: Server name + "Supermon"
+ * 
+ * Display Preferences:
+ * - number-displayed: Number of nodes to display
+ * - show-number: Show node count
+ * - show-all: Show all nodes
+ * - show-detailed: Detailed view mode
+ * 
+ * CSS Structure:
+ * - base.css: Basic styling
+ * - layout.css: Layout and positioning
+ * - menu.css: Navigation menu styling
+ * - tables.css: Table styling
+ * - forms.css: Form styling
+ * - widgets.css: Widget components
+ * - responsive.css: Mobile responsiveness
+ * - custom.css: User customizations (optional)
+ * 
+ * JavaScript Includes:
+ * - jquery.min.js: jQuery library
+ * - jquery-ui.min.js: jQuery UI components
+ * - app.js: Main application logic
+ * - auth.js: Authentication functions
+ * - utils.js: Utility functions
+ * - modern-header.js: Modern header functionality
+ * 
+ * Dependencies:
+ * - global.inc: Global configuration
+ * - common.inc: Common functions and constants
+ * - csrf.inc: CSRF protection
+ * - Session management: User session handling
+ * 
+ * @author Supermon-ng Team
+ * @version 3.0.0
+ * @since 1.0.0
+ */
+
 include("user_files/global.inc");
 include("includes/common.inc");
 include("includes/csrf.inc");

@@ -1,4 +1,50 @@
 <?php
+/**
+ * Supermon-ng Authentication Configuration System
+ * 
+ * Provides dynamic authentication configuration management for Supermon-ng.
+ * Handles user-specific INI file mapping, configuration validation, and
+ * fallback mechanisms for authentication settings.
+ * 
+ * Features:
+ * - User-specific INI file mapping
+ * - Dynamic configuration file resolution
+ * - Fallback to default configurations
+ * - Configuration file existence validation
+ * - Support for multiple authentication schemes
+ * - Centralized authentication configuration management
+ * 
+ * Configuration Files:
+ * - authini.inc: User-to-INI file mapping configuration
+ * - allmon.ini: Default authentication configuration
+ * - nolog.ini: No-login configuration fallback
+ * - User-specific INI files: Custom per-user configurations
+ * 
+ * Functions:
+ * - get_ini_name(): Resolves user-specific INI file paths
+ * - checkini(): Validates INI file existence with fallback
+ * - iniValid(): Checks if INI mapping configuration is valid
+ * 
+ * Security:
+ * - File path validation and sanitization
+ * - Fallback mechanisms for missing configurations
+ * - User-specific configuration isolation
+ * - Configuration file existence checks
+ * 
+ * File Structure:
+ * - $USERFILES/authini.inc: Contains $ININAME array mapping
+ * - $USERFILES/allmon.ini: Default configuration file
+ * - $USERFILES/nolog.ini: No-access configuration
+ * - $USERFILES/[username].ini: User-specific configurations
+ * 
+ * Dependencies:
+ * - common.inc: Common configuration and constants
+ * - $USERFILES: User files directory constant
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
+ */
 
 /**
  * Gets the INI file path based on the username.

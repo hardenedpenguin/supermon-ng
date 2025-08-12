@@ -1,4 +1,63 @@
 <?php
+/**
+ * Supermon-ng User Authentication and Authorization System
+ * 
+ * Provides comprehensive user authentication and permission-based access control
+ * for Supermon-ng. Handles user authorization for specific actions, buttons,
+ * and features based on user roles and permissions defined in configuration files.
+ * 
+ * Features:
+ * - Session-based user authentication
+ * - Permission-based access control
+ * - Dynamic authorization checking
+ * - User role management
+ * - Configuration-driven permissions
+ * - Fallback authorization mechanisms
+ * - Secure permission validation
+ * 
+ * Authorization System:
+ * - Button/action-based permissions
+ * - User role arrays in authusers.inc
+ * - Session user validation
+ * - Dynamic permission checking
+ * - Default authorization fallback
+ * 
+ * Configuration Files:
+ * - authusers.inc: User permission arrays
+ * - common.inc: Common configuration and constants
+ * - Session management: User session validation
+ * 
+ * Permission Structure:
+ * - Each permission is an array of authorized users
+ * - Permission names match button/action identifiers
+ * - Users are matched against session user
+ * - Strict comparison for security
+ * 
+ * Security Features:
+ * - Session validation and authentication
+ * - File existence validation
+ * - Array type checking
+ * - Strict user comparison
+ * - Fallback authorization handling
+ * - Secure permission validation
+ * 
+ * Functions:
+ * - get_user_auth(): Checks user authorization for specific actions
+ * 
+ * Usage Example:
+ * - get_user_auth("CONNECTUSER") - Checks connect permission
+ * - get_user_auth("DTMFUSER") - Checks DTMF permission
+ * - get_user_auth("ADMIN") - Checks admin permission
+ * 
+ * Dependencies:
+ * - common.inc: Common configuration and constants
+ * - Session management: User session validation
+ * - authusers.inc: User permission configuration
+ * 
+ * @author Supermon-ng Team
+ * @version 2.0.3
+ * @since 1.0.0
+ */
 
 /**
  * Checks if the current session user is authorized for a specific action or "button".
