@@ -1,22 +1,51 @@
 <?php
+/**
+ * Supermon-ng Authentication INI File Mapping
+ * 
+ * This file maps usernames to specific allmon.ini configuration files.
+ * Each user can have their own customized configuration file.
+ * 
+ * HOW TO USE:
+ * 1. Uncomment the lines you want to use
+ * 2. Replace 'username' with actual login usernames
+ * 3. Replace 'filename.ini' with your custom INI file names
+ * 4. Create the corresponding INI files in the user_files directory
+ * 
+ * EXAMPLES:
+ * - $ININAME['john'] = "john-allmon.ini";     // John uses john-allmon.ini
+ * - $ININAME['admin'] = "admin-config.ini";   // Admin uses admin-config.ini
+ * - $ININAME['operator'] = "allmon.ini";      // Operator uses default allmon.ini
+ * 
+ * NOTES:
+ * - If no mapping exists for a user, they will use the default allmon.ini
+ * - File names are case-sensitive
+ * - All INI files must be in the user_files directory
+ * - Users without mappings fall back to allmon.ini
+ */
 
-// Mapping ini files to specific username defined ini files.
+// ========================================
+// USER CONFIGURATION MAPPINGS
+// ========================================
+// Uncomment and modify the lines below to map users to specific INI files
 
-// EXAMPLES -
-//$ININAME['admin'] = "admin-allmon.ini";
-//$ININAME['doug'] = "doug-allmon.ini";
-//$ININAME['wa3dsp'] =  "wa3dsp-allmon.ini";
+// Example: Map 'admin' user to admin-specific configuration
+// $ININAME['admin'] = "admin-allmon.ini";
 
-// You should have at least one entry to facilitate changing your
-// admin login ini file name. Here it is shown as just mapping to
-// the allmon.ini file but you can customize that. It is suggested 
-// that you name the files username-allmon.ini and they would always
-// go in the supermon2/user_files directory. 
+// Example: Map 'operator' user to operator-specific configuration  
+// $ININAME['operator'] = "operator-allmon.ini";
 
-// NOTE if the file user_files/nolog.ini exists it will be used when
-// there is no login to supermon2. If you want the nolog users to have
-// the allmon.ini or some other ini simply copy it to user_files/nolog.ini
+// Example: Map 'john' user to john-specific configuration
+// $ININAME['john'] = "john-allmon.ini";
 
-$ININAME['admin'] = "allmon.ini";
+// Example: Map 'jane' user to jane-specific configuration
+// $ININAME['jane'] = "jane-allmon.ini";
+
+// ========================================
+// ADD YOUR USER MAPPINGS BELOW
+// ========================================
+// Replace 'your_username' with actual usernames
+// Replace 'your_filename.ini' with your INI file names
+
+// $ININAME['your_username'] = "your_filename.ini";
 
 ?>
