@@ -215,8 +215,6 @@ CSS_ISSUES=0
 if [ -n "$CSS_FILES" ]; then
     while IFS= read -r css_file; do
         # Basic CSS syntax check (count braces)
-        local open_braces
-        local close_braces
         open_braces=$(grep -o "{" "$css_file" | wc -l)
         close_braces=$(grep -o "}" "$css_file" | wc -l)
         
