@@ -1,45 +1,66 @@
+SUPERMON-NG USER CONFIGURATION DIRECTORY
+========================================
 
 This directory - user_files - houses ALL of the files that the Supermon-ng
 user can configure. There are NO configurable files in the supermon-ng
-directory. Do NOT change permissions of files. See the various example
-files for configuration ideas. 
+directory. Do NOT change permissions of files.
 
-     CONFIGURABLE FILES IN THIS DIRECTORY
-     ------------------------------------
+ACTIVE CONFIGURATION FILES
+--------------------------
 
-authini.inc      - ini to user mapping. Named Xauthini.inc to deactivate
-authusers.inc    - button to user maaping. Named Xauthusers.inc to deactivate
-allmon.ini       - The default Sueprmon-ng initialization file
-nolog.ini        - The NOT logged ini file if ini to user mapping is activated
-global.inc	     - User configuration settings
+authini.inc      - INI to user mapping configuration
+authusers.inc    - Button to user permission mapping
+allmon.ini       - The default Supermon-ng initialization file
+global.inc       - User configuration settings
+favini.inc       - Favorites INI file mapping configuration
 favorites.ini    - Favorites button configuration
 controlpanel.ini - Control Panel button configuration
-background.jpg	 - This is a symbolic link to a header background image of your choice.
+privatenodes.txt - Private AllStar nodes list
+background.jpg   - Header background image (symbolic link)
 
-      FILES A USER MAY ADD -  Replace <username> with real login username.
-      --------------------------------------------------------------------
+USER-SPECIFIC FILES (OPTIONAL)
+------------------------------
 
-<username>-allmon.ini 		- Additional ini files for other users. Replace <username>
-                        	  with real login username.
-<username>-favorites.ini	- Favorites ini files mapped to users 
-<username>-controlpanel.ini	- Control Panel ini files mapped to users
+You may create user-specific configuration files by replacing <username> 
+with the actual login username:
 
-An_image_file.jpg     - Replacement for header background symbolicly linked to background.jpg
+<username>-allmon.ini        - User-specific allmon configuration
+<username>-favorites.ini     - User-specific favorites configuration  
+<username>-controlpanel.ini  - User-specific control panel configuration
 
- EXAMPLE AND BACKUP FILES
- -------------------------
+EXAMPLE: For user "john", create:
+- john-allmon.ini
+- john-favorites.ini
+- john-controlpanel.ini
 
-global.inc.example
-allmon.ini.example
-admin-allmon.ini.example
-user1-allmon.ini.example
-nolog.ini.example
-authini.inc.example
-authusers.inc.example
-authusers.ini.backup
-favini.inc.example
-cntrlini.inc.example
-favnolog.ini
-cntrlnolog.ini
+CONFIGURATION MAPPING
+---------------------
 
-NOTE - files renamed with preceeding 'X' to deavtivate.
+The following files control which configuration files are used for each user:
+
+authini.inc      - Maps usernames to specific allmon.ini files
+favini.inc       - Maps usernames to specific favorites.ini files
+cntrlini.inc     - Maps usernames to specific controlpanel.ini files
+
+If these mapping files don't exist, the default files are used for all users.
+
+SECURITY NOTES
+--------------
+
+- Keep authusers.inc secure - it contains user permissions
+- Regularly backup your configuration files
+- Test configuration changes in a safe environment
+- Use strong passwords for AMI connections
+
+BACKGROUND IMAGE
+---------------
+
+Replace background.jpg with your own image by:
+1. Place your image in this directory
+2. Update the symbolic link: ln -sf your_image.jpg background.jpg
+
+SUPPORT
+-------
+
+For configuration help, see the Supermon-ng documentation
+or visit the AllStar Link community forums.
