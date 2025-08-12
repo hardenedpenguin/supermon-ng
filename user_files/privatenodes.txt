@@ -1,3 +1,2 @@
-0|Admin IaxRpt client
 80016|NEWSLINE|[IRLP EXP0016]|Amateur Radio Newsline
 89990|REF9990|[IRLP 9990]|ECHO Reflector
