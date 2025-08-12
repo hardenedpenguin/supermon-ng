@@ -28,7 +28,7 @@ include("user_files/global.inc");
 include("includes/common.inc");
 include("includes/configeditor/configeditor-controller.inc");
 
-$SUPERMON_DIR = "/var/www/html/supermon-ng";
+$SUPERMON_DIR = dirname(__FILE__);
 
 // Run the configuration editor system
 runConfigeditor();

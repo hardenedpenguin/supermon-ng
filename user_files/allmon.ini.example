@@ -1,0 +1,97 @@
+; Supermon-ng AllStar Configuration Example
+; 
+; This is an example configuration file for AllStar nodes.
+; Copy this file to allmon.ini and customize it for your setup.
+; 
+; HOW TO USE:
+; 1. Copy this file to user_files/allmon.ini
+; 2. Replace the example values with your actual node information
+; 3. Add or remove nodes as needed
+; 4. Test your configuration by accessing the web interface
+; 
+; FORMAT:
+; [NODE_NUMBER]
+; name = "Node Name"
+; host = "hostname_or_ip"
+; port = port_number
+; password = "password"
+; 
+; EXAMPLES:
+; [546051]
+; name = "W5GLE Main"
+; host = "192.168.1.100"
+; port = 5038
+; password = "your_password"
+; 
+; [546052]
+; name = "W5GLE Hub"
+; host = "192.168.1.101"
+; port = 5038
+; password = "your_password"
+
+; ========================================
+; EXAMPLE NODE CONFIGURATIONS
+; ========================================
+
+; Example: Main AllStar node
+[546051]
+name = "Main AllStar Node"
+host = "192.168.1.100"
+port = 5038
+password = "your_password_here"
+
+; Example: Hub node
+[546052]
+name = "AllStar Hub"
+host = "192.168.1.101"
+port = 5038
+password = "your_password_here"
+
+; Example: Repeater node
+[546053]
+name = "Repeater Node"
+host = "192.168.1.102"
+port = 5038
+password = "your_password_here"
+
+; Example: IRLP node
+[546054]
+name = "IRLP Node"
+host = "192.168.1.103"
+port = 5038
+password = "your_password_here"
+
+; Example: EchoLink node
+[546055]
+name = "EchoLink Node"
+host = "192.168.1.104"
+port = 5038
+password = "your_password_here"
+
+; ========================================
+; CONFIGURATION NOTES
+; ========================================
+; 
+; SECURITY:
+; - Use strong, unique passwords for each node
+; - Consider using SSH keys for additional security
+; - Restrict access to the AMI port (5038) with firewall rules
+; - Regularly update passwords and review access logs
+; 
+; NETWORKING:
+; - Use static IP addresses for reliable connections
+; - Ensure proper firewall configuration
+; - Consider using VPN for remote access
+; - Test connectivity before deploying
+; 
+; MONITORING:
+; - Enable logging for troubleshooting
+; - Monitor node status regularly
+; - Set up alerts for node failures
+; - Keep backup configurations
+; 
+; TROUBLESHOOTING:
+; - Check network connectivity first
+; - Verify AMI credentials
+; - Review Asterisk logs for errors
+; - Test with simple AMI commands

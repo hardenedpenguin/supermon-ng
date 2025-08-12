@@ -1,7 +1,7 @@
 #! /usr/bin/php -q
 <?php
 
-define('APP_DIR', "/var/www/html/supermon-ng/");
+define('APP_DIR', dirname(__FILE__) . "/");
 define('ASTDB_FILE', APP_DIR . "astdb.txt");
 define('PRIVATE_NODES_FILE', APP_DIR . "user_files/privatenodes.txt");
 define('ALLSTAR_DB_URL', "http://allmondb.allstarlink.org/");
@@ -106,9 +106,11 @@ $finalContent = $privateNodesContent . $allstarNodesContent;
 $finalContent = preg_replace('/[\x00-\x09\x0B-\x0C\x0E-\x1F\x7F-\xFF]/', '', $finalContent);
 
 if (empty($finalContent) && $isStrictlyPrivate && empty($privateNodesContent)) {
-    script_log("No data to write (strictly private mode and no private nodes found/loaded). " . ASTDB_FILE . " will not be updated.");
+                    script_log("No data to write (strictly private mode and no private nodes found/loaded). " . 
+                          ASTDB_FILE . " will not be updated.");
 } elseif (empty($finalContent) && !$isStrictlyPrivate) {
-    script_log("No data to write (public fetch failed and no private nodes). " . ASTDB_FILE . " will not be updated to prevent data loss.");
+    script_log("No data to write (public fetch failed and no private nodes). " . 
+              ASTDB_FILE . " will not be updated to prevent data loss.");
 } else {
     $fh = fopen(ASTDB_FILE, 'w');
     if ($fh === false) {

@@ -63,7 +63,8 @@ class ExampleComponent
             return $this->renderError('Invalid component data');
         }
         
-        $html = '<div id="' . htmlspecialchars($this->id) . '" class="' . htmlspecialchars($this->options['css_class']) . '">';
+        $html = '<div id="' . htmlspecialchars($this->id) . '" class="' . 
+                htmlspecialchars($this->options['css_class']) . '">';
         
         if ($this->options['show_header']) {
             $html .= $this->renderHeader();

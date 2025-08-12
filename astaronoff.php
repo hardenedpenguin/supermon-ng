@@ -60,11 +60,11 @@ if (isset($_SESSION['sm61loggedin']) && $_SESSION['sm61loggedin'] === true) {
 
     if ($button === 'astaron' && get_user_auth("ASTSTRUSER")) {
         print "<b>Starting up AllStar... </b> ";
-        exec('sudo /usr/bin/astup.sh', $out);
+        exec(escapeshellcmd('sudo /usr/bin/astup.sh'), $out);
         print_r($out);
     } elseif ($button === 'astaroff' && get_user_auth("ASTSTPUSER")) {
         print "<b>Shutting down AllStar... </b> ";
-        exec('sudo /usr/bin/astdn.sh', $out);
+        exec(escapeshellcmd('sudo /usr/bin/astdn.sh'), $out);
         print_r($out);
     }
 
