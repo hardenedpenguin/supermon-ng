@@ -1,99 +1,176 @@
 <?php
+/**
+ * Supermon-ng Global Configuration
+ * 
+ * This file contains global settings and configuration options for Supermon-ng.
+ * All settings here apply to the entire system and affect the user interface,
+ * appearance, and functionality of the Supermon-ng web interface.
+ * 
+ * HOW TO USE:
+ * 1. Uncomment the settings you want to configure
+ * 2. Replace placeholder values with your actual settings
+ * 3. Test your changes by refreshing the web interface
+ * 4. Refer to the documentation for detailed explanations
+ * 
+ * IMPORTANT NOTES:
+ * - All paths should be absolute or relative to the Supermon-ng root
+ * - HTML is supported in text fields for formatting
+ * - Colors can be specified as names, hex codes, or RGB values
+ * - File paths must be accessible by the web server
+ */
 
-// Welcome Message when not logged in
-//$WELCOME_MSG="<p style='margin-top:1em;'><center><b>Welcome to my Supermon2 page</b><br><br>You can use any valid html code here<br>
-//including color changes, links, email contacts<br>or anything else you want to advertise</center></p>";
-//
-// Welcome message when logged in
-//$WELCOME_MSG_LOGGED="<p style='margin-top:1em;'><center><b>and likewise you can put info here for login guests</b></p>";
-//
-// Your callsign
+// ========================================
+// BASIC IDENTITY & INFORMATION
+// ========================================
+
+// Your callsign (displayed in header and titles)
 $CALL = "CALL";
-//
-// Your name
+
+// Your name (displayed in various locations)
 $NAME = "NAME";
-//
-// Your location, example Houston, Texas
+
+// Your location (supports HTML formatting)
 $LOCATION = "<span style=\"color: #ff0000\">LOCATION</span>";
-//
-// Second line header title
+
+// ========================================
+// PAGE TITLES & HEADERS
+// ========================================
+
+// Second line header title (main title)
 $TITLE2 = "ASL3+ Management Dashboard";
-//
-// Third line header title
+
+// Third line header title (subtitle)
 $TITLE3 = "AllStarLink/IRLP/EchoLink/Digital - Bridging Control Center";
-//
-// Leaving $BACKGROUND null "" results in BACKGROUND_COLOR (below)
-$BACKGROUND = "user_files/background.jpg";
-//
-// Background color if no image
-$BACKGROUND_COLOR = "black";
-//
-// Height of background - matches image height
-$BACKGROUND_HEIGHT = "164px";
-//
-// Prefix to Name in Page title. Often Supermon
-// "Node# -"
+
+// Prefix for page titles (appears before node numbers)
+// Example: "Supermon - " would show "Supermon - 546051"
 $SMSERVERNAME = "";
-//
-// Enable [Database] button For quick review of entire AllStar
-// internal database.
-//
-$DATABASE_TXT = "/tmp/database.txt";
-//
-// When your RPi2-3 system is running on a LAN network with a router/firewall,
-// you do NOT need this variable set!
-// If your RPi2-3 system is directly connected to the Internet without a firewall/router,
-// Supermon can hang trying to get both the WAN and LAN addresses.
-// Set this variable to “yes” to disable checking for a LAN address and report only the
-// WAN address. This will eliminate the hanging of Supermon in this case.
-//
-$WANONLY = "";
-//
-// Display Background Color, If not defined it is white
-// Use name or code, Google html color shades of gray look best
-//
+
+// ========================================
+// WELCOME MESSAGES
+// ========================================
+
+// Welcome message for non-logged-in users
+// Supports full HTML formatting
+// $WELCOME_MSG = "<p style='margin-top:1em;'><center><b>Welcome to my Supermon-ng page</b><br><br>You can use any valid HTML code here<br>including color changes, links, email contacts<br>or anything else you want to advertise</center></p>";
+
+// Welcome message for logged-in users
+// Supports full HTML formatting
+// $WELCOME_MSG_LOGGED = "<p style='margin-top:1em;'><center><b>Welcome back! Here's your personalized dashboard</b><br><br>Customize this message for your logged-in users</center></p>";
+
+// ========================================
+// BACKGROUND & APPEARANCE
+// ========================================
+
+// Background image file (relative to user_files directory)
+// Leave empty ("") to use background color instead
+$BACKGROUND = "user_files/background.jpg";
+
+// Background color (used when no image is specified)
+// Can be color name, hex code, or RGB value
+$BACKGROUND_COLOR = "black";
+
+// Background image height (should match your image)
+$BACKGROUND_HEIGHT = "164px";
+
+// Display background color for content areas
+// Use color names or hex codes (gray shades work well)
 $DISPLAY_BACKGROUND = "black";
-//
-// Add logos to header - See manual
-// for more info
-//
-// Image file name
-//$LOGO_NAME="";
-//
-// Size adjustment
-//$LOGO_SIZE="15%";
-//
-// Logo Positioning
-//$LOGO_POSITION_RIGHT="12%";
-//$LOGO_POSITION_TOP="20%";
-//
-// Logo URL
-//$LOGO_URL="http://www.someplace.org/>";
-//
-// Add URL's for node info.
-//
-// Add header CALL URL
-//$MY_URL = "http://someplace.org>";
-//
-// Each displayed node can have a url
-// Node URL replace with $URL_node
-// where node is a valid node.
-//$URL_1998 = "https://someplace.org";
-//$URL_1999 = "http://someplace.org>";
-//
-// Log Supermon2 login/out sessions
-// Set to yes or no or make line a comment for no.
+
+// ========================================
+// LOGO CONFIGURATION
+// ========================================
+
+// Logo image file name (relative to user_files directory)
+// $LOGO_NAME = "your_logo.png";
+
+// Logo size adjustment (percentage of original size)
+// $LOGO_SIZE = "15%";
+
+// Logo positioning (percentage from right edge)
+// $LOGO_POSITION_RIGHT = "12%";
+
+// Logo positioning (percentage from top edge)
+// $LOGO_POSITION_TOP = "20%";
+
+// Logo clickable URL (where logo links to)
+// $LOGO_URL = "http://www.yourwebsite.org/";
+
+// ========================================
+// URL CONFIGURATION
+// ========================================
+
+// Your main website URL (displayed in header)
+// $MY_URL = "http://yourwebsite.org/";
+
+// Node-specific URLs (replace NODE with actual node number)
+// These URLs appear as clickable links for each node
+// $URL_1998 = "https://yournode1998.org";
+// $URL_1999 = "http://yournode1999.org/";
+// $URL_546051 = "https://w5gle.org";
+
+// ========================================
+// DATABASE & SYSTEM FEATURES
+// ========================================
+
+// Database file path for [Database] button
+// Enables quick review of entire AllStar internal database
+// Set to empty ("") to disable the Database button
+$DATABASE_TXT = "/tmp/database.txt";
+
+// Network configuration for direct internet connections
+// Set to "yes" if your system is directly connected to internet without firewall
+// This prevents Supermon from hanging when checking LAN/WAN addresses
+// Leave empty ("") for normal LAN/firewall setups
+$WANONLY = "";
+
+// ========================================
+// LOGGING CONFIGURATION
+// ========================================
+
+// Enable/disable Supermon-ng login/out session logging
+// Options: "yes", "no", or comment out for no logging
 $SMLOG = "yes";
-// Enable or Disable hamclock, set url to use to embed
-// NOTE: Hamclock MUST be configured with a reverse proxy to be displayed properly
-// in Supermon-ng. Direct access to hamclock without a reverse proxy will not work.
+
+// ========================================
+// HAMCLOCK INTEGRATION
+// ========================================
+
+// Enable or disable HamClock integration
+// NOTE: HamClock MUST be configured with a reverse proxy to work properly
+// Direct access to HamClock without reverse proxy will not work
 $HAMCLOCK_ENABLED = "False";
-// URL for users accessing from your local network (e.g., 192.168.x.x)
+
+// HamClock URL for local network access (e.g., 192.168.x.x)
 $HAMCLOCK_URL_INTERNAL = "http://YOUR_INTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
-// URL for users accessing from the internet
+
+// HamClock URL for external internet access
 $HAMCLOCK_URL_EXTERNAL = "http://YOUR_EXTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
-// Provide a url for the Digital Dashboard
-// Dashboard button will not displayed if not configured!!
+
+// ========================================
+// DIGITAL VOICE INTEGRATION
+// ========================================
+
+// Digital Voice Dashboard URL
+// Dashboard button will not be displayed if not configured
 // $DVM_URL = "../dvswitch";
+
+// ========================================
+// CUSTOMIZATION EXAMPLES
+// ========================================
+
+// Example: Custom welcome message with styling
+// $WELCOME_MSG = "<div style='background: #1a1a1a; padding: 20px; border-radius: 10px; margin: 20px;'><h2 style='color: #00ff00;'>Welcome to W5GLE AllStar Network</h2><p style='color: #ffffff;'>Monitor and control our AllStar nodes from anywhere in the world.</p></div>";
+
+// Example: Node-specific URLs
+// $URL_546051 = "https://w5gle.org";
+// $URL_546052 = "https://w5gle.org/hub";
+
+// Example: Custom logo configuration
+// $LOGO_NAME = "w5gle_logo.png";
+// $LOGO_SIZE = "20%";
+// $LOGO_POSITION_RIGHT = "10%";
+// $LOGO_POSITION_TOP = "15%";
+// $LOGO_URL = "https://w5gle.org";
 
 ?>
