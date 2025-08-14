@@ -419,6 +419,72 @@ EOF
     log_success "Initial configuration completed"
 }
 
+# Function to set executable permissions
+set_executable_permissions() {
+    log_header "Setting Executable Permissions"
+    
+    local app_path="${DEST_DIR}/${EXTRACTED_DIR}"
+    
+    # Make sbin files executable (except node_info.ini)
+    if [ -d "${app_path}/user_files/sbin" ]; then
+        log_info "Setting executable permissions for sbin files..."
+        
+        # Find all files in sbin except node_info.ini and make them executable
+        find "${app_path}/user_files/sbin" -type f ! -name "node_info.ini" -exec chmod +x {} \;
+        
+        # Set proper ownership
+        chown -R root:"$WWW_GROUP" "${app_path}/user_files/sbin"
+        
+        log_success "Sbin files made executable"
+    fi
+    
+    # Make set_password.sh executable
+    if [ -f "${app_path}/user_files/set_password.sh" ]; then
+        log_info "Setting executable permission for set_password.sh..."
+        chmod +x "${app_path}/user_files/set_password.sh"
+        chown root:"$WWW_GROUP" "${app_path}/user_files/set_password.sh"
+        log_success "set_password.sh made executable"
+    fi
+    
+    # Make astdb.php executable
+    if [ -f "${app_path}/astdb.php" ]; then
+        log_info "Setting executable permission for astdb.php..."
+        chmod +x "${app_path}/astdb.php"
+        chown root:"$WWW_GROUP" "${app_path}/astdb.php"
+        log_success "astdb.php made executable"
+    fi
+}
+
+# Function to run set_password.sh
+run_set_password() {
+    log_header "Setting Up Password Management"
+    
+    local app_path="${DEST_DIR}/${EXTRACTED_DIR}"
+    local set_password_script="${app_path}/user_files/set_password.sh"
+    
+    if [ -f "$set_password_script" ] && [ -x "$set_password_script" ]; then
+        log_info "set_password.sh script is available for password management"
+        log_info "This script is interactive and requires user input"
+        log_info "You can run it manually after installation:"
+        log_info "  cd $app_path"
+        log_info "  ./user_files/set_password.sh"
+        
+        # Create a basic .htpasswd file if it doesn't exist
+        local htpasswd_file="${app_path}/.htpasswd"
+        if [ ! -f "$htpasswd_file" ]; then
+            log_info "Creating empty .htpasswd file for future use..."
+            touch "$htpasswd_file"
+            chown root:"$WWW_GROUP" "$htpasswd_file"
+            chmod 664 "$htpasswd_file"
+            log_success "Empty .htpasswd file created"
+        fi
+        
+        log_success "Password management setup completed"
+    else
+        log_warning "set_password.sh not found or not executable, skipping"
+    fi
+}
+
 # Function to install sudo configuration
 install_sudo_config() {
     log_header "Installing Sudo Configuration"
@@ -524,7 +590,8 @@ display_post_install_info() {
     echo "1. Configure your web server to point to: $app_path"
     echo "2. Edit configuration file: ${app_path}/user_files/global.inc"
     echo "3. Set up authentication in: ${app_path}/user_files/authusers.inc"
-    echo "4. Access the web interface at: http://your-server/supermon-ng/"
+    echo "4. Set up passwords: cd $app_path && ./user_files/set_password.sh"
+    echo "5. Access the web interface at: http://your-server/supermon-ng/"
     echo
     echo -e "${C_CYAN}Important Files:${C_RESET}"
     echo "- Configuration: ${app_path}/user_files/global.inc"
@@ -535,6 +602,7 @@ display_post_install_info() {
     echo "- Sudo configuration: $SUDO_FILE_PATH"
     echo "- Editor script: $EDITOR_SCRIPT_PATH"
     echo "- Cron jobs: $CRON_FILE_PATH"
+    echo "- Executable files: sbin scripts, set_password.sh, astdb.php"
     echo
     echo -e "${C_CYAN}Documentation:${C_RESET}"
     echo "- README: ${app_path}/README.md"
@@ -585,7 +653,9 @@ main() {
         install_sudo_config
         install_editor_script
         create_initial_config
+        set_executable_permissions
         verify_installation
+        run_set_password
     } || {
         log_error "Installation failed"
         
