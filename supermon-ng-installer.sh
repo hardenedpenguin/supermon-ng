@@ -234,7 +234,7 @@ install_application() {
         log_info "Updating existing installation..."
         
         # Preserve user files
-        local preserve_files="user_files/ .htaccess .htpasswd supermon-ng.css"
+        local preserve_files="user_files/ .htaccess .htpasswd css/custom.css"
         
         for file in $preserve_files; do
             if [ -e "${app_path}/${file}" ]; then
@@ -243,7 +243,7 @@ install_application() {
         done
         
         # Sync files, preserving user data
-        rsync -a --delete --exclude='user_files/' --exclude='.htaccess' --exclude='.htpasswd' --exclude='supermon-ng.css' "${tmp_extract_path}/" "${app_path}/"
+        rsync -a --delete --exclude='user_files/' --exclude='.htaccess' --exclude='.htpasswd' --exclude='css/custom.css' "${tmp_extract_path}/" "${app_path}/"
         
         # Sync user_files but preserve existing
         if [ -d "${tmp_extract_path}/user_files" ]; then
