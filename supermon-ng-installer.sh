@@ -209,10 +209,23 @@ install_application() {
     local archive_path="${TMP_DIR}/supermon-ng-${APP_VERSION}.tar.xz"
     local tmp_extract_path="${TMP_DIR}/${EXTRACTED_DIR}"
     
+    # Check if archive exists
+    if [ ! -f "$archive_path" ]; then
+        log_error "Archive not found: $archive_path"
+        log_error "Download may have failed"
+        return 1
+    fi
+    
     # Extract archive
     log_info "Extracting archive..."
     if ! tar -xJf "$archive_path" -C "$TMP_DIR"; then
         log_error "Failed to extract archive"
+        return 1
+    fi
+    
+    # Check if extraction was successful
+    if [ ! -d "$tmp_extract_path" ]; then
+        log_error "Extraction failed - directory not found: $tmp_extract_path"
         return 1
     fi
     
@@ -351,6 +364,21 @@ create_initial_config() {
     
     local app_path="${DEST_DIR}/${EXTRACTED_DIR}"
     
+    # Check if application directory exists
+    if [ ! -d "$app_path" ]; then
+        log_error "Application directory not found: $app_path"
+        log_error "Application installation may have failed"
+        return 1
+    fi
+    
+    # Ensure user_files directory exists
+    if [ ! -d "${app_path}/user_files" ]; then
+        log_info "Creating user_files directory..."
+        mkdir -p "${app_path}/user_files"
+        chown root:"$WWW_GROUP" "${app_path}/user_files"
+        chmod 755 "${app_path}/user_files"
+    fi
+    
     # Create global.inc if it doesn't exist
     if [ ! -f "${app_path}/user_files/global.inc" ]; then
         log_info "Creating initial global.inc..."
@@ -383,9 +411,12 @@ $SMLOG = "yes";
 EOF
         chown root:"$WWW_GROUP" "${app_path}/user_files/global.inc"
         chmod 664 "${app_path}/user_files/global.inc"
+        log_success "Initial global.inc created"
+    else
+        log_info "global.inc already exists, skipping creation"
     fi
     
-    log_success "Initial configuration created"
+    log_success "Initial configuration completed"
 }
 
 # Function to install sudo configuration
@@ -450,14 +481,27 @@ verify_installation() {
     
     local app_path="${DEST_DIR}/${EXTRACTED_DIR}"
     
+    # Check if application directory exists
+    if [ ! -d "$app_path" ]; then
+        log_error "Application directory not found: $app_path"
+        return 1
+    fi
+    
     # Check if main files exist
     local required_files="index.php includes/common.inc user_files/global.inc"
+    local missing_files=""
+    
     for file in $required_files; do
         if [ ! -f "${app_path}/${file}" ]; then
-            log_error "Required file missing: $file"
-            return 1
+            missing_files="$missing_files $file"
         fi
     done
+    
+    if [ -n "$missing_files" ]; then
+        log_error "Required files missing:$missing_files"
+        log_error "Installation may be incomplete"
+        return 1
+    fi
     
     # Check web server access
     if [ -f "${app_path}/index.php" ]; then
