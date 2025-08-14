@@ -455,33 +455,30 @@ set_executable_permissions() {
     fi
 }
 
-# Function to run set_password.sh
-run_set_password() {
-    log_header "Setting Up Password Management"
+# Function to run astdb.php
+run_astdb() {
+    log_header "Running Astdb Setup"
     
     local app_path="${DEST_DIR}/${EXTRACTED_DIR}"
-    local set_password_script="${app_path}/user_files/set_password.sh"
+    local astdb_script="${app_path}/astdb.php"
     
-    if [ -f "$set_password_script" ] && [ -x "$set_password_script" ]; then
-        log_info "set_password.sh script is available for password management"
-        log_info "This script is interactive and requires user input"
-        log_info "You can run it manually after installation:"
-        log_info "  cd $app_path"
-        log_info "  ./user_files/set_password.sh"
+    if [ -f "$astdb_script" ] && [ -x "$astdb_script" ]; then
+        log_info "Running astdb.php script..."
         
-        # Create a basic .htpasswd file if it doesn't exist
-        local htpasswd_file="${app_path}/.htpasswd"
-        if [ ! -f "$htpasswd_file" ]; then
-            log_info "Creating empty .htpasswd file for future use..."
-            touch "$htpasswd_file"
-            chown root:"$WWW_GROUP" "$htpasswd_file"
-            chmod 664 "$htpasswd_file"
-            log_success "Empty .htpasswd file created"
+        # Change to the application directory
+        cd "$app_path"
+        
+        # Run the script
+        if php astdb.php; then
+            log_success "astdb.php completed successfully"
+        else
+            log_warning "astdb.php completed with warnings or errors"
         fi
         
-        log_success "Password management setup completed"
+        # Return to original directory
+        cd - > /dev/null
     else
-        log_warning "set_password.sh not found or not executable, skipping"
+        log_warning "astdb.php not found or not executable, skipping"
     fi
 }
 
@@ -603,6 +600,7 @@ display_post_install_info() {
     echo "- Editor script: $EDITOR_SCRIPT_PATH"
     echo "- Cron jobs: $CRON_FILE_PATH"
     echo "- Executable files: sbin scripts, set_password.sh, astdb.php"
+    echo "- Database setup: astdb.php executed"
     echo
     echo -e "${C_CYAN}Documentation:${C_RESET}"
     echo "- README: ${app_path}/README.md"
@@ -655,7 +653,7 @@ main() {
         create_initial_config
         set_executable_permissions
         verify_installation
-        run_set_password
+        run_astdb
     } || {
         log_error "Installation failed"
         
