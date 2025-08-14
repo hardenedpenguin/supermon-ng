@@ -79,6 +79,14 @@ sudo sed -i 's/admin/username/g' /var/www/html/supermon-ng/user_files/authusers.
 ```
 If you are using the sed method, please ensure you replace username with the username you have created for your supermon-ng login.
 
+## Documentation
+
+For detailed configuration and deployment guides, see the [docs/](docs/) directory:
+
+- **[DEPLOYMENT_CONFIGURATION.md](docs/DEPLOYMENT_CONFIGURATION.md)** - Reverse proxy setup, HamClock integration, and advanced configuration
+- **[DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)** - Development and architecture information
+- **[CONTRIBUTING.md](docs/CONTRIBUTING.md)** - How to contribute to the project
+
 ## Themes
 
 You can find a few themes I have thrown together to speed up customizing your install

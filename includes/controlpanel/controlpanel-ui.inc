@@ -110,17 +110,28 @@ function outputControlPanelMain(string $node, array $cpCommands): void {
     ?>
 <br>
 <div id="cpMain">
-    <center>Sending Command to node <?php echo $node ?></center>
+    <center>Sending Command to node <?php echo htmlspecialchars($node) ?></center>
     <br>
-    Control command (select one): <select name="cpSelection" class="submit-large" id="cpSelect">
-        <?php
-        for ($i = 0; $i < count($cpCommands['labels']); $i++) {
-            print "<option value=\"" . $cpCommands['cmds'][$i] . "\">" . $cpCommands['labels'][$i] . "</option>\n";
-        }
-        ?>
-    </select>
-    <input type="hidden" id="localnode" value="<?php echo $node ?>">
-    <input type="button" class="submit-large" value="Execute" id="cpExecute">
+    <?php if (isset($cpCommands['labels']) && is_array($cpCommands['labels']) && count($cpCommands['labels']) > 0): ?>
+        Control command (select one): <select name="cpSelection" class="submit-large" id="cpSelect">
+            <?php
+            for ($i = 0; $i < count($cpCommands['labels']); $i++) {
+                if (isset($cpCommands['cmds'][$i]) && isset($cpCommands['labels'][$i])) {
+                    print "<option value=\"" . htmlspecialchars($cpCommands['cmds'][$i]) . "\">" . htmlspecialchars($cpCommands['labels'][$i]) . "</option>\n";
+                }
+            }
+            ?>
+        </select>
+        <input type="hidden" id="localnode" value="<?php echo htmlspecialchars($node) ?>">
+        <input type="button" class="submit-large" value="Execute" id="cpExecute">
+    <?php else: ?>
+        <div class="info-message">
+            <strong>No Control Panel Commands Configured</strong><br>
+            To use the Control Panel, you need to configure commands in:<br>
+            <code>user_files/controlpanel.ini</code><br><br>
+            Edit the file and uncomment the commands you want to use by removing the semicolon (;) from the beginning of the lines.
+        </div>
+    <?php endif; ?>
     <br/><br>
     <div id="cpResult">
         </div>

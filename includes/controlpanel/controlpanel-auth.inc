@@ -78,19 +78,29 @@ function loadUserConfig(string $user): array|false {
  * @return array Processed commands configuration
  */
 function processControlPanelCommands(array $cpConfig, string $node): array {
-    $cpCommands = $cpConfig['general'];
+    // Initialize with default empty arrays
+    $cpCommands = [
+        'labels' => [],
+        'cmds' => []
+    ];
 
+    // Add general commands if they exist
+    if (isset($cpConfig['general'])) {
+        if (isset($cpConfig['general']['labels']) && is_array($cpConfig['general']['labels'])) {
+            $cpCommands['labels'] = array_merge($cpCommands['labels'], $cpConfig['general']['labels']);
+        }
+        if (isset($cpConfig['general']['cmds']) && is_array($cpConfig['general']['cmds'])) {
+            $cpCommands['cmds'] = array_merge($cpCommands['cmds'], $cpConfig['general']['cmds']);
+        }
+    }
+
+    // Add node-specific commands if they exist
     if (isset($cpConfig[$node])) {
-        foreach ($cpConfig[$node] as $type => $arr) {
-            if ($type == 'labels') {
-                foreach ($arr as $label) {
-                    $cpCommands['labels'][] = $label;
-                }
-            } elseif ($type == 'cmds') {
-                foreach ($arr as $cmd) {
-                    $cpCommands['cmds'][] = $cmd;
-                }
-            }
+        if (isset($cpConfig[$node]['labels']) && is_array($cpConfig[$node]['labels'])) {
+            $cpCommands['labels'] = array_merge($cpCommands['labels'], $cpConfig[$node]['labels']);
+        }
+        if (isset($cpConfig[$node]['cmds']) && is_array($cpConfig[$node]['cmds'])) {
+            $cpCommands['cmds'] = array_merge($cpCommands['cmds'], $cpConfig[$node]['cmds']);
         }
     }
 
