@@ -29,6 +29,8 @@ You will want to update TX039 for your county code, this should match the county
 
 ## Quick Install
 
+**System Requirements:** Debian-based system (Debian, Ubuntu, or AllStarLink distribution)
+
 First, ensure `rsync` and other necessary tools are installed:
 
 ```bash
@@ -42,6 +44,23 @@ wget -q -O supermon-ng-installer.sh "https://raw.githubusercontent.com/hardenedp
 chmod +x supermon-ng-installer.sh
 sudo ./supermon-ng-installer.sh
 ```
+
+> ⚠️ **Note:** This installer is designed for Debian-based systems (e.g., Debian, Ubuntu, or AllStarLink distributions). Run as root or with `sudo`.
+
+## Creating Releases
+
+To create a release tarball with proper versioning:
+
+```bash
+./scripts/create-release.sh
+```
+
+This will:
+- Extract version information from `includes/common.inc`
+- Create a compressed `.tar.xz` package
+- Generate comprehensive documentation (INSTALL.md, RELEASE_NOTES.md)
+- Create checksums (SHA256, SHA512, MD5)
+- Validate the release package
 
 > ⚠️ **Note:** This installer is designed for Debian-based systems (e.g., Debian, Ubuntu, or AllStarLink distributions). Run as root or with `sudo`.
 > ⚠️ **Note:** authusers.inc can be enabled/disabled during initial install, you will be prompted for a response.
