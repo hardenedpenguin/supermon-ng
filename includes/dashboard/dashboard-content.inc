@@ -76,7 +76,7 @@ Some changes to note. Please see the manual for complete install and update info
 <ul>
     <li>The primary new feature is the addition of dropdown menus. The menu could get out of control
         due to managing more and more clients. Dropdowns organize your menu items (usually nodes and RTCMs) by system.
-        For example you might have a Los Angles, a Las Vegas, a San Francisco and a New York system.
+        For example you might have a Los Angeles, a Las Vegas, a San Francisco and a New York system.
         Or you could put your nodes in one system, your RTCMs in another system and your hubs in yet another.</li>
     <li>Dropdowns are organized by the system= directive within allmon.ini. Any items with no system= directive
         will be shown on the navbar, as in v2. </li>
