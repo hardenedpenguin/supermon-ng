@@ -383,9 +383,9 @@ main() {
     log "Version: $version"
     log "Release Date: $version_date"
     
-    # Create release directory
-    local release_name="supermon-ng-${version#V}"
-    local release_dir="/tmp/$release_name"
+    # Create release directory (installer expects 'supermon-ng' directory)
+    local release_name="supermon-ng-${version}"
+    local release_dir="/tmp/supermon-ng"
     local release_file="/tmp/$release_name.tar.xz"
     
     log "Creating release directory: $release_dir"
@@ -436,7 +436,7 @@ main() {
     # Create tarball
     log "Creating tarball: $release_file"
     cd /tmp
-    tar -cJf "$release_file" "$release_name"
+    tar -cJf "$release_file" "supermon-ng"
     
     # Create checksums
     create_checksums "$release_file" "/tmp"
