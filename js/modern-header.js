@@ -13,24 +13,23 @@ class ModernHeader {
     }
 
     async registerServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            try {
-                const registration = await navigator.serviceWorker.register('js/sw.js');
-                
-                // Handle updates
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // New content is available
-                            this.showUpdateNotification();
-                        }
-                    });
-                });
-            } catch (error) {
-                // Service Worker registration failed silently
-            }
-        }
+//         if ('serviceWorker' in navigator) {
+//             try {
+//                 const registration = await navigator.serviceWorker.register('js/sw.js');
+//                 // Handle updates
+//                 registration.addEventListener('updatefound', () => {
+//                     const newWorker = registration.installing;
+//                     newWorker.addEventListener('statechange', () => {
+//                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+//                             // New content is available
+//                             this.showUpdateNotification();
+//                         }
+//                     });
+//                 });
+//             } catch (error) {
+//                 console.error('Service Worker registration failed:', error);
+//             }
+//         }
     }
 
     setupProgressiveWebApp() {

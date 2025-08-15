@@ -217,7 +217,7 @@ $(document).ready(function() {
 <script src="js/modern-header.js"></script>
 
 <!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json">
+<!-- <link rel="manifest" href="manifest.json"> -->
 <meta name="theme-color" content="#007bff">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
