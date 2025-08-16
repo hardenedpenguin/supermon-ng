@@ -41,12 +41,6 @@ COPY css/ ./css/
 COPY js/ ./js/
 COPY templates/ ./templates/
 COPY src/ ./src/
-COPY composer.json ./
-COPY bootstrap.php ./
-
-# Install Composer dependencies
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-RUN composer install --no-dev --optimize-autoloader
 
 # Set permissions (user_files will be mounted as a volume)
 RUN chown -R www-data:www-data /var/www/html \
