@@ -31,7 +31,7 @@
  * Dependencies: None (core configuration)
  * 
  * @author Supermon-ng Team
- * @version 3.0.0
+ * @version 4.0.0
  * @since 1.0.0
  */
 
@@ -48,7 +48,7 @@ $SMLOGNAME = "/tmp/SMLOG.txt";
 /**
  * @var string Title in header when logged in.
  */
-$TITLE_LOGGED = "Supermon-ng V3.0.0 AllStar Manager";
+$TITLE_LOGGED = "Supermon-ng V4.0.0 AllStar Manager";
 
 /**
  * @var string Version date of the Supermon-ng software.
@@ -58,7 +58,7 @@ $VERSION_DATE = "August 10, 2025";
 /**
  * @var string Title in header when not logged in.
  */
-$TITLE_NOT_LOGGED = "Supermon-ng V3.0.0 AllStar Monitor";
+$TITLE_NOT_LOGGED = "Supermon-ng V4.0.0 AllStar Monitor";
 
 /**
  * @var string Path to the webserver access log.
