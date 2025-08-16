@@ -37,8 +37,24 @@ Supermon-ng supports multiple deployment options to suit your needs:
 ```bash
 git clone https://github.com/your-org/supermon-ng.git
 cd supermon-ng
-./scripts/deploy.sh production
+
+# Prepare your user_files directory (see below)
+docker-compose up -d
 ```
+
+**How to use and persist user_files:**
+- All configuration and persistent data (such as `global.inc`, `allmon.ini`, etc.) should be placed in the `user_files` directory in your project root **before** running Docker.
+- The `docker-compose.yml` file mounts this directory into the container, so any changes you make on the host are instantly reflected in the running app.
+- To get started, copy the example files:
+  ```bash
+  cp user_files/global.inc.example user_files/global.inc
+  cp user_files/allmon.ini.example user_files/allmon.ini
+  # ...copy any other needed example files...
+  # Then edit them with your settings
+  nano user_files/global.inc
+  nano user_files/allmon.ini
+  ```
+- You can back up, restore, or edit these files at any time without rebuilding the Docker image.
 
 **Manual Docker Setup:**
 ```bash

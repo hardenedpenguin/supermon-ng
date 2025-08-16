@@ -1,24 +1,4 @@
-# Stage 1: Node.js build
-FROM node:18 AS build
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-# Copy Vite config if it exists
-COPY vite.config.js* ./
-COPY vite.frontend.config.js* ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
-COPY . .
-
-# Build the application (only if build script exists)
-RUN if grep -q '"build"' package.json; then npm run build; else echo "No build script found, skipping build"; fi
-
-# Stage 2: Production stage
+# Supermon-ng Simple Dockerfile
 FROM php:8.2-apache
 
 # Install system dependencies
@@ -49,45 +29,28 @@ COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 # Configure Apache
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
 RUN a2enmod rewrite headers expires
-
-# Enable .htaccess files
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
-# Set working directory
 WORKDIR /var/www/html
 
-# Copy PHP files
-COPY --from=build /app/*.php ./
-COPY --from=build /app/includes/ ./includes/
-COPY --from=build /app/user_files/ ./user_files/
-COPY --from=build /app/api/ ./api/
-COPY --from=build /app/css/ ./css/
-COPY --from=build /app/js/ ./js/
-COPY --from=build /app/templates/ ./templates/
-COPY --from=build /app/src/ ./src/
-
-# Copy configuration files
+# Copy application code (but NOT user_files)
+COPY *.php ./
+COPY includes/ ./includes/
+COPY api/ ./api/
+COPY css/ ./css/
+COPY js/ ./js/
+COPY templates/ ./templates/
+COPY src/ ./src/
 COPY composer.json ./
-COPY composer.lock ./
 COPY bootstrap.php ./
-# Copy environment file (handle missing file gracefully)
-COPY env.example* ./
-RUN if [ -f env.example ]; then cp env.example .env; else echo "env.example not found, creating basic .env"; echo "APP_ENV=production" > .env; fi
 
 # Install Composer dependencies
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer install --no-dev --optimize-autoloader
 
-# Set permissions
+# Set permissions (user_files will be mounted as a volume)
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html \
-    && chmod -R 777 /var/www/html/user_files
+    && chmod -R 755 /var/www/html
 
-# Create health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost/health.php || exit 1
-
-# Expose port
 EXPOSE 80
-
-# Start Apache
 CMD ["apache2-foreground"]
