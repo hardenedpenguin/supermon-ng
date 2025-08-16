@@ -10,7 +10,9 @@
  * @since 1.0.0
  */
 
-define('HTPASSWD_FILE', '.htpasswd');
+// NOTE: user_files/.htpasswd is created by running user_files/set_password.sh
+// It will not exist until the user runs that script.
+define('HTPASSWD_FILE', 'user_files/.htpasswd');
 
 /**
  * Authenticate user against htpasswd file

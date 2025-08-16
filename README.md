@@ -145,6 +145,21 @@ This will:
 > ⚠️ **Note:** This installer is designed for Debian-based systems (e.g., Debian, Ubuntu, or AllStarLink distributions). Run as root or with `sudo`.
 > ⚠️ **Note:** authusers.inc can be enabled/disabled during initial install, you will be prompted for a response.
 
+## ⚠️ Web Login Setup (Required)
+
+Supermon-ng uses a password file at `user_files/.htpasswd` for web login authentication.
+
+- **You must run:**
+  ```bash
+  ./user_files/set_password.sh
+  ```
+  to create or manage your web login credentials.
+- This script will guide you through creating a username and password.
+- The web interface will not allow login until this file exists.
+- You can re-run the script at any time to add, remove, or change users.
+
+> **Note:** The password file is not created automatically. You must run the script after installation or when setting up a new deployment.
+
 ## Post-Installation
 
 After the installer completes and you have configured an initial user, it is recommended to review and customize user permissions.
