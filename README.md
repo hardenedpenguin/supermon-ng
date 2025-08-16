@@ -74,5 +74,15 @@ docker-compose up -d
 ### Documentation
 - See the [docs/](docs/) directory for advanced configuration, monitoring, and deployment guides.
 
+## 🎨 Custom Theming
+
+To override the default theme or add your own styles, place a `custom.css` file in the `user_files/` directory:
+
+```bash
+nano user_files/custom.css
+```
+
+Any CSS you add here will be loaded automatically and will override the default styles. This file is persistent and will not be overwritten by upgrades or Docker rebuilds.
+
 ## License
 [MIT](LICENSE)
