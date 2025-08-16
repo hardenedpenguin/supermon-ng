@@ -78,7 +78,7 @@ $ASTERISK_LOG = "/var/log/asterisk/messages.log";
 /**
  * @var string Path to the AllStar allmon database text file.
  */
-$ASTDB_TXT = "/var/www/html/supermon-ng/astdb.txt";
+$ASTDB_TXT = "user_files/astdb.txt";
 
 /**
  * @var string Path to the AllStar rpt_extnodes file (not present in DNS mode).

@@ -84,5 +84,102 @@ nano user_files/custom.css
 
 Any CSS you add here will be loaded automatically and will override the default styles. This file is persistent and will not be overwritten by upgrades or Docker rebuilds.
 
+## 🧩 API Usage
+
+Supermon-ng provides a RESTful API for integration with external applications.
+
+### Authentication
+- All endpoints (except `/api/health`) require an API key.
+- Pass the API key via the `X-API-KEY` header or `api_key` query parameter.
+- Set your API key in the environment as `API_KEY` (default: `changeme`).
+
+### Endpoints
+
+#### `GET /api/health`
+- Health check endpoint (no authentication required).
+- **Response:**
+  ```json
+  { "status": "ok", "timestamp": 1699999999 }
+  ```
+
+#### `GET /api/nodes`
+- Returns a list of nodes and their status.
+- **Headers:** `X-API-KEY: yourkey`
+- **Response:**
+  ```json
+  {
+    "nodes": [
+      { "id": "2000", "callsign": "WB6NIL", "description": "ASL Public Hub", "location": "Los Angeles, CA" },
+      ...
+    ]
+  }
+  ```
+
+#### `GET /api/metrics`
+- Returns system and node metrics.
+- **Headers:** `X-API-KEY: yourkey`
+- **Response:**
+  ```json
+  {
+    "metrics": {
+      "uptime": "up 1 day, 2 hours",
+      "load_average": "0.01, 0.05, 0.10",
+      "asterisk_version": "Asterisk 18.9.0",
+      "node_count": 40369
+    }
+  }
+  ```
+
+#### `POST /api/control`
+- Sends a control command to a node via AMI.
+- **Headers:** `X-API-KEY: yourkey`
+- **Body (JSON):**
+  ```json
+  { "node": "2000", "command": "core show channels" }
+  ```
+- **Response:**
+  ```json
+  {
+    "result": "Command executed",
+    "node": "2000",
+    "command": "core show channels",
+    "output": "...command output..."
+  }
+  ```
+
+### Example Usage (curl)
+
+```bash
+# Health check
+curl http://localhost:8085/api/health
+
+# List nodes
+curl -H "X-API-KEY: yourkey" http://localhost:8085/api/nodes
+
+# Get metrics
+curl -H "X-API-KEY: yourkey" http://localhost:8085/api/metrics
+
+# Send control command
+curl -X POST -H "X-API-KEY: yourkey" -H "Content-Type: application/json" \
+  -d '{"node":"2000","command":"core show channels"}' \
+  http://localhost:8085/api/control
+```
+
+## 🔄 Regenerating Node Database (astdb.txt)
+
+The node database file (`user_files/astdb.txt`) should be regenerated every 3 hours to keep node information up to date.
+
+### Example Cron Job
+
+Edit your crontab with `crontab -e` and add:
+
+```
+0 */3 * * * /usr/bin/php /var/www/html/supermon-ng/astdb.php > /dev/null 2>&1
+```
+
+- This will regenerate `user_files/astdb.txt` every 3 hours using the existing `astdb.php` script.
+- The file will be available to the web UI and API.
+- The `user_files` directory is persistent and mounted as a Docker volume.
+
 ## License
 [MIT](LICENSE)
