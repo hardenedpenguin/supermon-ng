@@ -101,7 +101,7 @@ composer install
 npm install
 
 # Configure environment
-cp env.example .env
+cp env.production .env
 # Edit .env for development
 
 # Start development server
