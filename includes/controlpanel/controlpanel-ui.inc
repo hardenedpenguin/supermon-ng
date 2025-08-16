@@ -36,8 +36,8 @@ function outputControlPanelHead(string $title): void {
 <link type="text/css" rel="stylesheet" href="css/widgets.css">
 <link type="text/css" rel="stylesheet" href="css/responsive.css">
 <!-- Custom CSS (load last to override defaults) -->
-<?php if (file_exists('css/custom.css')): ?>
-<link type="text/css" rel="stylesheet" href="css/custom.css">
+<?php if (file_exists(__DIR__ . '/../../../user_files/custom.css')): ?>
+<link type="text/css" rel="stylesheet" href="user_files/custom.css">
 <?php endif; ?>
     <link type="text/css" rel="stylesheet" href="js/jquery-ui.css">
     <script src="js/jquery.min.js"></script>

@@ -27,8 +27,8 @@ function outputCpustatsHead(): void {
 <link rel="stylesheet" type="text/css" href="css/widgets.css">
 <link rel="stylesheet" type="text/css" href="css/responsive.css">
 <!-- Custom CSS (load last to override defaults) -->
-<?php if (file_exists('css/custom.css')): ?>
-<link rel="stylesheet" type="text/css" href="css/custom.css">
+<?php if (file_exists(__DIR__ . '/../../../user_files/custom.css')): ?>
+<link rel="stylesheet" type="text/css" href="user_files/custom.css">
 <?php endif; ?>
 </head>
 <body class="cpustats">
