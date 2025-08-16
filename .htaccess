@@ -1,5 +1,50 @@
-<FilesMatch "\.(htaccess|htpasswd|ini|ini.php|log|sh|inc|bak|save)$">
-Order Allow,Deny
-Deny from all
+# Supermon-ng .htaccess Configuration
+# Fixes MIME types and provides additional Apache configuration
+
+# MIME Types
+AddType text/css .css
+AddType application/javascript .js
+AddType text/javascript .js
+AddType image/svg+xml .svg
+AddType application/font-woff .woff
+AddType application/font-woff2 .woff2
+AddType application/x-font-ttf .ttf
+AddType application/x-font-otf .otf
+
+# Security Headers
+Header always set X-Content-Type-Options nosniff
+Header always set X-Frame-Options DENY
+Header always set X-XSS-Protection "1; mode=block"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+# Enable Rewrite Engine
+RewriteEngine On
+
+# Handle frontend routing
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.php [QSA,L]
+
+# Cache static files
+<FilesMatch "\.(css|js|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$">
+    ExpiresActive On
+    ExpiresDefault "access plus 1 year"
+    Header set Cache-Control "public, immutable"
 </FilesMatch>
 
+# Protect sensitive files
+<Files "*.ini">
+    Require all denied
+</Files>
+
+<Files "*.log">
+    Require all denied
+</Files>
+
+<Files "composer.*">
+    Require all denied
+</Files>
+
+<Files "package.json">
+    Require all denied
+</Files>

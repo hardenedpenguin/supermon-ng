@@ -1,0 +1,76 @@
+# Supermon-ng Simple Docker Configuration
+# Single-stage build without Node.js dependencies
+
+FROM php:8.2-apache
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
+    libzip-dev \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+    gd \
+    zip \
+    pdo \
+    pdo_mysql \
+    mysqli \
+    opcache
+
+# Configure PHP
+COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
+COPY docker/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+
+# Configure Apache
+COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
+RUN a2enmod rewrite headers expires
+
+# Enable .htaccess files
+RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
+
+# Set working directory
+WORKDIR /var/www/html
+
+# Copy PHP files
+COPY *.php ./
+COPY includes/ ./includes/
+COPY user_files/ ./user_files/
+COPY api/ ./api/
+COPY css/ ./css/
+COPY js/ ./js/
+COPY templates/ ./templates/
+COPY src/ ./src/
+
+# Copy configuration files
+COPY composer.json ./
+COPY bootstrap.php ./
+
+# Copy environment file (handle missing file gracefully)
+COPY env.example* ./
+RUN if [ -f env.example ]; then cp env.example .env; else echo "env.example not found, creating basic .env"; echo "APP_ENV=production" > .env; fi
+
+# Install Composer dependencies
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+RUN composer install --no-dev --optimize-autoloader
+
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html \
+    && chmod -R 777 /var/www/html/user_files
+
+# Create health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost/health.php || exit 1
+
+# Expose port
+EXPOSE 80
+
+# Start Apache
+CMD ["apache2-foreground"]

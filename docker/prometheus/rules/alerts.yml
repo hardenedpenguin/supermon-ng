@@ -1,0 +1,267 @@
+groups:
+  - name: supermon-ng-alerts
+    rules:
+      # Application Health Alerts
+      - alert: SupermonAppDown
+        expr: up{job="supermon-ng"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: supermon-ng
+        annotations:
+          summary: "Supermon-ng application is down"
+          description: "The Supermon-ng application has been down for more than 1 minute"
+
+      - alert: SupermonHealthCheckFailed
+        expr: probe_success{job="blackbox"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: supermon-ng
+        annotations:
+          summary: "Health check failed for {{ $labels.instance }}"
+          description: "Health check is failing for {{ $labels.instance }}"
+
+      # Performance Alerts
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: supermon-ng
+        annotations:
+          summary: "High response time detected"
+          description: "95th percentile response time is above 2 seconds"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: supermon-ng
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for the last 5 minutes"
+
+      # Database Alerts
+      - alert: DatabaseDown
+        expr: up{job="mysql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "MySQL database is down"
+          description: "MySQL database has been down for more than 1 minute"
+
+      - alert: HighDatabaseConnections
+        expr: mysql_global_status_threads_connected > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "High database connections"
+          description: "Database has more than 80 active connections"
+
+      - alert: DatabaseSlowQueries
+        expr: rate(mysql_global_status_slow_queries[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: database
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Rate of slow queries is above 0.1 per second"
+
+      # Redis Alerts
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis cache has been down for more than 1 minute"
+
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis is using more than 80% of available memory"
+
+      - alert: RedisConnectedClientsHigh
+        expr: redis_connected_clients > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "High number of Redis connections"
+          description: "Redis has more than 100 connected clients"
+
+      # System Resource Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% for more than 5 minutes"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 85% for more than 5 minutes"
+
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High disk usage on {{ $labels.instance }}"
+          description: "Disk usage is above 85% for more than 5 minutes"
+
+      - alert: DiskSpaceCritical
+        expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100 > 95
+        for: 1m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "Critical disk space on {{ $labels.instance }}"
+          description: "Disk usage is above 95% - immediate action required"
+
+      # Network Alerts
+      - alert: HighNetworkErrors
+        expr: rate(node_network_receive_errs_total[5m]) + rate(node_network_transmit_errs_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: network
+        annotations:
+          summary: "High network error rate on {{ $labels.instance }}"
+          description: "Network error rate is above 10 errors per second"
+
+      # Docker Alerts
+      - alert: ContainerRestarting
+        expr: increase(container_restarts_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+          service: docker
+        annotations:
+          summary: "Container restarting on {{ $labels.instance }}"
+          description: "Container {{ $labels.name }} has restarted in the last 5 minutes"
+
+      - alert: ContainerDown
+        expr: container_last_seen - container_start_time_seconds > 300
+        for: 1m
+        labels:
+          severity: critical
+          service: docker
+        annotations:
+          summary: "Container down on {{ $labels.instance }}"
+          description: "Container {{ $labels.name }} has been down for more than 5 minutes"
+
+      # Application-Specific Alerts
+      - alert: AllStarConnectionLost
+        expr: allstar_connection_status == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: allstar
+        annotations:
+          summary: "AllStar connection lost"
+          description: "Connection to AllStar network has been lost"
+
+      - alert: HighNodeActivity
+        expr: rate(allstar_node_connections_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          service: allstar
+        annotations:
+          summary: "High AllStar node activity"
+          description: "More than 100 node connections per minute"
+
+      - alert: APIRateLimitExceeded
+        expr: rate(api_rate_limit_exceeded_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "API rate limit exceeded"
+          description: "API rate limit has been exceeded more than 5 times per minute"
+
+      # Security Alerts
+      - alert: FailedLoginAttempts
+        expr: rate(failed_login_attempts_total[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "High number of failed login attempts"
+          description: "More than 10 failed login attempts per minute"
+
+      - alert: UnauthorizedAccessAttempts
+        expr: rate(unauthorized_access_attempts_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: critical
+          service: security
+        annotations:
+          summary: "Unauthorized access attempts detected"
+          description: "More than 5 unauthorized access attempts per minute"
+
+      # Backup Alerts
+      - alert: BackupFailed
+        expr: backup_last_success_timestamp < (time() - 86400)
+        for: 1h
+        labels:
+          severity: critical
+          service: backup
+        annotations:
+          summary: "Backup failed or missing"
+          description: "No successful backup in the last 24 hours"
+
+      - alert: BackupTooOld
+        expr: backup_last_success_timestamp < (time() - 604800)
+        for: 1h
+        labels:
+          severity: critical
+          service: backup
+        annotations:
+          summary: "Backup is too old"
+          description: "No successful backup in the last 7 days"
+
+  - name: supermon-ng-info
+    rules:
+      # Information rules (for dashboards)
+      - record: supermon:version
+        expr: supermon_version_info
+
+      - record: supermon:uptime
+        expr: time() - supermon_start_time_seconds
+
+      - record: supermon:active_users
+        expr: supermon_active_users_total
+
+      - record: supermon:total_nodes
+        expr: supermon_allstar_nodes_total

@@ -1,0 +1,152 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'supermon-ng'
+
+rule_files:
+  - "rules/*.yml"
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Supermon-ng Application
+  - job_name: 'supermon-ng'
+    static_configs:
+      - targets: ['supermon-ng:80']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    honor_labels: true
+
+  # MySQL Database
+  - job_name: 'mysql'
+    static_configs:
+      - targets: ['db:3306']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Redis Cache
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Nginx Reverse Proxy
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:80']
+    metrics_path: '/nginx_status'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Node Exporter (System Metrics)
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Docker Metrics
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['docker:9323']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+
+  # Custom Application Metrics
+  - job_name: 'supermon-custom'
+    static_configs:
+      - targets: ['supermon-ng:80']
+    metrics_path: '/api/health/metrics'
+    scrape_interval: 60s
+    scrape_timeout: 15s
+    honor_labels: true
+    params:
+      format: ['prometheus']
+
+  # Blackbox Exporter (External Health Checks)
+  - job_name: 'blackbox'
+    static_configs:
+      - targets:
+        - http://supermon-ng:80/health.php
+        - http://supermon-ng:80/api/health
+        - http://supermon-ng:80/
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115
+
+  # Service Discovery (if using Docker Swarm or Kubernetes)
+  - job_name: 'docker-service-discovery'
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        port: 2375
+        filters:
+          - name: name
+            values: ['supermon-ng']
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    relabel_configs:
+      - source_labels: [__meta_docker_service_name]
+        target_label: service
+      - source_labels: [__meta_docker_task_slot]
+        target_label: task_slot
+      - source_labels: [__meta_docker_network_ip]
+        target_label: __address__
+        replacement: $1:80
+
+# Recording Rules for Common Queries
+recording_rules:
+  - name: supermon_http_requests_total
+    expr: rate(http_requests_total[5m])
+    labels:
+      service: supermon-ng
+
+  - name: supermon_http_request_duration_seconds
+    expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))
+    labels:
+      service: supermon-ng
+
+  - name: supermon_database_connections
+    expr: mysql_global_status_threads_connected
+    labels:
+      service: supermon-ng
+
+  - name: supermon_redis_connected_clients
+    expr: redis_connected_clients
+    labels:
+      service: supermon-ng
+
+  - name: supermon_system_memory_usage
+    expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100
+    labels:
+      service: supermon-ng
+
+  - name: supermon_system_cpu_usage
+    expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+    labels:
+      service: supermon-ng
+
+  - name: supermon_disk_usage
+    expr: (node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100
+    labels:
+      service: supermon-ng

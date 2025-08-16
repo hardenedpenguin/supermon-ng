@@ -27,25 +27,89 @@ CUSTOM_LINK = https://alerts.weather.gov/cap/wwaatmget.php?x=TXC039&y=1
 ```
 You will want to update TX039 for your county code, this should match the county code used in SkyWarn Plus
 
-## Quick Install
+## 🛠️ Installation
 
-**System Requirements:** Debian-based system (Debian, Ubuntu, or AllStarLink distribution)
+Supermon-ng supports multiple deployment options to suit your needs:
 
-First, ensure `rsync` and other necessary tools are installed:
+### 🐳 Docker Deployment (Recommended for Production)
 
+**Quick Start with Docker:**
 ```bash
-sudo apt update && sudo apt install -y rsync acl
+git clone https://github.com/your-org/supermon-ng.git
+cd supermon-ng
+./scripts/deploy.sh production
 ```
 
-Then, download and run the installer script:
-
+**Manual Docker Setup:**
 ```bash
-wget -q -O supermon-ng-installer.sh "https://raw.githubusercontent.com/hardenedpenguin/supermon-ng/refs/heads/main/supermon-ng-installer.sh"
-chmod +x supermon-ng-installer.sh
-sudo ./supermon-ng-installer.sh
+# Build and start all services
+docker-compose up -d
+
+# Or with monitoring stack
+docker-compose --profile production --profile monitoring up -d
 ```
 
-> ⚠️ **Note:** This installer is designed for Debian-based systems (e.g., Debian, Ubuntu, or AllStarLink distributions). Run as root or with `sudo`.
+*See [Deployment Guide](docs/DEPLOYMENT_GUIDE.md) for detailed Docker instructions.*
+
+### 🏗️ Traditional LAMP Stack
+
+**For users who prefer traditional server setup:**
+```bash
+# Follow the traditional installation guide
+# See docs/TRADITIONAL_INSTALL.md for complete instructions
+```
+
+**Quick Traditional Setup:**
+```bash
+# Install dependencies
+sudo apt install apache2 php8.2 mysql-server redis-server
+
+# Clone and configure
+git clone https://github.com/your-org/supermon-ng.git
+cd supermon-ng
+composer install
+cp env.production .env
+# Edit .env with your settings
+```
+
+### 💻 Development Setup
+
+**For local development:**
+```bash
+# Clone repository
+git clone https://github.com/your-org/supermon-ng.git
+cd supermon-ng
+
+# Install dependencies
+composer install
+npm install
+
+# Configure environment
+cp env.example .env
+# Edit .env for development
+
+# Start development server
+php -S localhost:8080
+```
+
+*See [Development Setup Guide](docs/DEVELOPMENT_SETUP.md) for detailed development instructions.*
+
+### 📋 Installation Comparison
+
+| Feature | Docker | Traditional | Development |
+|---------|--------|-------------|-------------|
+| **Ease of Setup** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **Production Ready** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ | ⭐⭐ |
+| **Customization** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ |
+| **Resource Usage** | ⭐⭐⭐ | ⭐⭐⭐⭐⭐ | ⭐⭐⭐⭐ |
+| **Monitoring** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
+| **Scaling** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | ⭐⭐ |
+
+**Choose Docker if:** You want production-ready deployment with monitoring
+**Choose Traditional if:** You prefer full control over your environment
+**Choose Development if:** You're building features locally
+
+## ⚙️ Configuration
 
 ## Creating Releases
 

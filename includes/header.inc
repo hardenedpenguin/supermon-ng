@@ -210,6 +210,8 @@ $(document).ready(function() {
 <!-- <link rel="stylesheet" href="js/modern-styles.css"/> -->
 
 <!-- Load JavaScript files -->
+<script src="js/jquery.min.js"></script>
+<script src="js/jquery-ui.min.js"></script>
 <script src="js/sweetalert2-config.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>

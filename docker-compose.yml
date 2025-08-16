@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  # Supermon-ng Application
+  supermon-ng:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    container_name: supermon-ng
+    ports:
+      - "8080:80"
