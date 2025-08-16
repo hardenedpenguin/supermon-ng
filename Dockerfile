@@ -31,9 +31,12 @@ COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
 RUN a2enmod rewrite headers expires
 RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
 
+# Healthcheck for container health (checks web app)
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 CMD curl -f http://localhost/health.php || exit 1
+
 WORKDIR /var/www/html
 
-# Copy application code (but NOT user_files)
+# Copy application code (but NOT user_files, which is mounted as a volume)
 COPY *.php ./
 COPY includes/ ./includes/
 COPY css/ ./css/

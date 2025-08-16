@@ -3,8 +3,9 @@ services:
   supermon-ng:
     build: .
     container_name: supermon-ng
+    restart: unless-stopped  # Automatically restart unless stopped manually
     ports:
-      - "8080:80"
+      - "8085:80"
     volumes:
       - ./user_files:/var/www/html/user_files
     depends_on:
@@ -36,3 +37,5 @@ services:
 volumes:
   db_data:
   redis_data:
+
+# All persistent data is stored in user_files (app), db_data (MySQL), and redis_data (Redis)
