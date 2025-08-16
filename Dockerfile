@@ -36,11 +36,9 @@ WORKDIR /var/www/html
 # Copy application code (but NOT user_files)
 COPY *.php ./
 COPY includes/ ./includes/
-COPY api/ ./api/
 COPY css/ ./css/
 COPY js/ ./js/
 COPY templates/ ./templates/
-COPY src/ ./src/
 
 # Set permissions (user_files will be mounted as a volume)
 RUN chown -R www-data:www-data /var/www/html \
