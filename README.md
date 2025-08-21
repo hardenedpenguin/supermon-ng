@@ -1,107 +1,241 @@
-# supermon-ng
+# Supermon-ng v3.0.0
 
-**supermon-ng** is a modernized and extensible version of the original Supermon dashboard for managing and monitoring Asterisk-based systems such as AllStarLink nodes. It offers a streamlined web interface and compatibility with today's system environments.
+**Supermon-ng** is a modernized, secure, and extensible web-based dashboard for managing and monitoring Asterisk-based systems, particularly AllStarLink nodes. Built with security, performance, and user experience in mind, it provides a comprehensive interface for ham radio operators to monitor and control their AllStar networks.
 
-## Features
+![Supermon-ng Dashboard](https://img.shields.io/badge/Version-3.0.0-blue) ![PHP](https://img.shields.io/badge/PHP-7.4+-777BB4) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Debian%20%7C%20Ubuntu%20%7C%20AllStarLink-orange)
 
-- Responsive and mobile-friendly web UI
-- Enhanced security and codebase modernization
-- Simple installer script for quick deployment
-- Easily customizable and extendable
-- Compatible with Debian-based systems
+## 🚀 Key Features
 
-## Upgrading from <2.0.3 instructions
-If you are updating from anything before 2.0.3 you will need to modify two config files, these are global.inc and node_info.ini
+### Core Functionality
+- **Real-time Node Monitoring** - Live status of AllStar nodes with dynamic updates
+- **Voter System Management** - RTCM receiver monitoring with real-time signal strength visualization
+- **System Information Dashboard** - Comprehensive hardware and network monitoring
+- **Log Management** - Centralized access to Asterisk, Apache, and system logs
+- **Configuration Editor** - Web-based INI file management with syntax highlighting
 
-$HAMCLOCK_URL is no longer and should be updated to the following, user_files/global.inc
+### Security & Modernization
+- **Enhanced Security Framework** - CSRF protection, rate limiting, and secure session management
+- **Role-based Access Control** - Granular user permissions and authentication
+- **Input Validation** - Comprehensive sanitization and validation of all user inputs
+- **Secure File Operations** - Whitelist-based file access and command execution
+
+### User Experience
+- **Responsive Design** - Mobile-friendly interface that works on all devices
+- **Modern UI Components** - Clean, intuitive interface with dropdown menus
+- **Real-time Updates** - Server-Sent Events (SSE) for live data streaming
+- **Customizable Themes** - Multiple theme options for personalized appearance
+
+### System Integration
+- **AllStarLink Compatibility** - Full support for ASL3+ distribution
+- **Asterisk Integration** - Direct AMI (Asterisk Manager Interface) communication
+- **GPIO Support** - Raspberry Pi GPIO control and monitoring
+- **Database Management** - ASTDB, Echolink, and IRLP data handling
+
+## 📋 System Requirements
+
+- **Operating System**: Debian-based systems (Debian, Ubuntu, AllStarLink distribution)
+- **PHP**: 7.4 or higher
+- **Web Server**: Apache2 or Nginx
+- **Asterisk**: AllStarLink ASL3+ or compatible version
+- **Memory**: Minimum 512MB RAM (1GB recommended)
+- **Storage**: 100MB available space
+
+## 🛠️ Quick Installation
+
+### Automated Installation (Recommended)
+
 ```bash
-// URL for users accessing from your local network (e.g., 192.168.x.x)
-$HAMCLOCK_URL_INTERNAL = "http://YOUR_INTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
-// URL for users accessing from the internet
-$HAMCLOCK_URL_EXTERNAL = "http://YOUR_EXTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
-```
-
-ADD custom link for SkyWarn Alerts to user_files/sbin/node_info.ini, add to bottom of autosky stanza
-```bash
-CUSTOM_LINK = https://alerts.weather.gov/cap/wwaatmget.php?x=TXC039&y=1
-```
-You will want to update TX039 for your county code, this should match the county code used in SkyWarn Plus
-
-## Quick Install
-
-**System Requirements:** Debian-based system (Debian, Ubuntu, or AllStarLink distribution)
-
-First, ensure `rsync` and other necessary tools are installed:
-
-```bash
+# Update system and install dependencies
 sudo apt update && sudo apt install -y rsync acl
-```
 
-Then, download and run the installer script:
-
-```bash
+# Download and run the installer
 wget -q -O supermon-ng-installer.sh "https://raw.githubusercontent.com/hardenedpenguin/supermon-ng/refs/heads/main/supermon-ng-installer.sh"
 chmod +x supermon-ng-installer.sh
 sudo ./supermon-ng-installer.sh
 ```
 
-> ⚠️ **Note:** This installer is designed for Debian-based systems (e.g., Debian, Ubuntu, or AllStarLink distributions). Run as root or with `sudo`.
+The installer will:
+- Download and extract Supermon-ng
+- Configure web server settings
+- Set up initial user authentication
+- Configure system permissions
+- Enable required services
 
-## Creating Releases
+### Manual Installation
 
-To create a release tarball with proper versioning:
+For advanced users or custom deployments, see [DEPLOYMENT_CONFIGURATION.md](docs/DEPLOYMENT_CONFIGURATION.md) for detailed manual installation instructions.
 
-```bash
-./scripts/create-release.sh
+## 🔧 Configuration
+
+### Initial Setup
+
+After installation, configure your system:
+
+1. **Edit Configuration Files**:
+   ```bash
+   sudo nano /var/www/html/supermon-ng/user_files/allmon.ini
+   sudo nano /var/www/html/supermon-ng/user_files/global.inc
+   ```
+
+2. **Set User Permissions**:
+   ```bash
+   # For single admin setup
+   sudo sed -i 's/admin/yourusername/g' /var/www/html/supermon-ng/user_files/authusers.inc
+   
+   # Or edit manually for multiple users
+   sudo nano /var/www/html/supermon-ng/user_files/authusers.inc
+   ```
+
+3. **Configure Node Information**:
+   ```bash
+   sudo nano /var/www/html/supermon-ng/user_files/sbin/node_info.ini
+   ```
+
+### Key Configuration Files
+
+- `user_files/allmon.ini` - Node and system definitions
+- `user_files/global.inc` - Global settings and URLs
+- `user_files/authusers.inc` - User authentication and permissions
+- `user_files/sbin/node_info.ini` - Node-specific information
+
+## 🔄 Upgrading from Previous Versions
+
+### From v2.x to v3.0.0
+
+If upgrading from version 2.x, update these configuration files:
+
+**user_files/global.inc** - Replace `$HAMCLOCK_URL` with:
+```php
+// URL for users accessing from your local network
+$HAMCLOCK_URL_INTERNAL = "http://YOUR_INTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
+// URL for users accessing from the internet
+$HAMCLOCK_URL_EXTERNAL = "http://YOUR_EXTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
 ```
 
-This will:
-- Extract version information from `includes/common.inc`
-- Create a compressed `.tar.xz` package
-- Generate comprehensive documentation (INSTALL.md, RELEASE_NOTES.md)
-- Create checksums (SHA256, SHA512, MD5)
-- Validate the release package
-
-> ⚠️ **Note:** This installer is designed for Debian-based systems (e.g., Debian, Ubuntu, or AllStarLink distributions). Run as root or with `sudo`.
-> ⚠️ **Note:** authusers.inc can be enabled/disabled during initial install, you will be prompted for a response.
-
-## Post-Installation
-
-After the installer completes and you have configured an initial user, it is recommended to review and customize user permissions.
-
-You can do this by editing the `authusers.inc` file, which is typically located in your web server's directory for supermon-ng (e.g., `/var/www/html/supermon-ng/`).
-Choose the option that works best for you, the sed statement is best if you are the sole admin or the lead admin.
-```bash
-sudo nano /var/www/html/supermon-ng/user_files/authusers.inc
+**user_files/sbin/node_info.ini** - Add custom SkyWarn alerts:
+```ini
+[autosky]
+CUSTOM_LINK = https://alerts.weather.gov/cap/wwaatmget.php?x=TXC039&y=1
 ```
-```bash
-sudo sed -i 's/admin/username/g' /var/www/html/supermon-ng/user_files/authusers.inc
-```
-If you are using the sed method, please ensure you replace username with the username you have created for your supermon-ng login.
+*Replace `TXC039` with your county code*
 
-## Documentation
+### From v1.x or earlier
 
-For detailed configuration and deployment guides, see the [docs/](docs/) directory:
+Follow the v2.x upgrade path first, then apply the v3.0.0 changes above.
 
-- **[DEPLOYMENT_CONFIGURATION.md](docs/DEPLOYMENT_CONFIGURATION.md)** - Reverse proxy setup, HamClock integration, and advanced configuration
-- **[DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)** - Development and architecture information
-- **[CONTRIBUTING.md](docs/CONTRIBUTING.md)** - How to contribute to the project
+## 🎨 Customization
 
-## Themes
+### Themes
 
-You can find a few themes I have thrown together to speed up customizing your install
+Download and apply custom themes from the available options:
 
 ```bash
-https://w5gle.us/~anarchy/supermon-ng_themes/
+# Download a theme from the available options
+wget https://w5gle.us/~anarchy/supermon-ng_themes/your-chosen-theme.css
+
+# Create your custom CSS file
+sudo nano /var/www/html/supermon-ng/css/custom.css
 ```
-Once you download the file you must copy it to /var/www/html/supermon-ng/supermon-ng.css, make sure you do not leave it named as it is downloaded!
-> ⚠️ **Note:** Themes are being updated to have full support, Everything but seafoamgreen themese have been updated already..
-> 
 
-## Contributions
+**Available Themes**: Browse available themes at [https://w5gle.us/~anarchy/supermon-ng_themes/](https://w5gle.us/~anarchy/supermon-ng_themes/)
 
-Contributions, issues, and feature requests are welcome! Please fork the repository and submit a pull request.
+### Custom CSS
 
-## License
+For local customizations, create `css/custom.css` (not included in repository):
+```bash
+sudo nano /var/www/html/supermon-ng/css/custom.css
+```
 
-[MIT](LICENSE)
+You can either:
+- Create your own custom CSS from scratch
+- Download and modify one of the available themes
+- Use the theme as a starting point for your customizations
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the [docs/](docs/) directory:
+
+- **[DEPLOYMENT_CONFIGURATION.md](docs/DEPLOYMENT_CONFIGURATION.md)** - Advanced deployment, reverse proxy setup, and HamClock integration
+- **[DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)** - Architecture overview, development setup, and API documentation
+- **[CONTRIBUTING.md](docs/CONTRIBUTING.md)** - Contribution guidelines and development workflow
+- **[RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md)** - Release management and versioning
+- **[INSTALLER_IMPROVEMENTS.md](docs/INSTALLER_IMPROVEMENTS.md)** - Installer development and maintenance
+
+## 🔧 Development
+
+### Development Tools
+
+```bash
+# Code linting
+./scripts/lint-code.sh
+
+# Run tests
+./scripts/run-tests.sh
+
+# Development setup
+./scripts/dev-setup.sh
+```
+
+## 🤝 Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for:
+
+- Code style guidelines
+- Pull request process
+- Issue reporting
+- Development setup
+
+### Quick Start for Contributors
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests and linting
+5. Submit a pull request
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Permission Errors**: Ensure proper file ownership:
+```bash
+sudo chown -R www-data:www-data /var/www/html/supermon-ng/
+sudo chmod -R 755 /var/www/html/supermon-ng/
+```
+
+**Asterisk Connection Issues**: Verify AMI configuration:
+```bash
+sudo nano /etc/asterisk/manager.conf
+```
+
+**Log Access Problems**: Check log file permissions and paths in `includes/common.inc`
+
+### Getting Help
+
+- **Issues**: [GitHub Issues](https://github.com/hardenedpenguin/supermon-ng/issues)
+- **Documentation**: [docs/](docs/) directory
+- **Community**: AllStarLink forums and ham radio communities
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Original Supermon development team
+- AllStarLink community
+- Contributors and testers
+- Ham radio community support
+
+## 📞 Support
+
+For support, questions, or feature requests:
+
+- **GitHub Issues**: [Create an issue](https://github.com/hardenedpenguin/supermon-ng/issues)
+- **Documentation**: Check the [docs/](docs/) directory first
+- **Community**: Engage with the AllStarLink community
+
+---
+
+**Supermon-ng v3.0.0** - Modern AllStar Management Dashboard  
+*Built with ❤️ for the ham radio community*
