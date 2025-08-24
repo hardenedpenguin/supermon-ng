@@ -52,6 +52,7 @@
  * @param string|null $user The username.
  * @return string The path to the determined INI file.
  */
+if (!function_exists('get_ini_name')) {
 function get_ini_name($user) {
     include("includes/common.inc");
 
@@ -71,6 +72,7 @@ function get_ini_name($user) {
         return $standard_allmon_ini;
     }
 }
+}
 
 /**
  * Checks if a specific INI file exists in the given directory.
@@ -80,6 +82,7 @@ function get_ini_name($user) {
  * @param string $fname The filename of the INI file to check.
  * @return string The path to the existing INI file or the default allmon.ini.
  */
+if (!function_exists('checkini')) {
 function checkini($fdir, $fname) {
     $target_file = "$fdir/$fname";
     if (file_exists($target_file)) {
@@ -88,12 +91,14 @@ function checkini($fdir, $fname) {
         return "$fdir/allmon.ini";
     }
 }
+}
 
 /**
  * Checks if the $ININAME array (from authini.inc) is defined.
  *
  * @return bool True if $ININAME is set, false otherwise.
  */
+if (!function_exists('iniValid')) {
 function iniValid() {
     include("includes/common.inc");
 
@@ -102,6 +107,7 @@ function iniValid() {
     }
 
     return isset($ININAME);
+}
 }
 
 ?>
