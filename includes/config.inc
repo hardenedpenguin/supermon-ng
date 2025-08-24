@@ -6,7 +6,7 @@
  * Simplifies configuration access and provides default value handling.
  * 
  * @author Supermon-ng Team
- * @version 2.0.3
+ * @version 3.0.0
  */
 
 /**
@@ -20,6 +20,40 @@ class Config
     private static $config = [];
     private static $loadedFiles = [];
     private static $cache = [];
+    private static $environment = 'production';
+    private static $configPath = '';
+    
+    /**
+     * Initialize configuration system
+     * 
+     * @param array $options Configuration options
+     */
+    public static function init($options = []) 
+    {
+        if (isset($options['environment'])) {
+            self::$environment = $options['environment'];
+        }
+        
+        if (isset($options['config_path'])) {
+            self::$configPath = $options['config_path'];
+        } else {
+            self::$configPath = dirname(__DIR__) . '/user_files/';
+        }
+        
+        // Load environment-specific configuration
+        self::loadEnvironmentConfig();
+    }
+    
+    /**
+     * Load environment-specific configuration
+     */
+    private static function loadEnvironmentConfig() 
+    {
+        $envFile = self::$configPath . 'config.' . self::$environment . '.ini';
+        if (file_exists($envFile)) {
+            self::load($envFile, 'environment');
+        }
+    }
     
     /**
      * Load configuration from a file
@@ -31,7 +65,9 @@ class Config
     public static function load($file, $section = null) 
     {
         if (!file_exists($file)) {
-            ErrorHandler::logError("Configuration file not found", ['file' => $file]);
+            if (class_exists('ErrorHandler') && method_exists('ErrorHandler', 'logError')) {
+                ErrorHandler::logError("Configuration file not found", ['file' => $file]);
+            }
             return false;
         }
         
@@ -39,6 +75,7 @@ class Config
             return true; // Already loaded
         }
         
+        $startTime = microtime(true);
         $extension = pathinfo($file, PATHINFO_EXTENSION);
         
         switch ($extension) {
@@ -63,12 +100,16 @@ class Config
                 break;
                 
             default:
-                ErrorHandler::logError("Unsupported configuration file type", ['file' => $file]);
+                if (class_exists('ErrorHandler') && method_exists('ErrorHandler', 'logError')) {
+                    ErrorHandler::logError("Unsupported configuration file type", ['file' => $file]);
+                }
                 return false;
         }
         
         if ($data === false || $data === null) {
-            ErrorHandler::logError("Failed to parse configuration file", ['file' => $file]);
+            if (class_exists('ErrorHandler') && method_exists('ErrorHandler', 'logError')) {
+                ErrorHandler::logError("Failed to parse configuration file", ['file' => $file]);
+            }
             return false;
         }
         
@@ -80,7 +121,11 @@ class Config
         
         self::$loadedFiles[] = $file;
         
-        ErrorHandler::logError("Configuration loaded", ['file' => $file, 'section' => $section], 'INFO');
+        $duration = microtime(true) - $startTime;
+        if (class_exists('ErrorHandler') && method_exists('ErrorHandler', 'logFileOperation')) {
+            ErrorHandler::logFileOperation('config_load', $file, $duration, true);
+        }
+        
         return true;
     }
     
@@ -111,15 +156,15 @@ class Config
      * Check if configuration key exists
      * 
      * @param string $key Configuration key
-     * @return bool True if exists, false otherwise
+     * @return bool True if key exists
      */
     public static function has($key) 
     {
-        return self::getNestedValue(self::$config, $key, '__NOT_FOUND__') !== '__NOT_FOUND__';
+        return self::getNestedValue(self::$config, $key, null) !== null;
     }
     
     /**
-     * Get all configuration values
+     * Get all configuration data
      * 
      * @return array All configuration data
      */
@@ -129,135 +174,12 @@ class Config
     }
     
     /**
-     * Get configuration section
-     * 
-     * @param string $section Section name
-     * @return array Section data or empty array if not found
-     */
-    public static function section($section) 
-    {
-        return self::$config[$section] ?? [];
-    }
-    
-    /**
-     * Load user-specific configuration
-     * 
-     * @param string $username Username
-     * @return bool True on success, false on failure
-     */
-    public static function loadUserConfig($username) 
-    {
-        $userFiles = [
-            "user_files/{$username}-allmon.ini",
-            "user_files/{$username}-favorites.ini",
-            "user_files/{$username}-controlpanel.ini"
-        ];
-        
-        $loaded = false;
-        foreach ($userFiles as $file) {
-            if (file_exists($file)) {
-                if (self::load($file, "user_{$username}")) {
-                    $loaded = true;
-                }
-            }
-        }
-        
-        return $loaded;
-    }
-    
-    /**
-     * Get user-specific configuration
-     * 
-     * @param string $username Username
-     * @param string $key Configuration key
-     * @param mixed $default Default value
-     * @return mixed Configuration value
-     */
-    public static function getUserConfig($username, $key, $default = null) 
-    {
-        return self::get("user_{$username}.{$key}", $default);
-    }
-    
-    /**
-     * Load node configuration
-     * 
-     * @param string $username Username
-     * @return array Node configuration
-     */
-    public static function getNodeConfig($username) 
-    {
-        $cacheKey = "nodes_{$username}";
-        
-        if (isset(self::$cache[$cacheKey])) {
-            return self::$cache[$cacheKey];
-        }
-        
-        $iniFile = get_ini_name($username);
-        if (!$iniFile || !file_exists($iniFile)) {
-            return [];
-        }
-        
-        $config = parse_ini_file($iniFile, true);
-        if (!$config) {
-            return [];
-        }
-        
-        self::$cache[$cacheKey] = $config;
-        return $config;
-    }
-    
-    /**
-     * Get specific node configuration
-     * 
-     * @param string $username Username
-     * @param string $nodeId Node ID
-     * @return array|false Node configuration or false if not found
-     */
-    public static function getNodeById($username, $nodeId) 
-    {
-        $nodes = self::getNodeConfig($username);
-        return $nodes[$nodeId] ?? false;
-    }
-    
-    /**
-     * Reload configuration from files
-     */
-    public static function reload() 
-    {
-        $files = self::$loadedFiles;
-        self::$config = [];
-        self::$loadedFiles = [];
-        self::$cache = [];
-        
-        foreach ($files as $file) {
-            self::load($file);
-        }
-    }
-    
-    /**
-     * Get environment-based configuration
-     * 
-     * @param string $key Configuration key
-     * @param mixed $default Default value
-     * @return mixed Configuration value
-     */
-    public static function env($key, $default = null) 
-    {
-        $envValue = getenv($key);
-        if ($envValue !== false) {
-            return $envValue;
-        }
-        
-        return $_ENV[$key] ?? $default;
-    }
-    
-    /**
      * Get nested value from array using dot notation
      * 
      * @param array $array Array to search
      * @param string $key Dot notation key
      * @param mixed $default Default value
-     * @return mixed Found value or default
+     * @return mixed Value or default
      */
     private static function getNestedValue($array, $key, $default = null) 
     {
@@ -269,7 +191,7 @@ class Config
         $current = $array;
         
         foreach ($keys as $k) {
-            if (!is_array($current) || !array_key_exists($k, $current)) {
+            if (!is_array($current) || !isset($current[$k])) {
                 return $default;
             }
             $current = $current[$k];
@@ -304,14 +226,164 @@ class Config
         
         $current = $value;
     }
+    
+    /**
+     * Validate configuration
+     * 
+     * @param array $rules Validation rules
+     * @return array Validation errors
+     */
+    public static function validate($rules) 
+    {
+        $errors = [];
+        
+        foreach ($rules as $key => $rule) {
+            $value = self::get($key);
+            
+            if (isset($rule['required']) && $rule['required'] && $value === null) {
+                $errors[$key] = "Configuration key '$key' is required";
+                continue;
+            }
+            
+            if ($value === null) {
+                continue; // Skip validation for null values unless required
+            }
+            
+            if (isset($rule['type'])) {
+                switch ($rule['type']) {
+                    case 'string':
+                        if (!is_string($value)) {
+                            $errors[$key] = "Configuration key '$key' must be a string";
+                        }
+                        break;
+                    case 'int':
+                        if (!is_numeric($value) || (int)$value != $value) {
+                            $errors[$key] = "Configuration key '$key' must be an integer";
+                        }
+                        break;
+                    case 'bool':
+                        if (!is_bool($value) && !in_array($value, ['true', 'false', '1', '0'], true)) {
+                            $errors[$key] = "Configuration key '$key' must be a boolean";
+                        }
+                        break;
+                    case 'array':
+                        if (!is_array($value)) {
+                            $errors[$key] = "Configuration key '$key' must be an array";
+                        }
+                        break;
+                }
+            }
+            
+            if (isset($rule['min']) && is_numeric($value) && $value < $rule['min']) {
+                $errors[$key] = "Configuration key '$key' must be at least {$rule['min']}";
+            }
+            
+            if (isset($rule['max']) && is_numeric($value) && $value > $rule['max']) {
+                $errors[$key] = "Configuration key '$key' must be at most {$rule['max']}";
+            }
+            
+            if (isset($rule['min_length']) && is_string($value) && strlen($value) < $rule['min_length']) {
+                $errors[$key] = "Configuration key '$key' must be at least {$rule['min_length']} characters";
+            }
+            
+            if (isset($rule['max_length']) && is_string($value) && strlen($value) > $rule['max_length']) {
+                $errors[$key] = "Configuration key '$key' must be at most {$rule['max_length']} characters";
+            }
+            
+            if (isset($rule['pattern']) && is_string($value) && !preg_match($rule['pattern'], $value)) {
+                $errors[$key] = "Configuration key '$key' does not match required pattern";
+            }
+            
+            if (isset($rule['allowed']) && !in_array($value, $rule['allowed'])) {
+                $errors[$key] = "Configuration key '$key' must be one of: " . implode(', ', $rule['allowed']);
+            }
+        }
+        
+        return $errors;
+    }
+    
+    /**
+     * Get environment-specific configuration
+     * 
+     * @param string $key Configuration key
+     * @param mixed $default Default value
+     * @return mixed Configuration value
+     */
+    public static function getEnv($key, $default = null) 
+    {
+        $envKey = strtoupper($key);
+        return $_ENV[$envKey] ?? $_SERVER[$envKey] ?? getenv($envKey) ?: $default;
+    }
+    
+    /**
+     * Load user configuration with caching
+     * 
+     * @param string $user User identifier
+     * @return array|false User configuration or false on failure
+     */
+    public static function loadUserConfig($user) 
+    {
+        $cacheKey = "user_config_{$user}";
+        
+        // Try cache first
+        if (isset(self::$cache[$cacheKey])) {
+            return self::$cache[$cacheKey];
+        }
+        
+        $configFile = self::$configPath . "allmon_{$user}.ini";
+        
+        if (!file_exists($configFile)) {
+            return false;
+        }
+        
+        $config = parse_ini_file($configFile, true);
+        if ($config === false) {
+            return false;
+        }
+        
+        // Cache the result
+        self::$cache[$cacheKey] = $config;
+        
+        return $config;
+    }
+    
+    /**
+     * Clear configuration cache
+     * 
+     * @param string $key Optional specific cache key to clear
+     */
+    public static function clearCache($key = null) 
+    {
+        if ($key === null) {
+            self::$cache = [];
+        } else {
+            unset(self::$cache[$key]);
+        }
+    }
+    
+    /**
+     * Get configuration statistics
+     * 
+     * @return array Configuration statistics
+     */
+    public static function getStats() 
+    {
+        return [
+            'loaded_files' => count(self::$loadedFiles),
+            'cache_entries' => count(self::$cache),
+            'config_keys' => count(self::$config),
+            'environment' => self::$environment,
+            'config_path' => self::$configPath
+        ];
+    }
 }
 
 /**
- * Configuration helper functions for backward compatibility and convenience
+ * Configuration Helper Functions
  */
 
 /**
- * Get configuration value (shorthand)
+ * Get configuration value with fallback
  * 
  * @param string $key Configuration key
  * @param mixed $default Default value
@@ -323,20 +395,39 @@ function config($key, $default = null)
 }
 
 /**
- * Load common configuration files
+ * Set configuration value
+ * 
+ * @param string $key Configuration key
+ * @param mixed $value Value to set
  */
-function loadCommonConfig() 
+function config_set($key, $value) 
 {
-    Config::load('user_files/global.inc');
-    Config::load('includes/common.inc');
-    
-    // Load user-specific config if logged in
-    if (isset($_SESSION['user'])) {
-        Config::loadUserConfig($_SESSION['user']);
-    }
+    Config::set($key, $value);
 }
 
-// Auto-load common configuration if not in CLI mode
-if (php_sapi_name() !== 'cli') {
-    loadCommonConfig();
+/**
+ * Check if configuration key exists
+ * 
+ * @param string $key Configuration key
+ * @return bool True if key exists
+ */
+function config_has($key) 
+{
+    return Config::has($key);
 }
+
+/**
+ * Get environment variable with fallback
+ * 
+ * @param string $key Environment key
+ * @param mixed $default Default value
+ * @return mixed Environment value
+ */
+function env($key, $default = null) 
+{
+    return Config::getEnv($key, $default);
+}
+
+// Note: Configuration system initialization is now optional
+// To enable, call: Config::init();
+?>

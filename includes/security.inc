@@ -2,6 +2,9 @@
 /**
  * Security Configuration and Utilities
  * Centralized security settings for Supermon-ng
+ * 
+ * @author Supermon-ng Team
+ * @version 3.0.0
  */
 
 // Security configuration constants
@@ -10,6 +13,8 @@ define('SECURITY_LOGIN_TIMEOUT', 900); // 15 minutes
 define('SECURITY_SESSION_TIMEOUT', 28800); // 8 hours
 define('SECURITY_PASSWORD_MIN_LENGTH', 8);
 define('SECURITY_CSRF_TOKEN_LENGTH', 32);
+define('SECURITY_RATE_LIMIT_WINDOW', 60); // 1 minute
+define('SECURITY_RATE_LIMIT_MAX_REQUESTS', 100); // requests per window
 
 // Allowed file extensions for uploads (if any)
 define('SECURITY_ALLOWED_EXTENSIONS', ['txt', 'log', 'ini']);
@@ -44,6 +49,266 @@ define('SECURITY_ALLOWED_LOG_FILES', [
     '/var/log/asterisk/messages.log',
     '/home/irlp/log/messages'
 ]);
+
+/**
+ * Rate Limiting Class
+ */
+class RateLimiter 
+{
+    private static $rateLimitFile = '/tmp/supermon-ng-rate-limit.json';
+    
+    /**
+     * Check if request is within rate limits
+     * 
+     * @param string $identifier Request identifier (IP, user, etc.)
+     * @param int $maxRequests Maximum requests per window
+     * @param int $window Window size in seconds
+     * @return bool True if within limits, false if rate limited
+     */
+    public static function check($identifier, $maxRequests = null, $window = null) 
+    {
+        if ($maxRequests === null) {
+            $maxRequests = SECURITY_RATE_LIMIT_MAX_REQUESTS;
+        }
+        
+        if ($window === null) {
+            $window = SECURITY_RATE_LIMIT_WINDOW;
+        }
+        
+        $data = self::loadRateLimitData();
+        $now = time();
+        $key = md5($identifier);
+        
+        if (!isset($data[$key])) {
+            $data[$key] = [
+                'requests' => [],
+                'blocked_until' => 0
+            ];
+        }
+        
+        // Check if currently blocked
+        if ($data[$key]['blocked_until'] > $now) {
+            return false;
+        }
+        
+        // Clean old requests outside window
+        $data[$key]['requests'] = array_filter(
+            $data[$key]['requests'],
+            function($timestamp) use ($now, $window) {
+                return $timestamp > ($now - $window);
+            }
+        );
+        
+        // Check if within limits
+        if (count($data[$key]['requests']) >= $maxRequests) {
+            // Block for window duration
+            $data[$key]['blocked_until'] = $now + $window;
+            self::saveRateLimitData($data);
+            
+            // Log rate limit violation
+            if (class_exists('ErrorHandler') && method_exists('ErrorHandler', 'logError')) {
+                ErrorHandler::logError("Rate limit exceeded", [
+                    'identifier' => $identifier,
+                    'requests' => count($data[$key]['requests']),
+                    'max_requests' => $maxRequests,
+                    'window' => $window
+                ], 'SECURITY');
+            }
+            
+            return false;
+        }
+        
+        // Add current request
+        $data[$key]['requests'][] = $now;
+        self::saveRateLimitData($data);
+        
+        return true;
+    }
+    
+    /**
+     * Load rate limit data
+     * 
+     * @return array Rate limit data
+     */
+    private static function loadRateLimitData() 
+    {
+        if (!file_exists(self::$rateLimitFile)) {
+            return [];
+        }
+        
+        $content = file_get_contents(self::$rateLimitFile);
+        if ($content === false) {
+            return [];
+        }
+        
+        $data = json_decode($content, true);
+        return $data ?: [];
+    }
+    
+    /**
+     * Save rate limit data
+     * 
+     * @param array $data Rate limit data
+     */
+    private static function saveRateLimitData($data) 
+    {
+        $content = json_encode($data);
+        if ($content === false) {
+            return;
+        }
+        
+        file_put_contents(self::$rateLimitFile, $content, LOCK_EX);
+    }
+    
+    /**
+     * Clean up old rate limit data
+     * 
+     * @param int $maxAge Maximum age in seconds
+     */
+    public static function cleanup($maxAge = 3600) 
+    {
+        $data = self::loadRateLimitData();
+        $now = time();
+        $cleaned = false;
+        
+        foreach ($data as $key => $entry) {
+            // Remove old requests
+            $oldCount = count($entry['requests']);
+            $entry['requests'] = array_filter(
+                $entry['requests'],
+                function($timestamp) use ($now, $maxAge) {
+                    return $timestamp > ($now - $maxAge);
+                }
+            );
+            
+            // Remove entries with no recent activity
+            if (empty($entry['requests']) && $entry['blocked_until'] < $now) {
+                unset($data[$key]);
+                $cleaned = true;
+            } elseif (count($entry['requests']) !== $oldCount) {
+                $data[$key] = $entry;
+                $cleaned = true;
+            }
+        }
+        
+        if ($cleaned) {
+            self::saveRateLimitData($data);
+        }
+    }
+}
+
+/**
+ * Security Monitor Class
+ */
+class SecurityMonitor 
+{
+    private static $suspiciousPatterns = [
+        '/\.\./', // Directory traversal
+        '/<script/i', // XSS attempts
+        '/union\s+select/i', // SQL injection
+        '/exec\s*\(/i', // Command injection
+        '/system\s*\(/i', // Command injection
+        '/shell_exec/i', // Command injection
+        '/passthru/i', // Command injection
+        '/eval\s*\(/i', // Code injection
+        '/base64_decode/i', // Encoded payloads
+    ];
+    
+    /**
+     * Monitor request for security threats
+     * 
+     * @param array $request Request data
+     * @return array Security alerts
+     */
+    public static function monitorRequest($request) 
+    {
+        $alerts = [];
+        
+        // Check for suspicious patterns in all request data
+        foreach ($request as $key => $value) {
+            if (is_string($value)) {
+                $threats = self::detectThreats($value);
+                if (!empty($threats)) {
+                    $alerts[] = [
+                        'type' => 'suspicious_pattern',
+                        'field' => $key,
+                        'value' => substr($value, 0, 100), // Truncate for logging
+                        'threats' => $threats,
+                        'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+                    ];
+                }
+            }
+        }
+        
+        // Check for unusual request patterns
+        if (self::isUnusualRequest($request)) {
+            $alerts[] = [
+                'type' => 'unusual_request',
+                'details' => 'Unusual request pattern detected',
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+                'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+            ];
+        }
+        
+        return $alerts;
+    }
+    
+    /**
+     * Detect threats in input string
+     * 
+     * @param string $input Input string to check
+     * @return array Detected threats
+     */
+    private static function detectThreats($input) 
+    {
+        $threats = [];
+        
+        foreach (self::$suspiciousPatterns as $pattern) {
+            if (preg_match($pattern, $input)) {
+                $threats[] = $pattern;
+            }
+        }
+        
+        return $threats;
+    }
+    
+    /**
+     * Check if request is unusual
+     * 
+     * @param array $request Request data
+     * @return bool True if unusual
+     */
+    private static function isUnusualRequest($request) 
+    {
+        // Check for unusually long inputs
+        foreach ($request as $value) {
+            if (is_string($value) && strlen($value) > 10000) {
+                return true;
+            }
+        }
+        
+        // Check for unusual HTTP methods
+        $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+        if (!in_array($method, ['GET', 'POST'])) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Log security alert
+     * 
+     * @param array $alert Security alert data
+     */
+    public static function logAlert($alert) 
+    {
+        if (class_exists('ErrorHandler') && method_exists('ErrorHandler', 'logError')) {
+            ErrorHandler::logError("Security alert: " . $alert['type'], $alert, 'SECURITY');
+        }
+    }
+}
 
 /**
  * Validate file path for security
@@ -126,138 +391,79 @@ function validate_node_number($node) {
  * @param string $level The log level (INFO, WARNING, ERROR)
  */
 function log_security_event($event, $details = '', $level = 'INFO') {
-    $log_file = '/var/log/supermon-security.log';
-    $timestamp = date('Y-m-d H:i:s');
-    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $user = $_SESSION['user'] ?? 'anonymous';
-    
-    $log_entry = sprintf(
-        "[%s] %s - IP: %s, User: %s, Event: %s, Details: %s\n",
-        $timestamp,
-        $level,
-        $ip,
-        $user,
-        $event,
-        $details
-    );
-    
-    if (is_writable(dirname($log_file)) || is_writable($log_file)) {
-        file_put_contents($log_file, $log_entry, FILE_APPEND | LOCK_EX);
+    if (class_exists('ErrorHandler') && method_exists('ErrorHandler', 'logError')) {
+        ErrorHandler::logError("Security event: $event", [
+            'details' => $details,
+            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+            'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? 'unknown',
+            'user' => $_SESSION['user'] ?? 'anonymous'
+        ], $level);
     }
 }
 
 /**
- * Check if request is from allowed IP
- * @param array $allowed_ips Array of allowed IP addresses or CIDR ranges
- * @return bool True if allowed, false otherwise
+ * Validate and sanitize input
+ * @param mixed $input Input to validate
+ * @param string $type Type of validation
+ * @param array $options Validation options
+ * @return mixed Sanitized input or false if invalid
  */
-function is_allowed_ip($allowed_ips = []) {
-    $client_ip = $_SERVER['REMOTE_ADDR'] ?? '';
-    
-    if (empty($allowed_ips)) {
-        return true; // No restrictions
-    }
-    
-    foreach ($allowed_ips as $allowed_ip) {
-        if (strpos($allowed_ip, '/') !== false) {
-            // CIDR range
-            if (ip_in_range($client_ip, $allowed_ip)) {
-                return true;
+function validate_input($input, $type = 'string', $options = []) {
+    switch ($type) {
+        case 'string':
+            $input = trim(strip_tags($input));
+            if (isset($options['max_length']) && strlen($input) > $options['max_length']) {
+                return false;
             }
-        } else {
-            // Single IP
-            if ($client_ip === $allowed_ip) {
-                return true;
+            if (isset($options['min_length']) && strlen($input) < $options['min_length']) {
+                return false;
             }
-        }
+            if (isset($options['pattern']) && !preg_match($options['pattern'], $input)) {
+                return false;
+            }
+            return $input;
+            
+        case 'int':
+            $input = filter_var($input, FILTER_VALIDATE_INT);
+            if ($input === false) return false;
+            
+            if (isset($options['min']) && $input < $options['min']) return false;
+            if (isset($options['max']) && $input > $options['max']) return false;
+            return $input;
+            
+        case 'email':
+            return filter_var($input, FILTER_VALIDATE_EMAIL);
+            
+        case 'url':
+            return filter_var($input, FILTER_VALIDATE_URL);
+            
+        case 'alpha':
+            $input = trim(strip_tags($input));
+            return preg_match('/^[a-zA-Z]+$/', $input) ? $input : false;
+            
+        case 'alphanumeric':
+            $input = trim(strip_tags($input));
+            return preg_match('/^[a-zA-Z0-9]+$/', $input) ? $input : false;
+            
+        default:
+            return trim(strip_tags($input));
     }
-    
-    return false;
 }
 
 /**
- * Check if IP is in CIDR range
- * @param string $ip The IP to check
- * @param string $cidr The CIDR range
- * @return bool True if in range, false otherwise
+ * Check if user is rate limited
+ * @param string $identifier Rate limit identifier
+ * @return bool True if rate limited
  */
-function ip_in_range($ip, $cidr) {
-    list($subnet, $mask) = explode('/', $cidr);
-    $ip_binary = ip2long($ip);
-    $subnet_binary = ip2long($subnet);
-    $mask_binary = ~((1 << (32 - $mask)) - 1);
+function is_rate_limited($identifier = null) {
+    if ($identifier === null) {
+        $identifier = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    }
     
-    return ($ip_binary & $mask_binary) === ($subnet_binary & $mask_binary);
+    return !RateLimiter::check($identifier);
 }
 
-/**
- * Generate secure random string
- * @param int $length The length of the string
- * @return string The random string
- */
-function generate_secure_random_string($length = 32) {
-    return bin2hex(random_bytes($length / 2));
-}
-
-/**
- * Validate password strength
- * @param string $password The password to validate
- * @return array Array with 'valid' => bool and 'message' => string
- */
-function validate_password_strength($password) {
-    if (strlen($password) < SECURITY_PASSWORD_MIN_LENGTH) {
-        return [
-            'valid' => false,
-            'message' => 'Password must be at least ' . SECURITY_PASSWORD_MIN_LENGTH . ' characters long.'
-        ];
-    }
-    
-    if (!preg_match('/[A-Z]/', $password)) {
-        return [
-            'valid' => false,
-            'message' => 'Password must contain at least one uppercase letter.'
-        ];
-    }
-    
-    if (!preg_match('/[a-z]/', $password)) {
-        return [
-            'valid' => false,
-            'message' => 'Password must contain at least one lowercase letter.'
-        ];
-    }
-    
-    if (!preg_match('/[0-9]/', $password)) {
-        return [
-            'valid' => false,
-            'message' => 'Password must contain at least one number.'
-        ];
-    }
-    
-    return [
-        'valid' => true,
-        'message' => 'Password meets strength requirements.'
-    ];
-}
-
-/**
- * Clean up old rate limit files
- * @param int $max_age Maximum age in seconds (default 24 hours)
- */
-function cleanup_rate_limit_files($max_age = 86400) {
-    $temp_dir = sys_get_temp_dir();
-    $pattern = $temp_dir . '/rate_limit_*.txt';
-    
-    $files = glob($pattern);
-    $current_time = time();
-    
-    foreach ($files as $file) {
-        $file_time = filemtime($file);
-        if ($current_time - $file_time > $max_age) {
-            unlink($file);
-        }
-    }
-}
-
-// Clean up old rate limit files on script execution
-cleanup_rate_limit_files();
+// Note: Security monitoring initialization is now optional
+// To enable, call: init_security_monitoring();
+// To register cleanup, call: register_shutdown_function([RateLimiter::class, 'cleanup']);
 ?> 

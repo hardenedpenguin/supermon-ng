@@ -6,7 +6,7 @@
  * for the Supermon-ng application.
  * 
  * @author Supermon-ng Team
- * @version 2.0.3
+ * @version 3.0.0
  */
 
 /**
@@ -19,6 +19,9 @@ class ErrorHandler
 {
     private static $logFile = '/tmp/supermon-ng-errors.log';
     private static $debugMode = false;
+    private static $performanceLog = '/tmp/supermon-ng-performance.log';
+    private static $startTime;
+    private static $requestId;
     
     /**
      * Initialize error handler
@@ -35,9 +38,25 @@ class ErrorHandler
             self::$debugMode = $config['debug_mode'];
         }
         
+        if (isset($config['performance_log'])) {
+            self::$performanceLog = $config['performance_log'];
+        }
+        
+        // Generate request ID for tracking
+        self::$requestId = uniqid('req_', true);
+        self::$startTime = microtime(true);
+        
         // Set up PHP error handler
         set_error_handler([self::class, 'handlePHPError']);
         set_exception_handler([self::class, 'handleException']);
+        
+        // Log request start
+        self::logPerformance('REQUEST_START', [
+            'request_id' => self::$requestId,
+            'uri' => $_SERVER['REQUEST_URI'] ?? 'unknown',
+            'method' => $_SERVER['REQUEST_METHOD'] ?? 'unknown',
+            'ip' => $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+        ]);
     }
     
     /**
@@ -53,11 +72,13 @@ class ErrorHandler
         $user = $_SESSION['user'] ?? 'anonymous';
         $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
         $uri = $_SERVER['REQUEST_URI'] ?? 'unknown';
+        $requestId = self::$requestId ?? 'unknown';
         
         $logEntry = sprintf(
-            "[%s] [%s] [User: %s] [IP: %s] [URI: %s] %s",
+            "[%s] [%s] [Request: %s] [User: %s] [IP: %s] [URI: %s] %s",
             $timestamp,
             $level,
+            $requestId,
             $user,
             $ip,
             $uri,
@@ -80,6 +101,47 @@ class ErrorHandler
     }
     
     /**
+     * Log performance metrics
+     * 
+     * @param string $event Event name
+     * @param array $data Performance data
+     */
+    public static function logPerformance($event, $data = []) 
+    {
+        $timestamp = microtime(true);
+        $requestId = self::$requestId ?? 'unknown';
+        
+        $logEntry = sprintf(
+            "[%s] [%s] [Request: %s] %s",
+            date('Y-m-d H:i:s'),
+            $event,
+            $requestId,
+            json_encode($data)
+        ) . PHP_EOL;
+        
+        file_put_contents(self::$performanceLog, $logEntry, FILE_APPEND | LOCK_EX);
+    }
+    
+    /**
+     * Log request completion with performance metrics
+     */
+    public static function logRequestCompletion() 
+    {
+        if (self::$startTime === null) {
+            return;
+        }
+        
+        $duration = microtime(true) - self::$startTime;
+        $memoryUsage = memory_get_peak_usage(true);
+        
+        self::logPerformance('REQUEST_COMPLETE', [
+            'duration_ms' => round($duration * 1000, 2),
+            'memory_peak_mb' => round($memoryUsage / 1024 / 1024, 2),
+            'status_code' => http_response_code()
+        ]);
+    }
+    
+    /**
      * Display user-friendly error message
      * 
      * @param string $message User-friendly error message
@@ -99,100 +161,19 @@ class ErrorHandler
         
         return sprintf(
             '<div class="%s">%s</div>',
-            htmlspecialchars($class),
-            htmlspecialchars($message)
+            htmlspecialchars($class, ENT_QUOTES, 'UTF-8'),
+            htmlspecialchars($message, ENT_QUOTES, 'UTF-8')
         );
-    }
-    
-    /**
-     * Handle AMI-related errors
-     * 
-     * @param string $error AMI error message
-     * @param array $context Additional context
-     * @return string User-friendly error message
-     */
-    public static function handleAMIError($error, $context = []) 
-    {
-        self::logError("AMI Error: $error", $context);
-        return self::displayUserError("Unable to connect to node. Please check your configuration and try again.");
-    }
-    
-    /**
-     * Handle database/configuration errors
-     * 
-     * @param string $error Database error message
-     * @param array $context Additional context
-     * @return string User-friendly error message
-     */
-    public static function handleDatabaseError($error, $context = []) 
-    {
-        self::logError("Database Error: $error", $context);
-        return self::displayUserError("Configuration error. Please check your settings.");
-    }
-    
-    /**
-     * Handle file operation errors
-     * 
-     * @param string $error File error message
-     * @param array $context Additional context
-     * @return string User-friendly error message
-     */
-    public static function handleFileError($error, $context = []) 
-    {
-        self::logError("File Error: $error", $context);
-        return self::displayUserError("File operation failed. Please check permissions and try again.");
-    }
-    
-    /**
-     * Handle security-related errors
-     * 
-     * @param string $error Security error message
-     * @param array $context Additional context
-     * @return string User-friendly error message
-     */
-    public static function handleSecurityError($error, $context = []) 
-    {
-        self::logError("Security Error: $error", $context, 'SECURITY');
-        return self::displayUserError("Access denied. Insufficient permissions.");
-    }
-    
-    /**
-     * Handle validation errors
-     * 
-     * @param string $field Field name that failed validation
-     * @param string $value Value that failed validation
-     * @param string $rule Validation rule that failed
-     * @return string User-friendly error message
-     */
-    public static function handleValidationError($field, $value, $rule) 
-    {
-        self::logError("Validation Error", [
-            'field' => $field,
-            'value' => $value,
-            'rule' => $rule
-        ]);
-        
-        $friendlyMessages = [
-            'required' => "The $field field is required.",
-            'numeric' => "The $field field must be a number.",
-            'email' => "Please enter a valid email address.",
-            'min_length' => "The $field field is too short.",
-            'max_length' => "The $field field is too long.",
-            'pattern' => "The $field field format is invalid."
-        ];
-        
-        $message = $friendlyMessages[$rule] ?? "The $field field is invalid.";
-        return self::displayUserError($message, 'warning');
     }
     
     /**
      * Handle PHP errors
      * 
      * @param int $errno Error number
-     * @param string $errstr Error message
+     * @param string $errstr Error string
      * @param string $errfile Error file
      * @param int $errline Error line
-     * @return bool
+     * @return bool True to prevent default error handler
      */
     public static function handlePHPError($errno, $errstr, $errfile, $errline) 
     {
@@ -214,119 +195,136 @@ class ErrorHandler
             E_USER_DEPRECATED => 'USER_DEPRECATED'
         ];
         
-        $type = $errorTypes[$errno] ?? 'UNKNOWN';
+        $level = $errorTypes[$errno] ?? 'UNKNOWN';
         
-        self::logError("PHP $type: $errstr in $errfile:$errline");
+        self::logError($errstr, [
+            'file' => $errfile,
+            'line' => $errline,
+            'error_number' => $errno
+        ], $level);
         
-        // Don't execute PHP internal error handler
-        return true;
+        // Don't display errors in production
+        if (self::$debugMode) {
+            echo self::displayUserError("PHP $level: $errstr in $errfile on line $errline", 'error');
+        }
+        
+        return true; // Prevent default error handler
     }
     
     /**
      * Handle uncaught exceptions
      * 
-     * @param Exception $exception Uncaught exception
+     * @param Throwable $exception The exception
      */
     public static function handleException($exception) 
     {
-        self::logError("Uncaught Exception: " . $exception->getMessage(), [
+        self::logError($exception->getMessage(), [
             'file' => $exception->getFile(),
             'line' => $exception->getLine(),
-            'trace' => $exception->getTraceAsString()
-        ]);
+            'trace' => $exception->getTraceAsString(),
+            'code' => $exception->getCode()
+        ], 'EXCEPTION');
         
+        // Log request completion
+        self::logRequestCompletion();
+        
+        // Display user-friendly error
         if (self::$debugMode) {
-            echo self::displayUserError("An unexpected error occurred. Check the error log for details.");
+            echo self::displayUserError(
+                'An unexpected error occurred: ' . $exception->getMessage(),
+                'error'
+            );
         } else {
-            echo self::displayUserError("An unexpected error occurred. Please try again later.");
+            echo self::displayUserError(
+                'An unexpected error occurred. Please try again later.',
+                'error'
+            );
         }
     }
     
     /**
-     * Create debug dump
+     * Get request ID for tracking
      * 
-     * @param mixed $data Data to dump
-     * @param string $label Label for the dump
+     * @return string Request ID
      */
-    public static function debugDump($data, $label = 'Debug') 
+    public static function getRequestId() 
     {
-        if (self::$debugMode) {
-            echo "<pre><strong>$label:</strong>\n";
-            print_r($data);
-            echo "</pre>";
-        }
-        
-        self::logError("Debug Dump - $label", ['data' => $data], 'DEBUG');
+        return self::$requestId ?? 'unknown';
     }
     
     /**
-     * Log user action for audit trail
+     * Log AMI operation
      * 
-     * @param string $action Action performed
-     * @param array $context Action context
+     * @param string $operation Operation name
+     * @param string $node Node identifier
+     * @param float $duration Duration in seconds
+     * @param bool $success Success status
+     * @param string $error Error message if failed
      */
-    public static function logUserAction($action, $context = []) 
+    public static function logAMIOperation($operation, $node, $duration, $success, $error = '') 
     {
-        self::logError("User Action: $action", $context, 'AUDIT');
+        self::logPerformance('AMI_OPERATION', [
+            'operation' => $operation,
+            'node' => $node,
+            'duration_ms' => round($duration * 1000, 2),
+            'success' => $success,
+            'error' => $error
+        ]);
     }
     
     /**
-     * Clean up old log files
+     * Get error count (for performance monitoring)
      * 
-     * @param int $daysToKeep Number of days to keep logs
+     * @param int $hours Hours to look back (default: all time)
+     * @return int Number of errors
      */
-    public static function cleanupLogs($daysToKeep = 30) 
+    public static function getErrorCount($hours = null) 
     {
-        $cutoffTime = time() - ($daysToKeep * 24 * 60 * 60);
-        
-        if (file_exists(self::$logFile) && filemtime(self::$logFile) < $cutoffTime) {
-            // Archive old log file
-            $archiveName = self::$logFile . '.' . date('Y-m-d', filemtime(self::$logFile));
-            rename(self::$logFile, $archiveName);
-            
-            // Compress archived log
-            if (function_exists('gzopen')) {
-                $gz = gzopen($archiveName . '.gz', 'w9');
-                if ($gz) {
-                    gzwrite($gz, file_get_contents($archiveName));
-                    gzclose($gz);
-                    unlink($archiveName);
-                }
-            }
-        }
+        // Simple implementation - in production you'd parse the log file
+        return 0;
     }
     
     /**
-     * Get error statistics
+     * Get errors by level (for performance monitoring)
      * 
-     * @param int $hours Hours to look back
-     * @return array Error statistics
+     * @return array Errors grouped by level
      */
-    public static function getErrorStats($hours = 24) 
+    public static function getErrorsByLevel() 
     {
-        if (!file_exists(self::$logFile)) {
-            return ['total' => 0, 'by_level' => []];
-        }
-        
-        $cutoffTime = time() - ($hours * 3600);
-        $lines = file(self::$logFile, FILE_IGNORE_NEW_LINES);
-        $stats = ['total' => 0, 'by_level' => []];
-        
-        foreach ($lines as $line) {
-            if (preg_match('/\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] \[(\w+)\]/', $line, $matches)) {
-                $timestamp = strtotime($matches[1]);
-                $level = $matches[2];
-                
-                if ($timestamp >= $cutoffTime) {
-                    $stats['total']++;
-                    $stats['by_level'][$level] = ($stats['by_level'][$level] ?? 0) + 1;
-                }
-            }
-        }
-        
-        return $stats;
+        // Simple implementation - in production you'd parse the log file
+        return [
+            'ERROR' => 0,
+            'WARNING' => 0,
+            'INFO' => 0,
+            'DEBUG' => 0
+        ];
+    }
+    
+    /**
+     * Log file operation
+     * 
+     * @param string $operation Operation name
+     * @param string $file File path
+     * @param float $duration Duration in seconds
+     * @param bool $success Success status
+     * @param string $error Error message if failed
+     */
+    public static function logFileOperation($operation, $file, $duration, $success, $error = '') 
+    {
+        self::logPerformance('FILE_OPERATION', [
+            'operation' => $operation,
+            'file' => $file,
+            'duration_ms' => round($duration * 1000, 2),
+            'success' => $success,
+            'error' => $error
+        ]);
     }
 }
 
-// Initialize error handler
-ErrorHandler::init();
+// Note: Error handler initialization is now optional
+// To enable, call: ErrorHandler::init();
+// To register shutdown, call: register_shutdown_function([ErrorHandler::class, 'logRequestCompletion']);
+?>
+
+
+
