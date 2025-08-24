@@ -163,7 +163,7 @@ $chartData = getRecentPerformanceData(24);
 error_log("Performance chart data: " . json_encode($chartData));
 
 // Add Chart.js for performance charts
-echo '<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>';
+echo '<script src="js/chart.js"></script>';
 
 echo '<div class="container">';
 echo '<h1>Performance Monitor</h1>';
