@@ -242,13 +242,17 @@ echo '</div>';
 echo '<div class="charts-container">';
 echo '<div class="chart-card">';
 echo '<h3>Memory Usage Over Time</h3>';
-echo '<canvas id="memoryChart" width="400" height="200"></canvas>';
+echo '<div style="position: relative; height: 300px; width: 100%;">';
+echo '<canvas id="memoryChart"></canvas>';
+echo '</div>';
 echo '<div id="memoryData" style="display:none;">' . json_encode($chartData['memory_usage']) . '</div>';
 echo '</div>';
 
 echo '<div class="chart-card">';
 echo '<h3>Response Times</h3>';
-echo '<canvas id="responseChart" width="400" height="200"></canvas>';
+echo '<div style="position: relative; height: 300px; width: 100%;">';
+echo '<canvas id="responseChart"></canvas>';
+echo '</div>';
 echo '<div id="responseData" style="display:none;">' . json_encode($chartData['response_times']) . '</div>';
 echo '</div>';
 echo '</div>';
@@ -304,19 +308,41 @@ document.addEventListener("DOMContentLoaded", function() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: "Memory (MB)"
+                            text: "Memory (MB)",
+                            font: {
+                                size: 12
+                            }
+                        },
+                        ticks: {
+                            font: {
+                                size: 10
+                            }
                         }
                     },
                     x: {
                         title: {
                             display: true,
-                            text: "Time"
+                            text: "Time",
+                            font: {
+                                size: 12
+                            }
+                        },
+                        ticks: {
+                            maxTicksLimit: 12,
+                            font: {
+                                size: 10
+                            }
                         }
                     }
                 },
                 plugins: {
                     legend: {
-                        display: true
+                        display: true,
+                        labels: {
+                            font: {
+                                size: 12
+                            }
+                        }
                     }
                 }
             }
@@ -347,19 +373,41 @@ document.addEventListener("DOMContentLoaded", function() {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: "Response Time (ms)"
+                            text: "Response Time (ms)",
+                            font: {
+                                size: 12
+                            }
+                        },
+                        ticks: {
+                            font: {
+                                size: 10
+                            }
                         }
                     },
                     x: {
                         title: {
                             display: true,
-                            text: "Time"
+                            text: "Time",
+                            font: {
+                                size: 12
+                            }
+                        },
+                        ticks: {
+                            maxTicksLimit: 12,
+                            font: {
+                                size: 10
+                            }
                         }
                     }
                 },
                 plugins: {
                     legend: {
-                        display: true
+                        display: true,
+                        labels: {
+                            font: {
+                                size: 12
+                            }
+                        }
                     }
                 }
             }
@@ -410,7 +458,7 @@ echo '<style>
 
 .charts-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
 }
@@ -419,14 +467,17 @@ echo '<style>
     background: white;
     border: 1px solid #dee2e6;
     border-radius: 8px;
-    padding: 20px;
+    padding: 15px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-height: 350px;
 }
 
 .chart-card h3 {
     margin-top: 0;
+    margin-bottom: 15px;
     color: #495057;
     text-align: center;
+    font-size: 16px;
 }
 
 .log-container {
