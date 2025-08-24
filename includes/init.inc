@@ -74,7 +74,7 @@ function init_supermon_features($options = [])
             }
             
             // Check rate limiting
-            if (is_rate_limited()) {
+            if (is_security_rate_limited()) {
                 http_response_code(429);
                 die('Too many requests. Please try again later.');
             }

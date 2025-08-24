@@ -451,11 +451,11 @@ function validate_input($input, $type = 'string', $options = []) {
 }
 
 /**
- * Check if user is rate limited
+ * Check if user is rate limited (security system)
  * @param string $identifier Rate limit identifier
  * @return bool True if rate limited
  */
-function is_rate_limited($identifier = null) {
+function is_security_rate_limited($identifier = null) {
     if ($identifier === null) {
         $identifier = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
     }
