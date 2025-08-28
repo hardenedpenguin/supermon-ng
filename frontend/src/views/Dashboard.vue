@@ -205,6 +205,9 @@
         
         <!-- AST Log Modal -->
         <AstLog v-model:open="showAstLogModal" />
+        
+        <!-- AST Lookup Modal -->
+        <AstLookup v-model:open="showAstLookupModal" />
   </div>
 </template>
 
@@ -220,6 +223,7 @@ import AddFavorite from '@/components/AddFavorite.vue'
 import DeleteFavorite from '@/components/DeleteFavorite.vue'
 import Favorites from '@/components/Favorites.vue'
 import AstLog from '@/components/AstLog.vue'
+import AstLookup from '@/components/AstLookup.vue'
 
 const appStore = useAppStore()
 const realTimeStore = useRealTimeStore()
@@ -234,6 +238,7 @@ const showAddFavoriteModal = ref(false)
 const showDeleteFavoriteModal = ref(false)
 const showFavoritesModal = ref(false)
 const showAstLogModal = ref(false)
+const showAstLookupModal = ref(false)
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
 const databaseStatus = ref<any>(null)
@@ -406,10 +411,9 @@ const dtmf = async () => {
 }
 
 const astlookup = async () => {
-  if (!targetNode.value) return
   try {
-    // Implement AST lookup functionality
-    console.log('AST lookup for node:', targetNode.value)
+    console.log('Opening AST lookup modal')
+    showAstLookupModal.value = true
   } catch (error) {
     console.error('AST lookup error:', error)
   }

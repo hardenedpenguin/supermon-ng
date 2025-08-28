@@ -558,7 +558,7 @@ class ConfigController
             require_once 'includes/amifunctions.inc';
 
             // Connect to AMI
-            $fp = SimpleAmiClient::connect($amiHost);
+            $fp = \SimpleAmiClient::connect($amiHost);
             if ($fp === FALSE) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -568,8 +568,8 @@ class ConfigController
             }
 
             // Login to AMI
-            if (SimpleAmiClient::login($fp, $amiUser, $amiPass) === FALSE) {
-                SimpleAmiClient::logoff($fp);
+            if (\SimpleAmiClient::login($fp, $amiUser, $amiPass) === FALSE) {
+                \SimpleAmiClient::logoff($fp);
                 $response->getBody()->write(json_encode([
                     'success' => false,
                     'message' => "Could not login to Asterisk Manager for node $localNode with user $amiUser"
@@ -581,27 +581,27 @@ class ConfigController
             $results[] = "Reloading configurations for node - $localNode:";
 
             // Execute reload commands
-            if (SimpleAmiClient::command($fp, "rpt reload") !== false) {
+            if (\SimpleAmiClient::command($fp, "rpt reload") !== false) {
                 $results[] = "- rpt.conf reloaded successfully.";
             } else {
                 $results[] = "- FAILED to reload rpt.conf.";
             }
             sleep(1);
 
-            if (SimpleAmiClient::command($fp, "iax2 reload") !== false) {
+            if (\SimpleAmiClient::command($fp, "iax2 reload") !== false) {
                 $results[] = "- iax.conf reloaded successfully.";
             } else {
                 $results[] = "- FAILED to reload iax.conf.";
             }
             sleep(1);
 
-            if (SimpleAmiClient::command($fp, "extensions reload") !== false) {
+            if (\SimpleAmiClient::command($fp, "extensions reload") !== false) {
                 $results[] = "- extensions.conf reloaded successfully.";
             } else {
                 $results[] = "- FAILED to reload extensions.conf.";
             }
 
-            SimpleAmiClient::logoff($fp);
+            \SimpleAmiClient::logoff($fp);
 
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -624,10 +624,47 @@ class ConfigController
      */
     private function hasUserPermission(string $user, string $permission): bool
     {
-        // This is a simplified permission check
+        // Default permissions for unauthenticated users (same as AuthController)
+        $defaultPermissions = [
+            'CONNECTUSER' => true,
+            'DISCUSER' => true,
+            'MONUSER' => true,
+            'LMONUSER' => true,
+            'DTMFUSER' => false,
+            'ASTLKUSER' => true, // Allow lookup for unauthenticated users
+            'RSTATUSER' => true,
+            'BUBLUSER' => true,
+            'FAVUSER' => true,
+            'CTRLUSER' => false,
+            'CFGEDUSER' => false,
+            'ASTRELUSER' => false,
+            'ASTSTRUSER' => false,
+            'ASTSTPUSER' => false,
+            'FSTRESUSER' => false,
+            'RBTUSER' => false,
+            'UPDUSER' => true,
+            'HWTOUSER' => true,
+            'WIKIUSER' => true,
+            'CSTATUSER' => true,
+            'ASTATUSER' => true,
+            'EXNUSER' => true,
+            'NINFUSER' => true,
+            'ACTNUSER' => true,
+            'ALLNUSER' => true,
+            'DBTUSER' => true,
+            'GPIOUSER' => false,
+            'LLOGUSER' => true,
+            'ASTLUSER' => true,
+            'IRLPUSER' => false,
+            'WLOGUSER' => true,
+            'WERRUSER' => true,
+            'BANUSER' => false,
+            'SYSINFUSER' => true
+        ];
+        
+        // For now, use default permissions for all users
         // In a real implementation, you would check against the user's actual permissions
-        // For now, we'll assume the user has the permission if they're authenticated
-        return !empty($user);
+        return $defaultPermissions[$permission] ?? false;
     }
 
     /**
@@ -635,11 +672,39 @@ class ConfigController
      */
     private function getUserIniFile(string $user): string
     {
-        // Use the same logic as the original get_ini_name function
-        if ($user === 'default' || empty($user)) {
-            return 'user_files/allmon.ini';
+        // Include common.inc to get $USERFILES constant
+        include_once 'includes/common.inc';
+        
+        // Include authini.inc if it exists to get $ININAME mapping
+        if (file_exists("$USERFILES/authini.inc")) {
+            include_once "$USERFILES/authini.inc";
         }
-        return "user_files/{$user}.ini";
+        
+        $standardAllmonIni = "$USERFILES/allmon.ini";
+        
+        // Use the same logic as the original get_ini_name function
+        if (isset($ININAME) && isset($user)) {
+            if (array_key_exists($user, $ININAME) && $ININAME[$user] !== "") {
+                return $this->checkIniFile($USERFILES, $ININAME[$user]);
+            } else {
+                return $this->checkIniFile($USERFILES, "nolog.ini");
+            }
+        } else {
+            return $standardAllmonIni;
+        }
+    }
+    
+    /**
+     * Check if a specific INI file exists in the given directory
+     */
+    private function checkIniFile(string $fdir, string $fname): string
+    {
+        $targetFile = "$fdir/$fname";
+        if (file_exists($targetFile)) {
+            return $targetFile;
+        } else {
+            return "$fdir/allmon.ini";
+        }
     }
 
     /**
@@ -840,6 +905,486 @@ class ConfigController
         
         // Default fallback path
         return '/var/log/asterisk/messages.log';
+    }
+
+    /**
+     * Perform AllStar lookup across multiple networks
+     */
+    public function performAstLookup(Request $request, Response $response): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        
+        // Allow lookup to proceed even without authentication (using default permissions)
+        // The system is designed to work with default permissions for basic functionality
+        if (!$currentUser) {
+            $currentUser = 'default'; // Use default user for INI file resolution
+        }
+
+        // Check if user has ASTLKUSER permission
+        if (!$this->hasUserPermission($currentUser, 'ASTLKUSER')) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'ASTLKUSER permission required'
+            ]));
+            return $response->withStatus(403);
+        }
+
+        $data = $request->getParsedBody();
+        $lookupNode = trim($data['lookupNode'] ?? '');
+        $localNode = trim($data['localNode'] ?? '');
+
+        if (empty($lookupNode)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Please provide a node number or callsign to lookup'
+            ]));
+            return $response->withStatus(400);
+        }
+
+        if (empty($localNode)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Local node not specified'
+            ]));
+            return $response->withStatus(400);
+        }
+
+        try {
+            // Get user's INI file
+            $userIniFile = $this->getUserIniFile($currentUser);
+            
+            if (!file_exists($userIniFile)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Couldn't load supervisor INI file: $userIniFile"
+                ]));
+                return $response->withStatus(500);
+            }
+
+            $config = parse_ini_file($userIniFile, true);
+
+            if (!isset($config[$localNode])) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Node $localNode is not defined in $userIniFile"
+                ]));
+                return $response->withStatus(400);
+            }
+
+            $amiHost = $config[$localNode]['host'] ?? null;
+            $amiUser = $config[$localNode]['user'] ?? null;
+            $amiPass = $config[$localNode]['passwd'] ?? null;
+
+            if (empty($amiHost) || empty($amiUser) || empty($amiPass)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "AMI host, user, or password not configured for node $localNode"
+                ]));
+                return $response->withStatus(500);
+            }
+
+            // Include AMI functions
+            require_once 'includes/amifunctions.inc';
+
+            // Connect to AMI
+            $fp = \SimpleAmiClient::connect($amiHost);
+            if ($fp === FALSE) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Could not connect to Asterisk Manager at $amiHost for node $localNode"
+                ]));
+                return $response->withStatus(500);
+            }
+
+            // Login to AMI
+            if (\SimpleAmiClient::login($fp, $amiUser, $amiPass) === FALSE) {
+                \SimpleAmiClient::logoff($fp);
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Could not login to Asterisk Manager for node $localNode with user $amiUser"
+                ]));
+                return $response->withStatus(500);
+            }
+
+            // Perform lookup
+            $results = $this->performLookup($fp, $lookupNode, $localNode);
+
+            \SimpleAmiClient::logoff($fp);
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'results' => $results
+            ]));
+            return $response->withStatus(200);
+
+        } catch (Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Error performing lookup: ' . $e->getMessage()
+            ]));
+            return $response->withStatus(500);
+        }
+    }
+
+    /**
+     * Perform the actual lookup across different networks
+     */
+    private function performLookup($fp, $lookupNode, $localNode): array
+    {
+        $results = [];
+        $lookupNode = strtoupper($lookupNode);
+        $intNode = (int)$lookupNode;
+
+        // Determine lookup type and perform appropriate search
+        if ("$intNode" != "$lookupNode") {
+            // Do lookup by callsign
+            $allstarResults = $this->doAllStarCallsignSearch($fp, $lookupNode, $localNode);
+            if (!empty($allstarResults)) {
+                $results[] = [
+                    'type' => "AllStar Callsign Search for: \"$lookupNode\"",
+                    'results' => $allstarResults
+                ];
+            }
+
+            // Check EchoLink and IRLP for callsign searches
+            $echolinkResults = $this->doEchoLinkCallsignSearch($fp, $lookupNode);
+            if (!empty($echolinkResults)) {
+                $results[] = [
+                    'type' => "EchoLink Callsign Search for: \"$lookupNode\"",
+                    'results' => $echolinkResults
+                ];
+            }
+
+            $irlpResults = $this->doIrlpCallsignSearch($lookupNode);
+            if (!empty($irlpResults)) {
+                $results[] = [
+                    'type' => "IRLP Callsign Search for: \"$lookupNode\"",
+                    'results' => $irlpResults
+                ];
+            }
+
+        } elseif ($intNode > 80000 && $intNode < 90000) {
+            // Lookup by IRLP node number
+            $irlpResults = $this->doIrlpNumberSearch($intNode);
+            if (!empty($irlpResults)) {
+                $results[] = [
+                    'type' => "IRLP Node Number Search for: \"$lookupNode\"",
+                    'results' => $irlpResults
+                ];
+            }
+
+        } elseif ($intNode > 3000000) {
+            // Lookup by EchoLink node number
+            $echolinkResults = $this->doEchoLinkNumberSearch($fp, $intNode);
+            if (!empty($echolinkResults)) {
+                $results[] = [
+                    'type' => "EchoLink Node Number Search for: \"$lookupNode\"",
+                    'results' => $echolinkResults
+                ];
+            }
+
+        } else {
+            // Lookup by AllStar node number
+            $allstarResults = $this->doAllStarNumberSearch($fp, $intNode, $localNode);
+            if (!empty($allstarResults)) {
+                $results[] = [
+                    'type' => "AllStar Node Number Search for: \"$lookupNode\"",
+                    'results' => $allstarResults
+                ];
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Search AllStar database by callsign
+     */
+    private function doAllStarCallsignSearch($fp, $lookup, $localNode): array
+    {
+        $results = [];
+        
+        // Try multiple possible paths for the database
+        $dbPaths = [
+            'user_files/astdb.txt',
+            '/var/www/html/supermon-ng/astdb.txt',
+            '/var/www/html/supermon-ng/user_files/astdb.txt'
+        ];
+        
+        $dbPath = null;
+        foreach ($dbPaths as $path) {
+            if (file_exists($path)) {
+                $dbPath = $path;
+                break;
+            }
+        }
+        
+        if (!$dbPath) {
+            return $results;
+        }
+
+        $fh = fopen($dbPath, "r");
+        if ($fh && flock($fh, LOCK_SH)) {
+            while (($line = fgets($fh)) !== FALSE) {
+                $arr_db = explode('|', trim($line));
+                if (isset($arr_db[1]) && stripos($arr_db[1], $lookup) !== false) {
+                    $node = trim($arr_db[0]);
+                    $call = trim($arr_db[1]);
+                    $desc = trim($arr_db[2] ?? '');
+                    $qth = trim($arr_db[3] ?? '');
+                    
+                    $status = $this->getNodeStatus($node);
+                    
+                    $results[] = [
+                        'node' => $node,
+                        'callsign' => $call,
+                        'description' => $desc,
+                        'location' => $qth,
+                        'status' => $status
+                    ];
+                }
+            }
+            flock($fh, LOCK_UN);
+            fclose($fh);
+        }
+
+        return $results;
+    }
+
+    /**
+     * Search AllStar database by node number
+     */
+    private function doAllStarNumberSearch($fp, $lookup, $localNode): array
+    {
+        $results = [];
+        
+        // Try multiple possible paths for the database
+        $dbPaths = [
+            'user_files/astdb.txt',
+            '/var/www/html/supermon-ng/astdb.txt',
+            '/var/www/html/supermon-ng/user_files/astdb.txt'
+        ];
+        
+        $dbPath = null;
+        foreach ($dbPaths as $path) {
+            if (file_exists($path)) {
+                $dbPath = $path;
+                break;
+            }
+        }
+        
+        if (!$dbPath) {
+            return $results;
+        }
+
+        $fh = fopen($dbPath, "r");
+        if ($fh && flock($fh, LOCK_SH)) {
+            while (($line = fgets($fh)) !== FALSE) {
+                $arr_db = explode('|', trim($line));
+                if (isset($arr_db[0]) && $arr_db[0] == $lookup) {
+                    $node = trim($arr_db[0]);
+                    $call = trim($arr_db[1]);
+                    $desc = trim($arr_db[2] ?? '');
+                    $qth = trim($arr_db[3] ?? '');
+                    
+                    $status = $this->getNodeStatus($node);
+                    
+                    $results[] = [
+                        'node' => $node,
+                        'callsign' => $call,
+                        'description' => $desc,
+                        'location' => $qth,
+                        'status' => $status
+                    ];
+                }
+            }
+            flock($fh, LOCK_UN);
+            fclose($fh);
+        }
+
+        return $results;
+    }
+
+    /**
+     * Search EchoLink database by callsign
+     */
+    private function doEchoLinkCallsignSearch($fp, $lookup): array
+    {
+        $results = [];
+        
+        try {
+            $ami = \SimpleAmiClient::command($fp, "echolink dbdump");
+            
+            if ($ami !== false && strpos($ami, 'No such command') === false) {
+                $lines = explode("\n", $ami);
+                foreach ($lines as $line) {
+                    $parts = explode('|', trim($line));
+                    if (count($parts) >= 3 && stripos($parts[1], $lookup) !== false) {
+                        $results[] = [
+                            'node' => $parts[0],
+                            'callsign' => $parts[1],
+                            'description' => '',
+                            'location' => $parts[2],
+                            'status' => 'Unknown'
+                        ];
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // EchoLink lookup failed, continue
+        }
+
+        return $results;
+    }
+
+    /**
+     * Search EchoLink database by node number
+     */
+    private function doEchoLinkNumberSearch($fp, $echonode): array
+    {
+        $results = [];
+        $lookup = (int)substr("$echonode", 1);
+        
+        try {
+            $ami = \SimpleAmiClient::command($fp, "echolink dbdump");
+            
+            if ($ami !== false && strpos($ami, 'No such command') === false) {
+                $lines = explode("\n", $ami);
+                foreach ($lines as $line) {
+                    $parts = explode('|', trim($line));
+                    if (count($parts) >= 3 && $parts[0] == $lookup) {
+                        $results[] = [
+                            'node' => $parts[0],
+                            'callsign' => $parts[1],
+                            'description' => '',
+                            'location' => $parts[2],
+                            'status' => 'Unknown'
+                        ];
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            // EchoLink lookup failed, continue
+        }
+
+        return $results;
+    }
+
+    /**
+     * Search IRLP database by callsign
+     */
+    private function doIrlpCallsignSearch($lookup): array
+    {
+        $results = [];
+        
+        // Try multiple possible paths for the IRLP database
+        $irlpPaths = [
+            '/tmp/irlpdata.txt.gz',
+            '/var/www/html/supermon-ng/irlpdata.txt.gz'
+        ];
+        
+        $irlpPath = null;
+        foreach ($irlpPaths as $path) {
+            if (file_exists($path)) {
+                $irlpPath = $path;
+                break;
+            }
+        }
+        
+        if (!$irlpPath) {
+            return $results;
+        }
+
+        try {
+            $fh = gzopen($irlpPath, "r");
+            if ($fh) {
+                while (($line = gzgets($fh)) !== FALSE) {
+                    $parts = explode('|', trim($line));
+                    if (count($parts) >= 5 && stripos($parts[1], $lookup) !== false) {
+                        $qth = trim($parts[2] . ", " . $parts[3] . " " . $parts[4]);
+                        $results[] = [
+                            'node' => $parts[0],
+                            'callsign' => $parts[1],
+                            'description' => '',
+                            'location' => $qth,
+                            'status' => 'Unknown'
+                        ];
+                    }
+                }
+                gzclose($fh);
+            }
+        } catch (Exception $e) {
+            // IRLP lookup failed, continue
+        }
+
+        return $results;
+    }
+
+    /**
+     * Search IRLP database by node number
+     */
+    private function doIrlpNumberSearch($irlpnode): array
+    {
+        $results = [];
+        $lookup = (int)substr("$irlpnode", 1);
+        
+        // Try multiple possible paths for the IRLP database
+        $irlpPaths = [
+            '/tmp/irlpdata.txt.gz',
+            '/var/www/html/supermon-ng/irlpdata.txt.gz'
+        ];
+        
+        $irlpPath = null;
+        foreach ($irlpPaths as $path) {
+            if (file_exists($path)) {
+                $irlpPath = $path;
+                break;
+            }
+        }
+        
+        if (!$irlpPath) {
+            return $results;
+        }
+
+        try {
+            $fh = gzopen($irlpPath, "r");
+            if ($fh) {
+                while (($line = gzgets($fh)) !== FALSE) {
+                    $parts = explode('|', trim($line));
+                    if (count($parts) >= 5 && $parts[0] == $lookup) {
+                        $qth = trim($parts[2] . ", " . $parts[3] . " " . $parts[4]);
+                        $results[] = [
+                            'node' => $parts[0],
+                            'callsign' => $parts[1],
+                            'description' => '',
+                            'location' => $qth,
+                            'status' => 'Unknown'
+                        ];
+                    }
+                }
+                gzclose($fh);
+            }
+        } catch (Exception $e) {
+            // IRLP lookup failed, continue
+        }
+
+        return $results;
+    }
+
+    /**
+     * Get node status using DNS query
+     */
+    private function getNodeStatus($node): string
+    {
+        try {
+            $dnsQuery = shell_exec("nslookup $node 2>/dev/null");
+            if (strpos($dnsQuery, 'NOT-FOUND') !== false) {
+                return 'NOT FOUND';
+            }
+            return 'Unknown';
+        } catch (Exception $e) {
+            return 'Unknown';
+        }
     }
 
 }

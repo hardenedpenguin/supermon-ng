@@ -121,6 +121,7 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->post('/asterisk/reload', [ConfigController::class, 'executeAsteriskReload']);
         $group->post('/asterisk/control', [ConfigController::class, 'executeAsteriskControl']);
         $group->get('/astlog', [ConfigController::class, 'getAstLog']);
+        $group->post('/astlookup', [ConfigController::class, 'performAstLookup']);
     });
 
     // Database routes
