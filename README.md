@@ -1,241 +1,352 @@
-# Supermon-ng v3.0.0
+# Supermon-ng Modern Frontend
 
-**Supermon-ng** is a modernized, secure, and extensible web-based dashboard for managing and monitoring Asterisk-based systems, particularly AllStarLink nodes. Built with security, performance, and user experience in mind, it provides a comprehensive interface for ham radio operators to monitor and control their AllStar networks.
+A modern Vue 3 frontend for the Supermon-ng AllStar Link monitoring system, built with Vite and integrated with a PHP Slim backend.
 
-![Supermon-ng Dashboard](https://img.shields.io/badge/Version-3.0.0-blue) ![PHP](https://img.shields.io/badge/PHP-7.4+-777BB4) ![License](https://img.shields.io/badge/License-MIT-green) ![Platform](https://img.shields.io/badge/Platform-Debian%20%7C%20Ubuntu%20%7C%20AllStarLink-orange)
+## 🚀 Quick Start
 
-## 🚀 Key Features
+### Prerequisites
 
-### Core Functionality
-- **Real-time Node Monitoring** - Live status of AllStar nodes with dynamic updates
-- **Voter System Management** - RTCM receiver monitoring with real-time signal strength visualization
-- **System Information Dashboard** - Comprehensive hardware and network monitoring
-- **Log Management** - Centralized access to Asterisk, Apache, and system logs
-- **Configuration Editor** - Web-based INI file management with syntax highlighting
+- PHP 8.1+
+- Node.js 18+
+- Composer
+- npm
 
-### Security & Modernization
-- **Enhanced Security Framework** - CSRF protection, rate limiting, and secure session management
-- **Role-based Access Control** - Granular user permissions and authentication
-- **Input Validation** - Comprehensive sanitization and validation of all user inputs
-- **Secure File Operations** - Whitelist-based file access and command execution
+### Installation
 
-### User Experience
-- **Responsive Design** - Mobile-friendly interface that works on all devices
-- **Modern UI Components** - Clean, intuitive interface with dropdown menus
-- **Real-time Updates** - Server-Sent Events (SSE) for live data streaming
-- **Customizable Themes** - Multiple theme options for personalized appearance
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd supermon-ng
+   ```
 
-### System Integration
-- **AllStarLink Compatibility** - Full support for ASL3+ distribution
-- **Asterisk Integration** - Direct AMI (Asterisk Manager Interface) communication
-- **GPIO Support** - Raspberry Pi GPIO control and monitoring
-- **Database Management** - ASTDB, Echolink, and IRLP data handling
+2. **Install PHP dependencies**
+   ```bash
+   composer install
+   ```
 
-## 📋 System Requirements
+3. **Install frontend dependencies**
+   ```bash
+   cd frontend
+   npm install
+   ```
 
-- **Operating System**: Debian-based systems (Debian, Ubuntu, AllStarLink distribution)
-- **PHP**: 7.4 or higher
-- **Web Server**: Apache2 or Nginx
-- **Asterisk**: AllStarLink ASL3+ or compatible version
-- **Memory**: Minimum 512MB RAM (1GB recommended)
-- **Storage**: 100MB available space
+4. **Configure authentication**
+   ```bash
+   # List current users
+   php scripts/manage_users.php list
+   
+   # Add a new user
+   php scripts/manage_users.php add yourusername yourpassword
+   
+   # Change password for existing user
+   php scripts/manage_users.php change yourusername newpassword
+   ```
 
-## 🛠️ Quick Installation
+5. **Start the development servers**
+   ```bash
+   # Terminal 1: Start backend server
+   composer dev
+   
+   # Terminal 2: Start frontend server
+   cd frontend
+   npm run dev
+   ```
 
-### Automated Installation (Recommended)
+6. **Access the application**
+   - Backend API: http://localhost:8000
+   - Frontend: http://localhost:5173 (or next available port)
+
+## 🔐 Modern Authentication System
+
+### Overview
+
+The application now uses a **modern session-based authentication system** that provides:
+
+- **Secure password verification** against `.htpasswd` files
+- **Session management** with automatic expiration (24 hours)
+- **Multiple hash format support** (bcrypt, Apache MD5, SHA1, MD5, plain text)
+- **Permission-based access control** using the existing `authusers.inc` system
+- **User-specific configuration** via `authini.inc` mapping
+
+### Authentication Features
+
+#### 🔒 **Secure Password Storage**
+- **bcrypt hashing** (recommended) with configurable cost factor
+- **Legacy hash support** for existing `.htpasswd` files
+- **Multiple hash formats** supported for migration
+
+#### 🛡️ **Session Security**
+- **Automatic session expiration** (24 hours)
+- **Session regeneration** on refresh for security
+- **Secure cookie handling** with proper cleanup
+- **CSRF protection** via session tokens
+
+#### 👥 **User Management**
+- **Command-line user management** via `scripts/manage_users.php`
+- **Permission-based access control** using existing `authusers.inc`
+- **User-specific INI file mapping** via `authini.inc`
+
+### User Management Commands
 
 ```bash
-# Update system and install dependencies
-sudo apt update && sudo apt install -y rsync acl
+# List all users
+php scripts/manage_users.php list
 
-# Download and run the installer
-wget -q -O supermon-ng-installer.sh "https://raw.githubusercontent.com/hardenedpenguin/supermon-ng/refs/heads/main/supermon-ng-installer.sh"
-chmod +x supermon-ng-installer.sh
-sudo ./supermon-ng-installer.sh
+# Add a new user
+php scripts/manage_users.php add username password
+
+# Remove a user
+php scripts/manage_users.php remove username
+
+# Change user password
+php scripts/manage_users.php change username newpassword
 ```
 
-The installer will:
-- Download and extract Supermon-ng
-- Configure web server settings
-- Set up initial user authentication
-- Configure system permissions
-- Enable required services
+### Authentication Flow
 
-### Manual Installation
+1. **Login Process**
+   - User submits credentials via login modal
+   - Backend verifies against `.htpasswd` file
+   - Creates secure session with user data
+   - Returns user permissions and configuration source
 
-For advanced users or custom deployments, see [DEPLOYMENT_CONFIGURATION.md](docs/DEPLOYMENT_CONFIGURATION.md) for detailed manual installation instructions.
+2. **Session Management**
+   - Sessions persist for 24 hours
+   - Automatic session validation on each request
+   - Secure session cleanup on logout
+
+3. **Permission System**
+   - Integrates with existing `authusers.inc` permission arrays
+   - User-specific INI file mapping via `authini.inc`
+   - Granular control over features and buttons
+
+### API Endpoints
+
+#### Authentication Endpoints
+- `POST /api/auth/login` - User login
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/me` - Get current user info
+- `GET /api/auth/check` - Check authentication status
+- `POST /api/auth/refresh` - Refresh session
+
+#### Response Format
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "data": {
+    "user": {"name": "username"},
+    "authenticated": true,
+    "permissions": {
+      "CONNECTUSER": true,
+      "DISCUSER": true,
+      // ... other permissions
+    },
+    "config_source": "allmon.ini"
+  },
+  "timestamp": "2025-08-27T23:55:40+00:00"
+}
+```
+
+### Migration from Legacy System
+
+The new authentication system is **fully backward compatible** with existing Supermon-ng installations:
+
+1. **Existing `.htpasswd` files** are automatically supported
+2. **Current `authusers.inc` permissions** work without changes
+3. **User-specific INI mappings** via `authini.inc` are preserved
+4. **Multiple hash formats** are supported for gradual migration
+
+### Security Features
+
+- **Password hashing** with modern algorithms (bcrypt recommended)
+- **Session security** with automatic expiration and regeneration
+- **Input validation** and sanitization
+- **CSRF protection** via session tokens
+- **Secure cookie handling** with proper flags
+- **Logging** of authentication events for security monitoring
+
+## 🏗️ Architecture
+
+### Backend (PHP Slim)
+- **Modern PHP 8.1+** with strict typing
+- **Slim Framework 4** for API routing
+- **PHP-DI** for dependency injection
+- **Session-based authentication** with secure password verification
+- **Legacy integration** with existing Supermon-ng configuration files
+
+### Frontend (Vue 3)
+- **Vue 3 Composition API** with TypeScript
+- **Vite** for fast development and building
+- **Pinia** for state management
+- **Vue Router** for navigation
+- **Axios** for API communication
+- **Modern UI/UX** with responsive design
+
+### Key Components
+
+#### Backend Services
+- `AuthController` - Session-based authentication
+- `NodeController` - AMI integration and node management
+- `ConfigController` - Configuration and menu management
+- `DatabaseController` - AllStar database operations
+- `SystemController` - System control operations
+
+#### Frontend Stores
+- `appStore` - Authentication and user state
+- `realTimeStore` - Real-time node data via API polling
+
+#### Frontend Components
+- `Dashboard` - Main application interface
+- `Menu` - Navigation menu with node selection
+- `NodeTable` - Individual node status display
+- `LoginForm` - Modal-based authentication
+- `Modal` - Reusable modal component
 
 ## 🔧 Configuration
 
-### Initial Setup
+### Backend Configuration
+- **Session settings** in `src/Config/Middleware.php`
+- **Authentication settings** in `src/Application/Controllers/AuthController.php`
+- **Legacy file paths** in respective controllers
 
-After installation, configure your system:
+### Frontend Configuration
+- **API base URL** in `frontend/src/utils/api.ts`
+- **Environment variables** in `frontend/.env`
+- **Vite configuration** in `frontend/vite.config.ts`
 
-1. **Edit Configuration Files**:
-   ```bash
-   sudo nano /var/www/html/supermon-ng/user_files/allmon.ini
-   sudo nano /var/www/html/supermon-ng/user_files/global.inc
-   ```
+### Legacy Integration
+- **User permissions** via `user_files/authusers.inc`
+- **User-specific INI files** via `user_files/authini.inc`
+- **Node configuration** via `user_files/allmon.ini`
+- **Global settings** via `user_files/global.inc`
 
-2. **Set User Permissions**:
-   ```bash
-   # For single admin setup
-   sudo sed -i 's/admin/yourusername/g' /var/www/html/supermon-ng/user_files/authusers.inc
-   
-   # Or edit manually for multiple users
-   sudo nano /var/www/html/supermon-ng/user_files/authusers.inc
-   ```
+## 🚀 Development
 
-3. **Configure Node Information**:
-   ```bash
-   sudo nano /var/www/html/supermon-ng/user_files/sbin/node_info.ini
-   ```
-
-### Key Configuration Files
-
-- `user_files/allmon.ini` - Node and system definitions
-- `user_files/global.inc` - Global settings and URLs
-- `user_files/authusers.inc` - User authentication and permissions
-- `user_files/sbin/node_info.ini` - Node-specific information
-
-## 🔄 Upgrading from Previous Versions
-
-### From v2.x to v3.0.0
-
-If upgrading from version 2.x, update these configuration files:
-
-**user_files/global.inc** - Replace `$HAMCLOCK_URL` with:
-```php
-// URL for users accessing from your local network
-$HAMCLOCK_URL_INTERNAL = "http://YOUR_INTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
-// URL for users accessing from the internet
-$HAMCLOCK_URL_EXTERNAL = "http://YOUR_EXTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
-```
-
-**user_files/sbin/node_info.ini** - Add custom SkyWarn alerts:
-```ini
-[autosky]
-CUSTOM_LINK = https://alerts.weather.gov/cap/wwaatmget.php?x=TXC039&y=1
-```
-*Replace `TXC039` with your county code*
-
-### From v1.x or earlier
-
-Follow the v2.x upgrade path first, then apply the v3.0.0 changes above.
-
-## 🎨 Customization
-
-### Themes
-
-Download and apply custom themes from the available options:
-
+### Backend Development
 ```bash
-# Download a theme from the available options
-wget https://w5gle.us/~anarchy/supermon-ng_themes/your-chosen-theme.css
-
-# Create your custom CSS file
-sudo nano /var/www/html/supermon-ng/css/custom.css
-```
-
-**Available Themes**: Browse available themes at [https://w5gle.us/~anarchy/supermon-ng_themes/](https://w5gle.us/~anarchy/supermon-ng_themes/)
-
-### Custom CSS
-
-For local customizations, create `css/custom.css` (not included in repository):
-```bash
-sudo nano /var/www/html/supermon-ng/css/custom.css
-```
-
-You can either:
-- Create your own custom CSS from scratch
-- Download and modify one of the available themes
-- Use the theme as a starting point for your customizations
-
-## 📚 Documentation
-
-Comprehensive documentation is available in the [docs/](docs/) directory:
-
-- **[DEPLOYMENT_CONFIGURATION.md](docs/DEPLOYMENT_CONFIGURATION.md)** - Advanced deployment, reverse proxy setup, and HamClock integration
-- **[DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md)** - Architecture overview, development setup, and API documentation
-- **[CONTRIBUTING.md](docs/CONTRIBUTING.md)** - Contribution guidelines and development workflow
-- **[RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md)** - Release management and versioning
-- **[INSTALLER_IMPROVEMENTS.md](docs/INSTALLER_IMPROVEMENTS.md)** - Installer development and maintenance
-
-## 🔧 Development
-
-### Development Tools
-
-```bash
-# Code linting
-./scripts/lint-code.sh
+# Start development server
+composer dev
 
 # Run tests
-./scripts/run-tests.sh
+composer test
 
-# Development setup
-./scripts/dev-setup.sh
+# Code formatting
+composer format
 ```
 
+### Frontend Development
+```bash
+# Start development server
+cd frontend
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+```
+
+### API Testing
+```bash
+# Test authentication
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","password":"testpass123"}'
+
+# Test user info
+curl http://localhost:8000/api/auth/me
+
+# Test logout
+curl -X POST http://localhost:8000/api/auth/logout
+```
+
+## 📁 Project Structure
+
+```
+supermon-ng/
+├── src/                          # Backend PHP source
+│   ├── Application/
+│   │   └── Controllers/          # API controllers
+│   ├── Config/                   # Configuration files
+│   └── Services/                 # Business logic services
+├── frontend/                     # Vue 3 frontend
+│   ├── src/
+│   │   ├── components/           # Vue components
+│   │   ├── stores/               # Pinia stores
+│   │   ├── views/                # Page components
+│   │   └── utils/                # Utility functions
+│   └── public/                   # Static assets
+├── user_files/                   # Legacy configuration
+│   ├── .htpasswd                 # User credentials
+│   ├── authusers.inc            # User permissions
+│   ├── authini.inc              # User-specific INI mapping
+│   └── allmon.ini               # Node configuration
+├── scripts/                      # Utility scripts
+│   └── manage_users.php         # User management utility
+└── public/                       # Backend public files
+```
+
+## 🔄 Real-time Features
+
+### AMI Integration
+- **Real-time node monitoring** via Asterisk Manager Interface
+- **Automatic data polling** every 5 seconds
+- **Node status updates** including connected nodes
+- **HTML rendering** of node information and alerts
+
+### API Polling
+- **Replaced SSE** with reliable API polling
+- **Configurable polling intervals**
+- **Error handling** and automatic retry
+- **Efficient data updates** with change detection
+
+## 🎯 Key Features
+
+### Modern Authentication
+- ✅ **Session-based authentication** with secure password verification
+- ✅ **Multiple hash format support** for legacy compatibility
+- ✅ **Permission-based access control** using existing system
+- ✅ **User-specific configuration** mapping
+- ✅ **Automatic session management** with expiration
+
+### Real-time Monitoring
+- ✅ **AMI integration** for live node data
+- ✅ **API polling** for reliable updates
+- ✅ **Node status display** with HTML rendering
+- ✅ **Connected nodes** monitoring
+- ✅ **Alert and weather** information display
+
+### User Interface
+- ✅ **Modern Vue 3 interface** with responsive design
+- ✅ **Modal-based login** integrated in dashboard
+- ✅ **Permission-based UI** showing/hiding features
+- ✅ **Node selection** via menu system
+- ✅ **Real-time updates** without page refresh
+
+### Legacy Integration
+- ✅ **Backward compatibility** with existing Supermon-ng
+- ✅ **Existing configuration files** supported
+- ✅ **Permission system** preserved
+- ✅ **User management** via command-line tools
+- ✅ **Gradual migration** path from legacy system
+
 ## 🤝 Contributing
-
-We welcome contributions! Please see [CONTRIBUTING.md](docs/CONTRIBUTING.md) for:
-
-- Code style guidelines
-- Pull request process
-- Issue reporting
-- Development setup
-
-### Quick Start for Contributors
 
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Run tests and linting
+4. Test thoroughly
 5. Submit a pull request
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Permission Errors**: Ensure proper file ownership:
-```bash
-sudo chown -R www-data:www-data /var/www/html/supermon-ng/
-sudo chmod -R 755 /var/www/html/supermon-ng/
-```
-
-**Asterisk Connection Issues**: Verify AMI configuration:
-```bash
-sudo nano /etc/asterisk/manager.conf
-```
-
-**Log Access Problems**: Check log file permissions and paths in `includes/common.inc`
-
-### Getting Help
-
-- **Issues**: [GitHub Issues](https://github.com/hardenedpenguin/supermon-ng/issues)
-- **Documentation**: [docs/](docs/) directory
-- **Community**: AllStarLink forums and ham radio communities
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the same terms as the original Supermon-ng project.
 
 ## 🙏 Acknowledgments
 
-- Original Supermon development team
-- AllStarLink community
-- Contributors and testers
-- Ham radio community support
-
-## 📞 Support
-
-For support, questions, or feature requests:
-
-- **GitHub Issues**: [Create an issue](https://github.com/hardenedpenguin/supermon-ng/issues)
-- **Documentation**: Check the [docs/](docs/) directory first
-- **Community**: Engage with the AllStarLink community
-
----
-
-**Supermon-ng v3.0.0** - Modern AllStar Management Dashboard  
-*Built with ❤️ for the ham radio community*
+- Original Supermon-ng developers for the excellent foundation
+- Vue.js team for the amazing frontend framework
+- Slim Framework team for the robust PHP backend
+- AllStar Link community for continued support and feedback
