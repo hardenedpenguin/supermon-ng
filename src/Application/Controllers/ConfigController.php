@@ -1387,4 +1387,69 @@ class ConfigController
         }
     }
 
+    /**
+     * Generate bubble chart URL and information
+     */
+    public function getBubbleChart(Request $request, Response $response): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        
+        // Allow bubble chart to proceed even without authentication (using default permissions)
+        if (!$currentUser) {
+            $currentUser = 'default'; // Use default user for INI file resolution
+        }
+
+        // Check if user has BUBLUSER permission
+        if (!$this->hasUserPermission($currentUser, 'BUBLUSER')) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'BUBLUSER permission required'
+            ]));
+            return $response->withStatus(403);
+        }
+
+        $data = $request->getParsedBody();
+        $node = trim($data['node'] ?? '');
+        $localNode = trim($data['localNode'] ?? '');
+
+        // Determine which node to use (priority to 'node' parameter)
+        $nodeToUse = '';
+        $message = '';
+        
+        if ($node === '') {
+            $nodeToUse = $localNode;
+        } else {
+            $nodeToUse = $node;
+            $message = "Opening Bubble Chart for node " . htmlspecialchars($node);
+        }
+
+        if (empty($nodeToUse)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Please provide a node number'
+            ]));
+            return $response->withStatus(400);
+        }
+
+        // Build the stats URL
+        $statsUrl = $this->buildBubbleChartStatsUrl($nodeToUse);
+
+        $response->getBody()->write(json_encode([
+            'success' => true,
+            'message' => $message,
+            'statsUrl' => $statsUrl,
+            'node' => $nodeToUse
+        ]));
+        return $response->withStatus(200);
+    }
+
+    /**
+     * Build stats URL for bubble chart
+     */
+    private function buildBubbleChartStatsUrl(string $node): string
+    {
+        $statsBaseUrl = "http://stats.allstarlink.org/getstatus.cgi";
+        return $statsBaseUrl . "?" . urlencode($node);
+    }
+
 }

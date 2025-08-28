@@ -208,6 +208,9 @@
         
         <!-- AST Lookup Modal -->
         <AstLookup v-model:open="showAstLookupModal" />
+        
+        <!-- Bubble Chart Modal -->
+        <BubbleChart v-model:open="showBubbleChartModal" :local-node="targetNode" />
   </div>
 </template>
 
@@ -224,6 +227,7 @@ import DeleteFavorite from '@/components/DeleteFavorite.vue'
 import Favorites from '@/components/Favorites.vue'
 import AstLog from '@/components/AstLog.vue'
 import AstLookup from '@/components/AstLookup.vue'
+import BubbleChart from '@/components/BubbleChart.vue'
 
 const appStore = useAppStore()
 const realTimeStore = useRealTimeStore()
@@ -239,6 +243,7 @@ const showDeleteFavoriteModal = ref(false)
 const showFavoritesModal = ref(false)
 const showAstLogModal = ref(false)
 const showAstLookupModal = ref(false)
+const showBubbleChartModal = ref(false)
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
 const databaseStatus = ref<any>(null)
@@ -430,8 +435,8 @@ const rptstats = async () => {
 
 const bubble = async () => {
   try {
-    // Implement Bubble functionality
-    console.log('Bubble')
+    console.log('Opening Bubble Chart modal')
+    showBubbleChartModal.value = true
   } catch (error) {
     console.error('Bubble error:', error)
   }
