@@ -29,3 +29,5 @@ class ApiAuthMiddleware implements MiddlewareInterface
         return $handler->handle($request);
     }
 }
+
+

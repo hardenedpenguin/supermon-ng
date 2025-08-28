@@ -219,3 +219,5 @@ class AllStarConfigService
         $this->logger->info("Configuration cache cleared");
     }
 }
+
+

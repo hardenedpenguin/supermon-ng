@@ -6,7 +6,7 @@
  * Each button has its own permission array that lists authorized usernames.
  * 
  * HOW TO USE:
- * 1. Replace "admin" with your actual username(s)
+ * 1. Replace "anarchy" with your actual username(s)
  * 2. Add multiple users by separating with commas: array("user1", "user2")
  * 3. Use sed to quickly add yourself to all buttons (see examples below)
  * 
@@ -17,13 +17,13 @@
  * - Empty arrays = no access for anyone
  * 
  * SED COMMANDS FOR QUICK ADMIN SETUP:
- * - Add user "john" to all buttons: sed -i 's/"admin"/"john"/g' authusers.inc
- * - Add user "john" to existing admin: sed -i 's/array("admin")/array("admin", "john")/g' authusers.inc
- * - Add user "john" to all arrays: sed -i 's/array("admin")/array("admin", "john")/g' authusers.inc
+ * - Add user "john" to all buttons: sed -i 's/"anarchy"/"john"/g' authusers.inc
+ * - Add user "john" to existing anarchy: sed -i 's/array("anarchy")/array("anarchy", "john")/g' authusers.inc
+ * - Add user "john" to all arrays: sed -i 's/array("anarchy")/array("anarchy", "john")/g' authusers.inc
  * 
  * EXAMPLES:
  * - Single user: $CONNECTUSER=array("john");
- * - Multiple users: $CONNECTUSER=array("admin", "john", "operator");
+ * - Multiple users: $CONNECTUSER=array("anarchy", "john", "operator");
  * - No access: $CONNECTUSER=array();
  */
 
@@ -32,138 +32,138 @@
 // ========================================
 
 // Perm checkbox
-$PERMUSER=array("admin");
+$PERMUSER=array("anarchy");
 
 // Connect button
-$CONNECTUSER=array("admin");
+$CONNECTUSER=array("anarchy", "testuser");
 
 // Disconnect button
-$DISCUSER=array("admin");
+$DISCUSER=array("anarchy", "testuser");
 
 // Monitor button
-$MONUSER=array("admin");
+$MONUSER=array("anarchy", "testuser");
 
 // Local Monitor button
-$LMONUSER=array("admin");
+$LMONUSER=array("anarchy", "testuser");
 
 // ========================================
 // ADVANCED FEATURES
 // ========================================
 
 // DTMF button (*) - Security sensitive
-$DTMFUSER=array("admin");
+$DTMFUSER=array("anarchy");
 
 // Asterisk lookup button
-$ASTLKUSER=array("admin");
+$ASTLKUSER=array("anarchy");
 
 // RPT stats button
-$RSTATUSER=array("admin");
+$RSTATUSER=array("anarchy");
 
 // Bubble button
-$BUBLUSER=array("admin");
+$BUBLUSER=array("anarchy");
 
 // Favorites button
-$FAVUSER=array("admin");
+$FAVUSER=array("anarchy");
 
 // ========================================
 // ADMINISTRATIVE FEATURES (*) - Security sensitive
 // ========================================
 
 // Control Panel button (*)
-$CTRLUSER=array("admin");
+$CTRLUSER=array("anarchy");
 
 // Configuration Editor button (*)
-$CFGEDUSER=array("admin");
+$CFGEDUSER=array("anarchy");
 
 // Asterisk Reload Button (*)
-$ASTRELUSER=array("admin");
+$ASTRELUSER=array("anarchy");
 
 // Asterisk start button (*)
-$ASTSTRUSER=array("admin");
+$ASTSTRUSER=array("anarchy");
 
 // Asterisk stop button (*)
-$ASTSTPUSER=array("admin");
+$ASTSTPUSER=array("anarchy");
 
 // Asterisk restart button (*)
-$FSTRESUSER=array("admin");
+$FSTRESUSER=array("anarchy");
 
 // Asterisk reboot button (*)
-$RBTUSER=array("admin");
+$RBTUSER=array("anarchy");
 
 // ========================================
 // INFORMATION FEATURES
 // ========================================
 
 // Hamvoip update check button
-$UPDUSER=array("admin");
+$UPDUSER=array("anarchy");
 
 // Hamvoip howto button
-$HWTOUSER=array("admin");
+$HWTOUSER=array("anarchy");
 
 // Allstar wiki button
-$WIKIUSER=array("admin");
+$WIKIUSER=array("anarchy");
 
 // CPU status button (*)
-$CSTATUSER=array("admin");
+$CSTATUSER=array("anarchy");
 
 // Allstar status button
-$ASTATUSER=array("admin");
+$ASTATUSER=array("anarchy", "testuser");
 
 // Allstar node database button
-$EXNUSER=array("admin");
+$EXNUSER=array("anarchy", "testuser");
 
 // Node info button
-$NINFUSER=array("admin");
+$NINFUSER=array("anarchy", "testuser");
 
 // Active node button
-$ACTNUSER=array("admin");
+$ACTNUSER=array("anarchy", "testuser");
 
 // All nodes button
-$ALLNUSER=array("admin");
+$ALLNUSER=array("anarchy", "testuser");
 
 // Database button (*)
-$DBTUSER=array("admin");
+$DBTUSER=array("anarchy");
 
 // ========================================
 // HARDWARE & SYSTEM FEATURES
 // ========================================
 
 // GPIO button (*)
-$GPIOUSER=array("admin");
+$GPIOUSER=array("anarchy");
 
 // System Info button (*)
-$SYSINFUSER=array("admin");
+$SYSINFUSER=array("anarchy");
 
 // ========================================
 // LOG ACCESS (*) - Security sensitive
 // ========================================
 
 // Linux Log button
-$LLOGUSER=array("admin");
+$LLOGUSER=array("anarchy");
 
 // Asterisk log button
-$ASTLUSER=array("admin");
+$ASTLUSER=array("anarchy");
 
 // Connection log button
-$CLOGUSER=array("admin");
+$CLOGUSER=array("anarchy");
 
 // IRLP LOG button
-$IRLPLOGUSER=array("admin");
+$IRLPLOGUSER=array("anarchy");
 
 // Web access log button (*)
-$WLOGUSER=array("admin");
+$WLOGUSER=array("anarchy");
 
 // Web error log button (*)
-$WERRUSER=array("admin");
+$WERRUSER=array("anarchy");
 
 // ========================================
 // SECURITY FEATURES (*) - Highly sensitive
 // ========================================
 
 // Restrict button (*)
-$BANUSER=array("admin");
+$BANUSER=array("anarchy");
 
 // Simple USB button
-$SUSBUSER=array("admin");
+$SUSBUSER=array("anarchy");
 
 ?>

@@ -172,13 +172,13 @@ class AuthController
                 'timestamp' => date('c')
             ]));
         } else {
-            // No user logged in - return unauthenticated data with no permissions
+            // No user logged in - return unauthenticated data with default permissions
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'data' => [
                     'user' => null,
                     'authenticated' => false,
-                    'permissions' => $this->getNoPermissions(),
+                    'permissions' => $this->getDefaultPermissions(),
                     'config_source' => 'allmon.ini'
                 ],
                 'timestamp' => date('c')
@@ -208,13 +208,13 @@ class AuthController
                 'timestamp' => date('c')
             ]));
         } else {
-            // No user logged in - return unauthenticated data with no permissions
+            // No user logged in - return unauthenticated data with default permissions
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'data' => [
                     'authenticated' => false,
                     'user' => null,
-                    'permissions' => $this->getNoPermissions(),
+                    'permissions' => $this->getDefaultPermissions(),
                     'config_source' => 'allmon.ini'
                 ],
                 'timestamp' => date('c')

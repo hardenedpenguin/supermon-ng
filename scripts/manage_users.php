@@ -220,3 +220,5 @@ function getHashType($hash) {
         return 'plain text (insecure)';
     }
 }
+
+

@@ -24,13 +24,13 @@
 // ========================================
 
 // Your callsign (displayed in header and titles)
-$CALL = "CALL";
+$CALL = "W5GLE";
 
 // Your name (displayed in various locations)
-$NAME = "NAME";
+$NAME = "Jory A. Pratt";
 
 // Your location (supports HTML formatting)
-$LOCATION = "<span style=\"color: #ff0000\">LOCATION</span>";
+$LOCATION = "<span style=\"color: #ffffff\">Alvin, Texas</span>";
 
 // ========================================
 // PAGE TITLES & HEADERS
@@ -44,7 +44,7 @@ $TITLE3 = "AllStarLink/IRLP/EchoLink/Digital - Bridging Control Center";
 
 // Prefix for page titles (appears before node numbers)
 // Example: "Supermon - " would show "Supermon - 546051"
-$SMSERVERNAME = "";
+$SMSERVERNAME = "Supermon-ng";
 
 // ========================================
 // WELCOME MESSAGES

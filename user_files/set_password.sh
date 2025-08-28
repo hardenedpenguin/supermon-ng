@@ -5,7 +5,7 @@
 # Date: 5/20252
 
 # Path to the password file
-PASSWORD_FILE_DIR="/var/www/html/supermon-ng"
+PASSWORD_FILE_DIR="$(dirname "$0")"
 PASSWORD_FILE="$PASSWORD_FILE_DIR/.htpasswd"
 
 # === FUNCTIONS ===
@@ -335,10 +335,12 @@ cat << EOF
 |       Supermon-ng Password File Management Utility        |
 |---------------------------------------------------------|
 |  Create, view, update, or delete .htpasswd entries.     |
-|  Useful for managing Supermon-ng web access.              |
+|  Password file is now located at user_files/.htpasswd   |
+|  (relative to the project root).                        |
+|  Useful for managing Supermon-ng web access.            |
 |                                                         |
 |  SECURITY: Common usernames like 'admin', 'root', etc.  |
-|  are blocked for security reasons.                       |
+|  are blocked for security reasons.                      |
 +=========================================================+
 EOF
 

@@ -81,9 +81,9 @@
       <input v-if="appStore.hasPermission('RSTATUSER')" type="button" class="submit" value="Rpt Stats" @click="rptstats">
       <input v-if="appStore.hasPermission('BUBLUSER')" type="button" class="submit2" value="Bubble" @click="bubble">
       <input v-if="appStore.hasPermission('CTRLUSER')" type="button" class="submit2" value="Control" @click="controlpanel">
-      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit2" value="Favorites" @click="favorites">
-      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit2" value="Add Favorite" @click="addfavorite">
-      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit2" value="Delete Favorite" @click="deletefavorite">
+      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit2" value="Favorites" @click="showFavoritesModal = true">
+      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit2" value="Add Favorite" @click="showAddFavoriteModal = true">
+        <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit2" value="Delete Favorite" @click="showDeleteFavoriteModal = true">
       
       <!-- Detailed View Additional Buttons (matches original exactly) -->
       <hr class="button-separator">
@@ -184,6 +184,24 @@
       v-model:open="showDisplayConfigModal"
       @settings-updated="handleDisplaySettingsUpdated"
     />
+
+    <!-- Add Favorite Modal -->
+    <AddFavorite 
+      v-model:open="showAddFavoriteModal"
+      @favorite-added="handleFavoriteAdded"
+    />
+
+            <!-- Delete Favorite Modal -->
+        <DeleteFavorite 
+          v-model:open="showDeleteFavoriteModal"
+          @favorite-deleted="handleFavoriteDeleted"
+        />
+        
+        <!-- Favorites Modal -->
+        <Favorites 
+          v-model:open="showFavoritesModal"
+          @command-executed="handleCommandExecuted"
+        />
   </div>
 </template>
 
@@ -195,6 +213,9 @@ import NodeTable from '@/components/NodeTable.vue'
 import LoginForm from '@/components/LoginForm.vue'
 import Menu from '@/components/Menu.vue'
 import DisplayConfig from '@/components/DisplayConfig.vue'
+import AddFavorite from '@/components/AddFavorite.vue'
+import DeleteFavorite from '@/components/DeleteFavorite.vue'
+import Favorites from '@/components/Favorites.vue'
 
 const appStore = useAppStore()
 const realTimeStore = useRealTimeStore()
@@ -205,6 +226,9 @@ const targetNode = ref('')
 const permConnect = ref(false)
 const showLoginModal = ref(false)
 const showDisplayConfigModal = ref(false)
+const showAddFavoriteModal = ref(false)
+const showDeleteFavoriteModal = ref(false)
+const showFavoritesModal = ref(false)
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
 const databaseStatus = ref<any>(null)
@@ -431,24 +455,9 @@ const favorites = async () => {
   }
 }
 
-const addfavorite = async () => {
-  if (!targetNode.value) return
-  try {
-    // Implement add favorite functionality
-    console.log('Adding favorite for node:', targetNode.value)
-  } catch (error) {
-    console.error('Add favorite error:', error)
-  }
-}
 
-const deletefavorite = async () => {
-  try {
-    // Implement delete favorite functionality
-    console.log('Opening delete favorite dialog')
-  } catch (error) {
-    console.error('Delete favorite error:', error)
-  }
-}
+
+
 
 
 
@@ -476,8 +485,26 @@ const configeditor = async () => {
 const astreload = async () => {
   try {
     console.log('AST RELOAD command')
+    
+    if (!selectedNode.value) {
+      alert('Please select a node first')
+      return
+    }
+
+    const response = await axios.post('/api/config/asterisk/reload', {
+      localnode: selectedNode.value
+    }, { 
+      withCredentials: true 
+    })
+
+    if (response.data.success) {
+      alert('Asterisk configuration reload completed successfully!\n\n' + response.data.results.join('\n'))
+    } else {
+      alert('Error: ' + response.data.message)
+    }
   } catch (error) {
     console.error('AST RELOAD error:', error)
+    alert('Error executing Asterisk reload: ' + (error.response?.data?.message || error.message))
   }
 }
 
@@ -665,6 +692,24 @@ const openDonatePopup = () => {
   const handleDisplaySettingsUpdated = (settings: any) => {
     // Refresh the page to apply new display settings
     window.location.reload()
+  }
+
+  // Handle favorite added
+  const handleFavoriteAdded = (result: any) => {
+    // Could show a notification or refresh the page
+    console.log('Favorite added:', result)
+  }
+
+  // Handle favorite deleted
+  const handleFavoriteDeleted = (result: any) => {
+    // Could show a notification or refresh the page
+    console.log('Favorite deleted:', result)
+  }
+
+  // Handle command executed
+  const handleCommandExecuted = (result: any) => {
+    // Could show a notification or refresh the page
+    console.log('Command executed:', result)
   }
 
 // Lifecycle

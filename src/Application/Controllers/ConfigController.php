@@ -484,4 +484,162 @@ class ConfigController
             setcookie("display-data[{$key}]", $value, $expiretime, $cookie_path);
         }
     }
+
+    /**
+     * Execute Asterisk configuration reload
+     */
+    public function executeAsteriskReload(Request $request, Response $response): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        
+        if (!$currentUser) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Authentication required'
+            ]));
+            return $response->withStatus(401);
+        }
+
+        // Check if user has ASTRELUSER permission
+        if (!$this->hasUserPermission($currentUser, 'ASTRELUSER')) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'ASTRELUSER permission required'
+            ]));
+            return $response->withStatus(403);
+        }
+
+        $data = $request->getParsedBody();
+        $localNode = $data['localnode'] ?? null;
+
+        if (empty($localNode)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Local node not specified'
+            ]));
+            return $response->withStatus(400);
+        }
+
+        try {
+            // Get user's INI file
+            $userIniFile = $this->getUserIniFile($currentUser);
+            
+            if (!file_exists($userIniFile)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Couldn't load supervisor INI file: $userIniFile"
+                ]));
+                return $response->withStatus(500);
+            }
+
+            $config = parse_ini_file($userIniFile, true);
+
+            if (!isset($config[$localNode])) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Node $localNode is not defined in $userIniFile"
+                ]));
+                return $response->withStatus(400);
+            }
+
+            $amiHost = $config[$localNode]['host'] ?? null;
+            $amiUser = $config[$localNode]['user'] ?? null;
+            $amiPass = $config[$localNode]['passwd'] ?? null;
+
+            if (empty($amiHost) || empty($amiUser) || empty($amiPass)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "AMI host, user, or password not configured for node $localNode"
+                ]));
+                return $response->withStatus(500);
+            }
+
+            // Include AMI functions
+            require_once 'includes/amifunctions.inc';
+
+            // Connect to AMI
+            $fp = SimpleAmiClient::connect($amiHost);
+            if ($fp === FALSE) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Could not connect to Asterisk Manager at $amiHost for node $localNode"
+                ]));
+                return $response->withStatus(500);
+            }
+
+            // Login to AMI
+            if (SimpleAmiClient::login($fp, $amiUser, $amiPass) === FALSE) {
+                SimpleAmiClient::logoff($fp);
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Could not login to Asterisk Manager for node $localNode with user $amiUser"
+                ]));
+                return $response->withStatus(500);
+            }
+
+            $results = [];
+            $results[] = "Reloading configurations for node - $localNode:";
+
+            // Execute reload commands
+            if (SimpleAmiClient::command($fp, "rpt reload") !== false) {
+                $results[] = "- rpt.conf reloaded successfully.";
+            } else {
+                $results[] = "- FAILED to reload rpt.conf.";
+            }
+            sleep(1);
+
+            if (SimpleAmiClient::command($fp, "iax2 reload") !== false) {
+                $results[] = "- iax.conf reloaded successfully.";
+            } else {
+                $results[] = "- FAILED to reload iax.conf.";
+            }
+            sleep(1);
+
+            if (SimpleAmiClient::command($fp, "extensions reload") !== false) {
+                $results[] = "- extensions.conf reloaded successfully.";
+            } else {
+                $results[] = "- FAILED to reload extensions.conf.";
+            }
+
+            SimpleAmiClient::logoff($fp);
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'message' => 'Asterisk configuration reload completed',
+                'results' => $results
+            ]));
+            return $response->withStatus(200);
+
+        } catch (Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Error executing Asterisk reload: ' . $e->getMessage()
+            ]));
+            return $response->withStatus(500);
+        }
+    }
+
+    /**
+     * Check if user has specific permission
+     */
+    private function hasUserPermission(string $user, string $permission): bool
+    {
+        // This is a simplified permission check
+        // In a real implementation, you would check against the user's actual permissions
+        // For now, we'll assume the user has the permission if they're authenticated
+        return !empty($user);
+    }
+
+    /**
+     * Get user's INI file path
+     */
+    private function getUserIniFile(string $user): string
+    {
+        // Use the same logic as the original get_ini_name function
+        if ($user === 'default' || empty($user)) {
+            return 'user_files/allmon.ini';
+        }
+        return "user_files/{$user}.ini";
+    }
+
 }

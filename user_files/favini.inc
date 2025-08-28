@@ -51,6 +51,6 @@
 // Replace 'your_username' with actual usernames
 // Replace 'your_filename.ini' with your favorites INI file names
 
-// $FAVININAME['your_username'] = "your_filename.ini";
+$FAVININAME['anarchy'] = "anarchy-favorites.ini";
 
 ?>

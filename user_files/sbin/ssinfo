@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SUPERMON_DIR="/var/www/html/supermon-ng"
+SUPERMON_DIR="/home/supermon-ng"
 
 AddYear () {
     NewDate=`printf "%s\n" "$1" | /usr/bin/awk -v M="$MONTH" -v Y="$YEAR" 'BEGIN {Months="JanFebMarAprMayJunJulAugSepOctNovDec"; cM=""}

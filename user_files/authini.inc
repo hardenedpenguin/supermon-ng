@@ -46,6 +46,6 @@
 // Replace 'your_username' with actual usernames
 // Replace 'your_filename.ini' with your INI file names
 
-// $ININAME['your_username'] = "your_filename.ini";
+$ININAME['anarchy'] = "anarchy-allmon.ini";
 
 ?>

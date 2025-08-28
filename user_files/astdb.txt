@@ -14,7 +14,7 @@
 2019|WA6ZFT|Lab Dev Box|La Mesa, CA
 2020|KK9ROB|Private Node|California
 2021|G7RPG|HUBNet|hubnetwork.uk
-2022|G7RPG|HUBNet|hubnetwork.uk
+2022|G7RPG|Cloud Hub|UK
 2024|KM6RPT|448.280-|San Diego
 2027|WX8GRN|145.270|Lowell, MI
 2029|W6LIE|145.150-|Bakersfield, CA
@@ -190,10 +190,10 @@
 2251|W7RWN|Open Hub Ontario|Seattle, WA
 2252|W7RWN|Open Hub Ontario|Seattle, WA
 2253|GB3KE|145.6875 -0.6|Bearsden, Glasgow
-2254|W7RWN||spare
-2256|W7RWN|441.125+|spare
-2257|W7RWN|146.550|spare
-2258|W7RWN||spare
+2254|WA7DEM||spare
+2256|WA7DEM|441.125+|spare
+2257|WA7DEM|146.550|spare
+2258|WA7DEM||spare
 2259|GB3DQ|430.975 + 7.6 MHZ|Killigarth, Looe Cornwall UK
 2260|W9SH|Cumming Hub|Atlanta, GA
 2261|W9SH|000.000|Cumming, GA 30040
@@ -242,7 +242,7 @@
 2336|WU7Q|440|Adams, TN
 2337|N3FE|444.600|Mansfield, PA
 2338|N3FE|444.600+|Whitnyville, PA
-2339|N3FE|444.600 (+)|Mansfield, PA
+2339|N3FE|442.850 (+)|Millerton, PA
 2340|N3FE|System HUB|Mansfield, PA
 2341|K4KWQ|HUB|Jackson, Michigan, USA
 2344|VE3YYZ|443.050+|Toronto, ON
@@ -1010,7 +1010,7 @@
 27545|KD8JBF/L|145.750|Port Saint Lucie, FL
 27546|HS2QOJ|ASL Node|Nonthaburi
 27547|KQ4ADJ||Hintz Hamstation
-27549|KF0LPT|Josh|Raytown, Missouri&#128520;
+27549|KF0LPT|Josh|Raytown, Missouri
 27550|EB5ADX|144.725|ALCANTARILLA/MURCIA
 27551|9Z4FZ|147.705 - MHz|Arima,Trinidad and Tobago
 27552|KC0EQA|Nebraska_Hub TGIF|Hastings, Nebraska
@@ -1336,7 +1336,7 @@
 27892|KA4EPS/R|***FLORIDA HUB***|West Palm Beach, FL
 27893|WH6FM|WH6FM Hub - Hilo|Hilo, Hawaii
 27894|KA4EPS|146.550 Simplex|Woodland Park, Colorado
-27896|E25KC||Cabangtikor Pattani
+27896|Servers|Server|Cabangtikor Pattani
 27897|WD8GEO||Cleveland, Ohio
 27898|W3MIE||meadville, pa
 27899|K7RDB||Vashon Island, WA
@@ -1803,7 +1803,7 @@
 28431|N5YIZ|441.375 + |Houston, TX
 28432|K5HDM||S. Austin, Tx
 28433|WI3J|147.420 S TSQL 123.0|Gaithersburg, Md
-28434|K0VQ|444.725+|Carbondale, CO
+28434|K0VQ|444.725+|Various
 28435|KR1P|447.050 Layton, UT|Layton, UT
 28436|KC9UHI|431.600-|Little Chute, WI
 28437|W6COD|445.000 (S)|Los Angeles Ca
@@ -2314,7 +2314,7 @@
 28987|IR3UGC|431.3875 + 1.6 MHz|Sterzing / Vipiteno
 28988|VE2ABC||St-Tite des Caps  QC.
 28990|K0DMF|442.750+|North Branch, MN
-28991|K6PBT|EcholinkAccess 17374|USA
+28991|K6PBT|Echolink 17374|USA
 28992|KJ6KTV|Weather |Rancho Cucamonga, CA
 28993|K7ZAA|Netcom|Myrtle Point Oregon
 28995|WH6VP||HAWAII-PACIFIC
@@ -3126,11 +3126,11 @@
 29851|WA5VDM|145.350|Lake Charles, LA.
 29852|N3TUQ||Lancaster, PA
 29853|WA6VPL|Hub|Lompoc CA
-29854|WA6VPL|444.800 MHz +5.0 MHz|Lompoc CA
+29854|WA6VPL|430.025 MHz (+9 MHz)|Lompoc CA
 29855|WA6VPL|52.88 MHz (-0.5 MHz)|Lompoc CA
-29856|WA6VPL|147.120 MHz|Lompoc CA
-29857|WA6VPL| 145.120, DMR bridge|Lompoc CA
-29858|WA6VPL|146.400 MHz|Lompoc CA
+29856|WA6VPL||Lompoc CA
+29857|WA6VPL||Lompoc CA
+29858|WA6VPL||Lompoc CA
 29859|K7NBO|146.415|Shingletown Ca.
 29860|K7NBO|223.440|Shingletown Ca.
 29861|K6KD||Manhattan Beach, CA
@@ -4609,7 +4609,7 @@
 41490|DO8SN||Alfeld, Germany
 41491|W3HXF||Falls Church, Virginia USA
 41492|KH6GQM|Kohala Conf Bridge|Kapaau, Hawaii USA
-41493|WA6KBP|CALNET|Patagonia, AZ
+41493|WA6KBP|HotSpotRadios.com|Modesto, CA
 41494|K7AZ|TEST RTCM|Lompoc CA
 41495|K7AZ||Lompoc CA
 41496|K7AZ||Lompoc CA
@@ -4950,7 +4950,7 @@
 41862|N2YQT||South Glens Falls, NY
 41863|N1PCE|EchoLink N1PCE-R |Whitefield, NH
 41864|MB7IPN-HUB||Portsmouth
-41865|AE5HO|444.8 in, 439.8 out|Flower Mound, TX
+41865|AE5HO||Flower Mound, TX
 41866|W1FVB||Lancaster, NH
 41867|KC5CZX|441.400MHZ  +5|Lubbock Texas
 41868|KJ4JCP||London Ky
@@ -5482,7 +5482,7 @@
 42435|W7HEN|Echolink Gateway|Henderson, NV
 42436|KA7QEN||Sherwood, Oregon
 42437|K6LCM|Simplex|Santa Barbara, CA
-42439|2E0ENN|IAX2 Node #2|Cranwell, Lincolnshire, UK
+42439|2E0ENN|DVSwitch Node 2|Cranwell, Lincolnshire, UK
 42440|N3OOU|445.975|Philadelphia PA 19145
 42441|K8JTK|446.9125/S|Westlake, Ohio
 42442|KK6JKY||antioch,california USA
@@ -5592,7 +5592,7 @@
 42553|N7DOD||Lawton, OK
 42554|KJ6HUP|446.100|Fresno,ca
 42555|WD5EMS|927.0250|Belton, TX
-42556|N8AGJ|443.9375|lima Ohio
+42556|N8AGJ|443.9375|Bellefontaine, Ohio
 42557|MB7ALC|430.0375|Swinton, MEXBOROUGH 
 42558|W1FVB|Northern NH AllStar|nhhub.wordpress.com
 42559|K7DUH|445.000 Simplex|Tenino, WA
@@ -5888,7 +5888,7 @@
 42874|NA6ER||Torrance, Ca.
 42875|M0BXR||Warrington
 42876|M3CJC||Bradford
-42877|N8AGJ|446.225|Lima Ohio
+42877|N8AGJ|446.225|Bellefontaine, OHIO
 42878|E20ACC||BANGKOK
 42880|VE3XMR||Sudbury, Ontario 
 42881|AK8H||Akron Ohio
@@ -5902,8 +5902,8 @@
 42890|K4KWQ|Sheri-Asl3 node|Jackson, MI
 42891|AC7UB||Williams/Arizona/United States
 42892|KJ4QAL||St Petersburg, FL
-42893|N8AGJ||Lima Ohio
-42894|N8AGJ||Lima Ohio
+42893|N8AGJ|443.9375|Bellefontaine, Ohio
+42894|N8AGJ||Bellefontaine, Ohio
 42895|KC7RYP|146.010|Phoenix, AZ
 42896|DL9RDZ||Kellberg bei Passau
 42900|N0IV|432.200|Altoona, AL USA
@@ -6225,7 +6225,7 @@
 43264|N4XAT||Southampton, New Jersey
 43266|KG5JBC|443.200|Azle, TX
 43267|KJ6MID|Traveling Nano Node|Santa Barbara, CA
-43268|K8MDM|Portable|West Cobb
+43268|K8MDM|House 927.6xx node|Marietta, Ga
 43269|2W0TDK||Mold, UK
 43270|KF7TBT||north las vegas nevada
 43271|K6ZRX|444.525 +|Napa, CA
@@ -6419,7 +6419,7 @@
 43473|W6HPB|927.675 |Royal Oaks, CA
 43474|N1XBM||Planet, Earth
 43475|K1IMD||Padre Island
-43476|2E0ENN|IAX2 Node #3 |Cranwell Lincs UK 
+43476|2E0ENN|DVSwitch Node 3 |Cranwell Lincs UK 
 43477|KG5KYM|144.500|Houston, Tx
 43478|WH6FCC|446.800|Tualatin, Oregon
 43479|W0UJ||Crosslake, MN, USA
@@ -6618,9 +6618,9 @@
 43685|WV8MR||Parkersburg WV
 43686|4F0X |Love Lang No Hate>>>|>>>Four Fox Zero Xray xxx
 43687|DW2ZMX|Connected Freedom |ALLSTARLINK SYSTEM
-43688|Amateur Service|Together,Inspiring |Group Inc. *ASTIG*
+43688|*A*S*T*I*G* |*Globally Connected,|Locally Served*
 43689|4F0X|ASL3 >>> ALLMON3|*LOVE Lang Walang Hate*
-43690|POC |GATEWAY TO ASL|Connect and Enjoy QSO
+43690|Amateur Service|Together,Inspiring |Group Inc. *ASTIG*
 43691|4F0X Twin BabyG|Radioless Node 2 V3|>>>Four Fox Zero Xray xxx
 43692|4X1MB|438.750 - 7.6|Ramat Beit Shemesh, Israel
 43693|4X1ZZ|145.425|Jerusalem, Israel
@@ -7624,7 +7624,7 @@
 45531|KK4VRW|447.300|Varies
 45532|AB2FD||Deer Park, NY
 45533|W7JFH|Mobile Node RPI3|Bountiful,Ut
-45534|WA6KBP||Patagonia, AZ
+45534|WA6KBP||Modesto, CA
 45535|NV8Q|K0HAM Network Hub|El Dorado, KS
 45536|KA1MXL|Warwick Rhode Island|Allstar node
 45537|K7KSN||Portable Node USA
@@ -8054,7 +8054,7 @@
 45999|KE5FGC|443.575|Tyler, Tx
 46000|VA2XJM||Val-d'Or, Qc
 46001|VA2XJM||Val-d'Or, Qc
-46002|VE4WTH|146.430|Winnipeg, MB
+46002|VE4WTH||Winnipeg, MB
 46003|VE4WTH||Winnipeg, MB
 46005|W7EI|VVARA Hub|Cottonwood, AZ
 46007|K7APX||Portable
@@ -9170,6 +9170,7 @@
 47268|W2LB||Farmington, New York
 47269|K9WKJ|444.975+|chippewa falls, wi
 47270|WA6IBE||Coarsegold, CA
+47271|NG5N|434.35000|FERRIS TX
 47272|N6KGN||ClearNode
 47273|K7REW|147.120 simplx|bullhead city,az
 47274|N0AYK|433.500|Vermillion, SD
@@ -9184,7 +9185,7 @@
 47283|N4JDL||clayton northcarolina
 47284|N4JDL||clayton northcarolina
 47285|N0XCR|1.25 Meter Band|Heisenberg Hugel / Colorado
-47286|2E0ENN|IAX2 Node #1|Cranwell UK
+47286|2E0ENN|DVSwitch Node 1|Cranwell UK
 47287|KI7PIM||Las Vegas, NV
 47288|KI7PIM||Las Vegas, NV
 47289|KB3BYJ||Lykens, PA
@@ -9241,7 +9242,7 @@
 47346|KE4QNH||Naples, FL
 47347|KE4QNH||Naples, FL
 47349|K2JZO||Browns Mills New Jersey
-47350|K5TKR||Fort Worth, TX 
+47350|K5TKR||Dallas, TX
 47351|2E0OMO||Bootle, Merseyside
 47352|K2PM||Easton Pa
 47353|W3WGX|146.760 -|Seven Springs
@@ -9700,7 +9701,7 @@
 47842|G7GIK|Radioless|Basingstoke, Hampshire. UK
 47843|W2CSX||Rochester, NY
 47844|MI0JPC|microHUB/UHF|Newtownards
-47845|MI1DAW||BELFAST 47845
+47845|MI5DAW||BELFAST
 47846|AD4RM|145.190 -600 Khz.|Springfield , Tn. USA
 47847|KE8YVT|446.1250|Salem, Ohio 
 47848|MB7AHY|430.8750|Liverpool
@@ -11020,7 +11021,7 @@
 49354|KU0L|440.225|Damascus, Oregon
 49355|ZS1I|HUB 145.550 Mhz|Mossel Bay South Africa
 49356|KE3GP|Testing|Joppa, MD
-49357|ww6iam|Digital Bridge Modes|Redlands california 
+49357|kd6pas|Radioless system|Redlands california 
 49358|KE3GP|DVSwitch|Joppa, MD
 49360|VE2RMC|146.970 -|Mt-Laurier, Qc, Canada
 49361|K1IC||Fairfield, CT
@@ -11310,7 +11311,7 @@
 49689|WA3ADI|Mobile Node|Havertown, PA
 49690|KC8TAI|WV-LINK NETWORK|Bruceton Mills, WV
 49691|EA1KT|433.70|Madrid, Spain
-49692|WB8Q|446.100 Mhz|Escanaba, Michigan
+49692|WB8Q|446.100 Mhz|Wetmore, Michigan
 49693|W9VFR||Normal, IL 
 49695|K5UUT|CLEARNODE|Pflugerville, TX
 49696|AI7MG||
@@ -11369,7 +11370,7 @@
 49758|HK4KM||Medellin, Antioquia, Colombia
 49759|EA1IVQ||Pontevedra
 49760|EA1IVQ||Pontevedra
-49761|KA3KDL|Mobile Hotspot|Hartsville, SC
+49761|KA3KDL|Mobile Mobile|Hartsville, SC
 49764|KJ5BMY||Ricahrdson Tx
 49765|KD6CUB||El Paso, TX
 49766|KD6CUB||El Paso, TX
@@ -11428,7 +11429,7 @@
 49824|KC8TAI||Bruceton Mills, WV
 49825|KI7RYT||Kenmore, WA
 49826|G4LXT||Weybridge/Surrey/UK
-49827|KE6GVK|ARRL & NEWSLINE |LOS ANGELES, CA
+49827|KE6GVK|wmrasystem.com|WMRA
 49828|N7WNS||Skeleton's Perch, AZ
 49829|K4VEB|145.700 + PL 100.0|The Villages, FL
 49830|NE7X|446.5250 Simplex|Northeast Phoenix AZ
@@ -11544,12 +11545,12 @@
 49955|KD2SBW||Niagara Falls, NY
 49957|N8NPK||Utica, Mi
 49961|KK6IMI||Turlock California USA
-49962|KE6GVK|XLX835 (D) TG-6 |LOS ANGELES, CA
-49963|KE6GVK|DMR KINGS OF DIGITAL|LOS ANGELES, CA
-49964|KE6GVK|wmrasystem.com|WMRA
-49965|KE6GVK|wmrasystem.com|WMRA
-49966|KE6GVK|wmrasystem.com|WMRA
-49967|KE6GVK|wmrasystem.com|WMRA
+49962|KE6GVK|WMRA-SERVER|LOS ANGELES, CA
+49963|KE6GVK|ARRL & NEWSLINE |LOS ANGELES, CA
+49964|KE6GVK|NXDN REFLECTOR 7941|LOS ANGELES, CA
+49965|KE6GVK|DMR KINGS OF DIGITAL|LOS ANGELES, CA
+49966|KE6GVK|XLX835 (D) TG-6 |LOS ANGELES, CA
+49967|KE6GVK|YSF US WMRA O7941|LOS ANGELES, CA
 49968|KE6GVK|wmrasystem.com|WMRA
 49969|KE6GVK|wmrasystem.com|WMRA
 49970|VA2RVB|442.800 +|Saint-Felix-de-Valois, Quebec
@@ -11963,7 +11964,7 @@
 50501|ZL4BEN||Wellington 
 50502|KC9YBU||Perry County, IN
 50505|KH2SW||DEDEDO, GUAM
-50507|MI5DAW||Belfast-M1KE
+50507|M5DAW||Belfast/Co.Antrim/UK
 50508|AA9JR||.
 50513|W9BIF|224.820|Goshen, Indiana
 50514|KF5TVG|442.650|Broken Arrow, Oklahoma
@@ -12118,7 +12119,7 @@
 50707|MB7IKL||Kington Langley
 50708|KN4YXV||Orlando, FL
 50709|2W0YOX||Chepstow
-50711|MI5DAW-M1KE||Belfast-M1KE
+50711|M5DAW||Belfast/Co.Antrim/UK
 50712|W3TTY|432.100|Perkasie,PA
 50713|W2KBZ|145.650 PL 141.3|Georgetown, DE
 50714|W1WRA|433.175|New England
@@ -12717,7 +12718,7 @@
 51576|ZL1JX|432.700|Auckland, NZ
 51577|DV7HAA||Bitoon, Dumanjug, Cebu
 51579|VK4BDE||townsville Australia
-51580|DW2BQI|GM ASL - POC|San Mateo Isabela Phil.
+51580|DW2BQI|Icom IC-2300H|San Mateo Isabela Phil.
 51583|WR3U||Lykens
 51584|W8KNX||South Lyon, MI
 51585|KC0USM||Missouri Valley, IA
@@ -12765,7 +12766,7 @@
 51645|IT9XVU|144.925 |Agira
 51646|K9EAG|147.090/+.6/88.5|Malvern AR,
 51647|KA4HOT|224.040 Simplex Node|Indianapolis/IN
-51648|VK5CIA|438.500|Adelaide / South Australia
+51648|VK5CIA|Meaning of Life -42|Adelaide / South Australia
 51649|WH6Y||Hawaii
 51650|KM4QFB|444.325|Valdosta/GA.
 51651|K9MLS|442.500 +|Denton, Texas
@@ -12817,6 +12818,7 @@
 51716|VE4UMX|Experimental|Winnipeg, Manitoba
 51717|VE4UMR|147.270+|Winnipeg, Manitoba
 51719|G0OOT|Radioless Node|Chester, Cheshire, UK
+51720|W0SCA|146.535|Idaho Springs, CO
 51722|M0KLT||Liverpool
 51723|YO2LYN|434.650|Resita
 51724|M1BMW|431.125 HUBNet|Pinchbeck, Spalding, Lincs
@@ -12850,7 +12852,7 @@
 51763|M0UKB|70cm Mobile Node|Allendale, UK
 51764|WS3RIC||Bristol, PA
 51765|W7JSM|430.425|Woodinville, Wa, USA
-51766|VK5CIA|438.600|Adelaide / South Australia
+51766|VK5CIA|Meaning of Life -43?|Adelaide / South Australia
 51767|ZLHUB|DRGNZ Network |New Zealand
 51768|ZL1BCO|146.750|Taupo New Zealand
 51769|K6IOS||Santa Ana, CA
@@ -14378,7 +14380,7 @@
 53881|VA3KXP|446.1625 Simplex|Ontario - Mobile
 53882|N6EDW||Menifee, CA
 53883|GB7BL|439.675 -9.0 118.8Hz|Allendale, UK
-53884|MI5DAW||Belfast-M1KE
+53884|M5DAW||Belfast/Co.Antrim/UK
 53886|NK5B|446.675|Davie, FL
 53887|KE0QIM|445.900|Maryland Heights, MO
 53888|WH6GNA||Wahiawa, Hawaii, USA
@@ -15271,7 +15273,7 @@
 55132|VE3FLK|448.900 Mhz Simplex|London On Canada
 55134|NA6GM|Grupong Magellan Hub|Los Angeles, CA
 55135|N5LUY|900 Mhz  HUB|setecg.com [Spring, Texas]
-55136|E25KU|145.7500 MHz.T94.8Hz|(HS8KF-L&&TGif 255) Suratthani
+55136|E25KU|145.7500 MHz.T94.8Hz|Bannaderm Suratthani  Thailand
 55137|HS6KLJ|-5www.ariss.net|Mikrotik iP44 Samutsakhon RPi3
 55138|KC5RJL||Houston, Texas
 55139|K4KAM||TALLAHASSEE FLORIDA
@@ -16353,7 +16355,7 @@
 56694|M7KWM||Didcot
 56695|KA4DAN||Lawrenceburg, KY
 56696|WB2ELW|442/447.325|Hamburg, NY
-56698|W0MUD|146.460|Minot, ND
+56698|W0MUD|146.460|Williston, ND
 56699|XE1SMD|438.375|JAMAY/JALISCO/MEXICO
 56701|KD0PGV||Fremont, Nebraska
 56703|XE1D|435.510|Guadalajara, Jalisco, Mexico
@@ -16477,7 +16479,7 @@
 56866|ZS3JDL|145.625|kimberly/nc/
 56868|KR6RG|HotSpotRadios.com|San Diego
 56869|DW2ACH>>Rain|Micronode FullDuplex|City of Ilagan, Isabela
-56870|XLX299 Module S||The cloud
+56870|XLX299 Module S||NZ
 56871|G6LUU||Northants GB
 56873|KD9LPW||Lowell, IN
 56874|VE3RUG||Maidstone/Ontario
@@ -16561,6 +16563,7 @@
 56978|W4IY|147.24|Lake Ridge, VA
 56979|W3SWL||State College, PA
 56980|KN3Q|433.500|Myrtle Beach SC
+56981|KI5UTZ||Porter Texas
 56982|WJ3EP||Henderson NV
 56983|KN6KHV|146.54|San Jose, California
 56985|KM4WSK|446.025|Wayne, PA
@@ -16686,6 +16689,7 @@
 57164|W0TCO-A|442.320|Denver, CO
 57165|BR9AA|439.650|Xi'An,ShaanXi
 57166|VE2REO|146.790|Sainte Calixte
+57167|M6LUN||St. Albans, UK
 57168|W1LOB||Sun City Center, FL
 57169|PD9FVH||Gouda, the Netherlands
 57170|W7DEG||Marquette Michigan
@@ -16850,6 +16854,7 @@
 57397|G6UOH||Grantham
 57399|W2JBO|52.550|Watson, LA
 57401|DU2E||AllStarLink_Ilocos_Sur
+57403|N6ACG|224.320 (-)|Corona Del Mar, CA
 57404|DU2E||AllStarLink_Ilocos_Sur
 57405|VK4YWG|145.350|QTH Townsville
 57408|VA3GMO||Toronto, ON, Canada
@@ -17211,7 +17216,6 @@
 57986|VA3CRW||North Bay, ON
 57988|W4AFG||Griffin, Georgia
 57990|VK2KES||RX Only
-57991|IW2EPA|145,225|Paderno D.no (MI) - Italy
 57994|KB0TDW-L|436.100|Council Bluffs Iowa
 57995|VK2CAR||Sydney, MSW
 57997|IZ7EXI||IT-C4FM_BAT Multiprotocollo
@@ -17587,6 +17591,7 @@
 58530|EA7HOC||Cordoba/Spain
 58531|KI5VIS||Coweta, OK
 58532|2W0KVG||South Wales UK
+58533|W8QN|147.6|Midland, Michigan
 58534|KE5BOR||Broken Arrow, OK
 58535|W4MEM||Memphis, TN
 58536|KK7CCE||Grayland, WA
@@ -19004,7 +19009,7 @@
 60636|KK7DFK||Queen Creek/Arizona/US
 60638|HS4ZDQ||Chantaburi, Thailand.
 60639|HS4ZDQ||Chantaburi, Thailand.
-60641|DX3EVM|145.180|Paniqui, Tarlac 
+60641|DX3EVM|145.180|District 3 
 60642|KM6FCK|433.500|Burbank CA
 60644|KF7TZO|146.535|Smith County, Texas
 60646|VE6KIK||Edmonton, Alberta, Canada
@@ -19543,7 +19548,7 @@
 61440|N5AK|444.650 - PL 100.0|Cleveland,TX=Sharkclub.org 
 61441|HS9CEL||Muang,Lopburi,Thailand 
 61443|S21HMX||Joypurhat
-61444|M7SNS|430.225|Castleford West Yorkshire
+61444|M7SNS||Castleford UK
 61445|M7SOX||Tonbridge 
 61448|AD8KO||Port Huron, MI
 61450|KG2BAD||Dallas, TX
@@ -19838,7 +19843,7 @@
 61857|DW2FIZ |Dwende Simplex Node|Bayambang,Pangasinan
 61858|WX3K||Northeast PA
 61860|OZ3AB|434.200|Naestved DK
-61862|K5VPC|438.550|Wylie, Texas
+61862|K5VPC|438.500|Wylie, Texas
 61863|G7UFO|434.0000|Browney, Durham
 61864|A92EE||Bahrain
 61866|S21ACP|438.200|Demra, Dhaka, Bangladesh
@@ -20113,7 +20118,7 @@
 62268|KZ4JN-L||Keystone Heights, FL - USA
 62269|VK4CAR|441.250|Gympie, Qld, Australia
 62270|E24GGG||HATYAI, SONGKHLA, THAILAND
-62271|PA3FNR-R|438.662,5 MHz. -7,6|Helmond, The Netherlands
+62271|PA3FNR|438.662,5 MHz.(-7,6)|Helmond, The Netherlands
 62272|E25GR||Li, Lamphun, Thailand
 62273|9W3AZM||Selangor
 62276|PA3FNR|438.662,5 MHz.|Helmond, The Netherlands
@@ -20366,7 +20371,7 @@
 62625|AE2JM|OCARC-NY  HUB|Newburgh, NY
 62627|N4BLS||Gastonia, NC
 62629|KF8BXI||Pleasant Ridge, MI
-62631|HS4XVD||AllStarlink - Phonsai - RoiEt
+62631|HS4XVD||Thahadyaw - Phonsai - RoiEt
 62634|KC6SDF||Los Angeles
 62635|PD4ET||Zevenhoven Z-H
 62636|PD2ARI|436.000|Amersfoort
@@ -20411,7 +20416,6 @@
 62694|KK7VBG||Issaquah, WA
 62696|W6QY|445.000|Hidden Valley Lake, California
 62697|NY5V|146.54|Quitman, TX
-62702|AP2JK||KP/Pakistan
 62704|VK3ANR|146.525|Geelong
 62706|W3MSB||Hershey
 62707|W0QOJ||Carbondale CO
@@ -20546,7 +20550,6 @@
 62911|WA7ER||Liberty Bay, WA
 62913|YT2FA|433.400|Prokuplje/Serbia
 62916|WN1C||allstarlink.org
-62919|AP2JK||Pakistan
 62921|S21BDK|435.500|Dhaka
 62925|W6FM||Santa Margarita/CA
 62926|DW2KGG Rain|Simplex Node 16 Ch.|Allstarlink Urdaneta City
@@ -21090,7 +21093,7 @@
 63760|N9EQ||West Bloomfield, MI
 63762|W0JO|U:446.100 D:146.595|Chamblee, GA
 63764|KA8OAD||Fairlawn, Ohio
-63765|VK3WLH||Kingston Tasmania
+63765|VK7WLH||Kingston Tasmania
 63766|EA7LEE||Huelva
 63767|VK7AAE||Blackmans Bay
 63769|NC8TM||Jacksonville, NC
@@ -21180,6 +21183,7 @@
 63886|W1AW||Mexico,Quertaro-QuertaroCity
 63888|VE7IGN||Langford Bear Mtn BC Canada
 63889|W6ELI||Big Bear City, CA
+63890|KC1VAX||NEW ENGLAND DIGITAL RADIO-NEDR
 63891|N6FMD|433.500|Fair Oaks California
 63892|G7RAE|432100|rothwell northants uk
 63893|2E0JKH||Northampton UK
@@ -21461,7 +21465,7 @@
 64284|KD3AKX||Chicora Pennsylvania
 64285|E25XZZ||ASL Khuankalong,Satun.
 64286|KB3PCC||Fairfield , Pa
-64287|VA3FBN||Dryden, ON 
+64287|VA3FBN||Dryden
 64288|VK6ISS/P||Portable
 64289|M6OBH||Epping
 64290|KE8ZCI||Eaton Rapids, MI
@@ -21510,7 +21514,7 @@
 64358|G1MZT||Redditch, Worcestershire
 64360|E24MFU||PRIK SONGKHLA THAILAND
 64361|KC8QDP|HUB|Glouster ohio
-64362|VA3FBN||Dryden, ON 
+64362|VA3FBN||Dryden
 64363|N7SH||Richland/WA
 64364|KL7ZK|445.350|Soldotna, Alaska
 64365|DY2LDZ||LAOAG CITY ILOCOS NORTE
@@ -21746,9 +21750,9 @@
 64674|E27BPR||Nonthaburi
 64675|N3DFK||Mount Lebanon, PA
 64676|N8GMY||Spring Lake,MI
-64677|E25MQ||McQUEEN MAKHAM CHANTHABOON
+64677|E25MQ||McQUEEN LOCAL HUB
 64678|AB0R|223.94|8 Miles North of Saint Paul MN
-64679|E25MQ|145.7375 Mhz|McQueen ASL Link Makham
+64679|E25MQ|145.7375 Mhz|McQueen Link Makham
 64680|SYAG|SYAG|South Yorkshire
 64681|S21OMH||Dhaka, Bangladesh
 64683|VE5LAX|446.100|Warman, Saskatchewan
@@ -21864,7 +21868,7 @@
 64836|S21DI|433.500|Dhaka
 64837|KK4VSD|224.240|Dadeville, Alabama
 64838|K6GBZ||Cameron Park, CA, USA
-64839|KB9VKQ|927.225 RPT -25|Brownstown, IL
+64839|KB9VKQ|927.225 RPT -25|Brownstown/Illinois/USA
 64841|G8LUZ||Wareham/Dorset/United Kingdom
 64842|WB0KKI||Colorado City Colorado
 64843|KK4YDY||Georgia
@@ -21908,7 +21912,7 @@
 64889|VU3HQP|433.500|Tripura
 64892|N7WHZ||Guantanamo HOA
 64894|EI1NC||Mallow, Co Cork.
-64895|KC3WOV|446.195|Clark,PA
+64895|KC3WOV|446.194|Clark,PA
 64896|VA7UY||Mission BC 
 64897|KO6HKG||Mobile Spot, USA
 64898|AB0R||8 Miles North of Saint Paul MN
@@ -22001,7 +22005,7 @@
 65017|AR AUXCOMM Hub|Cloud Based|Arkansas Statewide
 65018|HS8AJY||ASL Nabon Nakhonsitammarat,TH
 65019|2E0VWJ||Lower moor
-65020|MM7ONH|145.2375 MHz 88.5 Hz|Roybridge, Lochaber, Scotland.
+65020|M7ONH|145.2375 MHz 88.5 Hz|Roybridge, Lochaber, Scotland.
 65021|KC8KGZ|MSCG Hub|Flint, MI
 65022|KD9ANT||Roseville, Minnesota 
 65023|9W2NUF||Kelantan, Malaysia
@@ -22144,7 +22148,7 @@
 65219|VK4WSG|441.250|Townsville/QLD/Australia
 65220|M7AUO|439.600|Telford/Salop/United Kingdom
 65221|W6EMS||California
-65222|W0SV|146.940|SAUK RAPIDS, MN
+65222|KU5MC|146.940|SAUK RAPIDS, MN
 65223|MI7PYZ||Coleraine
 65224|M6HOU|434.250|Mere  Brow
 65226|DS5JHQ|438.300|Daejeon, Korea
@@ -22264,7 +22268,7 @@
 65392|W4BWW|6m_HUB_netwk|New Market, TN
 65393|WP4SBC||Maunabo, Puerto Rico
 65394|N0RAP||black forest, co
-65395|E25EY||E-San-Saket-RoiEt-Thailand
+65395|E25EY|145.7375 MHz|Link-Phonsai-RoiEt-Thailand
 65396|VK3TTF||Keysborough
 65397|W8RCY|433.575 MHz. |Madison Heights, MI
 65398|N8VDZ||Warren, MI
@@ -22557,7 +22561,7 @@
 65796|N5IMC||Powder Springs, GA
 65797|HB9HYE||ZH
 65799|9V1JC|433.175|Singapore
-65801|WA2BAH|146.420|Queens, NY
+65801|WA2BAH|446.33750|Queens, NY
 65802|K5EXI||217 S. Main St. Newcastle, OK 
 65804|M7HWZ||STOTFOLD
 65805|KC1WJJ||Old Saybrook
@@ -22584,7 +22588,6 @@
 65833|M7FGE|433.400|Runcorn
 65834|MB7IGV| 145.312500|Isle of Man
 65835|KE4VMU||Southwest Ranches Fl
-65836|KM7BHS|431.180/147.480|Phoenix,AZ 85029
 65837|WI0M||ST LOUIS
 65838|AA4GB|446.075|Fort Carson CO
 65840|W8EDH||Everywhere
@@ -22729,7 +22732,7 @@
 66012|M7DAX||Sheffield
 66013|VE7YYO Alinco| DR-438 Simplex Node|Allstarlink @ BURNABY, BC
 66015|VA7EP Alinco|DR-438 Simplex Node|Allstarlink@COQUITLAM B.C
-66016|KE8ZKS|446.5|Midland, Michigan
+66016|KE8ZKS||Midland, Michigan
 66019|VK1MS||ACT
 66020|VE2STV|446.125 MHz Simplex|Gatineau, QC
 66021|VK6BJR||Perth WA
@@ -22779,6 +22782,7 @@
 66077|KZ4NJ||Paintsville/KY/USA
 66078|N4WXY||Oviedo/Florida
 66079|M0SCS||Hemel Hempstead Herts
+66080|M0CCA||Plymouth
 66081|WB3GTM||Westford, VT
 66083|K4GLP|433.450|PICKENS/SC
 66084|VK2WE||Emu Plains NSW AU
@@ -22858,6 +22862,7 @@
 66180|KF0WWB||Wichita 
 66181|AA5KD|433.40|Oklahoma City, OK
 66183|KF0UPC|147.285|Pleasanton, KS
+66185|PD4BLM||Waalre
 66186|W6NML||Los Angeles, CA
 66187|KD6AJG||SANTA CLARITA, CA
 66188|CE1SJJ|146.850 +600|CALAMA
@@ -22904,7 +22909,7 @@
 66248|K5ASS||Pampa, TX
 66250|KG6TSM||Chico, CA
 66251|AC4JM||Boynton Beach, FL
-66252|VK1JT|438.800|Canberra
+66252|VK1JT|438.500|Canberra
 66253|M7DHQ|431.075|Exeter, UK
 66254|N6BMR||Daly City
 66255|N7GZX||Pendleton, Oregon
@@ -22914,7 +22919,7 @@
 66259|DV3ZAC||Radioless Node
 66260|KL5KT|434.050|Glennallen Alaska
 66261|DW7LRS||CALAWISAN LAPU LAPU CITY CEBU
-66265|MB7IZB|430.0250 MHz|Abbots Langley, England
+66265|M7YZB||Abbots Langley
 66266|ZR2BK||St Francis Bay
 66267|ZS2PE|Background Hub|Port Elizabeth
 66268|KJ5MJA||Temple, Texas
@@ -22947,7 +22952,7 @@
 66307|KR0LEX||wichita ks
 66308|G4SKM||Maltby, Rotherham, South Yorks
 66309|K2PIG||Bell Canyon, California
-66310|MB7IWW|145.3375|Bridlington, East Yorkshire 
+66310|MB7IWW||Bridlington, East Yorkshire 
 66311|W0GSK||Cedar Rapids, Iowa
 66314|W7LCB||Globe/AZ
 66315|HS4QKN|146.250|HS4QKN KHONKAEN 
@@ -22955,7 +22960,7 @@
 66318|KC1OSX||Merrimack, NH
 66321|KB8BMY||Lacey, Washington
 66322|KD9ZGZ||Osceola, WI
-66324|W0SV||Waite Park, MN
+66324|W0SV||Undisclosed
 66325|KJ5MLL||Fulton, MS
 66326|KO6GXM||Menifee, Ca
 66328|WX5ELP|145.41|El Paso, Texas
@@ -23040,7 +23045,7 @@
 66423|WX1NWA|147.360|Jasper, AR
 66424|XE2DHA||Tijuana BC Mexico
 66425|VE7JFF||Kamloops, BC
-66426|N5DRT|145.800 pl 203.5|Morton, tx
+66426|N5DRT||Morton, tx
 66428|SV1LL||Athens, Greece
 66429|S21DBU||Barishal, Bangladesh
 66430|DL7GAL||JN47JX
@@ -23048,6 +23053,7 @@
 66432|WQ7H||Kirkland, WA
 66433|KC3FHN|146.985|Union City, PA
 66434|9W4GRV||Kuala Selangor, MY
+66435|KK7VGQ||89081
 66436|R5BM||Moscow
 66437|KD9AKE||Livingston, Texas
 66438|KJ6NPV|446.100|West Sacramento,CA
@@ -23059,11 +23065,13 @@
 66445|HS7QMB||Bangkok TH.
 66446|ZS6SPB|439.100|Polokwane
 66447|N5TIN||Wimberley TX
+66448|K3JWD||Branchburg NJ USA
 66449|M0OLO||Newnham
 66450|WA1VML|446.600|North Haven CT USA
 66452|WB2GLW||Long Island NY
+66453|N0LAK|147.420|San Luis Valley, Colorado
 66455|KF8CUA||Stow, Ohio
-66458|M7OCM|430.200|Lowestoft
+66458|M7OCM||Lowestoft
 66459|M7MNW||UK
 66460|KE2ELI|420.150|Henrietta, NY
 66461|KR4FXM||Marietta, GA
@@ -23076,48 +23084,12 @@
 66468|S21QU||Dhaka, Bangladesh
 66469|K1MCO||Orlando, Florida
 66470|S21QU||Dhaka, Bangladesh
-66471|W4TTS|Saluda Gardens |West Columbia, SC
+66471|W4TTS||West Columbia, SC
 66472|W9XE|434.925|Warrensburg, Missouri
 66473|S21ABK|144.250|Tongi, Gazipur
-66474|KB5VAO|433.500|Lubbock, Tx
+66474|KB5VAO||Lubbock, Tx
 66476|KP4E||Grosse Pointe Farms, Michigan
 66477|W1KRZ||New Hampshire
-66481|KC2NJ||Short Hills, NJ, USA
-66483|KE9DQS||Camby, Indiana
-66486|DL7AOD||Berlin
-66488|OA2DG|439.800|Trujillo, La Libertad OA2
-66489|VK2NAT||Sydney
-66490|K8WDX||Charles Town WV
-66491|KQ4HPI||FLORIDA
-66492|KQ4HPI||FLORIDA
-66493|K9RZ||Sun City West, AZ
-66494|VK2PPM||Central Coast NSW
-66495|WB2UNA||Leesburg, VA
-66496|S21AAI||CLOUD
-66499|KM4LLW||Melbourne/FL
-66501|WA7DEM||Everett, WA
-66502|N4FOX|145.330|Cumberland Furnace, TN
-66503|NV0O|446.575|St Cloud, MN
-66504|M0UOO||Southampton
-66505|E25ZUE||MahaSarakham Thailand
-66506|DH8MST||Esting
-66508|KC2URB||Astoria, NY
-66509|XE3SGM||Mexico/Tabasco/Comalcalco
-66510|NG5N||FERRIS TX
-66511|G0AGT||Luton
-66512|M7IUB||Dodleston
-66513|OK1WED||Lanskroun, Czech republic
-66514|DL6BBE||Osnabrck jo42ag 
-66515|KK7RTW||Portland, OR
-66516|KC1RUP|434.4|Danbury, CT, USA
-66517|2D0PEY||Isle of Man
-66518|KC0UDT||Moscow Mills MO
-66519|W6IA|446.500|San Jose, CA
-66520|M6OER|431.125|Salisbury UK
-66521|KE2DYI||Fairport, NY
-66522|KC4PWZ||Beaumont, TX
-66523|KO4RXE|All is Welcome |Crittenden KY
-66524|N1KKO||Moses Lake WA
 66666|KK6RQ||Yikes! Time 4 Rabies Shots...
 90102|WB0YLE|146.55 RANGER NODE|Morrisville PA
 90103|W2QW|146.5500|Green Brook, NJ
@@ -23132,7 +23104,7 @@
 270513|W7FED|442.375|Albuquerque, NM
 270514|W7FED|443.075+|Jemez, NM
 270515|W7FED|440.875+|EL PASO, TEXAS
-270516|W7FED/P25|440.250+ P25|Albuquerque, NM
+270516|W7FED/P25|442.400+ P25|Albuquerque, NM
 270517|W7FED|447.850-|TorC, NM
 270518|W7FED|442.600+|SANDIA PEAK, Albuquerque NM
 270519|W7FED|TBD|Albuquerque, NM
@@ -23206,7 +23178,7 @@
 273720|KD9NXG HUB||Antioch,Il
 273721|KD9NXG|445.9250|Antioch,Il
 273722|KD9NXG||Antioch, IL 
-273770|N1RCW|ASL-DMR Bridge|Bluffton,SC
+273770|N1RCW|Local Hub|Bluffton,SC
 273771|RADIOSC Network|DMR Bridge XLX-517|Bluffton,SC
 273772|N1RCW|Local Hub|Bluffton,SC
 273773|N1RCW|146.535|Bluffton,SC
@@ -23367,7 +23339,7 @@
 283349|K8ARW|Hub|Columbus, OH
 283670|GM0RML |MAIN 283670 NAIRN|Nairn Scotland
 283671|GM0RML 1|Radioless HUB|Nairn Scotland
-283672|gm0rml|Radioless Node|Nairn Scotland
+283672|gm0rml|Radioless Node|nairn
 283720|N4RLS||Mobile Phone
 283721|N4RLS||Cloud
 283722|N4RLS||ASL 1 Server
@@ -23620,7 +23592,6 @@
 400453|_||Chase
 400454|_||Stukel
 400455|_||Blackwell
-400456|_||Bradley
 400460|_||STEENS RX!
 400461|AB7BS||Home Radio Less Node 
 400470|AB7BS||Home Radio Less Node 
@@ -24076,10 +24047,10 @@
 416000|E25LVV|ASL3 HUB|TO E25MQ-L ECHOLINK TANI&QRK5
 416001|E25LVV |145.7625 ASL 3|TO E25MQ-L ECHOLINK TANI&QRK5
 416002|E25LVV|DVSwitch|TO E25MQ-L ECHOLINK TANI&QRK5
-416003|E25LVV|146.2750 Mhz| ASL3 Mueang Chanthaboon
-416004|E25LVV|146.2500| Mueang Chanthaboon
+416003|E25LVV|146.2750 Mhz| ASL3 Mueang Chanthaburi
+416004|E25LVV|146.2500| Mueang Chanthaburi
 416005|E25LVV|146.2500 ASL 3|TO E25MQ-L ECHOLINK TANI&QRK5
-416006|E25LVV|146.2500 Mhz| ASL3 Mueang Chanthaboon
+416006|E25LVV|146.2500 Mhz| ASL3 Mueang Chanthaburi
 416190|N3NCG||Milton, PA
 416191|N3NCG||Milton, PA
 416192|N3NCG||Milton, PA
@@ -24089,7 +24060,7 @@
 416290|WB7BYV|927.0375 Downtown|Prescott, AZ
 416291|WB7BYV|927.9750 Guadalupe|Quartzsite, AZ
 416292|KB6BOB|927.9125 |Alpine, CA
-416293|WB7BYV|927.1750|Phoenix AZ
+416293|WB7BYV|927.0250 |Lake Havasu City, AZ
 416410|W3ERV||Hagerstown  MD
 416411|W3ERV||Hagerstown  MD
 416412|W3ERV||Hagerstown  MD
@@ -24416,7 +24387,6 @@
 429822|W0EF/R|146.760|MSP
 429823|N0BYH|146.760|North Branch
 429824|W0EF/R|444.125|St. Louis Park, MN
-429825|W0EF|146.760|Champlin Mn
 429830|4I9WSR |vbox|Misamis Oriental
 429831|4I9WSR |ZEROTIER|Misamis Oriental
 429832|4I9WSR |ZEROTIER|Misamis Oriental
@@ -24779,7 +24749,7 @@
 450322|W4BWW|144.92+ CC1|Holly Springs, MS
 450323|W4BWW|145.33- PL107.2|Holly Springs, MS
 450330|W4BWW.net|EAST_TN_HUB_ 443.6+|Kodak, TN
-450331|W4BWW|53.39- C118.8|Kodak, TN
+450331|W4BWW|52.55 Simplex|Kodak, TN
 450332|W4BWW|29.620- PL118.8|Kodak, TN
 450333|W4BWW|145.14- CC1|Kodak, TN
 450380|KF0FYC|446.100.000|Gas KS
@@ -25632,12 +25602,11 @@
 471051|KJ5RM||Haslet, TX
 471052|KJ5RM||Haslet, TX
 471053|KJ5RM|439.100|Haslet, TX
-471370|MI5DAW-MOBILE||BELFAST
-471371|GB3RK-RPT|438.3875 - 7.6 split|BELFAST
+471370|MI5DAW||BELFAST
+471371|GB3RK|438.3875 - 7.6 split|BELFAST
 471372|MI5DAW |ASL3 TEST NODE|BELFAST
-471373|MI5DAW-XLX925||Belfast/Co.Antrim/UK
-471374|MI5DAW-M1KE||BELFAST
-471375|MI5DAW||BELFAST
+471373|MI5DAW||Belfast/Co.Antrim/UK
+471374|MI5DAW||BELFAST
 471420|4G1GMW|Dwende Radioless|Novaliches,Quezon City
 471421|4G1GMW||Novaliches,Quezon City
 471422|4G1GMW||Novaliches,Quezon City
@@ -26021,7 +25990,7 @@
 482211|KD6LIL||Oroville, CA
 482220|K0VQ|147.165 +|Cortez, CO
 482221|K0VQ|447.300 -|Cortez, CO
-482222|K0VQ|446.300 Simplex|El Jebel, CO
+482222|K0VQ|449.725 -|Various
 482223|K0VQ||Various
 482224|K0VQ|446.300 S|Cortez, CO
 482280|K8AMH||Little Elm TX
@@ -26031,15 +26000,15 @@
 482700|KD2PWR|VOIP|Seattle, WA
 482701|KD2PWR|VOIP|Saddle Brook, NJ
 482880|NB1RI Cov Hub||Coventry, RI
-482881|K1JST||Coventry, RI
-482882|K1JST||Coventry, RI
-482883|K1JST||Coventry, RI
+482881|NB1RI TAC 1|EWG|West Greenwich, RI
+482882|NB1RI TAC 2||Coventry, RI
+482883|NB1RI TAC 3||Coventry, RI
 482884|NB1RI Echolink|Node 997017 Cloud|Cloud
-482885|K1JST||Coventry, RI
-482886|K1JST||Coventry, RI
-482887|K1JST||Coventry, RI
-482888|K1JST||Coventry, RI
-482889|K1JST||Coventry, RI
+482885|NB1RI NP Hub||North Providence, RI
+482886|K1EWG/R M17|145.31|Cloud
+482887|NB1RI/R Rich|145.19|Cloud
+482888|K1JST/N|439.0|Coventry, RI
+482889|NB1RI/R Scit U|449.375|Cloud
 482960|AB7BS||Extention 
 482961|AB7BS||Extention 
 483070|n5kke||fort worth,tx.
@@ -26068,9 +26037,9 @@
 483551|KD4RAU|430.4250 Simplex|Westtown Pa
 483552|KD4RAU|433.500 Simplex|Westtown Pa
 483553|KD4RAU|Cell Phone|Westtown Pa
-483560|W8FLH/R|BM DMR/Echolink|Greenville, Ohio
+483560|W8FLH/R|146.790|Greenville, Ohio
 483561|W8FLH|P25 TG14679|Greenville, OH
-483562|W8FLH|FM 146.790|Greenville, Ohio
+483562|W8FLH|DMR TG310746|Greenville, Ohio
 483563|W8FLH|Radioless|Greenville, Ohio
 483564|W8FLH|P25|Greenville, Ohio
 483565|W8FLH|145.630|Greenville, Ohio
@@ -26151,7 +26120,7 @@
 485670|VK3FC|Multimode Bridge|Victoria Australia
 485671|VK3FC|VHF|Portable, Australia
 485672|VK3FC||Victoria Australia
-485900|DX1MK|POC to RF Node|Laguna
+485900|DX1MK|Digital Node|Laguna
 485901|DX1MK||Laguna
 485902|DX1MK||Laguna
 486080|N6KMA|IAX Node for |Southern California
@@ -26170,7 +26139,7 @@
 486513|Our coffee shop||Nienburg, Germany 
 486630|KD6DWX|145.710 SIMPLEX|Riverside, California USA
 486631|KD6DWX ECHOLINK|145.710 SIMPLEX|Riverside, California USA
-486770|WA5AIR|432.415 Dacus,Tx| SouthCoastReflector.com [USA]
+486770|WA5AIR|432.415|Dacus=SouthCoastReflector.com
 486771|WA5AIR  ||SouthCoastReflector.com [USA]
 486772|WA5AIR |444.500 Link Radio| SouthCoastReflector.com [USA]
 486773|WA5AIR  |146.620 - Alvin Tx|SouthCoastReflector.com [USA]
@@ -26943,10 +26912,10 @@
 503053|NB1RI/R Cumb V|145.17|Cumberland, RI
 503054|NB1RI/R West V|147.39|Westerly, RI
 503055|K1JST ||Coventry, RI
-503056|K1JST||Coventry, RI
-503057|K1JST||Coventry, RI
-503058|K1JST||Coventry, RI
-503059|K1JST||Coventry, RI
+503056|NB1RI/R NProv U|449.325 RF Link1|North Providence, RI
+503057|N1BS/R NProv V|145.35|North Providence, RI
+503058|NB1RI/R NProv 2|224.56|North Providence, RI
+503059|NB1RI/R Exeter|146.985|West Greenwich, RI
 503080|KM6IAU||Yucca Valley, California, US
 503081|KM6IAU||Yucca Valley, California, US
 503082|KM6IAU|BM TG 3196 ATN|Yucca Valley, California, US
@@ -27293,7 +27262,6 @@
 506621|DB0FLW|439.5375 DMR Bridge|Leipzig, Germany
 506710|K9LRE|446.2000|Murphysboro, Il.
 506711|K9LRE|446.1000|Murphysboro, Il.
-506712|K9LRE|145.67000|Murphysboro, Il.
 506760|W9CAR|433.500|Columbus, GA
 506761|W9CAR|446.100|Columbus, GA
 506770|N5SOR||2161 Commerce
@@ -27889,16 +27857,10 @@
 511761|D70JI-R||KOREA
 511770|D70JI|144.600MHz|KOREA
 511771|D70JI|144.600MHz|KOREA
-511780|DVNZ-UK||The cloud
-511781|DVNZ TG530|TG530|The cloud
-511782|XLX299 Module 0||The cloud
-511783|DVNZ TG5304|TG5304|The cloud
-511784|DVNZ TG5304|TG5304|The cloud
-511785|ZL2ROR|XLX299|The cloud
-511786|ZL2ROR|XLX299|The cloud
-511787|ZL2ROR|XLX299|The cloud
-511788|ZL2ROR|XLX299|The cloud
-511789|ZL2ROR|XLX299|The cloud
+511780|DVNZ-UK||NZ
+511781|XLX299 Module B||NZ
+511782|XLX299 Module 0||NZ
+511783|ZL4HUB||NZ
 511790|WA4OKJ|443.200|Rome Georgia
 511791|WA4OKJ|443.200|Rome Georgia
 511792|WA4OKJ|443.200|Rome Georgia
@@ -28194,7 +28156,6 @@
 513962|KB3AWQ|29.660 10 m Rpt TX|Williamsport, Pennsylvania PA
 513963|KB3AWQ|Home node|Williamsport, Pennsylvania PA
 513964|KB3AWQ|53.050 6 m Repeater |Williamsport, Pennsylvania PA
-513965|KB3AWQ|53.050 6 m Rpt TX|Williamsport, PA
 514120|K1AN||Dewey, AZ
 514121|W8GEM|446.500|Dewey, AZ
 514170|N5GMJ|441.975 +5Mhz|Weatherford, TX
@@ -28567,8 +28528,6 @@
 517180|KJ4JXT||Ellijay/GA.
 517181|KJ4JXT||Ellijay/GA.
 517182|KJ4JXT||Ellijay/GA.
-517200|W0SCA|146.535|Idaho Springs, CO
-517201|W0SCA|146.535|Idaho Springs, CO
 517210|LZ1PLC||Plovdiv Bulgaria
 517211|LZ1PLC||Manole
 517212|LZ1PLC||Manole
@@ -29690,7 +29649,7 @@
 529295|N5ZR|Steerable|Selma, TX
 529296|N5ZR|146.98 Simplex Node|Selma, TX
 529297|N5ZR|433.5 SHARI PIHAT|In the magic cloud
-529298|N5ZR|147.99 Simplex Node|Smithson Valley, TX
+529298|N5ZR|147.99 Simplex Node|New Braunfels, TX
 529299|N5ZR|146.19|Cost, TX
 529300|KC2KJO|446.400|Clyde, NY
 529301|KC2KJO|146.53|Clyde, NY
@@ -29852,7 +29811,7 @@
 530744| Server Local |Sohground |Cabangtikor Pattani
 530745|E25KC|145.7875 MHz|Cabangtikor Pattani
 530746|E25KC|145.7875 MHz|Cabangtikor Pattani
-530747|E25KC  ||Cabangtikor Pattani
+530747|E25KC  Pi|145.7875 MHz|Cabangtikor Pattani
 530780|VA7DGP|147.540|New Westminster, BC
 530781|VA7DGP|147.540|New Westminster, BC
 530782|VA7DGP|147.540|New Westminster, BC
@@ -30773,10 +30732,10 @@
 538732|AD6RC |441 800 repeater RC|HAYWARD, CALIFORNIA
 538733|AD6RC |BAMRC MATULIS HUB RC|Home
 538734|KO6HHU HERCULES||Home
-538736|AD6RC |441 800  ALAMEDA.CA|HAYWARD, CALIFORNIA
+538736|AD6RC |440.8375 Hayward, CA|HAYWARD, CALIFORNIA
 538737|AD6RC |KABAYAN RC  HUB |ALAMEDA
 538738|AD6RC |RPT support group RC|NorCal
-538739|AD6RC |AD6RC Hayward |Home
+538739|AD6RC |443 800 alameda RON|Home
 538850|K1DTC||Somerset/MA
 538851|K1DTC||Somerset, MA
 538900|JE6WHX||Fukuoka-City
@@ -31191,7 +31150,7 @@
 543392|K1BWO|Mobile Node|cloud
 543393|K1BWO||Paris TN
 543394|K1BWO||Cloud Server Albany OR
-543395|ORN 70cm Simp.|447.100|Alpha Site
+543395|K1BWO||USA
 543440|DU1XRF|434.76 MHZ|Mandaluyong
 543441|DU1XRF|434.76 MHZ|Mandaluyong
 543490|KW7MMK|Simplex 449.300|Pahrump,Nevada
@@ -31325,7 +31284,6 @@
 545013|DVSWITCH|DVSWITCH|Enjoy The Hobby 73's
 545014|NH2Y*FULLDUPLEX|BRIAN|GUAM 671
 545015|*NH2Y*UHF*RPTR*|GUAM GATEWAY| *671* HAFA ADAI*
-545016|NH2Y ALS POC|POC| *671* HAFA ADAI*
 545060|VU2KDD|145.55000 -0.6 MHz|VIJAYAWADA
 545061|VU2KDD|145.55000 -0.6 MHz|VIJAYAWADA
 545070|IW6NBX|YSF IT FRANCAVILLA |Francavilla (CH)
@@ -31428,7 +31386,7 @@
 545890|N9QS||noblesville IN
 545891|N9QS||noblesville IN
 545920|WA6JFK|433.500|Glassell Park, California
-545921|WA6JFK|431.4750|LOS ANGELES CA
+545921|WA6JFK|433.4750|LOS ANGELES CA
 545940|DU8WP-DvSwitch|ALLSTARLINK SYSTEM| Kidapawan City
 545941|DX9RAG-DvSwitch|ALLSTARLINK SYSTEM| Kidapawan City
 545942|DU8WP-ALL-STAR |Link| Kidapawan City
@@ -31803,7 +31761,7 @@
 548862|KD6BHM|Link Radio|Bakersfield, CA
 548940|KN4WDF|Simplex Node|Verona, VA
 548941|KN4WDF||Verona, VA
-548950|KB7RQQ/UHF|441.100|Vancouver, Washington
+548950|KB7RQQ/UHF|432.225|Vancouver, Washington
 548951|KB7RQQ/ClearNd|434.550|Vancouver, Washington
 548952|Unused| |Vancouver, Washington
 548953|KB7RQQ/VHF|146.595|Vancouver, Washington
@@ -32324,15 +32282,15 @@
 553364|4I8GL||Jolo Sulu
 553365|4I8GL||Jolo Sulu
 553410|SG7ASL|Link 145,3375 MHz|Vaxjo, Sweden
-553411|SM6SUB||Vxj, Sweden
-553412|SM6SUB|m1ke by Shark-RF|Sweden
+553411|SM6SUB||Stockholm, Sweden
+553412|SM6SUB|m1ke by Shark-RF|Vaxjo, Sweden
 553413|SM6SUB|Private Node|Vaxjo, Sweden
 553414|SM6SUB|434.050|Vaxjo, Sweden
-553415|SK0TT|ALLSTAR SWEDEN|Stockholm, Sweden
+553415|SK2TT -0|ALLSTAR SWEDEN|Stockholm, Sweden
 553416|SK2TT -7|Whitelist Only|Stockholm, Sweden
 553417|SK2TT -7|ALLSTAR SWEDEN 7|Stockholm, Sweden
 553418|SK2TT -7||Stockholm, Sweden
-553419|SK0TT||Stockholm, Sweden
+553419|SK2TT -0||Stockholm, Sweden
 553430|W9WLX|Private Node|Milwaukee, WI
 553431|W9WLX|Private Node|Crivitz, WI
 553450|KG4Y||Winchester, VA
@@ -32379,7 +32337,7 @@
 554052|HS2QOJ|ASL Node|Analog Hotspot
 554053|HS2QOJ||Analog Hotspot
 554054|HS2QOJ|145.7875 Mhz|Nonthburi
-554055|HS2QOJ|146.2500 T123.0 ASL|Nonthburi
+554055|HS2QOJ|146.2750 T123.0 ASL|Nonthburi
 554056|HS2QOJ|145.78750 Mhz  T67|Analog Hotspot
 554057|HS2QOJ|146.2750 Mhz  T123|Analog Hotspot
 554058|HS2QOJ ASL3|146.2500 Mhz|Nonthburi
@@ -32703,7 +32661,7 @@
 556870|W4RSS||New Castle, IN
 556871|W4RSS||New Castle, IN
 556872|W4RSS||New Castle, IN
-556940|WB4RL|443.8250|Hartselle, Alabama
+556940|WB4RL-R|443.8250|Hartselle, Alabama
 556941|WB4RL-L||Hartselle, Alabama
 556970|KD5NDU|147.270 +|Water Valley,MS
 556971|KD5NDU-moblie|146.540|Water Valley,MS
@@ -33327,7 +33285,6 @@
 562272|DU9BC_ALLSTAR|LINK SYSTEM|Davao
 562273|DU9BC_ALLSTAR|LINK SYSTEM|Davao
 562274|DU9BC_ALLSTAR|LINK SYSTEM|Davao
-562275|DU9BC_ALLSTAR|LINK SYSTEM|D.C.Ph
 562280|GM5DVS-6|DVSPh - Live Stream|Scotland
 562281|GM5DVS|DVSPh - B1|Scotland
 562282|GM5DVS-5|DVSPh - ASL Bridge|Scotland
@@ -33906,7 +33863,7 @@
 568118|DV1ZBX||Bay, Laguna
 568119|DV1ZBX||Bay, Laguna
 568119|DV1ZBX||Bay, Laguna
-568170|DU1KC||Los Banos Laguna
+568170|DU1KC|DX1MK|Los Banos Laguna
 568171|DU1KC||Los Banos Laguna
 568172|DU1KC||Los Banos Laguna
 568173|DU1KC||Los Banos Laguna
@@ -34056,8 +34013,6 @@
 569760|W3MTH|PAISANITA#4|Allentown PA
 569761|W3MTH|manuel taveras|Allentown PA
 569762|W3MTH|SHARI PI-ZERO|Allentown PA
-569810|KI5UTZ|432.315|Porter,Texas
-569811|KI5UTZ||Porter,Texas
 569840|VE6MLD|443.600+|Medicine Hat, Alberta, Canada
 569841|VE6MLD|443.600+|Medicine Hat, Alberta, Canada
 569890|N3YFO|145.210|Johnstown PA
@@ -34092,7 +34047,7 @@
 570060|N0URB||Las Vegas, Nevada
 570061|N0URB||Las Vegas, Nevada
 570070|VK3ONE|438.5 Mhz|Naroghid, Victoria
-570071|VK3ONE|439.15 Mhz|Naroghid, Victoria
+570071|VK3ONE||Naroghid, Victoria
 570140|KI5PCQ Cloud||Virtual
 570141|KI5PCQ LakeAir |145.25|Waco, Tx
 570142|KI5PCQ Cell||Virtual
@@ -34249,8 +34204,6 @@
 571593|V44KR EOC|441.400mhz + |V44KR EOC
 571620|KO4RKG||Waleska, Ga
 571621|KO4RKG||Waleska, Ga
-571670|M6LUN||St. Albans, UK
-571671|M6LUN||St. Albans, UK
 571740|KM4JAZ|146.655 -600|Concord, NC
 571741|KM4JAZ||Concord, NC
 571750|AB6DD|DVSwitch|Sta. Barbara, Iloilo
@@ -34430,7 +34383,6 @@
 573473|KK7OZA|EchoLink|Draper, Utah
 573474|KF7KGN|53.070|Utah
 573475|KF7KGN|313836|Utah
-573476|KF7KGN|224.740|Draper, Utah
 573490|DW1SRH||CALGARY,AB
 573491|DW1SRH||CALGARY,AB
 573500|KB0USW|146.460|Marion TX
@@ -34476,8 +34428,6 @@
 573981|N4NCH||Hampstead, NC
 574020|2E1EVM||GREATSTONE,KENT,UK
 574021|2E1EVM||GREATSTONE,KENT,UK
-574030|N6ACG|224.320 (-)|Corona Del Mar, CA
-574031|N6ACG|224.420 (-)|CORONA DEL MAR, CA 
 574060|W7VOM||Mesa, AZ
 574061|W7VOM||Mesa, AZ
 574070|K2COP||Daytona Beach, FL
@@ -34855,7 +34805,7 @@
 576360|KA4UPI|448.0250|East Dublin, GA
 576361|KA4UPI|448.0250|East Dublin
 576430|4G1WWW|padzTOMSKY Micronode|City of Dasmarinas, Cavite
-576431|4G1WWW |Dwende Radioless |QTH @ PK06hl
+576431|4G1WWW |Dwende Radioless |QTH @ PK04ml
 576432|4G1WWW|Fr. Tomsky|City of Dasmarinas, Cavite
 576433|4G1WWW|Cloud - |Paranaque City PHL
 576434|4G1WWW Rain|Micronode Fullduplex|QTH @ PK04ml
@@ -34884,10 +34834,10 @@
 576557|W6ZU|NoRadio|Orange County, CA, USA
 576558|W6ZU|noRadio RL-20|Orange County, CA, USA
 576559|NA6GM||Mission Viejo, CA
-576560|HS3HXZ|145.7250 MHz Dup-0.6|ASL Server Uthai Thani
-576561|HS3HXZ|145.7250 MHz Dup-0.6|ASL Server Uthai Thani
+576560|HS3HXZ|145.7250 MHz Dup-0.6|HS6AU Link to XLX149UL
+576561|HS3HXZ|145.7250 MHz Dup-0.6|HS6AU ASL IAX Custom Server
 576562|HS3HXZ|145.7250 MHz Dup-0.6|ASL Server Uthai Thani
-576563|HS3HXZ|145.7250 MHz Dup-0.6|Mobile AllstarLink Hotspot
+576563|HS3HXZ|145.7250 MHz Dup-0.6|ASL-Analog Hotspot
 576564|HS3HXZ|145.76250 MHz|ASL Server Uthai Thani
 576565|HS3HXZ|145.76250 MHz|ASL Server Uthai Thani
 576566|HS3HXZ|145.76250 MHz|HS3AB/CH59 ASL Link to XLX149B
@@ -35021,7 +34971,7 @@
 577803|VE3GJP||TORONTO,CANADA
 577804|VE3GJP||TORONTO,CANADA
 577805|VE3GJP||TORONTO,CANADA
-577806|VE3GJP|GM Org.ASL server|Torrance, CA 90501 USA
+577806|VE3GJP|GM org.ASL server|Torrance, CA 90501 USA
 577807|VE3GJP|VA3GMO ASL SRVR|Torrance, CA 90501 USA
 577810|VACANT|442.350|TEXAS
 577811|K5CRA Cameron|441.375|TEXAS
@@ -35272,6 +35222,8 @@
 579871|KI5WXB|UHF testing|Frisco, Texas
 579890|E20FWF|145.7500|Thailand
 579891|E20FWF|145.7500|Thailand
+579910|IW2EPA|433,600|Paderno D.no (MI) - Italy
+579911|IW2EPA|144,88750 |Paderno D.no (MI) - Italy
 579920|M7WTP|Home Hotspot|Sudbury, Suffolk, England
 579921|M7WTP|Work Hotspot|Sudbury, Suffolk, England
 579930|WB9COY|146.43|Del Mar Ca
@@ -35783,8 +35735,6 @@
 585251|K9ISO|Radio-Less Node|Oswego, IL
 585252|K9ISO|Mobile - RFinder B1+|Oswego, IL
 585253|K9ISO|Radioless - Mobile|Oswego, IL
-585330|W8QN|147.6|Midland, Michigan
-585331|W8QN|147.6|Midland, Michigan
 585400|N5YTT|70 CM|Kempner TX
 585401|N5YTT|70 CM|Kempner TX
 585402|N5YTT|Cloud Node|Cloud
@@ -36096,7 +36046,7 @@
 587971|VE3CAN||Sudbury, Ontario
 587990|VE3ZDB||Kapuskasing, Ontario Canada
 587991|VE3ZDB||Kapuskasing, Ontario Canada
-588040|BRIDGE-TO|TGIF-420|KF0LPT | &#11088
+588040|BRIDGE-TO|TGIF-420|KF0LPT
 588041|BRIDGE-TO|XLX303-K-YSF|KF0LPT
 588042|KF0LPT-|TESTING-123|Raytown, Missouri
 588043|KF0LPT-ALLSTAR|-XLX732 D-|Raytown, Missouri
@@ -36234,7 +36184,7 @@
 589341|AC4H||Columbus, Ohio
 589360|DX1E|Cloud -|San Pablo City Laguna PH
 589361|DX1E|Cloud -|Digital Link
-589362|DX1E|Allstarlink 2 Analog|Puwedeee!!!
+589362|DX1E|RF EXT 94061|Hamshack Hotline
 589363|DX1E|UHF Link|San Pablo City Laguna PH
 589364|DX1E|VHFLink  145.760 Mhz|San Pablo City Laguna PH
 589370|4F1PUZ|RAIN PI ZERO FD|San Pablo City, Laguna, PHL
@@ -36243,7 +36193,7 @@
 589373|KO6BAA|MPOW MicroNode Node|San Pablo City, Laguna PH
 589374|4F1PUZ|Radioless Dell Wyse |San Pablo City, Laguna PH
 589375|KO6BAA|Radioless III KN6SF|San Pablo City, Laguna PH
-589376|KO6COF|Kapihan Radioless|San Pablo City, Laguna PH
+589376|4F1PUZ|KAPIHAN Radioless|San Pablo City, Laguna PH
 589377|4F1PUZ|Avocado Node|San Pablo City, Laguna PH
 589378|4F1PUZ|Radioless II KN6SF|San Pablo City, Laguna PH
 589379|4F1PUZ|Radioless FD #2|San Pablo City Laguna PH
@@ -36788,9 +36738,9 @@
 594641|CT1AFS||Aguada de Cima
 594670|AC2AM|446.875|Cheektowaga, NY
 594671|AC2AM||Cheektowaga, NY
-594730|The Twisted Tap|145.430|.
-594731|HOIP 15149|AmateurWire 30415149|.
-594732|FE Link Wise||.
+594730|The Twisted Tap|145.430|USA
+594731|W4JOR||USA
+594732|FE Link Wise||USA
 594840|IZ8LYA|432.46250|Castellammare di Stabia 
 594841|IZ8LYA|432.46250|Castellammare di Stabia 
 594842|IZ8LYA|432.46250|Castellammare di Stabia 
@@ -37066,9 +37016,9 @@
 597571|AB6MV|146.655 -|Moreno Valley CA, USA
 597580|IZ7DDC||Palagianello, TA - PUGLIA
 597581|IZ7DDC||Palagianello, TA - PUGLIA
-597600|NB1RI/R RF Link|449.325|North Providence, RI
-597601|N1BS/R|145.35|North Providence, RI
-597602|NB1RI/R Exeter|146.985|Coventry, RI
+597600|NB1RI/R Link|449.325|North Providence, RI
+597601|K1JST||North Providence, RI
+597602|K1JST||Coventry, RI
 597603|K1JST||Coventry, RI
 597604|K1JST||Coventry, RI
 597605|K1JST||Coventry, RI
@@ -37113,7 +37063,7 @@
 597830|N6SGX|446.000|Rapid City SD. USA
 597831|N6SGX||Rapid City SD. USA
 597870|AA5SG|ASL3 Server - 597870|Ellisville/Laurel MS USA
-597871|AA5SG|ASL3 HotSpot|Ellisville/Laurel MS USA
+597871|AA5SG|HamVOIP Pi3b HotSpot|Ellisville/Laurel MS USA
 597872|AA5SG|ASL PiB eval node|Ellisville/Laurel MS USA
 597873|AA5SG|ASL Netbook Hamshack|Ellisville/Laurel MS USA
 597874|AA5SG|147.1350+ W5NRU|Ellisville/Laurel MS USA
@@ -37131,7 +37081,7 @@
 597950|KJ5APA |TGIF/EchoLink|Cleburne Texas
 597951|KJ5APA  |Sim Rpt 145.55 /P25 |Cleburne Texas
 597952|KJ5APA|YSF 59795|Cleburne Texas
-597953|KJ5APA |Cloud Node|Cleburne Texas
+597953|KJ5APA |MMDVM Reflector|Cleburne Texas
 597954|KJ5APA |MRN Cloud HUB-2 |Cleburne Texas
 597955|KJ5APA|HOIP #15039|Cleburne Texas
 597956|KJ5APA|Murphy Radio Network|Cleburne Texas
@@ -37319,7 +37269,7 @@
 599201|KQ4MCL|TGIF 31377|Hamptonville NC
 599202|KQ4MCL|BM 3203418|Hamptonville NC
 599203|KQ4MCL|P25 31377|Hamptonville NC
-599204|KQ4MCL|ASL 3 BM 3203418|Raleigh, NC
+599204|KQ4MCL|ASL 3 Node|Raleigh, NC
 599205|KQ4MCL|NXDN 31377|Hamptonville NC
 599206|KQ4MCL|ASL 3 Test|Hamptonville NC
 599230|9W2RUT|435.175|Kuala Lumpur
@@ -38955,7 +38905,7 @@
 618290|KC2WBX-HUB||Lockport, New York
 618291|KC2WBX-R|443.4500 +|Gasport, NY
 618292|KC2WBX-R|443.4500 +|Hornell, NY
-618300|PA3DSC|MC80 430.750|Nuenen
+618300|PA3DSC|439.6925 MHz|Nuenen
 618301|PA3DSC|430.750 MHz Motorola|Nuenen
 618330|KI6JDE|446.100|Newberry Springs, CA USA
 618331|KI6JDE||Newberry Springs, CA USA
@@ -39284,7 +39234,6 @@
 621771|E21GJC||E21GJC  SAMUTSAKHON 
 621820|G8BUX||Buxton, UK
 621821|G4BUX||Buxton
-621822|G4BUX||Buxton
 621880|W5GI|439.000|Medfield
 621881|W5GI|440.000|Brockton MA
 621882|W5GI||Anegada VG
@@ -39351,7 +39300,7 @@
 622318|WB5TUF|29.540|Houston, Tx
 622360|K5GUD|445.825|Mooreland, OK
 622361|K5GUD|147.570|Mooreland, OK
-622362|K5GUD||Mooreland, OK
+622362|K5GUD|445.825|Mooreland, OK
 622363|K5GUD|147.570|Mooreland, OK
 622364|K5GUD|443.925|Mooreland, OK
 622365|W5AOK|442.050|Mooreland, OK
@@ -39434,7 +39383,7 @@
 623091|9V1LD|S.P.A.R.E. |Cebu PH
 623092|9V1LD||Cebu PH
 623120|N1YKT|442.650 (+)|Hopkinsville, KY
-623121|N1YKT|145.280 (-) NB|Hopkinsville, KY
+623121|N1YKT|442.650 (+)|Hopkinsville, KY
 623150|N9UDN||Janesville, wI
 623151|N9UDN||Janesville, wI
 623210|KJ7DQB|430.200|Camden New York
@@ -39490,7 +39439,7 @@
 623581|HS6TFZ||phichit
 623720|XE1AF|438.075|Mexico City
 623721|XE1AF|438.125|Mexico City
-623722|XE1AF|400.075|Mexico City
+623722|XE1AF|147.120|Mexico City
 623740|W1ASS||Manchester
 623741|W1ASS||Manchester
 623770|MB7ICA|430.0125|Crathorne, North Yorkshire
@@ -39533,7 +39482,6 @@
 624171|K5DBE||Glenpool, Oklahoma
 624200|WB9BLA|146.540|Crothersville, IN
 624201|WB9BLA|146560|Crothersville, IN
-624202|WB9BLA|146.540|Crothersville, IN
 624210|WT2D/R|442.600|Lehigh Acres
 624211|WT2D|442.600|Lehigh Acres
 624280|N7IBC PiHatU|433.2125|MCCALL, ID
@@ -39675,7 +39623,7 @@
 626487|WC9IN|Echolink Bridge|Fowler, IN
 626488|WC9IN|Hamshack HH Bridge|Fowler, IN
 626530|KE2AEM-L|EchoLink Node-289589|Bronx, NY
-626531|KE2AEM|441.1500 |Bronx, NY
+626531|KE2AEM|441.1500 DMR Bridge|Bronx, NY
 626532|KE2AEM|BM DMR Bridge 313295|Bronx, NY
 626580|W4HPL|147.210|Cookeville, TN
 626581|W4HPL|147.210|Cookeville, TN
@@ -39717,6 +39665,8 @@
 626991|VK6RKB Repeater|147.125|Boyanup
 627010|XE1RAG|433.4750|SAN PEDRO DE LOS PINOS
 627011|XE1RAG|433.4750|SAN PEDRO DE LOS PINOS
+627020|AP2ARS-X|AP2X QTH repeater|KP/Pakistan
+627021|AP2JK|AP2JK ap2x test|Khi/Sdh/PK
 627030|WN1R|440.0|New Orleans, LA
 627031|WN1R||New Orleans, LA
 627050|AE0WZ||Fruita, Colorado
@@ -39754,6 +39704,8 @@
 627440|KG4TRV||Miami, FL 
 627441|KG4TRV||Miami, FL 
 627442|KG4TRV||Miami, FL 
+627450|KC5DJR|DMR Bridge BM-313464|Lincoln, Arkansas
+627451|KC5DJR|ClearNode|Lincoln, Arkansas
 627560|W4ADX|434.4000|Florence, Alabama
 627561|W4ADX|434.3500|Florence, Alabama
 627562|W4ADX|434.2500|Florence, Alabama
@@ -39872,6 +39824,10 @@
 629181|MB7IBM|145.28750|Belfast
 629182|GI0RWO||Belfast
 629183|GI0RWO||Belfast
+629190|AP2JK||Pakistan
+629191|AP2ARS|PARS-Central Hub|Pakistan
+629192|AP2ARS|Karachi Node AP2ARS|Khi/Sdh/PK
+629193|AP2ARS|Chtrl-Brdg-Swat-KK|KP/Pakistan
 629220|KC1VHD||Northborough, MA
 629221|KC1VHD||Northborough, MA
 629230|G6GZH David|70cm|JO02CM
@@ -39893,14 +39849,6 @@
 629341|PA1ZKH|438.700|den haag
 629350|DU1BP||Lipa City, Batangas
 629351|DU1BP||Lipa City, Batangas
-629352|DU1BP||Lipa City, Batangas
-629353|DU1BP||Lipa City, Batangas
-629354|DU1BP||Lipa City, Batangas
-629355|DU1BP||Lipa City, Batangas
-629356|DU1BP||Lipa City, Batangas
-629357|DU1BP||Lipa City, Batangas
-629358|DU1BP||Lipa City, Batangas
-629359|DU1BP||Lipa City, Batangas
 629380|PA3GMD||St Oedenrode NL
 629381|PA3GMD||St Oedenrode NL
 629390|TA3RBB|431.35000|balikesir 
@@ -40019,7 +39967,7 @@
 630963|WD5MHZ||Arkoma, Oklahoma
 630964|WD5MHZ||Arkoma, Oklahoma
 631010|N2PJG||Long Island NY
-631011|N2PJG||Home - Ronkonkoma, NY
+631011|N2PJG||Portable
 631012|N2PJG||Portable
 631013|N2PJG||MOBILE
 631050|DU8WJD||General Santos City
@@ -40188,13 +40136,13 @@
 633231|KE8VKY||Lambertville, MI
 633232|KE8VKY||Lambertville, MI
 633233|KE8VKY||Lambertville, MI
-633240|DX8ZMC|145.550|DY8CRU-L
+633240|DX8ZMC|145.550|Malindang Amateur Radio Club 
 633241|DY8CRU|145.550|Dipolog City
-633242|DY8CRU|145.550|DY8CRU-L
-633243|DY8CRU|145.550|DY8CRU-L
-633244|DY8CRU|145.550|DY8CRU-L
-633245|DY8CRU|145.550|DY8CRU-L
-633246|DY8CRU|145.550|DY8CRU-L
+633242|DY8CRU|145.550|Malindang Amateur Radio Club 
+633243|DY8CRU|145.550|Malindang Amateur Radio Club 
+633244|DY8CRU|145.550|Malindang Amateur Radio Club 
+633245|DY8CRU|145.550|Malindang Amateur Radio Club 
+633246|DY8CRU|145.550|Malindang Amateur Radio Club 
 633270|4F6HP|145.250 MHz|Bacolod City 
 633271|DX6EVM|145.250 MHz|Bacolod City 
 633272|SCANiDU6|145.460 MHz|Bacolod City 
@@ -40416,7 +40364,7 @@
 636633|4G8WJL|Full Duplex|General Santos City
 636634|DX8-OSCAR|144.190|General Santos City
 636635|DU8WMT||General Santos City
-636636|4G8WND |STAND ALONE|General Santos City
+636636|DU8WMT-vhf 02n||General Santos City
 636637|DU8WMT||General Santos City
 636638|DU8WMT||General Santos City
 636639|DU8WMT||General Santos City
@@ -40564,7 +40512,7 @@
 638386|AP5LHR|PARS Lahore|Lahore
 638387|AP5HYD|PARS Hyderabad|Hyderabad
 638388|AP5LYH|Layyah|Charsadda
-638389|AP5ARS|Mobile Node|Islamabad
+638389|AP5ARS|Mobile AP5ARS|Charsadda
 638390|AP5ARS|Test Node AP5ARS|Charsadda
 638391|AP5ARS||Karachi
 638392|Demo-A62A|EARS|Dubai
@@ -40597,8 +40545,6 @@
 638851|VK1FRJ||Monash
 638870|W9SMJ|53.390 Remote RX|Burlington, IN
 638871|W9SMJ|927.050 Remote RX|Burlington, IN
-638900|KC1VAX||NEW ENGLAND DIGITAL RADIO HUB
-638901|KC1VAX||NEW ENGLAND DIGITAL RADIO HUB
 638940|KC9JOB||Fire Box Allstar!
 638941|KC9JOB||Fire Box Allstar!
 638960|IZ0PQE||Italy
@@ -40766,8 +40712,8 @@
 640970|KJ5HIJ|441.350  SPX |CLOUD
 640971|KJ5HIJ||CLOUD
 640990|W8YNY|444.175|Gaastra/Michigan
-640991|W8YNY|000.000|Gaastra/Michigan
-640992|W8YNY|433.125|Gaastra/Michigan
+640991|W8YNY2|000.000|Gaastra/Michigan
+640992|W8YNY3|000|Gaastra/Michigan
 641030|K4BMI||Orlando, FL
 641031|K4BMI||Orlando, FL
 641040|M0UCN||UK
@@ -40783,7 +40729,6 @@
 641081|KE9BMM|441.25500|Evergreen Park, IL
 641082|KE9BMM|445.62500|Evergreen Park, IL
 641083|KE9BMM||Evergreen Park, IL
-641084|KE9BMM||Evergreen Park, IL
 641090|KE2EPK||Northwest,New Jersey
 641091|KE2EPK||Northwest,New Jersey
 641092|KE2EPK||Northwest,New Jersey
@@ -40798,7 +40743,7 @@
 641222|WZ5TX 224.840||CEDAR HILL
 641223|WZ5TX|147.260|CEDAR HILL
 641224|WZ5TX||Baird Texas
-641225|WZ5TX TEST||Chalk Mtn. TX
+641225|WZ5TX 220 PLANO||Chalk Mtn. TX
 641226|WZ5TX||Chalk Mtn. TX
 641230|KC7X||Gilbert, AZ
 641231|KC7X|433.300 MHz|Gilbert AZ
@@ -40810,7 +40755,7 @@
 641420|SV1BYK|431.050|PERISTERI-ATHENS-GREECE
 641421|SV1BYK|431.050|PERISTERI-ATHENS-GREECE
 641460|KM4NXU|445.750|Savannah, Tennessee
-641461|KM4NXU |440.250|Mobile
+641461|KM4NXU|433.750|Savannah, Tennessee
 641462|KM4NXU|440.250|Mobile
 641463|KM4NXU||TriState Hub
 641490|KB9QJN- 146.640|146.640|Merrill, WI  USA
@@ -41354,7 +41299,6 @@
 649756|N6MVT||CARLA LINK RADIOS
 649757|N6MVT|443.075+LINK-162.2|CARLA-7 OAK HILL
 649759|N6MVT||CARLA LINK RADIOS
-649759|N6MVT||CARLA LINK RADIOS
 649770|N6GNW||PH
 649771|N6GNW||PH
 649772|N6GNW||PH
@@ -41612,7 +41556,7 @@
 653312|DU9ATM|JNSpot-ASL Radioless|Tagum City, Davao Del Norte
 653313|DU9ATM|Simplex To RPT|Tagum City, Davao Del Norte
 653314|DU9ATM||Tagum City, Davao Del Norte
-653315|DU9ATM|ASL to POC|Tagum City, Davao Del Norte
+653315|DU9ATM||Tagum City, Davao Del Norte
 653316|DU9ATM||Tagum City, Davao Del Norte
 653317|DU9ATM||Tagum City, Davao Del Norte
 653318|DU9ATM||Tagum City, Davao Del Norte
@@ -41720,8 +41664,8 @@
 654721|Unknown||CDMrepeater.com
 654770|PD0KDN||Stadskanaal, The Netherlands
 654771|PD0KDN||Stadskanaal, The Netherlands
-654780|KN4KAN|434.250|Enville Tn.
-654781|KN4KAN|52.930|Enville TN
+654780|KN4KAN|434.100|Enville Tn.
+654781|KN4KAN||Enville Tn.
 654990|W5TMR||Houston, Texas
 654991|W5TMR||Houston, Texas
 654992|W5TMR||Houston, Texas
@@ -41916,9 +41860,9 @@
 657601|E25BYA||THEPSATHIT,CHAIYAPHUM,THAILAND
 657690|VK4BNT||Mobile
 657691|VK4BNT|RPI4 - No RF|Mobile
-657700|KF8ELA||Dalton, Ohio
-657701|KF8ELA|445.950|Dalton, Ohio
-657702|KF8ELA|446.150|Wooster, Ohio
+657700|KF8ELA|Hub|Dalton, OH
+657701|KF8ELA|445.950|Dalton, OH
+657702|KF8ELA|446.150|Wooster, OH
 657780|EA2CK|430|Sopelana SPAIN
 657781|EA2CK|430|Sopelana SPAIN
 657790|EA2KB||Bizkaia 
@@ -41953,6 +41897,8 @@
 658271|KC8T||Dunmore PA
 658290|VK4BOZ|441.250|Nanango, Queensland
 658291|VK4BOZ|145.275|Nanango
+658360|KM7BHS|431.180/147.480|Phoenix,AZ 85029
+658361|KM7BHS||Phoenix,AZ 85029
 658390|W8EDH||South Lyon, MI
 658391|W8EDH||South Lyon, MI
 658450|KF4PQH||Locust Grove, Virginia
@@ -42069,12 +42015,12 @@
 660620|R3DHR||Moscow
 660621|R3DHR||Moscow
 660622|R3DHR||Moscow
-660640|KK4IOH||West Memphis, AR
-660641|KK4IOH||West Memphis, AR
-660642|KK4IOH||West Memphis, AR
-660643|KK4IOH||West Memphis, AR
-660644|KK4IOH||West Memphis, AR
-660645|W5HAR|442.875|Helena, AR
+660640|KK4IOH||Helena, AR
+660641|KK4IOH||Helena, AR
+660642|KK4IOH||Helena, AR
+660643|KK4IOH||Helena, AR
+660644|KK4IOH||Helena, AR
+660645|KK4IOH||Helena, AR
 660650|DF6MU|438.0750|Adsubia, Alicante, Spain
 660651|DF6MU|438.0750|Adsubia, Alicante, Spain
 660740|AB7CV|441.550|OAK RIDGE, TEXAS
@@ -42090,8 +42036,6 @@
 660750|DU1LA||Silang Cavite, Phils
 660751|DU1LA|ASL to POC|Silang Cavite, Phils
 660752|DU1LA||Silang Cavite, Phils
-660800|M0CCA||Plymouth
-660801|M0CCA||Plymouth
 660820|W1KDZ - HUB||Simi Valley, CA
 660821|W1KDZ - BASE||Simi Valley, CA
 660822|W1KDZ - ZR2||Simi Valley, CA
@@ -42162,15 +42106,11 @@
 661820|E25ZTT|146.2375 MHz|Pho Sai   Ubon Ratchathani 
 661821|E25ZTT|146.2375 MHz|Pho Sai   Ubon Ratchathani 
 661822|E25ZTT|146.2375 MHz|Pho Sai   Ubon Ratchathani 
-661850|PD4BLM||Waalre
-661851|PD4BLM||Waalre
-661852|PD4BLM||Waalre
-661853|PD4BLM||Waalre
 661890|KB0IAN|434.500|O'Fallon, MO
 661891|KB0IAN|446.9950|O'Fallon, MO
 661910|KJ7NUX||Salem OR
 661911|KJ7NUX||Salem OR
-661960|N0GIK|446.1625|ADEL, IA
+661960|N0GIK|444.575|ADEL, IA
 661961|N0GIK|446.1500|ADEL, IA
 661962|N0GIK|144.915|ADEL, IA
 661990|CU7BE|155.7625|Horta/Azores/Portugal
@@ -42182,11 +42122,11 @@
 662280|N6BMR||Daly City
 662280|N6BMR||Daly City
 662281|N6BMR||Daly City
-662281|N6BMR|146.970 N6BMR Link|Daly City
+662281|N6BMR||Daly City
 662300|CE4LSK||RANCAGUA
 662301|CE4LSK||RANCAGUA
-662310|N9NJS|Lee (M1KE) TGIF 3916|Hampshire IL 
-662311|N9NJS|Lee (M1KE)|Hampshire IL 
+662310|N9NJS||Hampshire IL 
+662311|N9NJS||Hampshire IL 
 662330|WB4LA||Loxahatchee, FL
 662331|WB4LA||Loxahatchee, FL
 662340|EA7IJD||Espaa
@@ -42228,8 +42168,8 @@
 662911|HK6REC|432.850+5000|DOSQUEBRADAS
 662930|KC8ZBC||Ortonville/Michigan
 662931|KC8ZBC||Ortonville/Michigan
-662970|K7OWW|224.400-|Springfield, OR
-662971|K7OWW|224.400-|Springfield, OR
+662970|K7OWW|224.400|Springfield, OR
+662971|K7OWW|224.400|Springfield, OR
 663010|NP3EA||Lares, Puerto Rico
 663011|NP3EA||Lares, Puerto Rico
 663130|AA9AD||Stoughton/WI
@@ -42271,14 +42211,8 @@
 664191|PE1DTN||Nuenen
 664200|EA2RE||Barakaldo/Bizkaia/Spain
 664201|EA2RE||Barakaldo/Bizkaia/Spain
-664350|KK7VGQ||89081
-664351|KK7VGQ||89081
-664480|K3JWD|444.55000|Branchburg NJ USA
-664481|K3JWD||Branchburg NJ USA
 664510|KF4TSL||East Dublin
 664511|KF4TSL||East Dublin
-664530|N0LAK|147.420|San Luis Valley, Colorado
-664531|N0LAK|147.420|San Luis Valley, Colorado
 664540|KB3CMT||Pittsburgh, PA
 664541|KB3CMT||Pittsburgh, PA
 664560|E26AMC||Khonkhean Thailand
@@ -42287,34 +42221,10 @@
 664571|DW3NKJ||Bulacan Philippines 
 664750|KC0NFA||Baxter, IA
 664751|KC0NFA||Baxter, IA
-664790|KB9VKQ|TAC618 Hub|Cyberspace
-664791|KB9VKQ||Cyberspace
-664800|WA7DEM|445.000- HotSpot|Everett, WA
-664801|WA7DEM||Everett, WA
-664802|WA7DEM||Everett, WA
-664803|WA7DEM||Everett, WA
-664804|WA7DEM||Everett, WA
-664805|WA7DEM||Everett, WA
-664806|WA7DEM||Everett, WA
-664807|WA7DEM||Everett, WA
-664808|WA7DEM||Everett, WA
-664809|WA7DEM||Everett, WA
-664820|E20HNW||Kannajaburi
-664821|E20HNW||Kannajaburi
-664840|VK5BUS||Adelaide
-664841|VK5BUS||Adelaide
-664850|PD8KRW||Eindhoven
-664851|PD8KRW||Eindhoven
-664970|PJ2LS||Curacao
-664971|PJ2LS||Curacao
-664980|4G8WND|STAND ALONE|Malandag, Malungon, Sarangani
-664981|4G8WND||Malandag, Malungon, Sarangani
-665070|W9CHA||Ocala, Florida
-665071|W9CHA||Ocala, Florida
 
 
-;Generated 42311 records in 0.349 seconds.
-;Served in 0.043 seconds.
+;Generated 42221 records in 0.306 seconds.
+;Served in 0.026 seconds.
 ;Served from cache: Yes
-;Generated at 2025-08-28 08:21:05 UTC by 1d2bf7bde9be
+;Generated at 2025-08-23 20:55:57 UTC by 1d2bf7bde9be
 

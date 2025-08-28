@@ -7,3 +7,5 @@ $app = require __DIR__ . '/../src/bootstrap.php';
 
 // Run the application
 $app->run();
+
+
