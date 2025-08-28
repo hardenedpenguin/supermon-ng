@@ -202,6 +202,9 @@
           v-model:open="showFavoritesModal"
           @command-executed="handleCommandExecuted"
         />
+        
+        <!-- AST Log Modal -->
+        <AstLog v-model:open="showAstLogModal" />
   </div>
 </template>
 
@@ -216,6 +219,7 @@ import DisplayConfig from '@/components/DisplayConfig.vue'
 import AddFavorite from '@/components/AddFavorite.vue'
 import DeleteFavorite from '@/components/DeleteFavorite.vue'
 import Favorites from '@/components/Favorites.vue'
+import AstLog from '@/components/AstLog.vue'
 
 const appStore = useAppStore()
 const realTimeStore = useRealTimeStore()
@@ -229,6 +233,7 @@ const showDisplayConfigModal = ref(false)
 const showAddFavoriteModal = ref(false)
 const showDeleteFavoriteModal = ref(false)
 const showFavoritesModal = ref(false)
+const showAstLogModal = ref(false)
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
 const databaseStatus = ref<any>(null)
@@ -511,16 +516,50 @@ const astreload = async () => {
 const astaron = async () => {
   try {
     console.log('AST START command')
+    
+    if (!confirm('Are you sure you want to START the AllStar service? This will bring the service online.')) {
+      return
+    }
+
+    const response = await axios.post('/api/config/asterisk/control', {
+      action: 'start'
+    }, { 
+      withCredentials: true 
+    })
+
+    if (response.data.success) {
+      alert('AllStar service started successfully!\n\n' + response.data.output.join('\n'))
+    } else {
+      alert('Error: ' + response.data.message)
+    }
   } catch (error) {
     console.error('AST START error:', error)
+    alert('Error starting AllStar service: ' + (error.response?.data?.message || error.message))
   }
 }
 
 const astaroff = async () => {
   try {
     console.log('AST STOP command')
+    
+    if (!confirm('Are you sure you want to STOP the AllStar service? This will bring the service offline.')) {
+      return
+    }
+
+    const response = await axios.post('/api/config/asterisk/control', {
+      action: 'stop'
+    }, { 
+      withCredentials: true 
+    })
+
+    if (response.data.success) {
+      alert('AllStar service stopped successfully!\n\n' + response.data.output.join('\n'))
+    } else {
+      alert('Error: ' + response.data.message)
+    }
   } catch (error) {
     console.error('AST STOP error:', error)
+    alert('Error stopping AllStar service: ' + (error.response?.data?.message || error.message))
   }
 }
 
@@ -623,6 +662,7 @@ const linuxlog = async () => {
 const astlog = async () => {
   try {
     console.log('AST Log')
+    showAstLogModal.value = true
   } catch (error) {
     console.error('AST Log error:', error)
   }

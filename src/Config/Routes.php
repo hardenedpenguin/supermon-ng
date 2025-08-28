@@ -119,6 +119,8 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->delete('/favorites', [ConfigController::class, 'deleteFavorite']);
         $group->post('/favorites/execute', [ConfigController::class, 'executeFavorite']);
         $group->post('/asterisk/reload', [ConfigController::class, 'executeAsteriskReload']);
+        $group->post('/asterisk/control', [ConfigController::class, 'executeAsteriskControl']);
+        $group->get('/astlog', [ConfigController::class, 'getAstLog']);
     });
 
     // Database routes

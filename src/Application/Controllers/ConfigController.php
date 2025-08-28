@@ -642,4 +642,204 @@ class ConfigController
         return "user_files/{$user}.ini";
     }
 
+    /**
+     * Execute Asterisk start/stop operations
+     */
+    public function executeAsteriskControl(Request $request, Response $response): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        
+        if (!$currentUser) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Authentication required'
+            ]));
+            return $response->withStatus(401);
+        }
+
+        $data = $request->getParsedBody();
+        $action = $data['action'] ?? null;
+
+        if (empty($action)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Action not specified'
+            ]));
+            return $response->withStatus(400);
+        }
+
+        try {
+            if ($action === 'start') {
+                // Check ASTSTRUSER permission for start operation
+                if (!$this->hasUserPermission($currentUser, 'ASTSTRUSER')) {
+                    $response->getBody()->write(json_encode([
+                        'success' => false,
+                        'message' => 'ASTSTRUSER permission required to start AllStar'
+                    ]));
+                    return $response->withStatus(403);
+                }
+
+                $command = 'sudo /usr/bin/astup.sh';
+                $message = 'Starting up AllStar...';
+                
+            } elseif ($action === 'stop') {
+                // Check ASTSTPUSER permission for stop operation
+                if (!$this->hasUserPermission($currentUser, 'ASTSTPUSER')) {
+                    $response->getBody()->write(json_encode([
+                        'success' => false,
+                        'message' => 'ASTSTPUSER permission required to stop AllStar'
+                    ]));
+                    return $response->withStatus(403);
+                }
+
+                $command = 'sudo /usr/bin/astdn.sh';
+                $message = 'Shutting down AllStar...';
+                
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Invalid action specified'
+                ]));
+                return $response->withStatus(400);
+            }
+
+            // Execute the command
+            $output = [];
+            $returnCode = 0;
+            
+            exec(escapeshellcmd($command), $output, $returnCode);
+
+            if ($returnCode === 0) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'message' => $message,
+                    'output' => $output,
+                    'action' => $action
+                ]));
+                return $response->withStatus(200);
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => $message . ' - Command failed',
+                    'output' => $output,
+                    'return_code' => $returnCode
+                ]));
+                return $response->withStatus(500);
+            }
+
+        } catch (Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Error executing Asterisk control: ' . $e->getMessage()
+            ]));
+            return $response->withStatus(500);
+        }
+    }
+
+    /**
+     * Get Asterisk log content
+     */
+    public function getAstLog(Request $request, Response $response): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        
+        if (!$currentUser) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Authentication required'
+            ]));
+            return $response->withStatus(401);
+        }
+
+        // Check if user has ASTLUSER permission
+        if (!$this->hasUserPermission($currentUser, 'ASTLUSER')) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'ASTLUSER permission required'
+            ]));
+            return $response->withStatus(403);
+        }
+
+        try {
+            // Get the Asterisk log file path
+            $logPath = $this->getAstLogPath();
+            
+            if (!$logPath) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Asterisk log file path not configured'
+                ]));
+                return $response->withStatus(500);
+            }
+
+            // Check if file exists and is readable
+            if (!file_exists($logPath)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Asterisk log file not found: $logPath"
+                ]));
+                return $response->withStatus(404);
+            }
+
+            if (!is_readable($logPath)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Asterisk log file not readable: $logPath"
+                ]));
+                return $response->withStatus(403);
+            }
+
+            // Read the log file content
+            $content = file_get_contents($logPath);
+            if ($content === false) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Failed to read Asterisk log file'
+                ]));
+                return $response->withStatus(500);
+            }
+
+            // Get file modification time
+            $lastModified = filemtime($logPath);
+            $lastModifiedFormatted = $lastModified ? date('Y-m-d H:i:s', $lastModified) : 'Unknown';
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'content' => $content,
+                'path' => $logPath,
+                'lastModified' => $lastModifiedFormatted
+            ]));
+            return $response->withStatus(200);
+
+        } catch (Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Error reading Asterisk log: ' . $e->getMessage()
+            ]));
+            return $response->withStatus(500);
+        }
+    }
+
+    /**
+     * Get Asterisk log file path from configuration
+     */
+    private function getAstLogPath(): ?string
+    {
+        // Try to include the common.inc file to get the ASTERISK_LOG variable
+        $commonIncPath = 'includes/common.inc';
+        
+        if (file_exists($commonIncPath)) {
+            // Include the file to get the ASTERISK_LOG variable
+            include $commonIncPath;
+            
+            // Check if ASTERISK_LOG is defined
+            if (isset($ASTERISK_LOG) && !empty($ASTERISK_LOG)) {
+                return $ASTERISK_LOG;
+            }
+        }
+        
+        // Default fallback path
+        return '/var/log/asterisk/messages.log';
+    }
+
 }
