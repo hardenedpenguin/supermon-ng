@@ -494,7 +494,7 @@ class AuthController
             'BUBLUSER' => true,
             'FAVUSER' => true,
             'CTRLUSER' => false, // Disable admin features for anonymous users
-            'CFGEDUSER' => false,
+            'CFGEDUSER' => true, // Allow config editor for unauthenticated users
             'ASTRELUSER' => false,
             'ASTSTRUSER' => false,
             'ASTSTPUSER' => false,
