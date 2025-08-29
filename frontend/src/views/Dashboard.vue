@@ -334,10 +334,11 @@ const onNodeChange = () => {
   // Ensure selectedNode is always a string for processing
   const selectedNodeStr = String(selectedNode.value)
   
-  // Update target node when selection changes
+  // Update target node when selection changes (only for single node mode)
   if (selectedNode.value && !selectedNodeStr.includes(',')) {
     targetNode.value = selectedNodeStr
   }
+  // In group mode, don't change targetNode - it should remain as the clicked node
   
   // Start monitoring the selected nodes
   if (selectedNode.value) {
@@ -986,10 +987,14 @@ watch(() => realTimeStore.nodes, (newNodes) => {
 
 // Watch for displayed nodes changes and update NodeTable components
 watch(displayedNodes, (newDisplayedNodes) => {
-  // Set default node when multiple nodes are displayed
+  // Only set default node if we don't have any selection AND we have multiple nodes
+  // This prevents overriding group selections
   if (newDisplayedNodes.length > 1 && !selectedNode.value) {
     nextTick(() => {
-      selectedNode.value = newDisplayedNodes[0].id
+      // Create a group selection from all displayed nodes
+      const nodeIds = newDisplayedNodes.map(node => node.id).join(',')
+      selectedNode.value = nodeIds
+      console.log('🔍 Created group selection from displayed nodes:', nodeIds)
       // Trigger onNodeChange to update target node and start monitoring
       onNodeChange()
     })
