@@ -524,6 +524,8 @@ const extnodes = async () => {
 const controlpanel = async () => {
   try {
     console.log('Opening Control Panel modal')
+    // Set targetNode to the currently selected node before opening modal
+    targetNode.value = selectedNode.value
     showControlPanelModal.value = true
   } catch (error) {
     console.error('Control Panel error:', error)
