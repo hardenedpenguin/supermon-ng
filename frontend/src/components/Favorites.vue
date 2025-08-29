@@ -67,7 +67,7 @@
                       <span v-if="favorite.node" class="section-badge node">
                         {{ favorite.node }}
                       </span>
-                      <span v-else class="general-badge">General</span>
+                      <span v-else class="prompt-badge">Prompt</span>
                     </td>
                     <td>
                       <button 
@@ -441,6 +441,17 @@ onMounted(() => {
   font-weight: 600;
   text-transform: uppercase;
   background-color: #7c3aed;
+  color: #ffffff;
+}
+
+.prompt-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background-color: #f59e0b;
   color: #ffffff;
 }
 
