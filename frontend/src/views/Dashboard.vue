@@ -214,7 +214,7 @@
         <BubbleChart v-model:open="showBubbleChartModal" :local-node="targetNode" />
         
         <!-- Control Panel Modal -->
-        <ControlPanel v-model:open="showControlPanelModal" :local-node="targetNode" />
+        <ControlPanel v-model:isVisible="showControlPanelModal" :local-node="targetNode" />
     
   </div>
 </template>

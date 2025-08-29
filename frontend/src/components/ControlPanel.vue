@@ -91,7 +91,7 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['close'])
+const emit = defineEmits(['update:isVisible'])
 
 // Reactive state
 const loading = ref(false)
@@ -108,7 +108,7 @@ const hasCommands = computed(() => {
 
 // Methods
 const closeModal = () => {
-  emit('close')
+  emit('update:isVisible', false)
   resetState()
 }
 
