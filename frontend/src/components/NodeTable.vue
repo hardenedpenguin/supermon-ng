@@ -421,10 +421,6 @@ defineExpose({
   background-color: rgba(255, 255, 255, 0.1);
   text-decoration: underline;
 }
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
 
 .gridtable-large {
   font-family: verdana, arial, sans-serif;
@@ -459,27 +455,7 @@ defineExpose({
   font-weight: normal;
 }
 
-/* Original Supermon-ng table styling */
-.gridtable {
-  font-family: verdana, arial, sans-serif;
-  font-size: 12px;
-  font-weight: bold;
-  color: var(--text-color);
-  padding: 2px;
-  border-collapse: collapse;
-  width: auto;
-  min-width: 0;
-  table-layout: auto;
-}
 
-.gridtable-large {
-  font-family: verdana, arial, sans-serif;
-  font-size: 22px;
-  font-weight: bold;
-  color: var(--text-color);
-  padding: 4px;
-  border-collapse: collapse;
-}
 
 .gridtable th {
   padding: 2px 4px;
