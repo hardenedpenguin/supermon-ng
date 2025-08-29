@@ -8,6 +8,10 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 
+// Include required files for AMI functionality
+require_once __DIR__ . '/../../../includes/amifunctions.inc';
+require_once __DIR__ . '/../../../includes/global.inc';
+
 class ConfigController
 {
     private LoggerInterface $logger;
@@ -405,24 +409,24 @@ class ConfigController
     {
         if (!$username) {
             // No user logged in, use default allmon.ini
-            return "user_files/allmon.ini";
+            return __DIR__ . '/../../../user_files/allmon.ini';
         }
         
-        $authIniFile = 'user_files/authini.inc';
+        $authIniFile = __DIR__ . '/../../../user_files/authini.inc';
         
         if (!file_exists($authIniFile)) {
-            return "user_files/allmon.ini";
+            return __DIR__ . '/../../../user_files/allmon.ini';
         }
         
         // Include the authini file to get the INI mapping
-        include $authIniFile;
+        include_once $authIniFile;
         
         // Check if user has a specific INI file mapped
         if (isset($ININAME[$username])) {
-            return "user_files/{$ININAME[$username]}";
+            return __DIR__ . "/../../../user_files/{$ININAME[$username]}";
         }
         
-        return "user_files/allmon.ini";
+        return __DIR__ . '/../../../user_files/allmon.ini';
     }
 
     /**
@@ -672,22 +676,32 @@ class ConfigController
      */
     private function getUserIniFile(string $user): string
     {
-        // Include common.inc to get $USERFILES constant
-        include_once 'includes/common.inc';
+        // Ensure $USERFILES is defined
+        $USERFILES = 'user_files';
         
-        // Include authini.inc if it exists to get $ININAME mapping
-        if (file_exists("$USERFILES/authini.inc")) {
-            include_once "$USERFILES/authini.inc";
+        // Try to include common.inc if it exists
+        $commonIncPath = __DIR__ . '/../../../includes/common.inc';
+        if (file_exists($commonIncPath)) {
+            include_once $commonIncPath;
+            if (isset($USERFILES)) {
+                $USERFILES = $USERFILES;
+            }
         }
         
-        $standardAllmonIni = "$USERFILES/allmon.ini";
+        // Include authini.inc if it exists to get $ININAME mapping
+        $authIniPath = "$USERFILES/authini.inc";
+        if (file_exists($authIniPath)) {
+            include_once $authIniPath;
+        }
+        
+        $standardAllmonIni = __DIR__ . "/../../../$USERFILES/allmon.ini";
         
         // Use the same logic as the original get_ini_name function
         if (isset($ININAME) && isset($user)) {
             if (array_key_exists($user, $ININAME) && $ININAME[$user] !== "") {
-                return $this->checkIniFile($USERFILES, $ININAME[$user]);
+                return $this->checkIniFile(__DIR__ . "/../../../$USERFILES", $ININAME[$user]);
             } else {
-                return $this->checkIniFile($USERFILES, "nolog.ini");
+                return $this->checkIniFile(__DIR__ . "/../../../$USERFILES", "nolog.ini");
             }
         } else {
             return $standardAllmonIni;
@@ -1215,7 +1229,7 @@ class ConfigController
         try {
             $ami = \SimpleAmiClient::command($fp, "echolink dbdump");
             
-            if ($ami !== false && strpos($ami, 'No such command') === false) {
+            if ($ami !== false && is_string($ami) && strpos($ami, 'No such command') === false) {
                 $lines = explode("\n", $ami);
                 foreach ($lines as $line) {
                     $parts = explode('|', trim($line));
@@ -1230,7 +1244,7 @@ class ConfigController
                     }
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // EchoLink lookup failed, continue
         }
 
@@ -1248,7 +1262,7 @@ class ConfigController
         try {
             $ami = \SimpleAmiClient::command($fp, "echolink dbdump");
             
-            if ($ami !== false && strpos($ami, 'No such command') === false) {
+            if ($ami !== false && is_string($ami) && strpos($ami, 'No such command') === false) {
                 $lines = explode("\n", $ami);
                 foreach ($lines as $line) {
                     $parts = explode('|', trim($line));
@@ -1263,7 +1277,7 @@ class ConfigController
                     }
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // EchoLink lookup failed, continue
         }
 
@@ -1378,11 +1392,11 @@ class ConfigController
     {
         try {
             $dnsQuery = shell_exec("nslookup $node 2>/dev/null");
-            if (strpos($dnsQuery, 'NOT-FOUND') !== false) {
+            if ($dnsQuery !== null && strpos($dnsQuery, 'NOT-FOUND') !== false) {
                 return 'NOT FOUND';
             }
             return 'Unknown';
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return 'Unknown';
         }
     }
@@ -1572,24 +1586,31 @@ class ConfigController
      */
     private function getControlPanelIniFile(string $user): string
     {
-        include_once 'includes/common.inc';
-        
         // Ensure $USERFILES is defined
-        if (!isset($USERFILES)) {
-            $USERFILES = 'user_files';
+        $USERFILES = 'user_files';
+        
+        // Try to include common.inc if it exists
+        $commonIncPath = __DIR__ . '/../../../includes/common.inc';
+        if (file_exists($commonIncPath)) {
+            include_once $commonIncPath;
+            if (isset($USERFILES)) {
+                $USERFILES = $USERFILES;
+            }
         }
         
-        if (file_exists("$USERFILES/authini.inc")) {
-            include_once "$USERFILES/authini.inc";
+        // Try to include authini.inc if it exists
+        $authIniPath = "$USERFILES/authini.inc";
+        if (file_exists($authIniPath)) {
+            include_once $authIniPath;
         }
 
-        $standardControlIni = "$USERFILES/controlpanel.ini";
+        $standardControlIni = __DIR__ . "/../../../$USERFILES/controlpanel.ini";
         
         if (isset($CNTRLININAME) && isset($user)) {
             if (array_key_exists($user, $CNTRLININAME) && $CNTRLININAME[$user] !== "") {
-                return $this->checkControlIniFile($USERFILES, $CNTRLININAME[$user]);
+                return $this->checkControlIniFile(__DIR__ . "/../../../$USERFILES", $CNTRLININAME[$user]);
             } else {
-                return $this->checkControlIniFile($USERFILES, "cntrlnolog.ini");
+                return $this->checkControlIniFile(__DIR__ . "/../../../$USERFILES", "cntrlnolog.ini");
             }
         } else {
             return $standardControlIni;
@@ -1612,7 +1633,11 @@ class ConfigController
             return $fallbackPath;
         }
         
-        throw new \Exception("No control panel configuration file found");
+        // Create a basic control panel INI file if none exists
+        $basicIniContent = "[Commands]\nrpt reload = RPT Reload\niax2 reload = IAX2 Reload\nextensions reload = Extensions Reload\necholink dbdump = EchoLink DB Dump\nastup = Asterisk Up\nastdn = Asterisk Down\n";
+        file_put_contents($fallbackPath, $basicIniContent);
+        
+        return $fallbackPath;
     }
 
     /**

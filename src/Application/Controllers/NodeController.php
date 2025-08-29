@@ -672,7 +672,7 @@ class NodeController
     private function hasUserPermission(?string $user, string $permission): bool
     {
         // Include necessary files
-        require_once __DIR__ . '/../../../includes/authusers.php';
+        require_once __DIR__ . '/../../../authusers.php';
         require_once __DIR__ . '/../../../includes/global.inc';
         
         // If no user, use default permissions
@@ -697,7 +697,7 @@ class NodeController
     {
         // Include necessary files
         require_once __DIR__ . '/../../../includes/global.inc';
-        require_once __DIR__ . '/../../../includes/authini.php';
+        require_once __DIR__ . '/../../../authini.php';
         
         // Get INI file path
         $iniFile = \get_ini_name($user);
