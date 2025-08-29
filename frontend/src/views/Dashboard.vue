@@ -51,6 +51,11 @@
           </option>
         </select>
         
+        <!-- Visual indicator for selected target node in group mode -->
+        <div v-if="displayedNodes.length > 1 && targetNode && selectedTargetNodeDisplay" class="target-node-indicator">
+          <strong>Managing:</strong> {{ selectedTargetNodeDisplay }}
+        </div>
+        
         <!-- Hidden input for single node (matches original) -->
         <input v-else class="submit" type="hidden" :value="displayedNodes[0]">
         
@@ -334,6 +339,23 @@ const dropdownOptions = computed(() => {
   
   // Fallback to all available nodes
   return availableNodes.value
+})
+
+// Computed property to show which node is selected for management in group mode
+const selectedTargetNodeDisplay = computed(() => {
+  if (!targetNode.value) return ''
+  
+  const targetNodeStr = String(targetNode.value)
+  const node = availableNodes.value.find(n => 
+    String(n.id) === targetNodeStr || 
+    String(n.node_number || n.id) === targetNodeStr
+  )
+  
+  if (node) {
+    return `${node.id} => ${node.info || 'Node not in database'}`
+  }
+  
+  return targetNodeStr
 })
 
 // Methods
@@ -1300,6 +1322,18 @@ watch(displayedNodes, (newDisplayedNodes) => {
 .config-button:hover {
   background-color: var(--primary-color);
   color: white;
+}
+
+/* Target node indicator styling */
+.target-node-indicator {
+  margin: 5px 0;
+  padding: 5px 10px;
+  background-color: var(--primary-color);
+  color: white;
+  border-radius: 4px;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid var(--primary-color);
 }
 
 /* Control panel styling */
