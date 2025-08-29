@@ -67,7 +67,7 @@
                       <span v-if="favorite.node" class="section-badge node">
                         {{ favorite.node }}
                       </span>
-                      <span v-else class="prompt-badge">Prompt</span>
+                      <span v-else class="no-target">-</span>
                     </td>
                     <td>
                       <button 
@@ -453,6 +453,11 @@ onMounted(() => {
   text-transform: uppercase;
   background-color: #f59e0b;
   color: #ffffff;
+}
+
+.no-target {
+  color: #6b7280;
+  font-style: italic;
 }
 
 .command-preview {

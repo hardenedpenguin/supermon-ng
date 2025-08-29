@@ -2357,6 +2357,25 @@ class ConfigController
     }
 
     /**
+     * Extract target node number from command
+     */
+    private function extractTargetNodeFromCommand(string $command): ?string
+    {
+        // Look for patterns like "ilink 13 55553" or "ilink 3 29332"
+        if (preg_match('/ilink\s+\d+\s+(\d+)/', $command, $matches)) {
+            return $matches[1];
+        }
+        
+        // Look for patterns like "status 1 xxx" or "status 11 xxx"
+        if (preg_match('/status\s+\d+\s+(\d+)/', $command, $matches)) {
+            return $matches[1];
+        }
+        
+        // If no pattern matches, return null
+        return null;
+    }
+
+    /**
      * Load favorites configuration from INI files
      */
     private function loadFavoritesConfiguration(string $user): array
@@ -2392,7 +2411,7 @@ class ConfigController
                             'index' => $i,
                             'label' => $labels[$i],
                             'command' => $cmds[$i],
-                            'node' => null // General favorites don't have a specific node
+                            'node' => $this->extractTargetNodeFromCommand($cmds[$i])
                         ];
                     }
                 }
@@ -2408,7 +2427,7 @@ class ConfigController
                             'index' => $i,
                             'label' => $labels[$i],
                             'command' => $cmds[$i],
-                            'node' => $section // The section name is the node number
+                            'node' => $this->extractTargetNodeFromCommand($cmds[$i])
                         ];
                     }
                 }
