@@ -337,6 +337,7 @@ const dropdownOptions = computed(() => {
 // Methods
 const onNodeChange = () => {
   console.log('🔍 onNodeChange called with selectedNode:', selectedNode.value)
+  console.log('🔍 onNodeChange - realTimeStore.monitoringNodes before:', realTimeStore.monitoringNodes)
   
   // Ensure selectedNode is always a string for processing
   const selectedNodeStr = String(selectedNode.value)
@@ -359,8 +360,11 @@ const onNodeChange = () => {
       
       // Start monitoring each node in the group
       nodeIds.forEach(nodeId => {
+        console.log('🔍 Starting monitoring for nodeId:', nodeId)
         realTimeStore.startMonitoring(nodeId)
       })
+      
+      console.log('🔍 onNodeChange - realTimeStore.monitoringNodes after:', realTimeStore.monitoringNodes)
       
       // Ensure the group selection is maintained after monitoring starts
       if (selectedNode.value !== currentGroupSelection) {
