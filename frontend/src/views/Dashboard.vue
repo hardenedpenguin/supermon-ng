@@ -46,12 +46,7 @@
       <div v-if="displayedNodes.length > 0">
         <!-- Multiple node dropdown (only show if multiple nodes) -->
         <select v-if="displayedNodes.length > 1 && dropdownOptions.length > 0" v-model="selectedNode" class="submit" @change="onNodeChange">
-          <!-- Group option (when in group mode) -->
-          <option v-if="isGroupMode" :value="groupSelectionString" class="submit">
-            Group: {{ getGroupDisplayName() }}
-          </option>
-          <!-- Individual node options (only when not in group mode) -->
-          <option v-else v-for="node in dropdownOptions" :key="node.id" :value="node.id" class="submit">
+          <option v-for="node in dropdownOptions" :key="node.id" :value="node.id" class="submit">
             {{ node.id }} => {{ node.info || 'Node not in database' }}
           </option>
         </select>
@@ -275,19 +270,7 @@ const availableNodes = computed(() => {
   return realTimeStore.nodes
 })
 
-const isGroupMode = computed(() => {
-  return selectedNode.value && String(selectedNode.value).includes(',')
-})
 
-const groupSelectionString = computed(() => {
-  return selectedNode.value || ''
-})
-
-const getGroupDisplayName = () => {
-  if (!isGroupMode.value) return ''
-  const nodeIds = String(selectedNode.value).split(',').map(id => id.trim())
-  return nodeIds.join(', ')
-}
 
 const displayedNodes = computed(() => {
   if (!selectedNode.value) {
@@ -370,14 +353,30 @@ const onNodeChange = () => {
     // Ensure selectedNode is always a string for processing
     const selectedNodeStr = String(selectedNode.value)
     
-    // Update target node when selection changes (only for single node mode)
-    if (selectedNode.value && !selectedNodeStr.includes(',')) {
-      targetNode.value = selectedNodeStr
-    }
-    // In group mode, don't change targetNode - it should remain as the clicked node
+    // Check if we were previously in group mode and now have a single node selection
+    // This happens when a node is selected from the dropdown in group mode
+    const wasInGroupMode = displayedNodes.value.length > 1 && !selectedNodeStr.includes(',')
     
-    // Start monitoring the selected nodes
-    if (selectedNode.value) {
+    if (wasInGroupMode) {
+      // We're in group mode but a single node was selected from dropdown
+      // Set this as the target node but maintain the group selection
+      targetNode.value = selectedNodeStr
+      console.log('🔍 Group mode: setting target node to:', selectedNodeStr)
+      
+      // Restore the group selection by creating it from displayed nodes
+      const groupSelection = displayedNodes.value.map(node => node.id).join(',')
+      selectedNode.value = groupSelection
+      console.log('🔍 Group mode: restored group selection:', groupSelection)
+      
+      // Start monitoring the group nodes
+      const nodeIds = groupSelection.split(',').map(id => id.trim())
+      console.log('🔍 Starting monitoring for group nodes:', nodeIds)
+      nodeIds.forEach(nodeId => {
+        console.log('🔍 Starting monitoring for nodeId:', nodeId)
+        realTimeStore.startMonitoring(nodeId)
+      })
+    } else {
+      // Normal single node or group selection
       if (selectedNodeStr.includes(',')) {
         // Handle group selection
         const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
@@ -392,8 +391,6 @@ const onNodeChange = () => {
           realTimeStore.startMonitoring(nodeId)
         })
         
-        console.log('🔍 onNodeChange - realTimeStore.monitoringNodes after:', realTimeStore.monitoringNodes)
-        
         // Ensure the group selection is maintained after monitoring starts
         if (selectedNode.value !== currentGroupSelection) {
           console.log('🔍 Restoring group selection after monitoring start')
@@ -402,9 +399,12 @@ const onNodeChange = () => {
       } else {
         // Handle single node selection
         console.log('🔍 Starting monitoring for single node:', selectedNodeStr)
+        targetNode.value = selectedNodeStr
         realTimeStore.startMonitoring(selectedNodeStr)
       }
     }
+    
+    console.log('🔍 onNodeChange - realTimeStore.monitoringNodes after:', realTimeStore.monitoringNodes)
   } finally {
     isNodeChangeInProgress = false
   }
