@@ -2287,7 +2287,8 @@ class ConfigController
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
             }
 
-            // Cast index to integer since the method expects int
+            // Ensure proper types for the method call
+            $section = (string)$section;
             $index = (int)$index;
 
             $result = $this->removeFavoriteFromConfiguration($currentUser, $section, $index);
