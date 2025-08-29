@@ -1008,6 +1008,9 @@ watch(() => realTimeStore.nodes, (newNodes) => {
 
 // Watch for displayed nodes changes and update NodeTable components
 watch(displayedNodes, (newDisplayedNodes) => {
+  console.log('🔍 displayedNodes watcher triggered - newDisplayedNodes length:', newDisplayedNodes.length)
+  console.log('🔍 displayedNodes watcher - current selectedNode:', selectedNode.value)
+  
   // Only set default node if we don't have any selection AND we have multiple nodes
   // This prevents overriding group selections
   if (newDisplayedNodes.length > 1 && !selectedNode.value) {
@@ -1027,6 +1030,8 @@ watch(displayedNodes, (newDisplayedNodes) => {
       // this might be a case where we need to create a group selection
       // But we should be careful not to override existing group selections
       console.log('🔍 Multiple displayed nodes but single node selection - keeping current selection')
+    } else {
+      console.log('🔍 Multiple displayed nodes with group selection - keeping group selection')
     }
   }
   
