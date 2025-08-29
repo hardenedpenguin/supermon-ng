@@ -67,7 +67,7 @@
                       <span v-if="favorite.node" class="section-badge node">
                         {{ favorite.node }}
                       </span>
-                      <span v-else class="no-node">N/A</span>
+                      <span v-else class="general-badge">General</span>
                     </td>
                     <td>
                       <button 
@@ -431,6 +431,17 @@ onMounted(() => {
 .no-node {
   color: #6b7280;
   font-style: italic;
+}
+
+.general-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background-color: #7c3aed;
+  color: #ffffff;
 }
 
 .command-preview {

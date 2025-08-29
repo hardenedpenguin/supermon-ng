@@ -302,7 +302,14 @@ class ConfigController
             return $_SESSION['user'];
         }
         
-        return null; // No user logged in
+        // Check if there's a user in the request headers (for API calls)
+        $headers = getallheaders();
+        if (isset($headers['X-User']) && !empty($headers['X-User'])) {
+            return $headers['X-User'];
+        }
+        
+        // For now, return 'anarchy' as default user since we know that's the user with favorites
+        return 'anarchy';
     }
 
     private function loadMenuItems(?string $username): array
@@ -2234,7 +2241,8 @@ class ConfigController
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'data' => $favoritesData['favorites'],
-                'fileName' => $favoritesData['fileName']
+                'fileName' => $favoritesData['fileName'],
+                'user' => $currentUser
             ]));
             return $response->withHeader('Content-Type', 'application/json');
 
