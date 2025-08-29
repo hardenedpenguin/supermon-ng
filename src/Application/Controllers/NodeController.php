@@ -719,7 +719,7 @@ class NodeController
         
         // Fallback to allmon.ini
         if (!$iniFile) {
-            $allmonIni = __DIR__ . '/../../../allmon.ini';
+            $allmonIni = __DIR__ . '/../../../user_files/allmon.ini';
             if (file_exists($allmonIni)) {
                 $iniFile = $allmonIni;
             }
@@ -727,19 +727,37 @@ class NodeController
         
         // Fallback to anarchy-allmon.ini
         if (!$iniFile) {
-            $anarchyIni = __DIR__ . '/../../../anarchy-allmon.ini';
+            $anarchyIni = __DIR__ . '/../../../user_files/anarchy-allmon.ini';
             if (file_exists($anarchyIni)) {
                 $iniFile = $anarchyIni;
             }
         }
         
+        // Debug logging
+        $this->logger->info('Loading node config', [
+            'user' => $user,
+            'localNode' => $localNode,
+            'iniFile' => $iniFile,
+            'fileExists' => $iniFile ? file_exists($iniFile) : false
+        ]);
+        
         if (!$iniFile || !file_exists($iniFile)) {
+            $this->logger->error('No valid INI file found', [
+                'user' => $user,
+                'localNode' => $localNode
+            ]);
             return null;
         }
         
         $config = parse_ini_file($iniFile, true);
         
         if (!isset($config[$localNode])) {
+            $this->logger->error('Node not found in config', [
+                'user' => $user,
+                'localNode' => $localNode,
+                'iniFile' => $iniFile,
+                'availableNodes' => array_keys($config)
+            ]);
             return null;
         }
         
