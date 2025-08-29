@@ -123,6 +123,8 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->get('/astlog', [ConfigController::class, 'getAstLog']);
         $group->post('/astlookup', [ConfigController::class, 'performAstLookup']);
         $group->post('/bubblechart', [ConfigController::class, 'getBubbleChart']);
+        $group->get('/controlpanel', [ConfigController::class, 'getControlPanel']);
+        $group->post('/controlpanel/execute', [ConfigController::class, 'executeControlCommand']);
     });
 
     // Database routes

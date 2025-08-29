@@ -635,7 +635,7 @@ class ConfigController
             'RSTATUSER' => true,
             'BUBLUSER' => true,
             'FAVUSER' => true,
-            'CTRLUSER' => false,
+            'CTRLUSER' => true,
             'CFGEDUSER' => false,
             'ASTRELUSER' => false,
             'ASTSTRUSER' => false,
@@ -1450,6 +1450,281 @@ class ConfigController
     {
         $statsBaseUrl = "http://stats.allstarlink.org/getstatus.cgi";
         return $statsBaseUrl . "?" . urlencode($node);
+    }
+
+    /**
+     * Get control panel configuration and available commands
+     */
+    public function getControlPanel(Request $request, Response $response): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        
+        // Allow control panel to proceed even without authentication (using default permissions)
+        if (!$currentUser) {
+            $currentUser = 'default'; // Use default user for INI file resolution
+        }
+
+        // Check if user has CTRLUSER permission
+        if (!$this->hasUserPermission($currentUser, 'CTRLUSER')) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'CTRLUSER permission required'
+            ]));
+            return $response->withStatus(403);
+        }
+
+        try {
+            // Get control panel configuration
+            $config = $this->getControlPanelConfig($currentUser);
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'config' => $config
+            ]));
+            return $response->withStatus(200);
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Failed to load control panel configuration: ' . $e->getMessage()
+            ]));
+            return $response->withStatus(500);
+        }
+    }
+
+    /**
+     * Execute control panel command
+     */
+    public function executeControlCommand(Request $request, Response $response): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        
+        // Allow control commands to proceed even without authentication (using default permissions)
+        if (!$currentUser) {
+            $currentUser = 'default'; // Use default user for INI file resolution
+        }
+
+        // Check if user has CTRLUSER permission
+        if (!$this->hasUserPermission($currentUser, 'CTRLUSER')) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'CTRLUSER permission required'
+            ]));
+            return $response->withStatus(403);
+        }
+
+        $data = $request->getParsedBody();
+        $command = trim($data['command'] ?? '');
+        $node = trim($data['node'] ?? '');
+
+        if (empty($command)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Command is required'
+            ]));
+            return $response->withStatus(400);
+        }
+
+        try {
+            // Get control panel configuration
+            $config = $this->getControlPanelConfig($currentUser);
+            
+            // Execute the command
+            $result = $this->executeControlPanelCommand($command, $node, $config);
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'result' => $result
+            ]));
+            return $response->withStatus(200);
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Failed to execute command: ' . $e->getMessage()
+            ]));
+            return $response->withStatus(500);
+        }
+    }
+
+    /**
+     * Get control panel configuration for user
+     */
+    private function getControlPanelConfig(string $user): array
+    {
+        include_once 'includes/common.inc';
+        
+        // Load control panel INI configuration
+        $controlIniFile = $this->getControlPanelIniFile($user);
+        
+        if (!file_exists($controlIniFile)) {
+            throw new \Exception("Control panel configuration file not found: $controlIniFile");
+        }
+
+        $config = parse_ini_file($controlIniFile, true);
+        if ($config === false) {
+            throw new \Exception("Failed to parse control panel configuration file");
+        }
+
+        return $config;
+    }
+
+    /**
+     * Get control panel INI file path for user
+     */
+    private function getControlPanelIniFile(string $user): string
+    {
+        include_once 'includes/common.inc';
+        
+        // Ensure $USERFILES is defined
+        if (!isset($USERFILES)) {
+            $USERFILES = 'user_files';
+        }
+        
+        if (file_exists("$USERFILES/authini.inc")) {
+            include_once "$USERFILES/authini.inc";
+        }
+
+        $standardControlIni = "$USERFILES/controlpanel.ini";
+        
+        if (isset($CNTRLININAME) && isset($user)) {
+            if (array_key_exists($user, $CNTRLININAME) && $CNTRLININAME[$user] !== "") {
+                return $this->checkControlIniFile($USERFILES, $CNTRLININAME[$user]);
+            } else {
+                return $this->checkControlIniFile($USERFILES, "cntrlnolog.ini");
+            }
+        } else {
+            return $standardControlIni;
+        }
+    }
+
+    /**
+     * Check if control INI file exists, return fallback if not
+     */
+    private function checkControlIniFile(string $fdir, string $fname): string
+    {
+        $fullPath = "$fdir/$fname";
+        if (file_exists($fullPath)) {
+            return $fullPath;
+        }
+        
+        // Fallback to standard control panel INI
+        $fallbackPath = "$fdir/controlpanel.ini";
+        if (file_exists($fallbackPath)) {
+            return $fallbackPath;
+        }
+        
+        throw new \Exception("No control panel configuration file found");
+    }
+
+    /**
+     * Execute control panel command
+     */
+    private function executeControlPanelCommand(string $command, string $node, array $config): array
+    {
+        // Map command to actual execution
+        switch (strtolower($command)) {
+            case 'rpt reload':
+                return $this->executeRptReload($node, $config);
+            case 'iax2 reload':
+                return $this->executeIax2Reload($node, $config);
+            case 'extensions reload':
+                return $this->executeExtensionsReload($node, $config);
+            case 'echolink dbdump':
+                return $this->executeEchoLinkDbDump($node, $config);
+            case 'astup':
+                return $this->executeAstUp($node, $config);
+            case 'astdn':
+                return $this->executeAstDown($node, $config);
+            default:
+                throw new \Exception("Unknown command: $command");
+        }
+    }
+
+    /**
+     * Execute rpt reload command
+     */
+    private function executeRptReload(string $node, array $config): array
+    {
+        // For now, use shell command directly (AMI can be enabled later)
+        $result = shell_exec("sudo /usr/bin/astup.sh rpt reload $node 2>&1");
+        return [
+            'command' => 'rpt reload',
+            'node' => $node,
+            'result' => $result,
+            'method' => 'Shell'
+        ];
+    }
+
+    /**
+     * Execute iax2 reload command
+     */
+    private function executeIax2Reload(string $node, array $config): array
+    {
+        // For now, use shell command directly (AMI can be enabled later)
+        $result = shell_exec("sudo /usr/bin/astup.sh iax2 reload 2>&1");
+        return [
+            'command' => 'iax2 reload',
+            'node' => $node,
+            'result' => $result,
+            'method' => 'Shell'
+        ];
+    }
+
+    /**
+     * Execute extensions reload command
+     */
+    private function executeExtensionsReload(string $node, array $config): array
+    {
+        // For now, use shell command directly (AMI can be enabled later)
+        $result = shell_exec("sudo /usr/bin/astup.sh extensions reload 2>&1");
+        return [
+            'command' => 'extensions reload',
+            'node' => $node,
+            'result' => $result,
+            'method' => 'Shell'
+        ];
+    }
+
+    /**
+     * Execute echolink dbdump command
+     */
+    private function executeEchoLinkDbDump(string $node, array $config): array
+    {
+        // For now, use shell command directly (AMI can be enabled later)
+        $result = shell_exec("sudo /usr/bin/astup.sh echolink dbdump 2>&1");
+        return [
+            'command' => 'echolink dbdump',
+            'node' => $node,
+            'result' => $result,
+            'method' => 'Shell'
+        ];
+    }
+
+    /**
+     * Execute astup command
+     */
+    private function executeAstUp(string $node, array $config): array
+    {
+        $result = shell_exec("sudo /usr/bin/astup.sh 2>&1");
+        return [
+            'command' => 'astup',
+            'node' => $node,
+            'result' => $result,
+            'method' => 'Shell'
+        ];
+    }
+
+    /**
+     * Execute astdn command
+     */
+    private function executeAstDown(string $node, array $config): array
+    {
+        $result = shell_exec("sudo /usr/bin/astdn.sh 2>&1");
+        return [
+            'command' => 'astdn',
+            'node' => $node,
+            'result' => $result,
+            'method' => 'Shell'
+        ];
     }
 
 }

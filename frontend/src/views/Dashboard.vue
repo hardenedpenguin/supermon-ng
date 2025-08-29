@@ -211,6 +211,9 @@
         
         <!-- Bubble Chart Modal -->
         <BubbleChart v-model:open="showBubbleChartModal" :local-node="targetNode" />
+        
+        <!-- Control Panel Modal -->
+        <ControlPanel v-model:open="showControlPanelModal" :local-node="targetNode" />
   </div>
 </template>
 
@@ -228,6 +231,7 @@ import Favorites from '@/components/Favorites.vue'
 import AstLog from '@/components/AstLog.vue'
 import AstLookup from '@/components/AstLookup.vue'
 import BubbleChart from '@/components/BubbleChart.vue'
+import ControlPanel from '@/components/ControlPanel.vue'
 
 const appStore = useAppStore()
 const realTimeStore = useRealTimeStore()
@@ -244,6 +248,7 @@ const showFavoritesModal = ref(false)
 const showAstLogModal = ref(false)
 const showAstLookupModal = ref(false)
 const showBubbleChartModal = ref(false)
+const showControlPanelModal = ref(false)
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
 const databaseStatus = ref<any>(null)
@@ -453,10 +458,10 @@ const extnodes = async () => {
 
 const controlpanel = async () => {
   try {
-    // Implement control panel functionality
-    console.log('Opening control panel')
+    console.log('Opening Control Panel modal')
+    showControlPanelModal.value = true
   } catch (error) {
-    console.error('Control panel error:', error)
+    console.error('Control Panel error:', error)
   }
 }
 
