@@ -276,21 +276,28 @@ const displayedNodes = computed(() => {
   }
   
   const selectedNodeStr = String(selectedNode.value)
+  console.log('🔍 displayedNodes computed - selectedNode:', selectedNodeStr)
+  console.log('🔍 displayedNodes computed - availableNodes count:', availableNodes.value.length)
   
   // Handle comma-separated node IDs (for groups)
   if (selectedNodeStr.includes(',')) {
     const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
-    return availableNodes.value.filter(node => 
+    console.log('🔍 displayedNodes computed - group nodeIds:', nodeIds)
+    const filteredNodes = availableNodes.value.filter(node => 
       nodeIds.includes(node.id.toString()) || 
       nodeIds.includes((node.node_number || node.id).toString())
     )
+    console.log('🔍 displayedNodes computed - filtered group nodes:', filteredNodes.map(n => n.id))
+    return filteredNodes
   }
   
   // Handle single node ID
-  return availableNodes.value.filter(node => 
+  const filteredNodes = availableNodes.value.filter(node => 
     node.id.toString() === selectedNodeStr || 
     (node.node_number || node.id).toString() === selectedNodeStr
   )
+  console.log('🔍 displayedNodes computed - filtered single node:', filteredNodes.map(n => n.id))
+  return filteredNodes
 })
 
 // Dropdown options - show displayed nodes when available, otherwise show all available nodes
@@ -1009,6 +1016,15 @@ watch(displayedNodes, (newDisplayedNodes) => {
       // Trigger onNodeChange to update target node and start monitoring
       onNodeChange()
     })
+  } else if (newDisplayedNodes.length > 1 && selectedNode.value) {
+    // If we have a selection and multiple displayed nodes, check if it's a group selection
+    const selectedNodeStr = String(selectedNode.value)
+    if (!selectedNodeStr.includes(',')) {
+      // If current selection is not a group, but we have multiple displayed nodes,
+      // this might be a case where we need to create a group selection
+      // But we should be careful not to override existing group selections
+      console.log('🔍 Multiple displayed nodes but single node selection - keeping current selection')
+    }
   }
   
   nextTick(() => {
