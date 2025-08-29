@@ -862,7 +862,10 @@ const openDonatePopup = () => {
 
   // Handle menu node selection
   const handleNodeSelection = (nodeId: string) => {
+    console.log('🔍 handleNodeSelection called with nodeId:', nodeId)
+    console.log('🔍 Previous selectedNode value:', selectedNode.value)
     selectedNode.value = nodeId
+    console.log('🔍 New selectedNode value:', selectedNode.value)
     onNodeChange()
   }
 
