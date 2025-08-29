@@ -275,9 +275,11 @@ const displayedNodes = computed(() => {
     return []
   }
   
+  const selectedNodeStr = String(selectedNode.value)
+  
   // Handle comma-separated node IDs (for groups)
-  if (selectedNode.value.includes(',')) {
-    const nodeIds = selectedNode.value.split(',').map(id => id.trim())
+  if (selectedNodeStr.includes(',')) {
+    const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
     return availableNodes.value.filter(node => 
       nodeIds.includes(node.id.toString()) || 
       nodeIds.includes((node.node_number || node.id).toString())
@@ -286,8 +288,8 @@ const displayedNodes = computed(() => {
   
   // Handle single node ID
   return availableNodes.value.filter(node => 
-    node.id.toString() === selectedNode.value || 
-    (node.node_number || node.id).toString() === selectedNode.value
+    node.id.toString() === selectedNodeStr || 
+    (node.node_number || node.id).toString() === selectedNodeStr
   )
 })
 
@@ -300,9 +302,11 @@ const dropdownOptions = computed(() => {
   
   // If we have a selectedNode but no displayedNodes yet, try to find the nodes
   if (selectedNode.value) {
+    const selectedNodeStr = String(selectedNode.value)
+    
     // Handle comma-separated node IDs (for groups)
-    if (selectedNode.value.includes(',')) {
-      const nodeIds = selectedNode.value.split(',').map(id => id.trim())
+    if (selectedNodeStr.includes(',')) {
+      const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
       return availableNodes.value.filter(node => 
         nodeIds.includes(node.id.toString()) || 
         nodeIds.includes((node.node_number || node.id).toString())
@@ -311,8 +315,8 @@ const dropdownOptions = computed(() => {
     
     // Handle single node ID
     const singleNode = availableNodes.value.find(node => 
-      node.id.toString() === selectedNode.value || 
-      (node.node_number || node.id).toString() === selectedNode.value
+      node.id.toString() === selectedNodeStr || 
+      (node.node_number || node.id).toString() === selectedNodeStr
     )
     if (singleNode) {
       return [singleNode]
@@ -327,14 +331,16 @@ const dropdownOptions = computed(() => {
 const onNodeChange = () => {
   console.log('🔍 onNodeChange called with selectedNode:', selectedNode.value)
   
+  // Ensure selectedNode is always a string for processing
+  const selectedNodeStr = String(selectedNode.value)
+  
   // Update target node when selection changes
-  if (selectedNode.value && !String(selectedNode.value).includes(',')) {
-    targetNode.value = String(selectedNode.value)
+  if (selectedNode.value && !selectedNodeStr.includes(',')) {
+    targetNode.value = selectedNodeStr
   }
   
   // Start monitoring the selected nodes
   if (selectedNode.value) {
-    const selectedNodeStr = String(selectedNode.value)
     if (selectedNodeStr.includes(',')) {
       // Handle group selection
       const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
@@ -821,7 +827,7 @@ const openDonatePopup = () => {
       // Find the local node that has this connected node
       const localNode = displayedNodes.value.find(node => {
         // Check if this local node has the clicked node as a connected node
-        const nodeData = realTimeStore.getNodeData(node.id)
+        const nodeData = realTimeStore.getNodeById(node.id)
         if (nodeData && nodeData.remote_nodes) {
           return nodeData.remote_nodes.some((remoteNode: any) => 
             remoteNode.node === nodeId || remoteNode.node.toString() === nodeId
