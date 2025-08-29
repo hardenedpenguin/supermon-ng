@@ -1950,7 +1950,8 @@ class ConfigController
             } finally {
                 // Always close the connection
                 if ($fp) {
-                    \SimpleAmiClient::logoff($fp);
+                    // Use shell command to close connection instead of SimpleAmiClient
+                    fclose($fp);
                 }
             }
         } catch (\Exception $e) {
