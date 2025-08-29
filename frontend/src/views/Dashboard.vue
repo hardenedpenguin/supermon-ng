@@ -214,7 +214,7 @@
         
         <!-- Control Panel Modal -->
         <ControlPanel v-model:open="showControlPanelModal" :local-node="targetNode" />
-    <ConfigEditor v-model:open="showConfigEditorModal" />
+    
   </div>
 </template>
 
@@ -233,7 +233,7 @@ import AstLog from '@/components/AstLog.vue'
 import AstLookup from '@/components/AstLookup.vue'
 import BubbleChart from '@/components/BubbleChart.vue'
 import ControlPanel from '@/components/ControlPanel.vue'
-import ConfigEditor from '@/components/ConfigEditor.vue'
+
 
 const appStore = useAppStore()
 const realTimeStore = useRealTimeStore()
@@ -251,7 +251,7 @@ const showAstLogModal = ref(false)
 const showAstLookupModal = ref(false)
 const showBubbleChartModal = ref(false)
 const showControlPanelModal = ref(false)
-const showConfigEditorModal = ref(false)
+
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
 const databaseStatus = ref<any>(null)
@@ -498,8 +498,8 @@ const digitaldashboard = async () => {
 // Additional button methods to match original Supermon-ng
 const configeditor = async () => {
   try {
-    console.log('Opening Config Editor modal')
-    showConfigEditorModal.value = true
+    console.log('Opening Config Editor in new window')
+    window.open('/configeditor.html', 'ConfigEditor', 'status=no,location=no,toolbar=no,width=1200,height=800,left=100,top=100')
   } catch (error) {
     console.error('Config editor error:', error)
   }
