@@ -335,47 +335,59 @@ const dropdownOptions = computed(() => {
 })
 
 // Methods
+let isNodeChangeInProgress = false
+
 const onNodeChange = () => {
+  if (isNodeChangeInProgress) {
+    console.log('🔍 onNodeChange already in progress, skipping')
+    return
+  }
+  
+  isNodeChangeInProgress = true
   console.log('🔍 onNodeChange called with selectedNode:', selectedNode.value)
   console.log('🔍 onNodeChange - realTimeStore.monitoringNodes before:', realTimeStore.monitoringNodes)
   
-  // Ensure selectedNode is always a string for processing
-  const selectedNodeStr = String(selectedNode.value)
-  
-  // Update target node when selection changes (only for single node mode)
-  if (selectedNode.value && !selectedNodeStr.includes(',')) {
-    targetNode.value = selectedNodeStr
-  }
-  // In group mode, don't change targetNode - it should remain as the clicked node
-  
-  // Start monitoring the selected nodes
-  if (selectedNode.value) {
-    if (selectedNodeStr.includes(',')) {
-      // Handle group selection
-      const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
-      console.log('🔍 Starting monitoring for group nodes:', nodeIds)
-      
-      // Store the current group selection to prevent it from being overridden
-      const currentGroupSelection = selectedNode.value
-      
-      // Start monitoring each node in the group
-      nodeIds.forEach(nodeId => {
-        console.log('🔍 Starting monitoring for nodeId:', nodeId)
-        realTimeStore.startMonitoring(nodeId)
-      })
-      
-      console.log('🔍 onNodeChange - realTimeStore.monitoringNodes after:', realTimeStore.monitoringNodes)
-      
-      // Ensure the group selection is maintained after monitoring starts
-      if (selectedNode.value !== currentGroupSelection) {
-        console.log('🔍 Restoring group selection after monitoring start')
-        selectedNode.value = currentGroupSelection
-      }
-    } else {
-      // Handle single node selection
-      console.log('🔍 Starting monitoring for single node:', selectedNodeStr)
-      realTimeStore.startMonitoring(selectedNodeStr)
+  try {
+    // Ensure selectedNode is always a string for processing
+    const selectedNodeStr = String(selectedNode.value)
+    
+    // Update target node when selection changes (only for single node mode)
+    if (selectedNode.value && !selectedNodeStr.includes(',')) {
+      targetNode.value = selectedNodeStr
     }
+    // In group mode, don't change targetNode - it should remain as the clicked node
+    
+    // Start monitoring the selected nodes
+    if (selectedNode.value) {
+      if (selectedNodeStr.includes(',')) {
+        // Handle group selection
+        const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
+        console.log('🔍 Starting monitoring for group nodes:', nodeIds)
+        
+        // Store the current group selection to prevent it from being overridden
+        const currentGroupSelection = selectedNode.value
+        
+        // Start monitoring each node in the group
+        nodeIds.forEach(nodeId => {
+          console.log('🔍 Starting monitoring for nodeId:', nodeId)
+          realTimeStore.startMonitoring(nodeId)
+        })
+        
+        console.log('🔍 onNodeChange - realTimeStore.monitoringNodes after:', realTimeStore.monitoringNodes)
+        
+        // Ensure the group selection is maintained after monitoring starts
+        if (selectedNode.value !== currentGroupSelection) {
+          console.log('🔍 Restoring group selection after monitoring start')
+          selectedNode.value = currentGroupSelection
+        }
+      } else {
+        // Handle single node selection
+        console.log('🔍 Starting monitoring for single node:', selectedNodeStr)
+        realTimeStore.startMonitoring(selectedNodeStr)
+      }
+    }
+  } finally {
+    isNodeChangeInProgress = false
   }
 }
 
