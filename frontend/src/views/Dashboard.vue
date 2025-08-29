@@ -358,10 +358,20 @@ const onNodeChange = () => {
 
 const connect = async () => {
   if (!targetNode.value) return
+  
+  // In group mode, we need to determine which node to connect to
+  let remoteNode = selectedNode.value
+  
+  // If we're in group mode (selectedNode contains multiple nodes), 
+  // we need to use the targetNode as the remote node
+  if (String(selectedNode.value).includes(',')) {
+    remoteNode = targetNode.value
+  }
+  
   try {
     const response = await axios.post('/api/nodes/connect', {
       localnode: targetNode.value,
-      remotenode: selectedNode.value,
+      remotenode: remoteNode,
       perm: permConnect.value ? 'on' : null
     })
     
@@ -379,10 +389,20 @@ const connect = async () => {
 
 const disconnect = async () => {
   if (!targetNode.value) return
+  
+  // In group mode, we need to determine which node to disconnect from
+  let remoteNode = selectedNode.value
+  
+  // If we're in group mode (selectedNode contains multiple nodes), 
+  // we need to use the targetNode as the remote node
+  if (String(selectedNode.value).includes(',')) {
+    remoteNode = targetNode.value
+  }
+  
   try {
     const response = await axios.post('/api/nodes/disconnect', {
       localnode: targetNode.value,
-      remotenode: selectedNode.value,
+      remotenode: remoteNode,
       perm: null
     })
     
@@ -421,10 +441,20 @@ const monitor = async () => {
 
 const permconnect = async () => {
   if (!targetNode.value) return
+  
+  // In group mode, we need to determine which node to connect to
+  let remoteNode = selectedNode.value
+  
+  // If we're in group mode (selectedNode contains multiple nodes), 
+  // we need to use the targetNode as the remote node
+  if (String(selectedNode.value).includes(',')) {
+    remoteNode = targetNode.value
+  }
+  
   try {
     const response = await axios.post('/api/nodes/connect', {
       localnode: targetNode.value,
-      remotenode: selectedNode.value,
+      remotenode: remoteNode,
       perm: 'on'
     })
     
