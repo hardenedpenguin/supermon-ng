@@ -212,13 +212,14 @@ watch(() => props.localNode, (newValue) => {
 }
 
 .modal-content {
-  background: white;
+  background: #2d3748;
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   max-width: 600px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
+  color: #e2e8f0;
 }
 
 .modal-header {
@@ -226,14 +227,14 @@ watch(() => props.localNode, (newValue) => {
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
-  background: #f8f9fa;
+  border-bottom: 1px solid #4a5568;
+  background: #1a202c;
   border-radius: 8px 8px 0 0;
 }
 
 .modal-header h2 {
   margin: 0;
-  color: #333;
+  color: #e2e8f0;
   font-size: 1.5rem;
 }
 
@@ -242,7 +243,7 @@ watch(() => props.localNode, (newValue) => {
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #666;
+  color: #a0aec0;
   padding: 0;
   width: 30px;
   height: 30px;
@@ -254,8 +255,8 @@ watch(() => props.localNode, (newValue) => {
 }
 
 .close-button:hover {
-  background-color: #e0e0e0;
-  color: #333;
+  background-color: #4a5568;
+  color: #e2e8f0;
 }
 
 .modal-body {
@@ -283,11 +284,11 @@ watch(() => props.localNode, (newValue) => {
 }
 
 .error-message {
-  background: #f8d7da;
-  color: #721c24;
+  background: #742a2a;
+  color: #feb2b2;
   padding: 15px;
   border-radius: 4px;
-  border: 1px solid #f5c6cb;
+  border: 1px solid #c53030;
   text-align: center;
 }
 
@@ -297,12 +298,13 @@ watch(() => props.localNode, (newValue) => {
 }
 
 .no-commands h3 {
-  color: #666;
+  color: #a0aec0;
   margin-bottom: 15px;
 }
 
 .no-commands code {
-  background: #f8f9fa;
+  background: #4a5568;
+  color: #e2e8f0;
   padding: 8px 12px;
   border-radius: 4px;
   font-family: monospace;
@@ -317,15 +319,15 @@ watch(() => props.localNode, (newValue) => {
 }
 
 .node-info {
-  background: #e3f2fd;
+  background: #2c5282;
   padding: 15px;
   border-radius: 4px;
-  border-left: 4px solid #2196f3;
+  border-left: 4px solid #63b3ed;
 }
 
 .node-info p {
   margin: 0;
-  color: #1976d2;
+  color: #bee3f8;
 }
 
 .command-section {
@@ -336,25 +338,27 @@ watch(() => props.localNode, (newValue) => {
 
 .command-section label {
   font-weight: 600;
-  color: #333;
+  color: #e2e8f0;
 }
 
 .command-select {
   padding: 12px;
-  border: 2px solid #ddd;
+  border: 2px solid #4a5568;
   border-radius: 4px;
   font-size: 14px;
-  background: white;
+  background: #1a202c;
+  color: #e2e8f0;
   transition: border-color 0.2s;
 }
 
 .command-select:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: #63b3ed;
 }
 
 .command-select:disabled {
-  background: #f5f5f5;
+  background: #2d3748;
+  color: #718096;
   cursor: not-allowed;
 }
 
@@ -364,7 +368,7 @@ watch(() => props.localNode, (newValue) => {
 }
 
 .execute-button {
-  background: #007bff;
+  background: #3182ce;
   color: white;
   border: none;
   padding: 12px 30px;
@@ -377,11 +381,11 @@ watch(() => props.localNode, (newValue) => {
 }
 
 .execute-button:hover:not(:disabled) {
-  background: #0056b3;
+  background: #2c5282;
 }
 
 .execute-button:disabled {
-  background: #ccc;
+  background: #4a5568;
   cursor: not-allowed;
 }
 
@@ -389,25 +393,27 @@ watch(() => props.localNode, (newValue) => {
   margin-top: 20px;
   padding: 15px;
   border-radius: 4px;
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
+  background: #1a202c;
+  border: 1px solid #4a5568;
 }
 
 .result-section h4 {
   margin: 0 0 10px 0;
-  color: #333;
+  color: #e2e8f0;
 }
 
 .result-content {
-  background: white;
+  background: #2d3748;
+  color: #e2e8f0;
   padding: 12px;
   border-radius: 4px;
-  border: 1px solid #dee2e6;
+  border: 1px solid #4a5568;
 }
 
 .result-content.error {
-  background: #fff5f5;
-  border-color: #feb2b2;
+  background: #742a2a;
+  border-color: #c53030;
+  color: #feb2b2;
 }
 
 .result-content pre {
@@ -417,18 +423,19 @@ watch(() => props.localNode, (newValue) => {
   font-family: monospace;
   font-size: 13px;
   line-height: 1.4;
+  color: #e2e8f0;
 }
 
 .modal-footer {
   padding: 20px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid #4a5568;
   text-align: center;
-  background: #f8f9fa;
+  background: #1a202c;
   border-radius: 0 0 8px 8px;
 }
 
 .close-window-button {
-  background: #6c757d;
+  background: #4a5568;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -439,6 +446,6 @@ watch(() => props.localNode, (newValue) => {
 }
 
 .close-window-button:hover {
-  background: #5a6268;
+  background: #2d3748;
 }
 </style>
