@@ -837,8 +837,10 @@ const openDonatePopup = () => {
       })
       
       if (localNode) {
-        selectedNode.value = localNode.id
-        onNodeChange()
+        // Don't change the group selection - just update the target node
+        // The group selection should remain intact
+        console.log('🔍 Node clicked in group mode, keeping group selection:', selectedNode.value)
+        console.log('🔍 Updated target node to:', nodeId)
       }
     }
     
