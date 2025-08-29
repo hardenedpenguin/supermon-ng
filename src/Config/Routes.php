@@ -127,7 +127,8 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->put('/display', [ConfigController::class, 'updateDisplayConfig']);
         $group->get('/node-info', [ConfigController::class, 'getNodeInfo']);
         $group->post('/add-favorite', [ConfigController::class, 'addFavorite']);
-                   $group->get('/favorites', [ConfigController::class, 'getFavorites']);
+        $group->get('/favorites', [ConfigController::class, 'getFavorites']);
+        $group->post('/favorites/add', [ConfigController::class, 'addFavorite']);
         $group->delete('/favorites', [ConfigController::class, 'deleteFavorite']);
         $group->post('/favorites/execute', [ConfigController::class, 'executeFavorite']);
         $group->post('/asterisk/reload', [ConfigController::class, 'executeAsteriskReload']);

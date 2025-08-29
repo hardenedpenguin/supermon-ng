@@ -6,7 +6,12 @@
         <div class="favorites-content">
           <div class="favorites-header">
             <h2>{{ title }}</h2>
-            <button class="close-button" @click="closeModal">&times;</button>
+            <div class="header-actions">
+              <button @click="showAddFavoriteModal = true" class="add-favorite-btn">
+                Add Favorite
+              </button>
+              <button class="close-button" @click="closeModal">&times;</button>
+            </div>
           </div>
 
           <div class="favorites-body">
@@ -105,12 +110,20 @@
         </div>
       </div>
     </Transition>
+
+    <!-- Add Favorite Modal -->
+    <AddFavorite
+      v-model:isVisible="showAddFavoriteModal"
+      :node-number="selectedNodeForAdd"
+      @favorite-added="handleFavoriteAdded"
+    />
   </Teleport>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import axios from 'axios'
+import AddFavorite from './AddFavorite.vue'
 
 interface Props {
   open: boolean
@@ -143,6 +156,8 @@ const result = ref<ExecuteResult | null>(null)
 const favorites = ref<Favorite[]>([])
 const currentUser = ref('')
 const fileName = ref('')
+const showAddFavoriteModal = ref(false)
+const selectedNodeForAdd = ref('')
 
 const title = computed(() => {
   if (result.value && result.value.success) {
@@ -234,6 +249,19 @@ const refreshParent = () => {
   window.location.reload()
 }
 
+const handleFavoriteAdded = (favoriteResult: any) => {
+  if (favoriteResult.success) {
+    // Reload favorites after adding
+    loadFavorites()
+    // Show success message
+    result.value = {
+      success: true,
+      message: favoriteResult.message,
+      executed_label: favoriteResult.label
+    }
+  }
+}
+
 const closeModal = () => {
   emit('update:open', false)
   // Reset state
@@ -302,6 +330,28 @@ onMounted(() => {
   padding: 20px;
   border-bottom: 1px solid #374151;
   background-color: #111827;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.add-favorite-btn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 0.2s;
+}
+
+.add-favorite-btn:hover {
+  background: #059669;
 }
 
 .favorites-header h2 {

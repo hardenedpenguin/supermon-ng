@@ -2597,36 +2597,17 @@ class ConfigController
             $content .= "\n";
         }
 
-        // Use the sudo helper script to write the file
-        $command = "sudo /usr/local/sbin/supermon_unified_file_editor.sh " . escapeshellarg($filePath);
-        
-        $descriptorspec = [
-            0 => ['pipe', 'r'], // stdin
-            1 => ['pipe', 'w'], // stdout
-            2 => ['pipe', 'w']  // stderr
-        ];
-
-        $process = proc_open($command, $descriptorspec, $pipes);
-        
-        if (!is_resource($process)) {
-            throw new \Exception('Failed to execute sudo command');
+        // Ensure the directory exists
+        $dir = dirname($filePath);
+        if (!is_dir($dir)) {
+            if (!mkdir($dir, 0755, true)) {
+                throw new \Exception('Failed to create directory: ' . $dir);
+            }
         }
 
-        // Write content to stdin
-        fwrite($pipes[0], $content);
-        fclose($pipes[0]);
-
-        // Read output
-        $stdout = stream_get_contents($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
-        
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-
-        $returnCode = proc_close($process);
-
-        if ($returnCode !== 0) {
-            throw new \Exception('Sudo command failed: ' . $stderr);
+        // Write the file directly (for development)
+        if (file_put_contents($filePath, $content) === false) {
+            throw new \Exception('Failed to write to file: ' . $filePath);
         }
     }
 
@@ -2640,4 +2621,226 @@ class ConfigController
         return '"' . $value . '"';
     }
 
+    /**
+     * Add a new favorite command
+     */
+    public function addFavorite(Request $request, Response $response): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $currentUser = 'default';
+        }
+
+        // Check user permissions
+        if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'FAVUSER permission required'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+        }
+
+        $data = $request->getParsedBody();
+        $node = $data['node'] ?? '';
+        $customLabel = trim($data['custom_label'] ?? '');
+        $addToGeneral = ($data['add_to_general'] ?? '') === '1';
+
+        // Validate node parameter
+        if (!is_numeric($node) || $node === '') {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Invalid node number provided'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        // Look up node information from astdb.txt
+        $nodeInfo = $this->lookupNodeInfo($node);
+        if ($nodeInfo === false) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => "Node $node not found in astdb.txt database"
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        }
+
+        // Check if node already exists in favorites
+        $alreadyExists = $this->nodeExistsInFavorites($currentUser, $node);
+        if ($alreadyExists) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => "Node $node already exists in your favorites"
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(409);
+        }
+
+        // Use custom label if provided, otherwise generate from node info
+        if (empty($customLabel)) {
+            $customLabel = $nodeInfo['callsign'] . ' ' . $nodeInfo['description'] . ' ' . $node;
+        }
+
+        // Generate command
+        $command = "rpt cmd %node% ilink 13 " . $node;
+
+        // Add to favorites
+        $result = $this->addFavoriteToConfiguration($currentUser, $node, $customLabel, $command, $addToGeneral);
+
+        if ($result['success']) {
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'message' => "Node $node has been successfully added to your favorites as \"$customLabel\"",
+                'node' => $node,
+                'label' => $customLabel,
+                'file' => $result['fileName']
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+        } else {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $result['message']
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
+    /**
+     * Look up node information in astdb.txt
+     */
+    private function lookupNodeInfo(string $node): array|false
+    {
+        $astdbPath = $this->getAstdbPath();
+        if (!$astdbPath || !file_exists($astdbPath)) {
+            return false;
+        }
+
+        $lines = file($astdbPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        if ($lines === false) {
+            return false;
+        }
+
+        foreach ($lines as $line) {
+            $parts = explode('|', $line);
+            if (count($parts) >= 4) {
+                $nodeNum = trim($parts[0]);
+                if ($nodeNum === $node) {
+                    return [
+                        'node' => $nodeNum,
+                        'callsign' => trim($parts[1]),
+                        'description' => trim($parts[2]),
+                        'location' => trim($parts[3])
+                    ];
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Get astdb.txt path
+     */
+    private function getAstdbPath(): ?string
+    {
+        if (isset($GLOBALS['ASTDB_TXT'])) {
+            return $GLOBALS['ASTDB_TXT'];
+        }
+
+        // Try common paths
+        $commonPaths = [
+            __DIR__ . '/../../../astdb.txt',
+            __DIR__ . '/../../../user_files/astdb.txt',
+            '/var/lib/asterisk/astdb.txt'
+        ];
+
+        foreach ($commonPaths as $path) {
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if node already exists in favorites
+     */
+    private function nodeExistsInFavorites(string $user, string $node): bool
+    {
+        $favoritesData = $this->loadFavoritesConfiguration($user);
+        if (!isset($favoritesData['favorites'])) {
+            return false;
+        }
+
+        foreach ($favoritesData['favorites'] as $favorite) {
+            if ($favorite['node'] === $node) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Add favorite to configuration
+     */
+    private function addFavoriteToConfiguration(string $user, string $node, string $label, string $command, bool $addToGeneral): array
+    {
+        $favoritesIniPath = $this->getFavoritesIniPath($user);
+        $config = [];
+
+        // Load existing configuration
+        if (file_exists($favoritesIniPath)) {
+            $config = parse_ini_file($favoritesIniPath, true);
+            if ($config === false) {
+                $config = [];
+            }
+        }
+
+        // Ensure general section exists
+        if (!isset($config['general'])) {
+            $config['general'] = [];
+        }
+
+        // Add to favorites
+        if ($addToGeneral) {
+            // Add to general section
+            if (!isset($config['general']['label'])) {
+                $config['general']['label'] = [];
+            }
+            if (!isset($config['general']['cmd'])) {
+                $config['general']['cmd'] = [];
+            }
+
+            array_push($config['general']['label'], $label);
+            array_push($config['general']['cmd'], $command);
+        } else {
+            // Add to node-specific section
+            if (!isset($config[$node])) {
+                $config[$node] = [];
+            }
+            if (!isset($config[$node]['label'])) {
+                $config[$node]['label'] = [];
+            }
+            if (!isset($config[$node]['cmd'])) {
+                $config[$node]['cmd'] = [];
+            }
+
+            array_push($config[$node]['label'], $label);
+            array_push($config[$node]['cmd'], $command);
+        }
+
+        // Write back to file
+        try {
+            $this->writeFavoritesConfiguration($favoritesIniPath, $config);
+            return [
+                'success' => true,
+                'fileName' => basename($favoritesIniPath)
+            ];
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'message' => 'Error writing to favorites file: ' . $e->getMessage()
+            ];
+        }
+    }
 }

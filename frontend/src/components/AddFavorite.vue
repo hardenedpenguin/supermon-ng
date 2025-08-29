@@ -1,477 +1,379 @@
 <template>
-  <div v-if="open" class="add-favorite-modal" @click="closeModal">
-    <div class="add-favorite-content" @click.stop>
-      <div class="add-favorite-header">
-        <h2>{{ title }}</h2>
+  <div v-if="isVisible" class="modal-overlay" @click="closeModal">
+    <div class="modal-content" @click.stop>
+      <div class="modal-header">
+        <h2>Add Favorite</h2>
         <button class="close-button" @click="closeModal">&times;</button>
       </div>
-      
-      <!-- Loading State -->
-      <div v-if="loading" class="loading">
-        Loading node information...
-      </div>
-      
-      <!-- Error State -->
-      <div v-else-if="error" class="error">
-        {{ error }}
-      </div>
-      
-      <!-- Success State -->
-      <div v-else-if="result" class="success">
-        {{ result.message }}
-        
-        <div v-if="result.success && result.file" class="file-info">
-          <h3>File Updated</h3>
-          <p><strong>File:</strong> {{ result.file }}</p>
-          <p><strong>Label:</strong> {{ result.label }}</p>
-        </div>
-        
-        <div class="button-group">
-          <input v-if="result.success" type="button" class="submit-large" value="Refresh Parent Window" @click="refreshParent">
-          <input type="button" class="submit-large" value="Close" @click="closeModal">
-        </div>
-      </div>
-      
-      <!-- Form State -->
-      <div v-else class="add-favorite-form">
-        <!-- Node Input Section -->
-        <div v-if="!nodeInfo" class="node-input-section">
-          <div class="form-group">
-            <label for="node_input">Enter Node Number:</label>
-            <input 
-              type="text" 
-              id="node_input" 
-              v-model="nodeInput" 
-              placeholder="e.g., 48752"
-              @keyup.enter="loadNodeInfo"
-            >
-            <small>Enter the node number you want to add to favorites</small>
-          </div>
-          
-          <div class="button-group">
-            <input type="button" class="submit-large" value="Load Node Info" @click="loadNodeInfo" :disabled="!nodeInput || loading">
-            <input type="button" class="submit-large" value="Cancel" @click="closeModal">
-          </div>
+
+      <div class="modal-body">
+        <div v-if="loading" class="loading">
+          <p>Loading node information...</p>
         </div>
 
-        <!-- Node Info and Form Section -->
-        <div v-else>
-        <div class="node-info">
-          <h3>Node Information</h3>
-          <p><strong>Node:</strong> {{ nodeInfo.node }}</p>
-          <p><strong>Callsign:</strong> {{ nodeInfo.callsign }}</p>
-          <p><strong>Description:</strong> {{ nodeInfo.description }}</p>
-          <p><strong>Location:</strong> {{ nodeInfo.location }}</p>
+        <div v-else-if="error" class="error-message">
+          {{ error }}
         </div>
 
-        <div class="node-info" style="margin-top: 15px;">
-          <h3>Favorites File</h3>
-          <p><strong>User:</strong> {{ currentUser }}</p>
-          <p><strong>File:</strong> {{ fileName }}</p>
-        </div>
-
-        <div v-if="alreadyExists" class="warning">
-          <strong>Warning:</strong> This node already exists in your favorites.
-        </div>
-
-        <form @submit.prevent="saveFavorite">
-          <div class="form-group">
-            <label for="custom_label">Custom Label (optional):</label>
-            <input 
-              type="text" 
-              id="custom_label" 
-              v-model="formData.custom_label" 
-              :placeholder="defaultLabel"
-            >
-            <small>Leave blank to use the default label above</small>
+        <div v-else-if="nodeInfo" class="add-favorite-form">
+          <div class="node-info">
+            <h3>Node Information</h3>
+            <p><strong>Node:</strong> {{ nodeInfo.node }}</p>
+            <p><strong>Callsign:</strong> {{ nodeInfo.callsign }}</p>
+            <p><strong>Description:</strong> {{ nodeInfo.description }}</p>
+            <p><strong>Location:</strong> {{ nodeInfo.location }}</p>
           </div>
 
           <div class="form-group">
-            <label>
-              <input 
-                type="checkbox" 
-                v-model="formData.add_to_general" 
-                value="1"
-              >
-              Add to General Favorites (available for all nodes)
+            <label for="custom-label">Custom Label (optional):</label>
+            <input
+              id="custom-label"
+              v-model="customLabel"
+              type="text"
+              placeholder="Enter custom label or leave blank for default"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                v-model="addToGeneral"
+                type="checkbox"
+                class="checkbox-input"
+              />
+              Add to General Favorites (works with any node)
             </label>
-            <small>If unchecked, this favorite will only be available for the current node</small>
+            <p class="help-text">
+              If checked, this favorite will be added to the general section and will prompt for a node number when executed.
+              If unchecked, it will be added to a node-specific section.
+            </p>
           </div>
 
           <div class="button-group">
-            <input type="submit" class="submit-large" value="Add to Favorites" :disabled="saving">
-            <input type="button" class="submit-large" value="Cancel" @click="closeModal">
+            <button
+              @click="addFavorite"
+              :disabled="saving"
+              class="add-button"
+            >
+              {{ saving ? 'Adding...' : 'Add to Favorites' }}
+            </button>
+            <button @click="closeModal" class="cancel-button">
+              Cancel
+            </button>
           </div>
-        </form>
+        </div>
+
+        <div v-else class="no-node-info">
+          <p>No node information available.</p>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, watch, onMounted, computed, nextTick } from 'vue'
+<script setup>
+import { ref, watch } from 'vue'
 import axios from 'axios'
 
-interface Props {
-  open: boolean
-}
+const props = defineProps({
+  isVisible: {
+    type: Boolean,
+    default: false
+  },
+  nodeNumber: {
+    type: String,
+    default: ''
+  }
+})
 
-interface Emits {
-  (e: 'update:open', value: boolean): void
-  (e: 'favorite-added', result: any): void
-}
-
-const props = defineProps<Props>()
-const emit = defineEmits<Emits>()
+const emit = defineEmits(['update:isVisible', 'favorite-added'])
 
 const loading = ref(false)
 const saving = ref(false)
 const error = ref('')
-const result = ref<any>(null)
-const nodeInfo = ref<any>(null)
-const alreadyExists = ref(false)
-const currentUser = ref('')
-const fileName = ref('')
-const nodeInput = ref('')
+const nodeInfo = ref(null)
+const customLabel = ref('')
+const addToGeneral = ref(true)
 
-const formData = ref({
-  custom_label: '',
-  add_to_general: true
+// Watch for changes in nodeNumber and load node info
+watch(() => props.nodeNumber, async (newNode) => {
+  if (newNode && props.isVisible) {
+    await loadNodeInfo(newNode)
+  }
 })
 
-const title = computed(() => {
-  if (result.value) {
-    return result.value.success ? 'Favorite Added Successfully' : 'Error Adding Favorite'
+// Watch for modal visibility
+watch(() => props.isVisible, async (visible) => {
+  if (visible && props.nodeNumber) {
+    await loadNodeInfo(props.nodeNumber)
+  } else if (!visible) {
+    resetForm()
   }
-  if (nodeInfo.value) {
-    return `Add Favorite - Node ${nodeInfo.value.node}`
-  }
-  return 'Add Favorite'
 })
 
-const defaultLabel = computed(() => {
-  if (nodeInfo.value) {
-    const parts = [nodeInfo.value.callsign]
-    if (nodeInfo.value.description && nodeInfo.value.description.trim()) {
-      parts.push(nodeInfo.value.description)
-    }
-    parts.push(nodeInfo.value.node)
-    return parts.join(' ')
-  }
-  return ''
-})
-
-const closeModal = () => {
-  emit('update:open', false)
-  // Reset state
+const loadNodeInfo = async (node) => {
+  if (!node) return
+  
+  loading.value = true
   error.value = ''
-  result.value = null
-  nodeInfo.value = null
-  alreadyExists.value = false
-  nodeInput.value = ''
-  formData.value = {
-    custom_label: '',
-    add_to_general: true
-  }
-}
-
-const refreshParent = () => {
-  // Refresh the parent window
-  window.location.reload()
-  closeModal()
-}
-
-const loadNodeInfo = async () => {
-  if (!nodeInput.value) {
-    error.value = 'Please enter a node number'
-    return
-  }
-
+  
   try {
-    loading.value = true
-    error.value = ''
-    
-    const response = await axios.get(`/api/config/node-info?node=${nodeInput.value}`, { 
-      withCredentials: true 
+    // For now, we'll use a mock response since we don't have a direct API
+    // In a real implementation, you'd call an API to get node info
+    const response = await axios.get(`/api/config/node-info?node=${node}`, {
+      withCredentials: true
     })
     
     if (response.data.success) {
-      const data = response.data.data
-      nodeInfo.value = data.nodeInfo
-      alreadyExists.value = data.alreadyExists
-      currentUser.value = data.currentUser || 'admin'
-      fileName.value = data.fileName || `${currentUser.value}-favorites.ini`
-      
-      // Set default label after ensuring reactivity
-      await nextTick()
-      formData.value.custom_label = defaultLabel.value
+      nodeInfo.value = response.data.nodeInfo
+      // Set default label
+      customLabel.value = `${nodeInfo.value.callsign} ${nodeInfo.value.description} ${node}`
     } else {
       error.value = response.data.message || 'Failed to load node information'
     }
-  } catch (err: any) {
-    console.error('Failed to load node info:', err)
+  } catch (err) {
     error.value = err.response?.data?.message || 'Failed to load node information'
   } finally {
     loading.value = false
   }
 }
 
-const saveFavorite = async () => {
-  if (!nodeInfo.value?.node) {
-    error.value = 'No node information available'
-    return
-  }
-
+const addFavorite = async () => {
+  if (!props.nodeNumber) return
+  
+  saving.value = true
+  error.value = ''
+  
   try {
-    saving.value = true
-    error.value = ''
-    
-    const response = await axios.post('/api/config/add-favorite', {
-      node: nodeInfo.value.node,
-      custom_label: formData.value.custom_label,
-      add_to_general: formData.value.add_to_general ? '1' : '0'
-    }, { 
-      withCredentials: true 
+    const response = await axios.post('/api/config/favorites/add', {
+      node: props.nodeNumber,
+      custom_label: customLabel.value,
+      add_to_general: addToGeneral.value ? '1' : '0'
+    }, {
+      withCredentials: true
     })
     
-    result.value = response.data
-    
     if (response.data.success) {
-      emit('favorite-added', response.data)
+      emit('favorite-added', {
+        success: true,
+        message: response.data.message,
+        node: response.data.node,
+        label: response.data.label
+      })
+      closeModal()
+    } else {
+      error.value = response.data.message || 'Failed to add favorite'
     }
-  } catch (err: any) {
-    console.error('Failed to add favorite:', err)
-    result.value = {
-      success: false,
-      message: err.response?.data?.message || 'Failed to add favorite'
-    }
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Failed to add favorite'
   } finally {
     saving.value = false
   }
 }
 
-// Reset form when modal opens
-watch(() => props.open, (newOpen) => {
-  if (newOpen) {
-    // Reset all state when modal opens
-    error.value = ''
-    result.value = null
-    nodeInfo.value = null
-    alreadyExists.value = false
-    nodeInput.value = ''
-    formData.value = {
-      custom_label: '',
-      add_to_general: true
-    }
-  }
-})
+const closeModal = () => {
+  emit('update:isVisible', false)
+}
+
+const resetForm = () => {
+  loading.value = false
+  saving.value = false
+  error.value = ''
+  nodeInfo.value = null
+  customLabel.value = ''
+  addToGeneral.value = true
+}
 </script>
 
 <style scoped>
-.add-favorite-modal {
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
-.add-favorite-content {
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+.modal-content {
+  background: #2d3748;
   border-radius: 8px;
-  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
   max-width: 600px;
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
 }
 
-.add-favorite-header {
+.modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #333;
-  padding-bottom: 10px;
+  padding: 20px;
+  border-bottom: 1px solid #4a5568;
+  background: #1a202c;
+  border-radius: 8px 8px 0 0;
 }
 
-.add-favorite-header h2 {
+.modal-header h2 {
   margin: 0;
-  color: #fff;
-  font-size: 1.5em;
+  color: #e2e8f0;
+  font-size: 1.5rem;
 }
 
 .close-button {
   background: none;
   border: none;
-  color: #fff;
   font-size: 24px;
   cursor: pointer;
+  color: #a0aec0;
   padding: 0;
   width: 30px;
   height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s;
 }
 
 .close-button:hover {
-  background-color: #333;
-  border-radius: 4px;
+  background-color: #4a5568;
+  color: #e2e8f0;
+}
+
+.modal-body {
+  padding: 20px;
 }
 
 .loading {
   text-align: center;
-  color: #fff;
-  padding: 20px;
+  color: #a0aec0;
 }
 
-.error {
-  background-color: rgba(239, 68, 68, 0.1);
-  border: 1px solid #EF4444;
-  color: #EF4444;
+.error-message {
+  background: #742a2a;
+  color: #feb2b2;
   padding: 15px;
   border-radius: 4px;
-  margin-bottom: 20px;
-}
-
-.success {
-  background-color: rgba(16, 185, 129, 0.1);
-  border: 1px solid #10B981;
-  color: #10B981;
-  padding: 15px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-}
-
-.warning {
-  background-color: rgba(245, 124, 0, 0.1);
-  border: 1px solid #F59E0B;
-  color: #F59E0B;
-  padding: 15px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-}
-
-.file-info {
-  background-color: #2A2A2A;
-  border: 1px solid #374151;
-  border-radius: 4px;
-  padding: 15px;
-  margin-top: 15px;
-}
-
-.file-info h3 {
-  margin-top: 0;
-  color: #4A90E2;
-}
-
-.file-info p {
-  margin: 5px 0;
+  border: 1px solid #c53030;
+  text-align: center;
 }
 
 .node-info {
-  background-color: #2A2A2A;
-  border: 1px solid #374151;
-  border-radius: 4px;
+  background: #2c5282;
   padding: 15px;
+  border-radius: 4px;
+  border-left: 4px solid #63b3ed;
   margin-bottom: 20px;
 }
 
 .node-info h3 {
-  margin-top: 0;
-  color: #4A90E2;
+  margin: 0 0 10px 0;
+  color: #bee3f8;
 }
 
 .node-info p {
   margin: 5px 0;
+  color: #bee3f8;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-  color: #fff;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #e2e8f0;
 }
 
-.form-group input[type="text"] {
+.form-input {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #374151;
+  padding: 12px;
+  border: 2px solid #4a5568;
   border-radius: 4px;
-  background-color: #2A2A2A;
-  color: #E0E0E0;
+  font-size: 14px;
+  background: #1a202c;
+  color: #e2e8f0;
+  transition: border-color 0.2s;
   box-sizing: border-box;
 }
 
-.form-group input[type="text"]:focus {
+.form-input:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: #63b3ed;
 }
 
-.form-group input[type="checkbox"] {
-  margin-right: 8px;
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: normal;
 }
 
-.form-group small {
-  color: #999;
-  font-size: 0.9em;
+.checkbox-input {
+  margin-right: 10px;
+  width: 18px;
+  height: 18px;
 }
 
-.node-input-section {
-  text-align: center;
-  padding: 20px 0;
+.help-text {
+  margin-top: 8px;
+  font-size: 0.875rem;
+  color: #a0aec0;
+  font-style: italic;
 }
 
 .button-group {
-  text-align: center;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
   margin-top: 20px;
 }
 
-.submit-large {
-  background-color: #007bff;
-  color: white;
+.add-button, .cancel-button {
+  padding: 12px 24px;
   border: none;
-  padding: 10px 20px;
-  margin: 5px;
   border-radius: 4px;
-  cursor: pointer;
   font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 120px;
 }
 
-.submit-large:hover:not(:disabled) {
-  background-color: #0056b3;
+.add-button {
+  background: #3182ce;
+  color: white;
 }
 
-.submit-large:disabled {
-  background-color: #6c757d;
+.add-button:hover:not(:disabled) {
+  background: #2c5282;
+}
+
+.add-button:disabled {
+  background: #4a5568;
   cursor: not-allowed;
 }
 
-.submit-large[value="Add to Favorites"] {
-  background-color: #10B981;
+.cancel-button {
+  background: #4a5568;
+  color: white;
 }
 
-.submit-large[value="Add to Favorites"]:hover:not(:disabled) {
-  background-color: #059669;
+.cancel-button:hover {
+  background: #2d3748;
 }
 
-.submit-large[value="Cancel"] {
-  background-color: #6B7280;
-}
-
-.submit-large[value="Cancel"]:hover:not(:disabled) {
-  background-color: #4B5563;
+.no-node-info {
+  text-align: center;
+  color: #a0aec0;
 }
 </style>
