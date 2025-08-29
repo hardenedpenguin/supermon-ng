@@ -673,7 +673,7 @@ class NodeController
     {
         // Include necessary files
         require_once __DIR__ . '/../../../authusers.php';
-        require_once __DIR__ . '/../../../includes/global.inc';
+        require_once __DIR__ . '/../../../includes/common.inc';
         
         // If no user, use default permissions
         if (!$user) {
@@ -696,7 +696,7 @@ class NodeController
     private function loadNodeConfig(?string $user, string $localNode): ?array
     {
         // Include necessary files
-        require_once __DIR__ . '/../../../includes/global.inc';
+        require_once __DIR__ . '/../../../includes/common.inc';
         require_once __DIR__ . '/../../../authini.php';
         
         // Get INI file path

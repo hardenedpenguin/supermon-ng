@@ -10,7 +10,7 @@ use Psr\Log\LoggerInterface;
 
 // Include required files for AMI functionality
 require_once __DIR__ . '/../../../includes/amifunctions.inc';
-require_once __DIR__ . '/../../../includes/global.inc';
+require_once __DIR__ . '/../../../includes/common.inc';
 
 class ConfigController
 {
@@ -1120,7 +1120,7 @@ class ConfigController
         
         // Try multiple possible paths for the database
         $dbPaths = [
-            'user_files/astdb.txt',
+            __DIR__ . '/../../../user_files/astdb.txt',
             '/var/www/html/supermon-ng/astdb.txt',
             '/var/www/html/supermon-ng/user_files/astdb.txt'
         ];
@@ -1174,7 +1174,7 @@ class ConfigController
         
         // Try multiple possible paths for the database
         $dbPaths = [
-            'user_files/astdb.txt',
+            __DIR__ . '/../../../user_files/astdb.txt',
             '/var/www/html/supermon-ng/astdb.txt',
             '/var/www/html/supermon-ng/user_files/astdb.txt'
         ];
@@ -1294,7 +1294,7 @@ class ConfigController
         // Try multiple possible paths for the IRLP database
         $irlpPaths = [
             '/tmp/irlpdata.txt.gz',
-            '/var/www/html/supermon-ng/irlpdata.txt.gz'
+            __DIR__ . '/../../../irlpdata.txt.gz'
         ];
         
         $irlpPath = null;
@@ -1327,7 +1327,7 @@ class ConfigController
                 }
                 gzclose($fh);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // IRLP lookup failed, continue
         }
 
@@ -1345,7 +1345,7 @@ class ConfigController
         // Try multiple possible paths for the IRLP database
         $irlpPaths = [
             '/tmp/irlpdata.txt.gz',
-            '/var/www/html/supermon-ng/irlpdata.txt.gz'
+            __DIR__ . '/../../../irlpdata.txt.gz'
         ];
         
         $irlpPath = null;
@@ -1378,7 +1378,7 @@ class ConfigController
                 }
                 gzclose($fh);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             // IRLP lookup failed, continue
         }
 
