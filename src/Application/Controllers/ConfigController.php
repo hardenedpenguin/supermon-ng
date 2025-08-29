@@ -2209,4 +2209,408 @@ class ConfigController
         ];
     }
 
+    /**
+     * Get favorites configuration
+     */
+    public function getFavorites(Request $request, Response $response): Response
+    {
+        try {
+            $currentUser = $this->getCurrentUser();
+            if (!$currentUser) {
+                $currentUser = 'default';
+            }
+            
+            // Check user permissions
+            if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'FAVUSER permission required'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+            }
+
+            $favoritesData = $this->loadFavoritesConfiguration($currentUser);
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => $favoritesData['favorites'],
+                'fileName' => $favoritesData['fileName']
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Failed to load favorites: ' . $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
+    /**
+     * Delete a favorite
+     */
+    public function deleteFavorite(Request $request, Response $response): Response
+    {
+        try {
+            $currentUser = $this->getCurrentUser();
+            if (!$currentUser) {
+                $currentUser = 'default';
+            }
+            
+            // Check user permissions
+            if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'FAVUSER permission required'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+            }
+
+            $body = $request->getParsedBody();
+            $section = $body['section'] ?? '';
+            $index = $body['index'] ?? '';
+
+            if (empty($section) || !isset($index)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Section and index are required'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+
+            $result = $this->removeFavoriteFromConfiguration($currentUser, $section, $index);
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'message' => 'Favorite deleted successfully',
+                'data' => $result
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Failed to delete favorite: ' . $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
+    /**
+     * Execute a favorite command
+     */
+    public function executeFavorite(Request $request, Response $response): Response
+    {
+        try {
+            $currentUser = $this->getCurrentUser();
+            if (!$currentUser) {
+                $currentUser = 'default';
+            }
+            
+            // Check user permissions
+            if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'FAVUSER permission required'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+            }
+
+            $body = $request->getParsedBody();
+            $node = $body['node'] ?? '';
+            $command = $body['command'] ?? '';
+
+            if (empty($node) || empty($command)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Node and command are required'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+
+            // Execute the command using the same logic as control panel
+            $result = $this->executeFavoriteCommand($command, $node);
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'message' => 'Command executed successfully',
+                'data' => $result
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Failed to execute command: ' . $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
+    /**
+     * Load favorites configuration from INI files
+     */
+    private function loadFavoritesConfiguration(string $user): array
+    {
+        // Get the favorites INI file path for the user
+        $favoritesIniPath = $this->getFavoritesIniPath($user);
+        
+        if (!file_exists($favoritesIniPath)) {
+            return [
+                'favorites' => [],
+                'fileName' => basename($favoritesIniPath)
+            ];
+        }
+
+        $config = parse_ini_file($favoritesIniPath, true);
+        if ($config === false) {
+            throw new \Exception("Failed to parse favorites INI file: $favoritesIniPath");
+        }
+
+        $favorites = [];
+        
+        // Process each section
+        foreach ($config as $section => $sectionData) {
+            if ($section === 'general') {
+                // General favorites (available for all nodes)
+                if (isset($sectionData['label']) && isset($sectionData['cmd'])) {
+                    $labels = is_array($sectionData['label']) ? $sectionData['label'] : [$sectionData['label']];
+                    $cmds = is_array($sectionData['cmd']) ? $sectionData['cmd'] : [$sectionData['cmd']];
+                    
+                    for ($i = 0; $i < count($labels) && $i < count($cmds); $i++) {
+                        $favorites[] = [
+                            'section' => 'general',
+                            'index' => $i,
+                            'label' => $labels[$i],
+                            'command' => $cmds[$i],
+                            'node' => null // General favorites don't have a specific node
+                        ];
+                    }
+                }
+            } else {
+                // Node-specific favorites
+                if (isset($sectionData['label']) && isset($sectionData['cmd'])) {
+                    $labels = is_array($sectionData['label']) ? $sectionData['label'] : [$sectionData['label']];
+                    $cmds = is_array($sectionData['cmd']) ? $sectionData['cmd'] : [$sectionData['cmd']];
+                    
+                    for ($i = 0; $i < count($labels) && $i < count($cmds); $i++) {
+                        $favorites[] = [
+                            'section' => $section,
+                            'index' => $i,
+                            'label' => $labels[$i],
+                            'command' => $cmds[$i],
+                            'node' => $section // The section name is the node number
+                        ];
+                    }
+                }
+            }
+        }
+
+        return [
+            'favorites' => $favorites,
+            'fileName' => basename($favoritesIniPath)
+        ];
+    }
+
+    /**
+     * Remove a favorite from the configuration
+     */
+    private function removeFavoriteFromConfiguration(string $user, string $section, int $index): array
+    {
+        $favoritesIniPath = $this->getFavoritesIniPath($user);
+        
+        if (!file_exists($favoritesIniPath)) {
+            throw new \Exception("Favorites INI file not found: $favoritesIniPath");
+        }
+
+        $config = parse_ini_file($favoritesIniPath, true);
+        if ($config === false) {
+            throw new \Exception("Failed to parse favorites INI file: $favoritesIniPath");
+        }
+
+        // Check if section exists
+        if (!isset($config[$section])) {
+            throw new \Exception("Section '$section' not found in favorites configuration");
+        }
+
+        $sectionData = $config[$section];
+        
+        // Check if label and cmd arrays exist
+        if (!isset($sectionData['label']) || !isset($sectionData['cmd'])) {
+            throw new \Exception("Section '$section' is missing label or cmd configuration");
+        }
+
+        $labels = is_array($sectionData['label']) ? $sectionData['label'] : [$sectionData['label']];
+        $cmds = is_array($sectionData['cmd']) ? $sectionData['cmd'] : [$sectionData['cmd']];
+
+        // Check if index is valid
+        if ($index < 0 || $index >= count($labels) || $index >= count($cmds)) {
+            throw new \Exception("Invalid index $index for section '$section'");
+        }
+
+        // Remove the item at the specified index
+        array_splice($labels, $index, 1);
+        array_splice($cmds, $index, 1);
+
+        // Update the configuration
+        $config[$section]['label'] = $labels;
+        $config[$section]['cmd'] = $cmds;
+
+        // If section is now empty, remove it entirely
+        if (empty($labels) && empty($cmds)) {
+            unset($config[$section]);
+        }
+
+        // Write the updated configuration back to file
+        $this->writeFavoritesConfiguration($favoritesIniPath, $config);
+
+        return [
+            'section' => $section,
+            'index' => $index,
+            'removed' => true
+        ];
+    }
+
+    /**
+     * Execute a favorite command using AMI or shell
+     */
+    private function executeFavoriteCommand(string $command, string $node): array
+    {
+        // Replace %node% placeholder with actual node number
+        $cmdString = str_replace('%node%', $node, $command);
+
+        // Try to execute via AMI first, then fall back to shell
+        try {
+            // Load node configuration
+            $nodeConfig = $this->loadNodeConfig($node);
+            if ($nodeConfig) {
+                // Try AMI execution
+                $fp = $this->connectToAmi($nodeConfig);
+                if ($fp) {
+                    $result = $this->executeAmiCommand($fp, $cmdString);
+                    if ($result !== false) {
+                        return [
+                            'command' => $cmdString,
+                            'node' => $node,
+                            'result' => $result,
+                            'method' => 'AMI'
+                        ];
+                    }
+                }
+            }
+        } catch (\Exception $e) {
+            // AMI failed, continue to shell execution
+        }
+
+        // Fall back to shell execution
+        $result = shell_exec("sudo asterisk -rx " . escapeshellarg($cmdString) . " 2>&1");
+        
+        return [
+            'command' => $cmdString,
+            'node' => $node,
+            'result' => $result,
+            'method' => 'Shell'
+        ];
+    }
+
+    /**
+     * Get the favorites INI file path for a user
+     */
+    private function getFavoritesIniPath(string $user): string
+    {
+        // Check if user-specific favorites file exists
+        $userSpecificPath = __DIR__ . '/../../../user_files/' . $user . '-favorites.ini';
+        if (file_exists($userSpecificPath)) {
+            return $userSpecificPath;
+        }
+
+        // Check favini.inc for user mapping
+        $faviniPath = __DIR__ . '/../../../user_files/favini.inc';
+        if (file_exists($faviniPath)) {
+            try {
+                // Include the file to get the mapping array
+                include $faviniPath;
+                
+                // Check if the mapping exists
+                if (isset($FAVININAME[$user])) {
+                    $mappedPath = __DIR__ . '/../../../user_files/' . $FAVININAME[$user];
+                    if (file_exists($mappedPath)) {
+                        return $mappedPath;
+                    }
+                }
+            } catch (\Exception $e) {
+                // If there's an error reading favini.inc, continue to default
+            }
+        }
+
+        // Default to general favorites.ini
+        return __DIR__ . '/../../../user_files/favorites.ini';
+    }
+
+    /**
+     * Write favorites configuration to INI file
+     */
+    private function writeFavoritesConfiguration(string $filePath, array $config): void
+    {
+        $content = '';
+        
+        foreach ($config as $section => $sectionData) {
+            $content .= "[$section]\n";
+            
+            foreach ($sectionData as $key => $value) {
+                if (is_array($value)) {
+                    foreach ($value as $item) {
+                        $content .= "$key = " . $this->escapeIniValue($item) . "\n";
+                    }
+                } else {
+                    $content .= "$key = " . $this->escapeIniValue($value) . "\n";
+                }
+            }
+            $content .= "\n";
+        }
+
+        // Use the sudo helper script to write the file
+        $command = "sudo /usr/local/sbin/supermon_unified_file_editor.sh " . escapeshellarg($filePath);
+        
+        $descriptorspec = [
+            0 => ['pipe', 'r'], // stdin
+            1 => ['pipe', 'w'], // stdout
+            2 => ['pipe', 'w']  // stderr
+        ];
+
+        $process = proc_open($command, $descriptorspec, $pipes);
+        
+        if (!is_resource($process)) {
+            throw new \Exception('Failed to execute sudo command');
+        }
+
+        // Write content to stdin
+        fwrite($pipes[0], $content);
+        fclose($pipes[0]);
+
+        // Read output
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        $returnCode = proc_close($process);
+
+        if ($returnCode !== 0) {
+            throw new \Exception('Sudo command failed: ' . $stderr);
+        }
+    }
+
+    /**
+     * Escape a value for INI file format
+     */
+    private function escapeIniValue(string $value): string
+    {
+        // Escape special characters for INI format
+        $value = str_replace('"', '\\"', $value);
+        return '"' . $value . '"';
+    }
+
 }
