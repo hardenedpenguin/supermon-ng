@@ -46,7 +46,12 @@
       <div v-if="displayedNodes.length > 0">
         <!-- Multiple node dropdown (only show if multiple nodes) -->
         <select v-if="displayedNodes.length > 1 && dropdownOptions.length > 0" v-model="selectedNode" class="submit" @change="onNodeChange">
-          <option v-for="node in dropdownOptions" :key="node.id" :value="node.id" class="submit">
+          <!-- Group option (when in group mode) -->
+          <option v-if="isGroupMode" :value="groupSelectionString" class="submit">
+            Group: {{ getGroupDisplayName() }}
+          </option>
+          <!-- Individual node options (only when not in group mode) -->
+          <option v-else v-for="node in dropdownOptions" :key="node.id" :value="node.id" class="submit">
             {{ node.id }} => {{ node.info || 'Node not in database' }}
           </option>
         </select>
@@ -269,6 +274,20 @@ const hasControlPermissions = computed(() => {
 const availableNodes = computed(() => {
   return realTimeStore.nodes
 })
+
+const isGroupMode = computed(() => {
+  return selectedNode.value && String(selectedNode.value).includes(',')
+})
+
+const groupSelectionString = computed(() => {
+  return selectedNode.value || ''
+})
+
+const getGroupDisplayName = () => {
+  if (!isGroupMode.value) return ''
+  const nodeIds = String(selectedNode.value).split(',').map(id => id.trim())
+  return nodeIds.join(', ')
+}
 
 const displayedNodes = computed(() => {
   if (!selectedNode.value) {
