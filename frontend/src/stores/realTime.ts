@@ -96,9 +96,17 @@ export const useRealTimeStore = defineStore('realTime', () => {
   }
 
   const startMonitoring = (nodeId: string) => {
+    console.log('🔍 startMonitoring called with nodeId:', nodeId)
+    console.log('🔍 monitoringNodes before:', monitoringNodes.value)
+    
     if (!monitoringNodes.value.includes(nodeId)) {
       monitoringNodes.value.push(nodeId)
+      console.log('🔍 Added nodeId to monitoringNodes:', nodeId)
+    } else {
+      console.log('🔍 NodeId already in monitoringNodes:', nodeId)
     }
+    
+    console.log('🔍 monitoringNodes after:', monitoringNodes.value)
     
     if (!isConnected.value) {
       startPolling()
