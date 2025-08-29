@@ -1,216 +1,193 @@
 <template>
-  <div v-if="open" class="modal-overlay" @click="closeModal">
+  <div v-if="isVisible" class="modal-overlay" @click="closeModal">
     <div class="modal-content" @click.stop>
-      <!-- Modal Header -->
       <div class="modal-header">
-        <h3>Control Panel</h3>
+        <h2>Control Panel</h2>
         <button class="close-button" @click="closeModal">&times;</button>
       </div>
-
-      <!-- Modal Body -->
+      
       <div class="modal-body">
-        <!-- Loading State -->
-        <div v-if="loading" class="loading-container">
-          <div class="loading-spinner"></div>
-          <p>Loading control panel configuration...</p>
+        <div v-if="loading" class="loading">
+          <div class="spinner"></div>
+          <p>Loading control panel commands...</p>
         </div>
-
-        <!-- Error State -->
-        <div v-else-if="error" class="error-container">
-          <div class="error-icon">⚠️</div>
-          <h4>Error</h4>
+        
+        <div v-else-if="error" class="error-message">
           <p>{{ error }}</p>
-          <button class="btn btn-primary" @click="loadConfiguration">Retry</button>
         </div>
-
-        <!-- Control Panel Content -->
-        <div v-else class="control-panel-content">
-          <!-- Node Selection -->
-          <div class="form-group">
-            <label for="nodeSelect">Target Node:</label>
-            <input
-              id="nodeSelect"
-              v-model="selectedNode"
-              type="text"
-              class="form-control"
-              placeholder="Enter node number (optional)"
-            />
+        
+        <div v-else-if="!hasCommands" class="no-commands">
+          <h3>No Control Panel Commands Configured</h3>
+          <p>To use the Control Panel, you need to configure commands in:</p>
+          <code>user_files/controlpanel.ini</code>
+          <p>Edit the file and uncomment the commands you want to use by removing the semicolon (;) from the beginning of the lines.</p>
+        </div>
+        
+        <div v-else class="control-panel">
+          <div class="node-info">
+            <p><strong>Sending Command to node:</strong> {{ localNode }}</p>
           </div>
-
-          <!-- Available Commands -->
-          <div class="commands-section">
-            <h4>Available Commands</h4>
-            <div class="commands-grid">
-              <button
-                v-for="command in availableCommands"
-                :key="command.name"
-                class="command-button"
-                :class="{ 'executing': executingCommand === command.name }"
-                :disabled="executingCommand !== null"
-                @click="executeCommand(command.name)"
+          
+          <div class="command-section">
+            <label for="commandSelect">Control command (select one):</label>
+            <select 
+              id="commandSelect" 
+              v-model="selectedCommand" 
+              class="command-select"
+              :disabled="executing"
+            >
+              <option value="">-- Select a command --</option>
+              <option 
+                v-for="(label, index) in commands.labels" 
+                :key="index"
+                :value="commands.cmds[index]"
               >
-                <div class="command-icon">{{ command.icon }}</div>
-                <div class="command-info">
-                  <div class="command-name">{{ command.name }}</div>
-                  <div class="command-description">{{ command.description }}</div>
-                </div>
-              </button>
-            </div>
+                {{ label }}
+              </option>
+            </select>
           </div>
-
-          <!-- Command Results -->
-          <div v-if="commandResult" class="results-section">
-            <h4>Command Results</h4>
-            <div class="result-container">
-              <div class="result-header">
-                <span class="result-command">{{ commandResult.command }}</span>
-                <span class="result-method">{{ commandResult.method }}</span>
-              </div>
-              <div class="result-content">
-                <pre>{{ commandResult.result }}</pre>
-              </div>
-              <button class="btn btn-secondary" @click="clearResults">Clear Results</button>
+          
+          <div class="execute-section">
+            <button 
+              @click="executeCommand" 
+              :disabled="!selectedCommand || executing"
+              class="execute-button"
+            >
+              <span v-if="executing">Executing...</span>
+              <span v-else>Execute</span>
+            </button>
+          </div>
+          
+          <div v-if="result" class="result-section">
+            <h4>Command Result:</h4>
+            <div class="result-content" :class="{ 'error': result.error }">
+              <pre>{{ result.message }}</pre>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- Modal Footer -->
+      
       <div class="modal-footer">
-        <button class="btn btn-secondary" @click="closeModal">Close</button>
+        <button @click="closeModal" class="close-window-button">Close Window</button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
-import axios from 'axios'
+import { ref, computed, watch } from 'vue'
+import { api } from '../api'
 
 // Props
 const props = defineProps({
-  open: {
+  isVisible: {
     type: Boolean,
     default: false
   },
   localNode: {
     type: String,
-    default: ''
+    required: true
   }
 })
 
 // Emits
-const emit = defineEmits(['update:open'])
+const emit = defineEmits(['close'])
 
-// Reactive data
+// Reactive state
 const loading = ref(false)
 const error = ref('')
-const selectedNode = ref('')
-const availableCommands = ref([])
-const executingCommand = ref(null)
-const commandResult = ref(null)
+const commands = ref({ labels: [], cmds: [] })
+const selectedCommand = ref('')
+const executing = ref(false)
+const result = ref(null)
 
-// Available commands configuration
-const commandsConfig = [
-  {
-    name: 'rpt reload',
-    description: 'Reload RPT configuration',
-    icon: '🔄'
-  },
-  {
-    name: 'iax2 reload',
-    description: 'Reload IAX2 configuration',
-    icon: '📞'
-  },
-  {
-    name: 'extensions reload',
-    description: 'Reload extensions configuration',
-    icon: '📋'
-  },
-  {
-    name: 'echolink dbdump',
-    description: 'Dump EchoLink database',
-    icon: '🗄️'
-  },
-  {
-    name: 'astup',
-    description: 'Start Asterisk service',
-    icon: '🟢'
-  },
-  {
-    name: 'astdn',
-    description: 'Stop Asterisk service',
-    icon: '🔴'
-  }
-]
+// Computed
+const hasCommands = computed(() => {
+  return commands.value.labels && commands.value.labels.length > 0
+})
 
 // Methods
 const closeModal = () => {
-  emit('update:open', false)
-  clearResults()
+  emit('close')
+  resetState()
 }
 
-const loadConfiguration = async () => {
+const resetState = () => {
+  loading.value = false
+  error.value = ''
+  commands.value = { labels: [], cmds: [] }
+  selectedCommand.value = ''
+  executing.value = false
+  result.value = null
+}
+
+const loadCommands = async () => {
+  if (!props.localNode) return
+  
   loading.value = true
   error.value = ''
   
   try {
-    const response = await axios.get('/api/config/controlpanel')
+    const response = await api.get(`/config/controlpanel?node=${props.localNode}`)
     
     if (response.data.success) {
-      availableCommands.value = commandsConfig
+      commands.value = response.data.data
     } else {
-      error.value = response.data.message || 'Failed to load control panel configuration'
+      error.value = response.data.message || 'Failed to load control panel commands'
     }
   } catch (err) {
-    console.error('Control panel configuration error:', err)
-    error.value = err.response?.data?.message || 'Failed to load control panel configuration'
+    console.error('Error loading control panel commands:', err)
+    error.value = 'Failed to load control panel commands. Please try again.'
   } finally {
     loading.value = false
   }
 }
 
-const executeCommand = async (commandName) => {
-  if (executingCommand.value) return
+const executeCommand = async () => {
+  if (!selectedCommand.value || !props.localNode) return
   
-  executingCommand.value = commandName
-  commandResult.value = null
+  executing.value = true
+  result.value = null
   
   try {
-    const response = await axios.post('/api/config/controlpanel/execute', {
-      command: commandName,
-      node: selectedNode.value || props.localNode || ''
+    const response = await api.post('/config/controlpanel/execute', {
+      node: props.localNode,
+      command: selectedCommand.value
     })
     
     if (response.data.success) {
-      commandResult.value = response.data.result
+      result.value = {
+        error: false,
+        message: response.data.data.result || 'Command executed successfully'
+      }
     } else {
-      error.value = response.data.message || 'Failed to execute command'
+      result.value = {
+        error: true,
+        message: response.data.message || 'Command execution failed'
+      }
     }
   } catch (err) {
-    console.error('Command execution error:', err)
-    error.value = err.response?.data?.message || 'Failed to execute command'
+    console.error('Error executing command:', err)
+    result.value = {
+      error: true,
+      message: 'Failed to execute command. Please try again.'
+    }
   } finally {
-    executingCommand.value = null
+    executing.value = false
   }
 }
 
-const clearResults = () => {
-  commandResult.value = null
-}
-
-// Watchers
-watch(() => props.open, (newValue) => {
-  if (newValue) {
-    loadConfiguration()
-    selectedNode.value = props.localNode || ''
+// Watch for visibility changes
+watch(() => props.isVisible, (newValue) => {
+  if (newValue && props.localNode) {
+    loadCommands()
   }
 })
 
-// Lifecycle
-onMounted(() => {
-  if (props.open) {
-    loadConfiguration()
+// Watch for localNode changes
+watch(() => props.localNode, (newValue) => {
+  if (props.isVisible && newValue) {
+    loadCommands()
   }
 })
 </script>
@@ -224,45 +201,43 @@ onMounted(() => {
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
 }
 
 .modal-content {
   background: white;
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  max-width: 800px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
   width: 90%;
-  max-height: 90vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #e5e7eb;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  border-radius: 8px 8px 0 0;
 }
 
-.modal-header h3 {
+.modal-header h2 {
   margin: 0;
+  color: #333;
   font-size: 1.5rem;
-  font-weight: 600;
 }
 
 .close-button {
   background: none;
   border: none;
-  color: white;
-  font-size: 1.5rem;
+  font-size: 24px;
   cursor: pointer;
+  color: #666;
   padding: 0;
   width: 30px;
   height: 30px;
@@ -274,31 +249,27 @@ onMounted(() => {
 }
 
 .close-button:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: #e0e0e0;
+  color: #333;
 }
 
 .modal-body {
-  padding: 24px;
-  overflow-y: auto;
-  flex: 1;
+  padding: 20px;
 }
 
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
+.loading {
+  text-align: center;
+  padding: 40px 20px;
 }
 
-.loading-spinner {
+.spinner {
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #007bff;
+  border-radius: 50%;
   width: 40px;
   height: 40px;
-  border: 4px solid #f3f4f6;
-  border-top: 4px solid #667eea;
-  border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin-bottom: 16px;
+  margin: 0 auto 20px;
 }
 
 @keyframes spin {
@@ -306,232 +277,163 @@ onMounted(() => {
   100% { transform: rotate(360deg); }
 }
 
-.error-container {
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 15px;
+  border-radius: 4px;
+  border: 1px solid #f5c6cb;
   text-align: center;
-  padding: 40px;
 }
 
-.error-icon {
-  font-size: 3rem;
-  margin-bottom: 16px;
+.no-commands {
+  text-align: center;
+  padding: 20px;
 }
 
-.error-container h4 {
-  color: #dc2626;
-  margin-bottom: 8px;
+.no-commands h3 {
+  color: #666;
+  margin-bottom: 15px;
 }
 
-.error-container p {
-  color: #6b7280;
-  margin-bottom: 20px;
+.no-commands code {
+  background: #f8f9fa;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-family: monospace;
+  display: inline-block;
+  margin: 10px 0;
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #374151;
-}
-
-.form-control {
-  width: 100%;
-  padding: 12px 16px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.form-control:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-}
-
-.commands-section {
-  margin-bottom: 24px;
-}
-
-.commands-section h4 {
-  margin-bottom: 16px;
-  color: #374151;
-  font-weight: 600;
-}
-
-.commands-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 16px;
-}
-
-.command-button {
+.control-panel {
   display: flex;
-  align-items: center;
-  padding: 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.node-info {
+  background: #e3f2fd;
+  padding: 15px;
+  border-radius: 4px;
+  border-left: 4px solid #2196f3;
+}
+
+.node-info p {
+  margin: 0;
+  color: #1976d2;
+}
+
+.command-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.command-section label {
+  font-weight: 600;
+  color: #333;
+}
+
+.command-select {
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
   background: white;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: left;
+  transition: border-color 0.2s;
 }
 
-.command-button:hover:not(:disabled) {
-  border-color: #667eea;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
-  transform: translateY(-1px);
+.command-select:focus {
+  outline: none;
+  border-color: #007bff;
 }
 
-.command-button:disabled {
-  opacity: 0.6;
+.command-select:disabled {
+  background: #f5f5f5;
   cursor: not-allowed;
 }
 
-.command-button.executing {
-  border-color: #f59e0b;
-  background-color: #fef3c7;
-}
-
-.command-icon {
-  font-size: 1.5rem;
-  margin-right: 12px;
-  width: 24px;
-  text-align: center;
-}
-
-.command-info {
-  flex: 1;
-}
-
-.command-name {
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 4px;
-}
-
-.command-description {
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.results-section {
-  margin-top: 24px;
-  padding-top: 24px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.results-section h4 {
-  margin-bottom: 16px;
-  color: #374151;
-  font-weight: 600;
-}
-
-.result-container {
-  background: #f9fafb;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.result-header {
+.execute-section {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #e5e7eb;
-}
-
-.result-command {
-  font-weight: 600;
-  color: #374151;
-}
-
-.result-method {
-  background: #667eea;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.result-content {
-  margin-bottom: 16px;
-}
-
-.result-content pre {
-  background: #1f2937;
-  color: #f9fafb;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  overflow-x: auto;
-  white-space: pre-wrap;
-  word-break: break-word;
-  margin: 0;
-}
-
-.modal-footer {
-  padding: 20px 24px;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-}
-
-.btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.execute-button {
+  background: #007bff;
   color: white;
+  border: none;
+  padding: 12px 30px;
+  border-radius: 4px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-width: 120px;
 }
 
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+.execute-button:hover:not(:disabled) {
+  background: #0056b3;
 }
 
-.btn-secondary {
-  background: #6b7280;
+.execute-button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.result-section {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 4px;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+}
+
+.result-section h4 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.result-content {
+  background: white;
+  padding: 12px;
+  border-radius: 4px;
+  border: 1px solid #dee2e6;
+}
+
+.result-content.error {
+  background: #fff5f5;
+  border-color: #feb2b2;
+}
+
+.result-content pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.modal-footer {
+  padding: 20px;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+  background: #f8f9fa;
+  border-radius: 0 0 8px 8px;
+}
+
+.close-window-button {
+  background: #6c757d;
   color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
 }
 
-.btn-secondary:hover {
-  background: #4b5563;
-  transform: translateY(-1px);
-}
-
-@media (max-width: 768px) {
-  .modal-content {
-    width: 95%;
-    margin: 20px;
-  }
-  
-  .commands-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .modal-header,
-  .modal-body,
-  .modal-footer {
-    padding: 16px;
-  }
+.close-window-button:hover {
+  background: #5a6268;
 }
 </style>

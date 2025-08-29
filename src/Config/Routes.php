@@ -136,7 +136,7 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->post('/astlookup', [ConfigController::class, 'performAstLookup']);
         $group->post('/bubblechart', [ConfigController::class, 'getBubbleChart']);
                     $group->get('/controlpanel', [ConfigController::class, 'getControlPanel']);
-            $group->post('/controlpanel/execute', [ConfigController::class, 'executeControlCommand']);
+            $group->post('/controlpanel/execute', [ConfigController::class, 'executeControlPanelCommand']);
             $group->get('/configeditor/files', [ConfigController::class, 'getConfigEditorFiles']);
             $group->post('/configeditor/content', [ConfigController::class, 'getConfigFileContent']);
             $group->post('/configeditor/save', [ConfigController::class, 'saveConfigFile']);

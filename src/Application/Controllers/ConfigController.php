@@ -1401,6 +1401,147 @@ class ConfigController
         }
     }
 
+
+
+
+
+    /**
+     * Load control panel commands for a specific node
+     */
+    private function loadControlPanelCommands(string $user, string $node): array
+    {
+        // Get the control panel INI file path
+        $controlIniPath = $this->getControlPanelIniFile($user);
+        
+        if (!file_exists($controlIniPath)) {
+            // Return empty commands if file doesn't exist
+            return ['labels' => [], 'cmds' => []];
+        }
+
+        $cpConfig = parse_ini_file($controlIniPath, true);
+        if ($cpConfig === false) {
+            throw new \Exception('Failed to parse control panel configuration file');
+        }
+
+        // Initialize with default empty arrays
+        $cpCommands = [
+            'labels' => [],
+            'cmds' => []
+        ];
+
+        // Add general commands if they exist
+        if (isset($cpConfig['general'])) {
+            if (isset($cpConfig['general']['labels']) && is_array($cpConfig['general']['labels'])) {
+                $cpCommands['labels'] = array_merge($cpCommands['labels'], $cpConfig['general']['labels']);
+            }
+            if (isset($cpConfig['general']['cmds']) && is_array($cpConfig['general']['cmds'])) {
+                $cpCommands['cmds'] = array_merge($cpCommands['cmds'], $cpConfig['general']['cmds']);
+            }
+        }
+
+        // Add node-specific commands if they exist
+        if (isset($cpConfig[$node])) {
+            if (isset($cpConfig[$node]['labels']) && is_array($cpConfig[$node]['labels'])) {
+                $cpCommands['labels'] = array_merge($cpCommands['labels'], $cpConfig[$node]['labels']);
+            }
+            if (isset($cpConfig[$node]['cmds']) && is_array($cpConfig[$node]['cmds'])) {
+                $cpCommands['cmds'] = array_merge($cpCommands['cmds'], $cpConfig[$node]['cmds']);
+            }
+        }
+
+        return $cpCommands;
+    }
+
+    /**
+     * Execute a control panel command via AMI
+     */
+    private function executeControlCommand(string $node, string $command): string
+    {
+        // Load node configuration
+        $nodeConfig = $this->loadNodeConfig($node);
+        if (!$nodeConfig) {
+            throw new \Exception("Node $node not found in configuration");
+        }
+
+        // Connect to AMI
+        $fp = $this->connectToAmi($nodeConfig);
+        if (!$fp) {
+            throw new \Exception("Failed to connect to AMI for node $node");
+        }
+
+        try {
+            // Execute command with node substitution
+            $cmdString = str_replace('%node%', $node, $command);
+            $result = $this->executeAmiCommand($fp, $cmdString);
+            
+            if ($result === false) {
+                throw new \Exception("Failed to execute command: $cmdString");
+            }
+
+            return $result;
+        } finally {
+            // Always close the connection
+            if ($fp) {
+                \SimpleAmiClient::logoff($fp);
+            }
+        }
+    }
+
+    /**
+     * Load node configuration
+     */
+    private function loadNodeConfig(string $node): ?array
+    {
+        $configPath = $this->getUserIniFile($this->getCurrentUser() ?: 'default');
+        
+        if (!file_exists($configPath)) {
+            return null;
+        }
+
+        $config = parse_ini_file($configPath, true);
+        if (!$config || !isset($config[$node])) {
+            return null;
+        }
+
+        return $config[$node];
+    }
+
+    /**
+     * Connect to AMI
+     */
+    private function connectToAmi(array $nodeConfig)
+    {
+        if (!isset($nodeConfig['host']) || !isset($nodeConfig['user']) || !isset($nodeConfig['passwd'])) {
+            return false;
+        }
+
+        $fp = \SimpleAmiClient::connect($nodeConfig['host']);
+        if (!$fp) {
+            return false;
+        }
+
+        $loginResult = \SimpleAmiClient::login($fp, $nodeConfig['user'], $nodeConfig['passwd']);
+        if (!$loginResult) {
+            \SimpleAmiClient::logoff($fp);
+            return false;
+        }
+
+        return $fp;
+    }
+
+    /**
+     * Execute AMI command
+     */
+    private function executeAmiCommand($fp, string $command): string|false
+    {
+        $result = \SimpleAmiClient::command($fp, $command);
+        if ($result === false) {
+            return false;
+        }
+
+        return $result;
+    }
+
     /**
      * Generate bubble chart URL and information
      */
@@ -1487,32 +1628,43 @@ class ConfigController
             return $response->withStatus(403);
         }
 
+        $node = $request->getQueryParams()['node'] ?? '';
+        if (!is_numeric($node)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Invalid node parameter'
+            ]));
+            return $response->withStatus(400);
+        }
+
         try {
-            // Get control panel configuration
-            $config = $this->getControlPanelConfig($currentUser);
+            // Load control panel commands for the specific node
+            $cpCommands = $this->loadControlPanelCommands($currentUser, $node);
             
             $response->getBody()->write(json_encode([
                 'success' => true,
-                'config' => $config
+                'data' => $cpCommands
             ]));
-            return $response->withStatus(200);
+            return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
-                'message' => 'Failed to load control panel configuration: ' . $e->getMessage()
+                'message' => 'Failed to load control panel commands: ' . $e->getMessage()
             ]));
             return $response->withStatus(500);
         }
     }
 
+
+
     /**
-     * Execute control panel command
+     * Execute a control panel command
      */
-    public function executeControlCommand(Request $request, Response $response): Response
+    public function executeControlPanelCommand(Request $request, Response $response): Response
     {
         $currentUser = $this->getCurrentUser();
         
-        // Allow control commands to proceed even without authentication (using default permissions)
+        // Allow control panel to proceed even without authentication (using default permissions)
         if (!$currentUser) {
             $currentUser = 'default'; // Use default user for INI file resolution
         }
@@ -1527,29 +1679,27 @@ class ConfigController
         }
 
         $data = $request->getParsedBody();
-        $command = trim($data['command'] ?? '');
         $node = trim($data['node'] ?? '');
+        $command = trim($data['command'] ?? '');
 
-        if (empty($command)) {
+        if (!is_numeric($node) || empty($command)) {
             $response->getBody()->write(json_encode([
                 'success' => false,
-                'message' => 'Command is required'
+                'message' => 'Invalid node or command parameter'
             ]));
             return $response->withStatus(400);
         }
 
         try {
-            // Get control panel configuration
-            $config = $this->getControlPanelConfig($currentUser);
-            
-            // Execute the command
-            $result = $this->executeControlPanelCommand($command, $node, $config);
+            $result = $this->executeControlCommand($node, $command);
             
             $response->getBody()->write(json_encode([
                 'success' => true,
-                'result' => $result
+                'data' => [
+                    'result' => $result
+                ]
             ]));
-            return $response->withStatus(200);
+            return $response->withHeader('Content-Type', 'application/json');
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode([
                 'success' => false,
