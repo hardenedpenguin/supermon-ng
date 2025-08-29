@@ -328,23 +328,24 @@ const onNodeChange = () => {
   console.log('🔍 onNodeChange called with selectedNode:', selectedNode.value)
   
   // Update target node when selection changes
-  if (selectedNode.value && !selectedNode.value.includes(',')) {
-    targetNode.value = selectedNode.value
+  if (selectedNode.value && !String(selectedNode.value).includes(',')) {
+    targetNode.value = String(selectedNode.value)
   }
   
   // Start monitoring the selected nodes
   if (selectedNode.value) {
-    if (selectedNode.value.includes(',')) {
+    const selectedNodeStr = String(selectedNode.value)
+    if (selectedNodeStr.includes(',')) {
       // Handle group selection
-      const nodeIds = selectedNode.value.split(',').map(id => id.trim())
+      const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
       console.log('🔍 Starting monitoring for group nodes:', nodeIds)
       nodeIds.forEach(nodeId => {
         realTimeStore.startMonitoring(nodeId)
       })
     } else {
       // Handle single node selection
-      console.log('🔍 Starting monitoring for single node:', selectedNode.value)
-      realTimeStore.startMonitoring(selectedNode.value)
+      console.log('🔍 Starting monitoring for single node:', selectedNodeStr)
+      realTimeStore.startMonitoring(selectedNodeStr)
     }
   }
 }
@@ -525,7 +526,7 @@ const controlpanel = async () => {
   try {
     console.log('Opening Control Panel modal')
     // Set targetNode to the currently selected node before opening modal
-    targetNode.value = selectedNode.value
+    targetNode.value = String(selectedNode.value)
     showControlPanelModal.value = true
   } catch (error) {
     console.error('Control Panel error:', error)
