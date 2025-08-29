@@ -222,6 +222,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useRealTimeStore } from '@/stores/realTime'
+import axios from 'axios'
 import NodeTable from '@/components/NodeTable.vue'
 import LoginForm from '@/components/LoginForm.vue'
 import Menu from '@/components/Menu.vue'
@@ -350,7 +351,19 @@ const onNodeChange = () => {
 const connect = async () => {
   if (!targetNode.value) return
   try {
-    await realTimeStore.connectNode(targetNode.value, permConnect.value)
+    const response = await axios.post('/api/nodes/connect', {
+      localnode: targetNode.value,
+      remotenode: selectedNode.value,
+      perm: permConnect.value ? 'on' : null
+    })
+    
+    if (response.data.success) {
+      console.log('Connect success:', response.data.message)
+      // Refresh node data after successful connection
+      await realTimeStore.fetchNodeData()
+    } else {
+      console.error('Connect failed:', response.data.message)
+    }
   } catch (error) {
     console.error('Connect error:', error)
   }
@@ -359,7 +372,19 @@ const connect = async () => {
 const disconnect = async () => {
   if (!targetNode.value) return
   try {
-    await realTimeStore.disconnectNode(targetNode.value)
+    const response = await axios.post('/api/nodes/disconnect', {
+      localnode: targetNode.value,
+      remotenode: selectedNode.value,
+      perm: null
+    })
+    
+    if (response.data.success) {
+      console.log('Disconnect success:', response.data.message)
+      // Refresh node data after successful disconnection
+      await realTimeStore.fetchNodeData()
+    } else {
+      console.error('Disconnect failed:', response.data.message)
+    }
   } catch (error) {
     console.error('Disconnect error:', error)
   }
@@ -368,7 +393,19 @@ const disconnect = async () => {
 const monitor = async () => {
   if (!targetNode.value) return
   try {
-    await realTimeStore.monitorNode(targetNode.value)
+    const response = await axios.post('/api/nodes/monitor', {
+      localnode: targetNode.value,
+      remotenode: selectedNode.value,
+      perm: null
+    })
+    
+    if (response.data.success) {
+      console.log('Monitor success:', response.data.message)
+      // Refresh node data after successful monitoring
+      await realTimeStore.fetchNodeData()
+    } else {
+      console.error('Monitor failed:', response.data.message)
+    }
   } catch (error) {
     console.error('Monitor error:', error)
   }
@@ -377,7 +414,19 @@ const monitor = async () => {
 const permconnect = async () => {
   if (!targetNode.value) return
   try {
-    await realTimeStore.permConnectNode(targetNode.value)
+    const response = await axios.post('/api/nodes/connect', {
+      localnode: targetNode.value,
+      remotenode: selectedNode.value,
+      perm: 'on'
+    })
+    
+    if (response.data.success) {
+      console.log('Permanent connect success:', response.data.message)
+      // Refresh node data after successful connection
+      await realTimeStore.fetchNodeData()
+    } else {
+      console.error('Permanent connect failed:', response.data.message)
+    }
   } catch (error) {
     console.error('Perm connect error:', error)
   }
@@ -386,7 +435,19 @@ const permconnect = async () => {
 const localmonitor = async () => {
   if (!targetNode.value) return
   try {
-    await realTimeStore.localMonitorNode(targetNode.value)
+    const response = await axios.post('/api/nodes/local-monitor', {
+      localnode: targetNode.value,
+      remotenode: selectedNode.value,
+      perm: null
+    })
+    
+    if (response.data.success) {
+      console.log('Local monitor success:', response.data.message)
+      // Refresh node data after successful local monitoring
+      await realTimeStore.fetchNodeData()
+    } else {
+      console.error('Local monitor failed:', response.data.message)
+    }
   } catch (error) {
     console.error('Local monitor error:', error)
   }

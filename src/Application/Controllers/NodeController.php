@@ -207,222 +207,129 @@ class NodeController
 
     public function connect(Request $request, Response $response, array $args): Response
     {
-        $nodeId = $args['id'] ?? null;
+        return $this->executeNodeAction($request, $response, $args, 'connect');
+    }
+
+    public function disconnect(Request $request, Response $response, array $args): Response
+    {
+        return $this->executeNodeAction($request, $response, $args, 'disconnect');
+    }
+
+    public function monitor(Request $request, Response $response, array $args): Response
+    {
+        return $this->executeNodeAction($request, $response, $args, 'monitor');
+    }
+
+    public function localMonitor(Request $request, Response $response, array $args): Response
+    {
+        return $this->executeNodeAction($request, $response, $args, 'localmonitor');
+    }
+
+    /**
+     * Execute node action (connect, disconnect, monitor, localmonitor)
+     */
+    private function executeNodeAction(Request $request, Response $response, array $args, string $action): Response
+    {
+        // Get and validate parameters
         $data = $request->getParsedBody();
+        $localNode = $data['localnode'] ?? null;
+        $remoteNode = $data['remotenode'] ?? null;
+        $permInput = $data['perm'] ?? null;
         
-        if (!$nodeId) {
+        // Validate local node
+        if (!$localNode || !preg_match("/^\d+$/", $localNode)) {
             $response->getBody()->write(json_encode([
                 'success' => false,
-                'error' => 'Node ID is required'
+                'message' => 'Please provide a valid local node number.'
             ]));
-            
-            return $response
-                ->withStatus(400)
-                ->withHeader('Content-Type', 'application/json');
+            return $response->withHeader('Content-Type', 'application/json');
         }
 
-        $targetNode = $data['target_node'] ?? null;
-        
-        if (!$targetNode) {
+        // Check user permissions
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, $this->getActionPermission($action))) {
             $response->getBody()->write(json_encode([
                 'success' => false,
-                'error' => 'Target node is required'
+                'message' => "You are not authorized to perform the '$action' action."
             ]));
-            
-            return $response
-                ->withStatus(400)
-                ->withHeader('Content-Type', 'application/json');
+            return $response->withHeader('Content-Type', 'application/json');
         }
 
         try {
-            // Verify the node exists in configuration
-            if (!$this->configService->nodeExists($nodeId)) {
+            // Load node configuration
+            $nodeConfig = $this->loadNodeConfig($currentUser, $localNode);
+            if (!$nodeConfig) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
-                    'error' => "Node $nodeId is not configured"
+                    'message' => "Configuration for local node $localNode not found."
                 ]));
-                
-                return $response
-                    ->withStatus(404)
-                    ->withHeader('Content-Type', 'application/json');
+                return $response->withHeader('Content-Type', 'application/json');
             }
 
-            // Get AMI configuration for the node
-            $amiConfig = $this->configService->getAmiConfig($nodeId);
-            
-            $this->logger->info("Connecting node", [
-                'node_id' => $nodeId,
-                'target_node' => $targetNode,
-                'ami_host' => $amiConfig['host'],
-                'ami_port' => $amiConfig['port']
-            ]);
+            // Connect to AMI
+            $fp = $this->connectToAmi($nodeConfig, $localNode);
+            if (!$fp) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Could not connect to Asterisk Manager for node $localNode."
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
 
-            // TODO: Implement actual AMI connection and command
-            // For now, return success response
+            // Process action and get ilink command
+            $actionResult = $this->processAction($action, $permInput, $localNode, $remoteNode, $currentUser);
+            if (!$actionResult) {
+                \SimpleAmiClient::logoff($fp);
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Invalid action or insufficient permissions for '$action'."
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $ilink = $actionResult['ilink'];
+            $message = $actionResult['message'];
+
+            // Execute AMI command
+            $commandResult = $this->executeAmiCommand($fp, $ilink, $localNode, $remoteNode, $action);
+            
+            // Clean up connection
+            \SimpleAmiClient::logoff($fp);
+
+            // Return success response
             $response->getBody()->write(json_encode([
                 'success' => true,
-                'message' => "Node $nodeId connected to $targetNode",
+                'message' => $message,
                 'data' => [
-                    'node_id' => $nodeId,
-                    'target_node' => $targetNode,
-                    'status' => 'connected',
-                    'ami_config' => [
-                        'host' => $amiConfig['host'],
-                        'port' => $amiConfig['port']
-                    ],
+                    'action' => $action,
+                    'local_node' => $localNode,
+                    'remote_node' => $remoteNode,
+                    'ilink' => $ilink,
+                    'ami_response' => $commandResult,
                     'timestamp' => date('c')
                 ]
             ]));
 
             return $response->withHeader('Content-Type', 'application/json');
-            
-        } catch (Exception $e) {
-            $this->logger->error('Failed to connect node', [
-                'node_id' => $nodeId,
-                'target_node' => $targetNode,
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to execute node action', [
+                'action' => $action,
+                'local_node' => $localNode,
+                'remote_node' => $remoteNode,
                 'error' => $e->getMessage()
             ]);
-            
+
             $response->getBody()->write(json_encode([
                 'success' => false,
-                'error' => 'Failed to connect node',
-                'message' => $e->getMessage()
+                'message' => 'Failed to execute action: ' . $e->getMessage()
             ]));
-            
-            return $response
-                ->withStatus(500)
-                ->withHeader('Content-Type', 'application/json');
+
+            return $response->withHeader('Content-Type', 'application/json');
         }
     }
 
-    public function disconnect(Request $request, Response $response, array $args): Response
-    {
-        $nodeId = $args['id'] ?? null;
-        
-        if (!$nodeId) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'error' => 'Node ID is required'
-            ]));
-            
-            return $response
-                ->withStatus(400)
-                ->withHeader('Content-Type', 'application/json');
-        }
 
-        $this->logger->info("Disconnecting node", ['node_id' => $nodeId]);
-
-        // Mock disconnect response
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => "Node $nodeId disconnected",
-            'data' => [
-                'node_id' => $nodeId,
-                'status' => 'disconnected',
-                'timestamp' => date('c')
-            ]
-        ]));
-
-        return $response->withHeader('Content-Type', 'application/json');
-    }
-
-    public function monitor(Request $request, Response $response, array $args): Response
-    {
-        $nodeId = $args['id'] ?? null;
-        $data = $request->getParsedBody();
-        
-        if (!$nodeId) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'error' => 'Node ID is required'
-            ]));
-            
-            return $response
-                ->withStatus(400)
-                ->withHeader('Content-Type', 'application/json');
-        }
-
-        $targetNode = $data['target_node'] ?? null;
-        
-        if (!$targetNode) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'error' => 'Target node is required'
-            ]));
-            
-            return $response
-                ->withStatus(400)
-                ->withHeader('Content-Type', 'application/json');
-        }
-
-        $this->logger->info("Monitoring node", [
-            'node_id' => $nodeId,
-            'target_node' => $targetNode
-        ]);
-
-        // Mock monitor response
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => "Node $nodeId monitoring $targetNode",
-            'data' => [
-                'node_id' => $nodeId,
-                'target_node' => $targetNode,
-                'status' => 'monitoring',
-                'timestamp' => date('c')
-            ]
-        ]));
-
-        return $response->withHeader('Content-Type', 'application/json');
-    }
-
-    public function localMonitor(Request $request, Response $response, array $args): Response
-    {
-        $nodeId = $args['id'] ?? null;
-        $data = $request->getParsedBody();
-        
-        if (!$nodeId) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'error' => 'Node ID is required'
-            ]));
-            
-            return $response
-                ->withStatus(400)
-                ->withHeader('Content-Type', 'application/json');
-        }
-
-        $targetNode = $data['target_node'] ?? null;
-        
-        if (!$targetNode) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'error' => 'Target node is required'
-            ]));
-            
-            return $response
-                ->withStatus(400)
-                ->withHeader('Content-Type', 'application/json');
-        }
-
-        $this->logger->info("Local monitoring node", [
-            'node_id' => $nodeId,
-            'target_node' => $targetNode
-        ]);
-
-        // Mock local monitor response
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => "Node $nodeId locally monitoring $targetNode",
-            'data' => [
-                'node_id' => $nodeId,
-                'target_node' => $targetNode,
-                'status' => 'local_monitoring',
-                'timestamp' => date('c')
-            ]
-        ]));
-
-        return $response->withHeader('Content-Type', 'application/json');
-    }
 
     /**
      * Get AMI status for nodes (real-time data)
@@ -742,5 +649,170 @@ class NodeController
         }
         
         return null;
+    }
+
+    /**
+     * Get permission required for an action
+     */
+    private function getActionPermission(string $action): string
+    {
+        $permissions = [
+            'connect' => 'CONNECTUSER',
+            'disconnect' => 'DISCUSER',
+            'monitor' => 'MONUSER',
+            'localmonitor' => 'LMONUSER'
+        ];
+        
+        return $permissions[$action] ?? 'CONNECTUSER';
+    }
+
+    /**
+     * Check if user has permission
+     */
+    private function hasUserPermission(?string $user, string $permission): bool
+    {
+        // Include necessary files
+        require_once __DIR__ . '/../../../includes/authusers.php';
+        require_once __DIR__ . '/../../../includes/global.inc';
+        
+        // If no user, use default permissions
+        if (!$user) {
+            $defaultPermissions = [
+                'CONNECTUSER' => true,
+                'DISCUSER' => true,
+                'MONUSER' => true,
+                'LMONUSER' => true
+            ];
+            return $defaultPermissions[$permission] ?? false;
+        }
+        
+        // Check user-specific permissions
+        return \get_user_auth($permission);
+    }
+
+    /**
+     * Load node configuration from INI file
+     */
+    private function loadNodeConfig(?string $user, string $localNode): ?array
+    {
+        // Include necessary files
+        require_once __DIR__ . '/../../../includes/global.inc';
+        require_once __DIR__ . '/../../../includes/authini.php';
+        
+        // Get INI file path
+        $iniFile = \get_ini_name($user);
+        
+        if (!file_exists($iniFile)) {
+            return null;
+        }
+        
+        $config = parse_ini_file($iniFile, true);
+        
+        if (!isset($config[$localNode])) {
+            return null;
+        }
+        
+        return $config[$localNode];
+    }
+
+    /**
+     * Connect to AMI
+     */
+    private function connectToAmi(array $nodeConfig, string $localNode): mixed
+    {
+        // Include AMI functions
+        require_once __DIR__ . '/../../../includes/amifunctions.inc';
+        
+        $fp = \SimpleAmiClient::connect($nodeConfig['host']);
+        if ($fp === false) {
+            return false;
+        }
+
+        if (\SimpleAmiClient::login($fp, $nodeConfig['user'], $nodeConfig['passwd']) === false) {
+            \SimpleAmiClient::logoff($fp);
+            return false;
+        }
+
+        return $fp;
+    }
+
+    /**
+     * Process action and determine ilink command
+     */
+    private function processAction(string $action, ?string $permInput, string $localNode, ?string $remoteNode, ?string $user): ?array
+    {
+        $actionsConfig = [
+            'connect' => [
+                'auth' => 'CONNECTUSER',
+                'ilink_normal' => 3,
+                'ilink_perm' => 13,
+                'verb' => 'Connecting',
+                'structure' => '%s %s to %s'
+            ],
+            'monitor' => [
+                'auth' => 'MONUSER',
+                'ilink_normal' => 2,
+                'ilink_perm' => 12,
+                'verb' => 'Monitoring',
+                'structure' => '%s %s from %s'
+            ],
+            'localmonitor' => [
+                'auth' => 'LMONUSER',
+                'ilink_normal' => 8,
+                'ilink_perm' => 18,
+                'verb' => 'Local Monitoring',
+                'structure' => '%s %s from %s'
+            ],
+            'disconnect' => [
+                'auth' => 'DISCUSER',
+                'ilink_normal' => 11,
+                'ilink_perm' => 11,
+                'verb' => 'Disconnect',
+                'structure' => '%s %s from %s'
+            ]
+        ];
+        
+        if (!isset($actionsConfig[$action])) {
+            return null;
+        }
+        
+        $actionConfig = $actionsConfig[$action];
+        
+        // Check if user has permission for this action
+        if (!$this->hasUserPermission($user, $actionConfig['auth'])) {
+            return null;
+        }
+        
+        // Check if this is a permanent action
+        $isPermanentAction = ($permInput === 'on' && $this->hasUserPermission($user, 'PERMUSER'));
+        
+        $ilink = $isPermanentAction ? $actionConfig['ilink_perm'] : $actionConfig['ilink_normal'];
+        $verbPrefix = $isPermanentAction ? "Permanently " : "";
+        $currentVerb = $verbPrefix . $actionConfig['verb'];
+        
+        if ($action === 'connect') {
+            $message = sprintf($actionConfig['structure'], $currentVerb, $localNode, $remoteNode);
+        } else {
+            $message = sprintf($actionConfig['structure'], $currentVerb, $remoteNode, $localNode);
+        }
+        
+        return [
+            'ilink' => $ilink,
+            'message' => $message,
+            'button' => $action
+        ];
+    }
+
+    /**
+     * Execute AMI command
+     */
+    private function executeAmiCommand(mixed $fp, int $ilink, string $localNode, ?string $remoteNode, string $action): string
+    {
+        $commandToSend = "rpt cmd $localNode ilink $ilink";
+        if (!empty($remoteNode) || ($action === 'disconnect' && !empty($remoteNode))) {
+            $commandToSend .= " $remoteNode";
+        }
+        
+        return \SimpleAmiClient::command($fp, trim($commandToSend));
     }
 }

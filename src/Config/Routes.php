@@ -110,10 +110,10 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->get('/ami/status', [NodeController::class, 'getAmiStatus']);
         $group->get('/{id}', [NodeController::class, 'get']);
         $group->get('/{id}/status', [NodeController::class, 'status']);
-        $group->post('/{id}/connect', [NodeController::class, 'connect']);
-        $group->post('/{id}/disconnect', [NodeController::class, 'disconnect']);
-        $group->post('/{id}/monitor', [NodeController::class, 'monitor']);
-        $group->post('/{id}/local-monitor', [NodeController::class, 'localMonitor']);
+        $group->post('/connect', [NodeController::class, 'connect']);
+        $group->post('/disconnect', [NodeController::class, 'disconnect']);
+        $group->post('/monitor', [NodeController::class, 'monitor']);
+        $group->post('/local-monitor', [NodeController::class, 'localMonitor']);
     });
 
     // Config routes
