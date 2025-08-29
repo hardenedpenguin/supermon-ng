@@ -139,6 +139,7 @@
               :astdb="realTimeStore.astdb"
               :config="realTimeStore.nodeConfig"
               :ref="el => { if (el) nodeTableRefs[index] = el }"
+              @node-click="handleNodeClick"
             />
           </td>
         </tr>
@@ -805,6 +806,38 @@ const openDonatePopup = () => {
   const handleNodeSelection = (nodeId: string) => {
     selectedNode.value = nodeId
     onNodeChange()
+  }
+
+  // Handle node click from NodeTable (for quick target node selection)
+  const handleNodeClick = (nodeId: string) => {
+    // Set the clicked node as the target node
+    targetNode.value = nodeId
+    
+    // If we have a dropdown with multiple nodes, try to find and select the appropriate local node
+    if (dropdownOptions.value.length > 1) {
+      // Find the local node that has this connected node
+      const localNode = displayedNodes.value.find(node => {
+        // Check if this local node has the clicked node as a connected node
+        const nodeData = realTimeStore.getNodeData(node.id)
+        if (nodeData && nodeData.remote_nodes) {
+          return nodeData.remote_nodes.some((remoteNode: any) => 
+            remoteNode.node === nodeId || remoteNode.node.toString() === nodeId
+          )
+        }
+        return false
+      })
+      
+      if (localNode) {
+        selectedNode.value = localNode.id
+        onNodeChange()
+      }
+    }
+    
+    // Scroll to the control panel
+    const controlPanel = document.getElementById('connect_form')
+    if (controlPanel) {
+      controlPanel.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
   }
 
   // Handle display settings updated

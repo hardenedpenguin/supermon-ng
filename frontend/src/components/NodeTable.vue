@@ -41,9 +41,10 @@
             :class="getConnectedNodeClass(connectedNode)"
           >
             <td 
-              class="node-num" 
+              class="node-num clickable-node" 
               align="center"
-              @click="scrollToTop"
+              @click="handleNodeClick(connectedNode.node)"
+              :title="`Click to set ${connectedNode.node} as target node`"
             >
               {{ connectedNode.node }}
             </td>
@@ -81,6 +82,11 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, watchEffect } from 'vue'
+
+// Emits
+const emit = defineEmits<{
+  'node-click': [nodeId: string]
+}>()
 
 // Props
 interface Props {
@@ -321,6 +327,11 @@ const scrollToTop = () => {
   window.scrollTo(0, 0)
 }
 
+const handleNodeClick = (nodeId: string) => {
+  // Emit event to parent component
+  emit('node-click', nodeId)
+}
+
 // Update node data from real-time store
 const updateNodeData = (data: any) => {
   nodeData.value = data
@@ -398,6 +409,18 @@ defineExpose({
   padding: 4px;
   border-collapse: collapse;
   width: 100%;
+}
+
+/* Clickable node styling */
+.clickable-node {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clickable-node:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  text-decoration: underline;
+}
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
