@@ -103,7 +103,9 @@ const result = ref(null)
 
 // Computed
 const hasCommands = computed(() => {
-  return commands.value.labels && commands.value.labels.length > 0
+  const has = commands.value.labels && commands.value.labels.length > 0
+  console.log('hasCommands computed:', has, 'commands:', commands.value)
+  return has
 })
 
 // Methods
@@ -128,10 +130,13 @@ const loadCommands = async () => {
   error.value = ''
   
   try {
+    console.log('Loading commands for node:', props.localNode)
     const response = await api.get(`/config/controlpanel?node=${props.localNode}`)
+    console.log('API response:', response.data)
     
     if (response.data.success) {
       commands.value = response.data.data
+      console.log('Commands loaded:', commands.value)
     } else {
       error.value = response.data.message || 'Failed to load control panel commands'
     }
