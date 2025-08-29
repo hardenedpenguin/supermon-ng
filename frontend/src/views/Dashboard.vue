@@ -346,9 +346,20 @@ const onNodeChange = () => {
       // Handle group selection
       const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
       console.log('🔍 Starting monitoring for group nodes:', nodeIds)
+      
+      // Store the current group selection to prevent it from being overridden
+      const currentGroupSelection = selectedNode.value
+      
+      // Start monitoring each node in the group
       nodeIds.forEach(nodeId => {
         realTimeStore.startMonitoring(nodeId)
       })
+      
+      // Ensure the group selection is maintained after monitoring starts
+      if (selectedNode.value !== currentGroupSelection) {
+        console.log('🔍 Restoring group selection after monitoring start')
+        selectedNode.value = currentGroupSelection
+      }
     } else {
       // Handle single node selection
       console.log('🔍 Starting monitoring for single node:', selectedNodeStr)
