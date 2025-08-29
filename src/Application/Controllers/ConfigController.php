@@ -1691,12 +1691,16 @@ class ConfigController
         }
 
         try {
-            $result = $this->executeControlCommand($node, $command);
+            // Get control panel configuration
+            $config = $this->getControlPanelConfig($currentUser);
+            
+            // Execute the command using the existing private method
+            $result = $this->executeControlPanelCommandInternal($command, $node, $config);
             
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'data' => [
-                    'result' => $result
+                    'result' => $result['result'] ?? $result
                 ]
             ]));
             return $response->withHeader('Content-Type', 'application/json');
@@ -1793,7 +1797,7 @@ class ConfigController
     /**
      * Execute control panel command
      */
-    private function executeControlPanelCommand(string $command, string $node, array $config): array
+    private function executeControlPanelCommandInternal(string $command, string $node, array $config): array
     {
         // Map command to actual execution
         switch (strtolower($command)) {
@@ -1810,7 +1814,8 @@ class ConfigController
             case 'astdn':
                 return $this->executeAstDown($node, $config);
             default:
-                throw new \Exception("Unknown command: $command");
+                // For dynamic commands from INI file, execute via AMI
+                return $this->executeDynamicCommand($command, $node);
         }
     }
 
@@ -1900,6 +1905,59 @@ class ConfigController
             'result' => $result,
             'method' => 'Shell'
         ];
+    }
+
+    /**
+     * Execute dynamic command via AMI
+     */
+    private function executeDynamicCommand(string $command, string $node): array
+    {
+        try {
+            // Load node configuration
+            $nodeConfig = $this->loadNodeConfig($node);
+            if (!$nodeConfig) {
+                throw new \Exception("Node $node not found in configuration");
+            }
+
+            // Connect to AMI
+            $fp = $this->connectToAmi($nodeConfig);
+            if (!$fp) {
+                throw new \Exception("Failed to connect to AMI for node $node");
+            }
+
+            try {
+                // Execute command with node substitution
+                $cmdString = str_replace('%node%', $node, $command);
+                $result = $this->executeAmiCommand($fp, $cmdString);
+                
+                if ($result === false) {
+                    throw new \Exception("Failed to execute command: $cmdString");
+                }
+
+                return [
+                    'command' => $command,
+                    'node' => $node,
+                    'result' => $result,
+                    'method' => 'AMI'
+                ];
+            } finally {
+                // Always close the connection
+                if ($fp) {
+                    \SimpleAmiClient::logoff($fp);
+                }
+            }
+        } catch (\Exception $e) {
+            // If AMI fails, try shell execution as fallback
+            $cmdString = str_replace('%node%', $node, $command);
+            $result = shell_exec("sudo asterisk -rx '$cmdString' 2>&1");
+            
+            return [
+                'command' => $command,
+                'node' => $node,
+                'result' => $result,
+                'method' => 'Shell (AMI fallback)'
+            ];
+        }
     }
 
     /**
