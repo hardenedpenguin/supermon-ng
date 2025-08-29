@@ -499,7 +499,7 @@ const digitaldashboard = async () => {
 const configeditor = async () => {
   try {
     console.log('Opening Config Editor in new window')
-    window.open('/configeditor.html', 'ConfigEditor', 'status=no,location=no,toolbar=no,width=1200,height=800,left=100,top=100')
+    window.open('http://localhost:8000/configeditor.html', 'ConfigEditor', 'status=no,location=no,toolbar=no,width=1200,height=800,left=100,top=100')
   } catch (error) {
     console.error('Config editor error:', error)
   }
