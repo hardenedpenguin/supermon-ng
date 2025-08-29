@@ -1007,6 +1007,8 @@ watch(() => realTimeStore.nodes, (newNodes) => {
 }, { deep: true })
 
 // Watch for displayed nodes changes and update NodeTable components
+// TEMPORARILY DISABLED TO DEBUG GROUP MODE ISSUE
+/*
 watch(displayedNodes, (newDisplayedNodes) => {
   console.log('🔍 displayedNodes watcher triggered - newDisplayedNodes length:', newDisplayedNodes.length)
   console.log('🔍 displayedNodes watcher - current selectedNode:', selectedNode.value)
@@ -1046,6 +1048,7 @@ watch(displayedNodes, (newDisplayedNodes) => {
     })
   })
 }, { deep: true })
+*/
 </script>
 
 <style scoped>
