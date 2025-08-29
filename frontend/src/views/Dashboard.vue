@@ -338,6 +338,7 @@ const dropdownOptions = computed(() => {
 
 // Methods
 let isNodeChangeInProgress = false
+let previousSelectedNode: string | null = null
 
 const onNodeChange = () => {
   if (isNodeChangeInProgress) {
@@ -347,6 +348,7 @@ const onNodeChange = () => {
   
   isNodeChangeInProgress = true
   console.log('🔍 onNodeChange called with selectedNode:', selectedNode.value)
+  console.log('🔍 onNodeChange - previousSelectedNode:', previousSelectedNode)
   console.log('🔍 onNodeChange - realTimeStore.monitoringNodes before:', realTimeStore.monitoringNodes)
   
   try {
@@ -355,7 +357,7 @@ const onNodeChange = () => {
     
     // Check if we were previously in group mode and now have a single node selection
     // This happens when a node is selected from the dropdown in group mode
-    const wasInGroupMode = displayedNodes.value.length > 1 && !selectedNodeStr.includes(',')
+    const wasInGroupMode = previousSelectedNode && String(previousSelectedNode).includes(',') && !selectedNodeStr.includes(',')
     
     if (wasInGroupMode) {
       // We're in group mode but a single node was selected from dropdown
@@ -363,13 +365,12 @@ const onNodeChange = () => {
       targetNode.value = selectedNodeStr
       console.log('🔍 Group mode: setting target node to:', selectedNodeStr)
       
-      // Restore the group selection by creating it from displayed nodes
-      const groupSelection = displayedNodes.value.map(node => node.id).join(',')
-      selectedNode.value = groupSelection
-      console.log('🔍 Group mode: restored group selection:', groupSelection)
+      // Restore the group selection from the previous state
+      selectedNode.value = previousSelectedNode
+      console.log('🔍 Group mode: restored group selection:', previousSelectedNode)
       
       // Start monitoring the group nodes
-      const nodeIds = groupSelection.split(',').map(id => id.trim())
+      const nodeIds = String(previousSelectedNode).split(',').map(id => id.trim())
       console.log('🔍 Starting monitoring for group nodes:', nodeIds)
       nodeIds.forEach(nodeId => {
         console.log('🔍 Starting monitoring for nodeId:', nodeId)
@@ -403,6 +404,9 @@ const onNodeChange = () => {
         realTimeStore.startMonitoring(selectedNodeStr)
       }
     }
+    
+    // Update the previous selected node for next time
+    previousSelectedNode = selectedNode.value || null
     
     console.log('🔍 onNodeChange - realTimeStore.monitoringNodes after:', realTimeStore.monitoringNodes)
   } finally {
