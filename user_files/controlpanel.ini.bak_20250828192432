@@ -10,5 +10,3 @@ extensions_reload = true
 echolink_dbdump = true
 astup = true
 astdn = true
-
-# Test comment added by config editor

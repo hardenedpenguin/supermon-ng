@@ -636,7 +636,7 @@ class ConfigController
             'BUBLUSER' => true,
             'FAVUSER' => true,
             'CTRLUSER' => true,
-            'CFGEDUSER' => false,
+            'CFGEDUSER' => true, // Allow config editor for unauthenticated users
             'ASTRELUSER' => false,
             'ASTSTRUSER' => false,
             'ASTSTPUSER' => false,
@@ -1724,6 +1724,255 @@ class ConfigController
             'node' => $node,
             'result' => $result,
             'method' => 'Shell'
+        ];
+    }
+
+    /**
+     * Get list of editable configuration files
+     */
+    public function getConfigEditorFiles(Request $request, Response $response): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $currentUser = 'default';
+        }
+        
+        if (!$this->hasUserPermission($currentUser, 'CFGEDUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'CFGEDUSER permission required']));
+            return $response->withStatus(403);
+        }
+
+        try {
+            $files = $this->getEditableFilesList();
+            $response->getBody()->write(json_encode(['success' => true, 'files' => $files]));
+            return $response->withStatus(200);
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to get editable files: ' . $e->getMessage()]));
+            return $response->withStatus(500);
+        }
+    }
+
+    /**
+     * Get content of a specific configuration file
+     */
+    public function getConfigFileContent(Request $request, Response $response): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $currentUser = 'default';
+        }
+        
+        if (!$this->hasUserPermission($currentUser, 'CFGEDUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'CFGEDUSER permission required']));
+            return $response->withStatus(403);
+        }
+
+        $data = $request->getParsedBody();
+        $filePath = trim($data['filePath'] ?? '');
+        
+        if (empty($filePath)) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'File path is required']));
+            return $response->withStatus(400);
+        }
+
+        try {
+            $content = $this->readConfigFile($filePath);
+            $response->getBody()->write(json_encode(['success' => true, 'content' => $content]));
+            return $response->withStatus(200);
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to read file: ' . $e->getMessage()]));
+            return $response->withStatus(500);
+        }
+    }
+
+    /**
+     * Save content to a configuration file
+     */
+    public function saveConfigFile(Request $request, Response $response): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $currentUser = 'default';
+        }
+        
+        if (!$this->hasUserPermission($currentUser, 'CFGEDUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'CFGEDUSER permission required']));
+            return $response->withStatus(403);
+        }
+
+        $data = $request->getParsedBody();
+        $filePath = trim($data['filePath'] ?? '');
+        $content = $data['content'] ?? '';
+        
+        if (empty($filePath)) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'File path is required']));
+            return $response->withStatus(400);
+        }
+
+        try {
+            $result = $this->writeConfigFile($filePath, $content);
+            $response->getBody()->write(json_encode(['success' => true, 'message' => 'File saved successfully', 'result' => $result]));
+            return $response->withStatus(200);
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to save file: ' . $e->getMessage()]));
+            return $response->withStatus(500);
+        }
+    }
+
+    /**
+     * Get list of editable files organized by category
+     */
+    private function getEditableFilesList(): array
+    {
+        return [
+            'Supermon-ng' => [
+                ['path' => '/var/www/html/supermon-ng/user_files/allmon.ini', 'name' => 'Allmon Configuration', 'description' => 'Main AllStar configuration file'],
+                ['path' => '/var/www/html/supermon-ng/user_files/authini.ini', 'name' => 'Authentication Configuration', 'description' => 'User authentication settings'],
+                ['path' => '/var/www/html/supermon-ng/user_files/authuser.ini', 'name' => 'User Configuration', 'description' => 'User-specific settings'],
+                ['path' => '/var/www/html/supermon-ng/user_files/cntrlini.inc', 'name' => 'Control Panel Configuration', 'description' => 'Control panel settings'],
+                ['path' => '/var/www/html/supermon-ng/user_files/cntrlnolog.ini', 'name' => 'Control Panel Log Configuration', 'description' => 'Control panel logging settings'],
+                ['path' => '/var/www/html/supermon-ng/user_files/controlpanel.ini', 'name' => 'Control Panel Settings', 'description' => 'Control panel configuration'],
+                ['path' => '/var/www/html/supermon-ng/user_files/favini.inc', 'name' => 'Favorites Configuration', 'description' => 'User favorites settings'],
+                ['path' => '/var/www/html/supermon-ng/user_files/favnolog.ini', 'name' => 'Favorites Log Configuration', 'description' => 'Favorites logging settings'],
+                ['path' => '/var/www/html/supermon-ng/user_files/favorites.ini', 'name' => 'Favorites List', 'description' => 'User favorites list'],
+                ['path' => '/var/www/html/supermon-ng/user_files/nolog.ini', 'name' => 'No Log Configuration', 'description' => 'No logging settings'],
+                ['path' => '/var/www/html/supermon-ng/user_files/privatenodes.txt', 'name' => 'Private Nodes', 'description' => 'Private nodes list'],
+                ['path' => '/var/www/html/supermon-ng/user_files/global.inc', 'name' => 'Global Configuration', 'description' => 'Global settings'],
+                ['path' => '/var/www/html/supermon-ng/supermon-ng.css', 'name' => 'CSS Styles', 'description' => 'Custom CSS styles']
+            ],
+            'Asterisk' => [
+                ['path' => '/etc/asterisk/extensions.conf', 'name' => 'Extensions Configuration', 'description' => 'Dialplan extensions'],
+                ['path' => '/etc/asterisk/sip.conf', 'name' => 'SIP Configuration', 'description' => 'SIP channel settings'],
+                ['path' => '/etc/asterisk/iax.conf', 'name' => 'IAX Configuration', 'description' => 'IAX channel settings'],
+                ['path' => '/etc/asterisk/users.conf', 'name' => 'Users Configuration', 'description' => 'User definitions'],
+                ['path' => '/etc/asterisk/rpt.conf', 'name' => 'RPT Configuration', 'description' => 'Repeater settings'],
+                ['path' => '/etc/asterisk/dnsmgr.conf', 'name' => 'DNS Manager Configuration', 'description' => 'DNS manager settings'],
+                ['path' => '/etc/asterisk/http.conf', 'name' => 'HTTP Configuration', 'description' => 'HTTP server settings'],
+                ['path' => '/etc/asterisk/voter.conf', 'name' => 'Voter Configuration', 'description' => 'Voter settings'],
+                ['path' => '/etc/asterisk/manager.conf', 'name' => 'Manager Configuration', 'description' => 'AMI manager settings'],
+                ['path' => '/etc/asterisk/asterisk.conf', 'name' => 'Asterisk Configuration', 'description' => 'Main Asterisk settings'],
+                ['path' => '/etc/asterisk/modules.conf', 'name' => 'Modules Configuration', 'description' => 'Module loading settings'],
+                ['path' => '/etc/asterisk/logger', 'name' => 'Logger Configuration', 'description' => 'Logging settings'],
+                ['path' => '/etc/asterisk/usbradio.conf', 'name' => 'USB Radio Configuration', 'description' => 'USB radio settings'],
+                ['path' => '/etc/asterisk/simpleusb.conf', 'name' => 'Simple USB Configuration', 'description' => 'Simple USB settings'],
+                ['path' => '/etc/asterisk/irlp.conf', 'name' => 'IRLP Configuration', 'description' => 'IRLP settings'],
+                ['path' => '/etc/asterisk/echolink.conf', 'name' => 'EchoLink Configuration', 'description' => 'EchoLink settings']
+            ],
+            'DvSwitch' => [
+                ['path' => '/opt/Analog_Bridge/Analog_Bridge.ini', 'name' => 'Analog Bridge Configuration', 'description' => 'Analog Bridge settings'],
+                ['path' => '/opt/MMDVM_Bridge/MMDVM_Bridge.ini', 'name' => 'MMDVM Bridge Configuration', 'description' => 'MMDVM Bridge settings'],
+                ['path' => '/opt/MMDVM_Bridge/DVSwitch.ini', 'name' => 'DVSwitch Configuration', 'description' => 'DVSwitch settings']
+            ],
+            'IRLP' => [
+                ['path' => '/home/irlp/scripts/irlp.crons', 'name' => 'IRLP Cron Jobs', 'description' => 'IRLP cron job definitions'],
+                ['path' => '/home/irlp/noupdate/scripts/irlp.crons', 'name' => 'IRLP No-Update Cron Jobs', 'description' => 'IRLP no-update cron jobs'],
+                ['path' => '/home/irlp/custom/environment', 'name' => 'IRLP Environment', 'description' => 'IRLP environment settings'],
+                ['path' => '/home/irlp/custom/custom_decode', 'name' => 'IRLP Custom Decode', 'description' => 'IRLP custom decode settings'],
+                ['path' => '/home/irlp/custom/custom.crons', 'name' => 'IRLP Custom Cron Jobs', 'description' => 'IRLP custom cron jobs'],
+                ['path' => '/home/irlp/custom/timeoutvalue', 'name' => 'IRLP Timeout Value', 'description' => 'IRLP timeout settings'],
+                ['path' => '/home/irlp/custom/lockout_list', 'name' => 'IRLP Lockout List', 'description' => 'IRLP lockout list'],
+                ['path' => '/home/irlp/custom/timing', 'name' => 'IRLP Timing', 'description' => 'IRLP timing settings']
+            ],
+            'Misc' => [
+                ['path' => '/usr/local/etc/allstar.env', 'name' => 'AllStar Environment', 'description' => 'AllStar environment variables'],
+                ['path' => '/usr/local/bin/AUTOSKY/AutoSky.ini', 'name' => 'AutoSky Configuration', 'description' => 'AutoSky settings']
+            ]
+        ];
+    }
+
+    /**
+     * Read content of a configuration file
+     */
+    private function readConfigFile(string $filePath): string
+    {
+        // Validate file path is in our whitelist
+        $editableFiles = $this->getEditableFilesList();
+        $isWhitelisted = false;
+        
+        foreach ($editableFiles as $category => $files) {
+            foreach ($files as $file) {
+                if ($file['path'] === $filePath) {
+                    $isWhitelisted = true;
+                    break 2;
+                }
+            }
+        }
+        
+        if (!$isWhitelisted) {
+            throw new \Exception('File is not in the editable files whitelist');
+        }
+
+        if (!file_exists($filePath)) {
+            return ''; // Return empty string for non-existent files
+        }
+
+        $content = file_get_contents($filePath);
+        if ($content === false) {
+            throw new \Exception('Failed to read file content');
+        }
+
+        return $content;
+    }
+
+    /**
+     * Write content to a configuration file using the sudo helper script
+     */
+    private function writeConfigFile(string $filePath, string $content): array
+    {
+        // Validate file path is in our whitelist
+        $editableFiles = $this->getEditableFilesList();
+        $isWhitelisted = false;
+        
+        foreach ($editableFiles as $category => $files) {
+            foreach ($files as $file) {
+                if ($file['path'] === $filePath) {
+                    $isWhitelisted = true;
+                    break 2;
+                }
+            }
+        }
+        
+        if (!$isWhitelisted) {
+            throw new \Exception('File is not in the editable files whitelist');
+        }
+
+        // Use the sudo helper script to write the file
+        $command = "sudo /usr/local/sbin/supermon_unified_file_editor.sh " . escapeshellarg($filePath);
+        
+        $descriptorspec = [
+            0 => ['pipe', 'r'], // stdin
+            1 => ['pipe', 'w'], // stdout
+            2 => ['pipe', 'w']  // stderr
+        ];
+
+        $process = proc_open($command, $descriptorspec, $pipes);
+        
+        if (!is_resource($process)) {
+            throw new \Exception('Failed to execute sudo command');
+        }
+
+        // Write content to stdin
+        fwrite($pipes[0], $content);
+        fclose($pipes[0]);
+
+        // Read output
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+
+        $returnCode = proc_close($process);
+
+        if ($returnCode !== 0) {
+            throw new \Exception('Sudo command failed: ' . $stderr);
+        }
+
+        return [
+            'filePath' => $filePath,
+            'stdout' => $stdout,
+            'stderr' => $stderr,
+            'returnCode' => $returnCode
         ];
     }
 
