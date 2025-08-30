@@ -129,6 +129,9 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         
         // FastRestart Route
         $group->post('/fastrestart', [NodeController::class, 'fastrestart']);
+        
+        // IRLP Log Route
+        $group->post('/irlplog', [NodeController::class, 'irlplog']);
     });
 
     // Config routes

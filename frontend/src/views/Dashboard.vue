@@ -230,6 +230,9 @@
             v-model:isVisible="showFastRestartModal" 
             :localnode="selectedLocalNode || selectedNode" 
           />
+          
+          <!-- IRLP Log Modal -->
+          <IRLPLog v-model:isVisible="showIrlpLogModal" />
     
   </div>
 </template>
@@ -256,6 +259,7 @@ import Database from '@/components/Database.vue'
 import Donate from '@/components/Donate.vue'
 import ExtNodes from '@/components/ExtNodes.vue'
 import FastRestart from '@/components/FastRestart.vue'
+import IRLPLog from '@/components/IRLPLog.vue'
 
 
 const appStore = useAppStore()
@@ -281,6 +285,7 @@ const showDatabaseModal = ref(false)
 const showDonateModal = ref(false)
   const showExtNodesModal = ref(false)
   const showFastRestartModal = ref(false)
+  const showIrlpLogModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -724,26 +729,37 @@ const astaroff = async () => {
   }
 }
 
-const fastrestart = async () => {
-  try {
-    console.log('Opening FastRestart modal')
-    
-    // Use selectedLocalNode if available, otherwise use selectedNode
-    if (selectedLocalNode.value) {
-      showFastRestartModal.value = true
-    } else if (selectedNode.value) {
-      showFastRestartModal.value = true
-    } else {
-      console.error('No node selected for fast restart')
-      alert('Please select a node first to perform fast restart.')
-      return
+  const fastrestart = async () => {
+    try {
+      console.log('Opening FastRestart modal')
+      
+      // Use selectedLocalNode if available, otherwise use selectedNode
+      if (selectedLocalNode.value) {
+        showFastRestartModal.value = true
+      } else if (selectedNode.value) {
+        showFastRestartModal.value = true
+      } else {
+        console.error('No node selected for fast restart')
+        alert('Please select a node first to perform fast restart.')
+        return
+      }
+    } catch (error) {
+      console.error('FastRestart error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Failed to open FastRestart: ${errorMessage}`)
     }
-  } catch (error) {
-    console.error('FastRestart error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    alert(`Failed to open FastRestart: ${errorMessage}`)
   }
-}
+
+  const irlplog = async () => {
+    try {
+      console.log('Opening IRLP Log modal')
+      showIrlpLogModal.value = true
+    } catch (error) {
+      console.error('IRLP Log error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      alert(`Failed to open IRLP Log: ${errorMessage}`)
+    }
+  }
 
 const reboot = async () => {
   try {

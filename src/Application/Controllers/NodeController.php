@@ -874,7 +874,7 @@ class NodeController
         $defaultPermissions = [
             'ADMINUSER', 'AUTHUSER', 'CONNUSER', 'DISCONNUSER', 'MONUSER', 
             'LOCALMONUSER', 'PERMCONNUSER', 'RPTUSER', 'RPTSTATSUSER', 
-            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER'
+            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER'
         ];
 
         // Check if user has the specific permission
@@ -1382,5 +1382,53 @@ class NodeController
             'message' => 'Fast restart command sent successfully. Asterisk is restarting now.',
             'output' => $restartOutput
         ];
+    }
+
+    public function irlplog(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'IRLPLOGUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to view IRLP logs.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Get IRLP log file path from configuration
+            $irlpLogPath = $this->config['irlp_log'] ?? '/home/irlp/log/messages';
+
+            if (!file_exists($irlpLogPath)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'IRLP log file not found: ' . $irlpLogPath
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $fileContent = file_get_contents($irlpLogPath);
+
+            if ($fileContent === false) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Failed to read IRLP log file'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => [
+                    'file_path' => $irlpLogPath,
+                    'content' => $fileContent,
+                    'timestamp' => date('c')
+                ],
+                'message' => 'IRLP log file retrieved successfully'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve IRLP log file', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve IRLP log file: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
     }
 }
