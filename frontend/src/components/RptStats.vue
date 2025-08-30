@@ -193,7 +193,7 @@ const formatTimestamp = (timestamp) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -201,13 +201,14 @@ const formatTimestamp = (timestamp) => {
 }
 
 .modal-content {
-  background-color: var(--bg-color);
+  background-color: var(--background-color);
   border-radius: 8px;
-  width: 90%;
-  max-width: 800px;
-  max-height: 90vh;
+  width: 40%;
+  max-width: 500px;
+  max-height: 60vh;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color);
 }
 
 .modal-header {
@@ -216,7 +217,7 @@ const formatTimestamp = (timestamp) => {
   align-items: center;
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--border-color);
-  background-color: var(--header-bg);
+  background-color: var(--container-bg);
 }
 
 .modal-header h3 {
@@ -244,7 +245,7 @@ const formatTimestamp = (timestamp) => {
 
 .modal-body {
   padding: 1.5rem;
-  max-height: calc(90vh - 120px);
+  max-height: calc(60vh - 120px);
   overflow-y: auto;
 }
 

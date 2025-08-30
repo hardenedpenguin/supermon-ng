@@ -880,21 +880,22 @@ class NodeController
                 'DTMFUSER' => true,
                 'PERMUSER' => true
             ];
-            return $defaultPermissions[$permission] ?? false;
-        }
-        
-        // For now, use default permissions for all users
-        // TODO: Implement proper user-specific permission checking
-        $defaultPermissions = [
-            'CONNECTUSER' => true,
-            'DISCUSER' => true,
-            'MONUSER' => true,
-            'LMONUSER' => true,
-            'DTMFUSER' => true,
-            'RSTATUSER' => true,
-            'PERMUSER' => true
-        ];
-        return $defaultPermissions[$permission] ?? false;
+                    return $defaultPermissions[$permission] ?? false;
+    }
+    
+    // For now, use default permissions for all users
+    // TODO: Implement proper user-specific permission checking
+    $defaultPermissions = [
+        'CONNECTUSER' => true,
+        'DISCUSER' => true,
+        'MONUSER' => true,
+        'LMONUSER' => true,
+        'DTMFUSER' => true,
+        'RSTATUSER' => true,
+        'CSTATUSER' => true,
+        'PERMUSER' => true
+    ];
+    return $defaultPermissions[$permission] ?? false;
     }
 
     /**
@@ -1061,5 +1062,86 @@ class NodeController
         }
         
         return \SimpleAmiClient::command($fp, trim($commandToSend));
+    }
+
+    /**
+     * Get CPU and system statistics
+     */
+    public function cpustats(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'CSTATUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to access CPU statistics.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            $statsContent = $this->executeCpuStatsCommands();
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => [
+                    'content' => $statsContent,
+                    'timestamp' => date('c')
+                ],
+                'message' => 'CPU statistics retrieved successfully'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve CPU statistics', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve CPU statistics: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    /**
+     * Execute CPU statistics commands
+     * 
+     * Note: When moving to server, replace with:
+     * - '/usr/bin/uname -a' -> 'export TERM=vt100 && sudo /usr/bin/ssinfo - '
+     * - '/usr/bin/free -h' -> '/usr/bin/din'
+     * - '/usr/bin/uptime' -> (remove or keep)
+     */
+    private function executeCpuStatsCommands(): string
+    {
+        $commands = [
+            '/usr/bin/date',
+            '/usr/bin/uname -a',  // Server: 'export TERM=vt100 && sudo /usr/bin/ssinfo - '
+            '/usr/bin/ip a',
+            '/usr/bin/df -hT',
+            '/usr/bin/free -h',   // Server: '/usr/bin/din'
+            '/usr/bin/uptime',
+            '/usr/bin/top -b -n1'
+        ];
+
+        $content = '';
+        foreach ($commands as $command) {
+            $output = $this->executeCpuStatsCommand($command);
+            $content .= $this->formatCpuStatsOutput($command, $output);
+        }
+
+        return $content;
+    }
+
+    /**
+     * Execute a single CPU statistics command
+     */
+    private function executeCpuStatsCommand(string $command): string
+    {
+        $output = shell_exec($command . ' 2>&1');
+        return $output ?: '';
+    }
+
+    /**
+     * Format CPU statistics command output
+     */
+    private function formatCpuStatsOutput(string $command, string $output): string
+    {
+        $formatted = "Command: " . htmlspecialchars($command) . "\n";
+        $formatted .= "-----------------------------------------------------------------\n";
+        $formatted .= htmlspecialchars($output);
+        $formatted .= "\n\n";
+        return $formatted;
     }
 }

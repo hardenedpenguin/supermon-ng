@@ -220,8 +220,11 @@
         <!-- Control Panel Modal -->
         <ControlPanel v-model:isVisible="showControlPanelModal" :local-node="targetNode" />
         
-        <!-- RPT Stats Modal -->
-        <RptStats v-model:isVisible="showRptStatsModal" :node-number="targetNode" />
+                  <!-- RPT Stats Modal -->
+          <RptStats v-model:isVisible="showRptStatsModal" :node-number="targetNode" />
+          
+          <!-- CPU Stats Modal -->
+          <CpuStats v-model:isVisible="showCpuStatsModal" />
     
   </div>
 </template>
@@ -243,6 +246,7 @@ import AstLookup from '@/components/AstLookup.vue'
 import BubbleChart from '@/components/BubbleChart.vue'
 import ControlPanel from '@/components/ControlPanel.vue'
 import RptStats from '@/components/RptStats.vue'
+import CpuStats from '@/components/CpuStats.vue'
 
 
 const appStore = useAppStore()
@@ -263,6 +267,7 @@ const showAstLookupModal = ref(false)
 const showBubbleChartModal = ref(false)
 const showControlPanelModal = ref(false)
 const showRptStatsModal = ref(false)
+const showCpuStatsModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -551,6 +556,8 @@ const rptstats = async () => {
   }
 }
 
+
+
 const bubble = async () => {
   try {
     console.log('Opening Bubble Chart modal')
@@ -572,8 +579,21 @@ const extnodes = async () => {
 const controlpanel = async () => {
   try {
     console.log('Opening Control Panel modal')
-    // Set targetNode to the currently selected node before opening modal
-    targetNode.value = String(selectedNode.value)
+    console.log('selectedNode.value:', selectedNode.value)
+    console.log('selectedLocalNode.value:', selectedLocalNode.value)
+    
+    // Use selectedLocalNode if available, otherwise use selectedNode
+    if (selectedLocalNode.value) {
+      targetNode.value = String(selectedLocalNode.value)
+    } else if (selectedNode.value) {
+      targetNode.value = String(selectedNode.value)
+    } else {
+      console.error('No node selected for control panel')
+      alert('Please select a node first')
+      return
+    }
+    
+    console.log('targetNode.value set to:', targetNode.value)
     showControlPanelModal.value = true
   } catch (error) {
     console.error('Control Panel error:', error)
@@ -721,7 +741,8 @@ const openWiki = async () => {
 
 const cpustats = async () => {
   try {
-    console.log('CPU Status')
+    console.log('Opening CPU Stats modal')
+    showCpuStatsModal.value = true
   } catch (error) {
     console.error('CPU Status error:', error)
   }

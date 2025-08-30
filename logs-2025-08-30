@@ -7242,3 +7242,1277 @@
 [2025-08-30T02:06:13.056513+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"a855889"}
 [2025-08-30T02:06:13.056716+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"a855889"}
 [2025-08-30T02:06:13.344325+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":288.41,"ip":"::1"} {"uid":"a855889"}
+[2025-08-30T02:06:18.059876+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"fedabf4"}
+[2025-08-30T02:06:18.060292+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"fedabf4"}
+[2025-08-30T02:06:18.231476+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":172.83,"ip":"::1"} {"uid":"fedabf4"}
+[2025-08-30T02:06:23.059010+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"529fdd1"}
+[2025-08-30T02:06:23.059241+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"529fdd1"}
+[2025-08-30T02:06:23.271078+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":212.74,"ip":"::1"} {"uid":"529fdd1"}
+[2025-08-30T02:06:28.059874+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ad30ab9"}
+[2025-08-30T02:06:28.060137+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ad30ab9"}
+[2025-08-30T02:06:28.273575+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":214.39,"ip":"::1"} {"uid":"ad30ab9"}
+[2025-08-30T02:06:33.061985+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"8ec32eb"}
+[2025-08-30T02:06:33.062397+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"8ec32eb"}
+[2025-08-30T02:06:33.470828+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":410.12,"ip":"::1"} {"uid":"8ec32eb"}
+[2025-08-30T02:06:38.059429+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"52abefb"}
+[2025-08-30T02:06:38.059666+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"52abefb"}
+[2025-08-30T02:06:38.268172+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":209.32,"ip":"::1"} {"uid":"52abefb"}
+[2025-08-30T02:06:38.509725+00:00] supermon-ng.INFO: Loading node config {"user":"anarchy","localNode":"546051","iniFile":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/allmon.ini","fileExists":true} {"uid":"5101dac"}
+[2025-08-30T02:06:38.540815+00:00] supermon-ng.INFO: HTTP Request {"method":"POST","uri":"/api/nodes/rptstats","status_code":200,"duration_ms":59.58,"ip":"::1"} {"uid":"5101dac"}
+[2025-08-30T02:06:43.057557+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"3d7ea42"}
+[2025-08-30T02:06:43.057788+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"3d7ea42"}
+[2025-08-30T02:06:43.206594+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":149.92,"ip":"::1"} {"uid":"3d7ea42"}
+[2025-08-30T02:06:44.044775+00:00] supermon-ng.INFO: HTTP Request {"method":"POST","uri":"/api/nodes/rptstats","status_code":200,"duration_ms":34.54,"ip":"::1"} {"uid":"d87747c"}
+[2025-08-30T02:06:48.081771+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"520a2be"}
+[2025-08-30T02:06:48.083028+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"520a2be"}
+[2025-08-30T02:06:48.276555+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":199.37,"ip":"::1"} {"uid":"520a2be"}
+[2025-08-30T02:06:53.447813+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"32cf605"}
+[2025-08-30T02:06:53.448778+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"32cf605"}
+[2025-08-30T02:06:53.642854+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":197.56,"ip":"::1"} {"uid":"32cf605"}
+[2025-08-30T02:06:58.075861+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"1755ad1"}
+[2025-08-30T02:06:58.076623+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"1755ad1"}
+[2025-08-30T02:06:58.238356+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":164.61,"ip":"::1"} {"uid":"1755ad1"}
+[2025-08-30T02:07:03.078574+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"9432977"}
+[2025-08-30T02:07:03.079141+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"9432977"}
+[2025-08-30T02:07:03.252453+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":175.92,"ip":"::1"} {"uid":"9432977"}
+[2025-08-30T02:07:08.073536+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"54e7c45"}
+[2025-08-30T02:07:08.074346+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"54e7c45"}
+[2025-08-30T02:07:08.239492+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":168.01,"ip":"::1"} {"uid":"54e7c45"}
+[2025-08-30T02:07:13.073013+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"bf365a4"}
+[2025-08-30T02:07:13.073770+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"bf365a4"}
+[2025-08-30T02:07:13.261471+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":190.48,"ip":"::1"} {"uid":"bf365a4"}
+[2025-08-30T02:07:18.077949+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"f21acf0"}
+[2025-08-30T02:07:18.078825+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f21acf0"}
+[2025-08-30T02:07:18.274176+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":198.39,"ip":"::1"} {"uid":"f21acf0"}
+[2025-08-30T02:07:23.073774+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"2a6981c"}
+[2025-08-30T02:07:23.074644+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"2a6981c"}
+[2025-08-30T02:07:23.240065+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":168.32,"ip":"::1"} {"uid":"2a6981c"}
+[2025-08-30T02:07:28.058831+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7027b8f"}
+[2025-08-30T02:07:28.059159+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7027b8f"}
+[2025-08-30T02:07:28.253287+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":195.52,"ip":"::1"} {"uid":"7027b8f"}
+[2025-08-30T02:07:33.074013+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"2d48687"}
+[2025-08-30T02:07:33.074898+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"2d48687"}
+[2025-08-30T02:07:33.344909+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":272.92,"ip":"::1"} {"uid":"2d48687"}
+[2025-08-30T02:07:38.067612+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"db06d26"}
+[2025-08-30T02:07:38.067863+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"db06d26"}
+[2025-08-30T02:07:38.222691+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":155.74,"ip":"::1"} {"uid":"db06d26"}
+[2025-08-30T02:07:43.057685+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c890444"}
+[2025-08-30T02:07:43.057960+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c890444"}
+[2025-08-30T02:07:43.240825+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":183.82,"ip":"::1"} {"uid":"c890444"}
+[2025-08-30T02:07:48.071581+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"2ef961f"}
+[2025-08-30T02:07:48.072551+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"2ef961f"}
+[2025-08-30T02:07:48.233775+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":164.3,"ip":"::1"} {"uid":"2ef961f"}
+[2025-08-30T02:07:53.063772+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"78c7c5b"}
+[2025-08-30T02:07:53.064064+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"78c7c5b"}
+[2025-08-30T02:07:53.217667+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":154.6,"ip":"::1"} {"uid":"78c7c5b"}
+[2025-08-30T02:07:58.073095+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"3fe4677"}
+[2025-08-30T02:07:58.074200+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"3fe4677"}
+[2025-08-30T02:07:58.267948+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":198.24,"ip":"::1"} {"uid":"3fe4677"}
+[2025-08-30T02:08:03.072127+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"99b8aaf"}
+[2025-08-30T02:08:03.072916+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"99b8aaf"}
+[2025-08-30T02:08:03.255925+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":185.64,"ip":"::1"} {"uid":"99b8aaf"}
+[2025-08-30T02:08:08.064140+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"af5984b"}
+[2025-08-30T02:08:08.064414+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"af5984b"}
+[2025-08-30T02:08:08.273236+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":209.81,"ip":"::1"} {"uid":"af5984b"}
+[2025-08-30T02:08:13.059615+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"9411f5d"}
+[2025-08-30T02:08:13.059956+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"9411f5d"}
+[2025-08-30T02:08:13.492539+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":434.03,"ip":"::1"} {"uid":"9411f5d"}
+[2025-08-30T02:08:18.062933+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"89224dc"}
+[2025-08-30T02:08:18.063343+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"89224dc"}
+[2025-08-30T02:08:18.218065+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":156.35,"ip":"::1"} {"uid":"89224dc"}
+[2025-08-30T02:08:23.074184+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7b1dd30"}
+[2025-08-30T02:08:23.075056+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7b1dd30"}
+[2025-08-30T02:08:23.252790+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":181.47,"ip":"::1"} {"uid":"7b1dd30"}
+[2025-08-30T02:08:28.057810+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"092623a"}
+[2025-08-30T02:08:28.058267+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"092623a"}
+[2025-08-30T02:08:28.248469+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":191.57,"ip":"::1"} {"uid":"092623a"}
+[2025-08-30T02:08:33.081221+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"3a6f6ba"}
+[2025-08-30T02:08:33.082162+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"3a6f6ba"}
+[2025-08-30T02:08:33.291362+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":214.27,"ip":"::1"} {"uid":"3a6f6ba"}
+[2025-08-30T02:08:38.072641+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"08bb3ff"}
+[2025-08-30T02:08:38.073396+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"08bb3ff"}
+[2025-08-30T02:08:38.253871+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":183.25,"ip":"::1"} {"uid":"08bb3ff"}
+[2025-08-30T02:08:43.065942+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ed8217f"}
+[2025-08-30T02:08:43.066233+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ed8217f"}
+[2025-08-30T02:08:43.247101+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":182.06,"ip":"::1"} {"uid":"ed8217f"}
+[2025-08-30T02:08:48.058191+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"044d295"}
+[2025-08-30T02:08:48.058454+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"044d295"}
+[2025-08-30T02:08:48.212641+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":155.17,"ip":"::1"} {"uid":"044d295"}
+[2025-08-30T02:08:53.072794+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ce1eda6"}
+[2025-08-30T02:08:53.073754+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ce1eda6"}
+[2025-08-30T02:08:53.239646+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":169.36,"ip":"::1"} {"uid":"ce1eda6"}
+[2025-08-30T02:08:58.076533+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"b218c8e"}
+[2025-08-30T02:08:58.077447+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"b218c8e"}
+[2025-08-30T02:08:58.332060+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":257.72,"ip":"::1"} {"uid":"b218c8e"}
+[2025-08-30T02:09:03.076158+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"066285a"}
+[2025-08-30T02:09:03.077133+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"066285a"}
+[2025-08-30T02:09:03.264727+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":191.98,"ip":"::1"} {"uid":"066285a"}
+[2025-08-30T02:09:08.081286+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"9cc5c25"}
+[2025-08-30T02:09:08.082003+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"9cc5c25"}
+[2025-08-30T02:09:08.274626+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":196.89,"ip":"::1"} {"uid":"9cc5c25"}
+[2025-08-30T02:09:13.074371+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c49d11c"}
+[2025-08-30T02:09:13.074942+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c49d11c"}
+[2025-08-30T02:09:13.252178+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":179.77,"ip":"::1"} {"uid":"c49d11c"}
+[2025-08-30T02:09:18.060688+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"cbeeda4"}
+[2025-08-30T02:09:18.061072+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"cbeeda4"}
+[2025-08-30T02:09:18.240190+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":180.73,"ip":"::1"} {"uid":"cbeeda4"}
+[2025-08-30T02:09:23.058602+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"52678f0"}
+[2025-08-30T02:09:23.058895+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"52678f0"}
+[2025-08-30T02:09:23.231637+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":174.03,"ip":"::1"} {"uid":"52678f0"}
+[2025-08-30T02:09:28.067427+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"868dbba"}
+[2025-08-30T02:09:28.067745+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"868dbba"}
+[2025-08-30T02:09:28.251920+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":185.36,"ip":"::1"} {"uid":"868dbba"}
+[2025-08-30T02:09:33.072271+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"585a5ac"}
+[2025-08-30T02:09:33.072737+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"585a5ac"}
+[2025-08-30T02:09:33.239231+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":168.64,"ip":"::1"} {"uid":"585a5ac"}
+[2025-08-30T02:09:38.061598+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"f8af7d0"}
+[2025-08-30T02:09:38.061989+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f8af7d0"}
+[2025-08-30T02:09:38.272058+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":211.86,"ip":"::1"} {"uid":"f8af7d0"}
+[2025-08-30T02:09:43.073893+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"dc9966b"}
+[2025-08-30T02:09:43.074445+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"dc9966b"}
+[2025-08-30T02:09:43.266412+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":193.91,"ip":"::1"} {"uid":"dc9966b"}
+[2025-08-30T02:09:48.058359+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"dca0495"}
+[2025-08-30T02:09:48.058634+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"dca0495"}
+[2025-08-30T02:09:48.226452+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":169.07,"ip":"::1"} {"uid":"dca0495"}
+[2025-08-30T02:09:53.058424+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"cd0b35f"}
+[2025-08-30T02:09:53.058744+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"cd0b35f"}
+[2025-08-30T02:09:53.235164+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":177.57,"ip":"::1"} {"uid":"cd0b35f"}
+[2025-08-30T02:09:58.064350+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"63bad35"}
+[2025-08-30T02:09:58.064768+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"63bad35"}
+[2025-08-30T02:09:58.262876+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":199.87,"ip":"::1"} {"uid":"63bad35"}
+[2025-08-30T02:10:03.078666+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"d642344"}
+[2025-08-30T02:10:03.079064+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"d642344"}
+[2025-08-30T02:10:03.423963+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":354.7,"ip":"::1"} {"uid":"d642344"}
+[2025-08-30T02:10:08.072209+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"51fbce7"}
+[2025-08-30T02:10:08.072600+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"51fbce7"}
+[2025-08-30T02:10:08.261777+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":190.6,"ip":"::1"} {"uid":"51fbce7"}
+[2025-08-30T02:10:13.073555+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"eb8d6cd"}
+[2025-08-30T02:10:13.074027+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"eb8d6cd"}
+[2025-08-30T02:10:13.250158+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":177.65,"ip":"::1"} {"uid":"eb8d6cd"}
+[2025-08-30T02:10:18.071456+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"8e69d5f"}
+[2025-08-30T02:10:18.072136+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"8e69d5f"}
+[2025-08-30T02:10:18.241287+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":172.71,"ip":"::1"} {"uid":"8e69d5f"}
+[2025-08-30T02:10:23.079436+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"09aab36"}
+[2025-08-30T02:10:23.079905+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"09aab36"}
+[2025-08-30T02:10:23.316968+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":239.28,"ip":"::1"} {"uid":"09aab36"}
+[2025-08-30T02:10:28.067823+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"a240f64"}
+[2025-08-30T02:10:28.068273+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"a240f64"}
+[2025-08-30T02:10:28.265341+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":198.93,"ip":"::1"} {"uid":"a240f64"}
+[2025-08-30T02:10:33.061033+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"1921581"}
+[2025-08-30T02:10:33.061401+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"1921581"}
+[2025-08-30T02:10:33.251138+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":191.49,"ip":"::1"} {"uid":"1921581"}
+[2025-08-30T02:10:38.058535+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"53d6ca6"}
+[2025-08-30T02:10:38.058871+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"53d6ca6"}
+[2025-08-30T02:10:38.247873+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":190.52,"ip":"::1"} {"uid":"53d6ca6"}
+[2025-08-30T02:10:43.070650+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"02bec6a"}
+[2025-08-30T02:10:43.071035+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"02bec6a"}
+[2025-08-30T02:10:43.267677+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":198.11,"ip":"::1"} {"uid":"02bec6a"}
+[2025-08-30T02:10:48.057575+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e090bba"}
+[2025-08-30T02:10:48.057829+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"e090bba"}
+[2025-08-30T02:10:48.246238+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":189.59,"ip":"::1"} {"uid":"e090bba"}
+[2025-08-30T02:10:53.434677+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"cc7f2e9"}
+[2025-08-30T02:10:53.434933+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"cc7f2e9"}
+[2025-08-30T02:10:53.649477+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":215.65,"ip":"::1"} {"uid":"cc7f2e9"}
+[2025-08-30T02:10:58.438436+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"83b2234"}
+[2025-08-30T02:10:58.439635+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"83b2234"}
+[2025-08-30T02:10:58.745469+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":309.36,"ip":"::1"} {"uid":"83b2234"}
+[2025-08-30T02:11:03.465794+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"17d773f"}
+[2025-08-30T02:11:03.466082+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"17d773f"}
+[2025-08-30T02:11:03.683080+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":218.11,"ip":"::1"} {"uid":"17d773f"}
+[2025-08-30T02:11:08.447556+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"27ec9e1"}
+[2025-08-30T02:11:08.448117+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"27ec9e1"}
+[2025-08-30T02:11:08.653004+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":207.28,"ip":"::1"} {"uid":"27ec9e1"}
+[2025-08-30T02:11:13.445405+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"cdf7336"}
+[2025-08-30T02:11:13.445780+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"cdf7336"}
+[2025-08-30T02:11:13.706715+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":262.54,"ip":"::1"} {"uid":"cdf7336"}
+[2025-08-30T02:11:18.438397+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"640ee93"}
+[2025-08-30T02:11:18.438830+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"640ee93"}
+[2025-08-30T02:11:18.614353+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":177.17,"ip":"::1"} {"uid":"640ee93"}
+[2025-08-30T02:11:23.428479+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ef15e72"}
+[2025-08-30T02:11:23.428736+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ef15e72"}
+[2025-08-30T02:11:23.603852+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":175.91,"ip":"::1"} {"uid":"ef15e72"}
+[2025-08-30T02:11:28.428608+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"6637793"}
+[2025-08-30T02:11:28.428823+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"6637793"}
+[2025-08-30T02:11:28.586717+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":158.66,"ip":"::1"} {"uid":"6637793"}
+[2025-08-30T02:11:33.444942+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"1598e82"}
+[2025-08-30T02:11:33.445694+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"1598e82"}
+[2025-08-30T02:11:33.663449+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":220.59,"ip":"::1"} {"uid":"1598e82"}
+[2025-08-30T02:11:38.430217+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"f90afd6"}
+[2025-08-30T02:11:38.430513+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f90afd6"}
+[2025-08-30T02:11:38.617553+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":188.19,"ip":"::1"} {"uid":"f90afd6"}
+[2025-08-30T02:11:43.430691+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"fd10aaa"}
+[2025-08-30T02:11:43.431050+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"fd10aaa"}
+[2025-08-30T02:11:43.609138+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":179.28,"ip":"::1"} {"uid":"fd10aaa"}
+[2025-08-30T02:11:48.454824+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c275298"}
+[2025-08-30T02:11:48.455193+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c275298"}
+[2025-08-30T02:11:48.687498+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":233.89,"ip":"::1"} {"uid":"c275298"}
+[2025-08-30T02:12:02.437574+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7a3bc4a"}
+[2025-08-30T02:12:02.438064+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7a3bc4a"}
+[2025-08-30T02:12:02.615870+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":179.71,"ip":"::1"} {"uid":"7a3bc4a"}
+[2025-08-30T02:13:02.451247+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"de1b07e"}
+[2025-08-30T02:13:02.451658+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"de1b07e"}
+[2025-08-30T02:13:02.608229+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":159.03,"ip":"::1"} {"uid":"de1b07e"}
+[2025-08-30T02:14:02.431315+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"a5cc7da"}
+[2025-08-30T02:14:02.431590+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"a5cc7da"}
+[2025-08-30T02:14:02.618446+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":187.98,"ip":"::1"} {"uid":"a5cc7da"}
+[2025-08-30T02:14:35.840638+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"710d1db"}
+[2025-08-30T02:14:35.841059+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"710d1db"}
+[2025-08-30T02:14:36.029686+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":190.05,"ip":"::1"} {"uid":"710d1db"}
+[2025-08-30T02:14:38.064645+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"831915b"}
+[2025-08-30T02:14:38.064997+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"831915b"}
+[2025-08-30T02:14:38.524043+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":460.69,"ip":"::1"} {"uid":"831915b"}
+[2025-08-30T02:14:41.289966+00:00] supermon-ng.INFO: Loading node config {"user":"anarchy","localNode":"546051","iniFile":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/allmon.ini","fileExists":true} {"uid":"e5eed75"}
+[2025-08-30T02:14:41.306373+00:00] supermon-ng.INFO: HTTP Request {"method":"POST","uri":"/api/nodes/rptstats","status_code":200,"duration_ms":48.75,"ip":"::1"} {"uid":"e5eed75"}
+[2025-08-30T02:14:43.076953+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"f35e624"}
+[2025-08-30T02:14:43.077673+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f35e624"}
+[2025-08-30T02:14:43.291757+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":217.75,"ip":"::1"} {"uid":"f35e624"}
+[2025-08-30T02:14:48.057499+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e6ba567"}
+[2025-08-30T02:14:48.057786+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"e6ba567"}
+[2025-08-30T02:14:48.262055+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":205.13,"ip":"::1"} {"uid":"e6ba567"}
+[2025-08-30T02:14:53.071867+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c77e98c"}
+[2025-08-30T02:14:53.072522+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c77e98c"}
+[2025-08-30T02:14:53.290499+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":220.5,"ip":"::1"} {"uid":"c77e98c"}
+[2025-08-30T02:14:58.056975+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"d4873b6"}
+[2025-08-30T02:14:58.057176+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"d4873b6"}
+[2025-08-30T02:14:58.276501+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":220.04,"ip":"::1"} {"uid":"d4873b6"}
+[2025-08-30T02:15:03.072295+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"a217d0f"}
+[2025-08-30T02:15:03.072713+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"a217d0f"}
+[2025-08-30T02:15:03.315303+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":244.35,"ip":"::1"} {"uid":"a217d0f"}
+[2025-08-30T02:15:08.057749+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"50bab1e"}
+[2025-08-30T02:15:08.058038+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"50bab1e"}
+[2025-08-30T02:15:08.211125+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":154.05,"ip":"::1"} {"uid":"50bab1e"}
+[2025-08-30T02:15:13.057107+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"0a3d482"}
+[2025-08-30T02:15:13.057317+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"0a3d482"}
+[2025-08-30T02:15:13.234430+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":177.9,"ip":"::1"} {"uid":"0a3d482"}
+[2025-08-30T02:15:18.059290+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"6b73c9c"}
+[2025-08-30T02:15:18.059597+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"6b73c9c"}
+[2025-08-30T02:15:18.223843+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":165.59,"ip":"::1"} {"uid":"6b73c9c"}
+[2025-08-30T02:15:23.057888+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"6c99f3c"}
+[2025-08-30T02:15:23.058163+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"6c99f3c"}
+[2025-08-30T02:15:23.220999+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":163.87,"ip":"::1"} {"uid":"6c99f3c"}
+[2025-08-30T02:15:28.057530+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"2ca6895"}
+[2025-08-30T02:15:28.057740+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"2ca6895"}
+[2025-08-30T02:15:28.229516+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":172.51,"ip":"::1"} {"uid":"2ca6895"}
+[2025-08-30T02:15:33.058056+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"d72bb18"}
+[2025-08-30T02:15:33.058299+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"d72bb18"}
+[2025-08-30T02:15:33.230580+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":173.37,"ip":"::1"} {"uid":"d72bb18"}
+[2025-08-30T02:15:38.077195+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c7403ca"}
+[2025-08-30T02:15:38.078176+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c7403ca"}
+[2025-08-30T02:15:38.393672+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":319.9,"ip":"::1"} {"uid":"c7403ca"}
+[2025-08-30T02:15:43.074514+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"8802110"}
+[2025-08-30T02:15:43.074975+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"8802110"}
+[2025-08-30T02:15:43.284342+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":211.71,"ip":"::1"} {"uid":"8802110"}
+[2025-08-30T02:15:48.062508+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"0f9834b"}
+[2025-08-30T02:15:48.062816+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"0f9834b"}
+[2025-08-30T02:15:48.271209+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":209.87,"ip":"::1"} {"uid":"0f9834b"}
+[2025-08-30T02:15:53.056494+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"b6f2e6b"}
+[2025-08-30T02:15:53.056690+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"b6f2e6b"}
+[2025-08-30T02:15:53.218751+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":162.76,"ip":"::1"} {"uid":"b6f2e6b"}
+[2025-08-30T02:15:58.057435+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7c19767"}
+[2025-08-30T02:15:58.057670+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7c19767"}
+[2025-08-30T02:15:58.208604+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":151.99,"ip":"::1"} {"uid":"7c19767"}
+[2025-08-30T02:16:03.058410+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7518d85"}
+[2025-08-30T02:16:03.058710+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7518d85"}
+[2025-08-30T02:16:03.217229+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":159.68,"ip":"::1"} {"uid":"7518d85"}
+[2025-08-30T02:16:08.063016+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c7763d4"}
+[2025-08-30T02:16:08.063592+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c7763d4"}
+[2025-08-30T02:16:08.226218+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":164.65,"ip":"::1"} {"uid":"c7763d4"}
+[2025-08-30T02:16:13.059495+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"95ab3f0"}
+[2025-08-30T02:16:13.059824+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"95ab3f0"}
+[2025-08-30T02:16:13.250392+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":191.87,"ip":"::1"} {"uid":"95ab3f0"}
+[2025-08-30T02:16:16.301400+00:00] supermon-ng.INFO: Loading node config {"user":"anarchy","localNode":"546051","iniFile":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/allmon.ini","fileExists":true} {"uid":"c5bfb9d"}
+[2025-08-30T02:16:16.318596+00:00] supermon-ng.INFO: HTTP Request {"method":"POST","uri":"/api/nodes/rptstats","status_code":200,"duration_ms":31.39,"ip":"::1"} {"uid":"c5bfb9d"}
+[2025-08-30T02:16:18.060948+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7814ceb"}
+[2025-08-30T02:16:18.061300+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7814ceb"}
+[2025-08-30T02:16:18.230442+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":170.63,"ip":"::1"} {"uid":"7814ceb"}
+[2025-08-30T02:16:23.074857+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"4e404db"}
+[2025-08-30T02:16:23.075568+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"4e404db"}
+[2025-08-30T02:16:23.245297+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":172.36,"ip":"::1"} {"uid":"4e404db"}
+[2025-08-30T02:16:28.075070+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"9001581"}
+[2025-08-30T02:16:28.075749+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"9001581"}
+[2025-08-30T02:16:28.256766+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":184.47,"ip":"::1"} {"uid":"9001581"}
+[2025-08-30T02:16:33.071925+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"4faf40c"}
+[2025-08-30T02:16:33.072835+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"4faf40c"}
+[2025-08-30T02:16:33.266715+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":196.86,"ip":"::1"} {"uid":"4faf40c"}
+[2025-08-30T02:16:38.071458+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"80189f6"}
+[2025-08-30T02:16:38.072207+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"80189f6"}
+[2025-08-30T02:16:38.278076+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":209.5,"ip":"::1"} {"uid":"80189f6"}
+[2025-08-30T02:16:43.067959+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"edcee94"}
+[2025-08-30T02:16:43.068612+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"edcee94"}
+[2025-08-30T02:16:43.247663+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":181.47,"ip":"::1"} {"uid":"edcee94"}
+[2025-08-30T02:16:48.068620+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"5c3ddee"}
+[2025-08-30T02:16:48.069280+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"5c3ddee"}
+[2025-08-30T02:16:48.244209+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":177.36,"ip":"::1"} {"uid":"5c3ddee"}
+[2025-08-30T02:16:53.069184+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"8b2afff"}
+[2025-08-30T02:16:53.069845+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"8b2afff"}
+[2025-08-30T02:16:53.296278+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":228.87,"ip":"::1"} {"uid":"8b2afff"}
+[2025-08-30T02:16:58.066770+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ee78526"}
+[2025-08-30T02:16:58.067216+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ee78526"}
+[2025-08-30T02:16:58.240955+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":175.41,"ip":"::1"} {"uid":"ee78526"}
+[2025-08-30T02:17:03.068555+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7c6f5f7"}
+[2025-08-30T02:17:03.069244+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7c6f5f7"}
+[2025-08-30T02:17:03.241728+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":174.94,"ip":"::1"} {"uid":"7c6f5f7"}
+[2025-08-30T02:17:08.071725+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"05d8adb"}
+[2025-08-30T02:17:08.072630+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"05d8adb"}
+[2025-08-30T02:17:08.265987+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":196.87,"ip":"::1"} {"uid":"05d8adb"}
+[2025-08-30T02:17:13.072848+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"6d9fb16"}
+[2025-08-30T02:17:13.073414+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"6d9fb16"}
+[2025-08-30T02:17:13.242139+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":171.44,"ip":"::1"} {"uid":"6d9fb16"}
+[2025-08-30T02:17:18.071943+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"4f9e869"}
+[2025-08-30T02:17:18.072762+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"4f9e869"}
+[2025-08-30T02:17:18.263371+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":193.75,"ip":"::1"} {"uid":"4f9e869"}
+[2025-08-30T02:17:23.073222+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"d29bbf0"}
+[2025-08-30T02:17:23.073961+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"d29bbf0"}
+[2025-08-30T02:17:23.269673+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":198.46,"ip":"::1"} {"uid":"d29bbf0"}
+[2025-08-30T02:17:28.070339+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"f5507d8"}
+[2025-08-30T02:17:28.071068+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f5507d8"}
+[2025-08-30T02:17:28.266797+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":198.49,"ip":"::1"} {"uid":"f5507d8"}
+[2025-08-30T02:17:33.081998+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"3d077cc"}
+[2025-08-30T02:17:33.083658+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"3d077cc"}
+[2025-08-30T02:17:33.408048+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":327.27,"ip":"::1"} {"uid":"3d077cc"}
+[2025-08-30T02:17:38.069946+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"45b7ca0"}
+[2025-08-30T02:17:38.070655+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"45b7ca0"}
+[2025-08-30T02:17:38.295917+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":227.77,"ip":"::1"} {"uid":"45b7ca0"}
+[2025-08-30T02:17:43.055815+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"309cc0c"}
+[2025-08-30T02:17:43.056030+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"309cc0c"}
+[2025-08-30T02:17:43.210956+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":155.65,"ip":"::1"} {"uid":"309cc0c"}
+[2025-08-30T02:17:48.056307+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"0753342"}
+[2025-08-30T02:17:48.056508+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"0753342"}
+[2025-08-30T02:17:48.231500+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":175.73,"ip":"::1"} {"uid":"0753342"}
+[2025-08-30T02:17:53.056224+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"65a100b"}
+[2025-08-30T02:17:53.056424+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"65a100b"}
+[2025-08-30T02:17:53.216512+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":160.81,"ip":"::1"} {"uid":"65a100b"}
+[2025-08-30T02:17:58.056140+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"bd2b1ca"}
+[2025-08-30T02:17:58.056339+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"bd2b1ca"}
+[2025-08-30T02:17:58.216035+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":160.41,"ip":"::1"} {"uid":"bd2b1ca"}
+[2025-08-30T02:18:03.057758+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"972c82f"}
+[2025-08-30T02:18:03.058002+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"972c82f"}
+[2025-08-30T02:18:03.368977+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":312.06,"ip":"::1"} {"uid":"972c82f"}
+[2025-08-30T02:18:08.065966+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"dd42247"}
+[2025-08-30T02:18:08.066677+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"dd42247"}
+[2025-08-30T02:18:08.266370+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":202.03,"ip":"::1"} {"uid":"dd42247"}
+[2025-08-30T02:18:13.055577+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"f37a3ef"}
+[2025-08-30T02:18:13.055755+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f37a3ef"}
+[2025-08-30T02:18:13.230412+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":175.29,"ip":"::1"} {"uid":"f37a3ef"}
+[2025-08-30T02:18:18.055584+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7e9fa81"}
+[2025-08-30T02:18:18.055774+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7e9fa81"}
+[2025-08-30T02:18:18.204392+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":149.3,"ip":"::1"} {"uid":"7e9fa81"}
+[2025-08-30T02:18:23.057443+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"999a052"}
+[2025-08-30T02:18:23.057709+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"999a052"}
+[2025-08-30T02:18:23.234908+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":178.36,"ip":"::1"} {"uid":"999a052"}
+[2025-08-30T02:18:28.067100+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"05d33be"}
+[2025-08-30T02:18:28.067747+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"05d33be"}
+[2025-08-30T02:18:28.275437+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":210.13,"ip":"::1"} {"uid":"05d33be"}
+[2025-08-30T02:18:33.056051+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"158ba9c"}
+[2025-08-30T02:18:33.056249+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"158ba9c"}
+[2025-08-30T02:18:33.198037+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":142.51,"ip":"::1"} {"uid":"158ba9c"}
+[2025-08-30T02:18:38.056364+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"b58c06f"}
+[2025-08-30T02:18:38.056575+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"b58c06f"}
+[2025-08-30T02:18:38.258968+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":203.06,"ip":"::1"} {"uid":"b58c06f"}
+[2025-08-30T02:18:43.057272+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"b1231ea"}
+[2025-08-30T02:18:43.057477+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"b1231ea"}
+[2025-08-30T02:18:43.206127+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":149.61,"ip":"::1"} {"uid":"b1231ea"}
+[2025-08-30T02:18:48.055769+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"bef40dd"}
+[2025-08-30T02:18:48.055951+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"bef40dd"}
+[2025-08-30T02:18:48.213212+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":157.91,"ip":"::1"} {"uid":"bef40dd"}
+[2025-08-30T02:18:53.067831+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"460a1e3"}
+[2025-08-30T02:18:53.068584+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"460a1e3"}
+[2025-08-30T02:18:53.252851+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":186.83,"ip":"::1"} {"uid":"460a1e3"}
+[2025-08-30T02:18:58.057981+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"61854b3"}
+[2025-08-30T02:18:58.058254+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"61854b3"}
+[2025-08-30T02:18:58.244519+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":187.21,"ip":"::1"} {"uid":"61854b3"}
+[2025-08-30T02:19:03.058465+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"0813a76"}
+[2025-08-30T02:19:03.058663+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"0813a76"}
+[2025-08-30T02:19:03.256030+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":198.14,"ip":"::1"} {"uid":"0813a76"}
+[2025-08-30T02:19:04.872074+00:00] supermon-ng.INFO: Loading node config {"user":"anarchy","localNode":"546051","iniFile":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/allmon.ini","fileExists":true} {"uid":"9c5062b"}
+[2025-08-30T02:19:04.889134+00:00] supermon-ng.INFO: HTTP Request {"method":"POST","uri":"/api/nodes/rptstats","status_code":200,"duration_ms":32.51,"ip":"::1"} {"uid":"9c5062b"}
+[2025-08-30T02:19:08.056938+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7865e71"}
+[2025-08-30T02:19:08.057175+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7865e71"}
+[2025-08-30T02:19:08.241742+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":185.43,"ip":"::1"} {"uid":"7865e71"}
+[2025-08-30T02:19:13.058038+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"3f52407"}
+[2025-08-30T02:19:13.058365+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"3f52407"}
+[2025-08-30T02:19:13.248147+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":190.99,"ip":"::1"} {"uid":"3f52407"}
+[2025-08-30T02:19:18.056027+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e121f6b"}
+[2025-08-30T02:19:18.056237+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"e121f6b"}
+[2025-08-30T02:19:18.232154+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":176.69,"ip":"::1"} {"uid":"e121f6b"}
+[2025-08-30T02:19:23.079053+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c6fa803"}
+[2025-08-30T02:19:23.079684+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c6fa803"}
+[2025-08-30T02:19:23.251932+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":175.61,"ip":"::1"} {"uid":"c6fa803"}
+[2025-08-30T02:19:28.057166+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"d016e3c"}
+[2025-08-30T02:19:28.057418+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"d016e3c"}
+[2025-08-30T02:19:28.237196+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":180.69,"ip":"::1"} {"uid":"d016e3c"}
+[2025-08-30T02:19:33.056172+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c3f5724"}
+[2025-08-30T02:19:33.056388+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c3f5724"}
+[2025-08-30T02:19:33.523604+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":467.97,"ip":"::1"} {"uid":"c3f5724"}
+[2025-08-30T02:19:38.066151+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c74c22e"}
+[2025-08-30T02:19:38.066562+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c74c22e"}
+[2025-08-30T02:19:38.233986+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":169.34,"ip":"::1"} {"uid":"c74c22e"}
+[2025-08-30T02:19:43.076640+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"d82b651"}
+[2025-08-30T02:19:43.076948+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"d82b651"}
+[2025-08-30T02:19:43.291260+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":215.59,"ip":"::1"} {"uid":"d82b651"}
+[2025-08-30T02:19:48.068086+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"2ada999"}
+[2025-08-30T02:19:48.068561+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"2ada999"}
+[2025-08-30T02:19:48.289294+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":222.4,"ip":"::1"} {"uid":"2ada999"}
+[2025-08-30T02:19:53.068952+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"9b6446e"}
+[2025-08-30T02:19:53.069602+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"9b6446e"}
+[2025-08-30T02:19:53.273805+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":206.84,"ip":"::1"} {"uid":"9b6446e"}
+[2025-08-30T02:19:58.061750+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"0af1096"}
+[2025-08-30T02:19:58.062169+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"0af1096"}
+[2025-08-30T02:19:58.245124+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":184.43,"ip":"::1"} {"uid":"0af1096"}
+[2025-08-30T02:20:03.079795+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ce3ce90"}
+[2025-08-30T02:20:03.080113+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ce3ce90"}
+[2025-08-30T02:20:03.325349+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":246.55,"ip":"::1"} {"uid":"ce3ce90"}
+[2025-08-30T02:20:08.072444+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"0818459"}
+[2025-08-30T02:20:08.073257+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"0818459"}
+[2025-08-30T02:20:08.284200+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":214.36,"ip":"::1"} {"uid":"0818459"}
+[2025-08-30T02:20:13.060922+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"71cbf1d"}
+[2025-08-30T02:20:13.061164+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"71cbf1d"}
+[2025-08-30T02:20:13.277082+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":216.86,"ip":"::1"} {"uid":"71cbf1d"}
+[2025-08-30T02:20:18.072096+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"d1d992f"}
+[2025-08-30T02:20:18.072622+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"d1d992f"}
+[2025-08-30T02:20:18.249514+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":179.02,"ip":"::1"} {"uid":"d1d992f"}
+[2025-08-30T02:20:23.072459+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"a00f3da"}
+[2025-08-30T02:20:23.072942+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"a00f3da"}
+[2025-08-30T02:20:23.274978+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":204.39,"ip":"::1"} {"uid":"a00f3da"}
+[2025-08-30T02:20:28.071737+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"289bf1b"}
+[2025-08-30T02:20:28.072233+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"289bf1b"}
+[2025-08-30T02:20:28.243419+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":173.0,"ip":"::1"} {"uid":"289bf1b"}
+[2025-08-30T02:20:33.056986+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"6fc6bbf"}
+[2025-08-30T02:20:33.057217+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"6fc6bbf"}
+[2025-08-30T02:20:33.247649+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":191.31,"ip":"::1"} {"uid":"6fc6bbf"}
+[2025-08-30T02:20:38.058629+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"6d74de6"}
+[2025-08-30T02:20:38.058923+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"6d74de6"}
+[2025-08-30T02:20:38.239384+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":181.56,"ip":"::1"} {"uid":"6d74de6"}
+[2025-08-30T02:20:43.060880+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"6a6495c"}
+[2025-08-30T02:20:43.061175+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"6a6495c"}
+[2025-08-30T02:20:43.278611+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":218.39,"ip":"::1"} {"uid":"6a6495c"}
+[2025-08-30T02:20:46.962018+00:00] supermon-ng.INFO: Checking session for user {"session_user":"not set","session_id":"0554ec4e614d19306202311ef8626af7"} {"uid":"e87e15e"}
+[2025-08-30T02:20:46.962288+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/controlpanel","status_code":200,"duration_ms":14.54,"ip":"::1"} {"uid":"e87e15e"}
+[2025-08-30T02:20:48.056405+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e8ca15f"}
+[2025-08-30T02:20:48.056628+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"e8ca15f"}
+[2025-08-30T02:20:48.256906+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":201.06,"ip":"::1"} {"uid":"e8ca15f"}
+[2025-08-30T02:20:53.065438+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"6d44ed4"}
+[2025-08-30T02:20:53.065769+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"6d44ed4"}
+[2025-08-30T02:20:53.270231+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":205.68,"ip":"::1"} {"uid":"6d44ed4"}
+[2025-08-30T02:20:58.057020+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"09baf1d"}
+[2025-08-30T02:20:58.057313+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"09baf1d"}
+[2025-08-30T02:20:58.220970+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":164.61,"ip":"::1"} {"uid":"09baf1d"}
+[2025-08-30T02:21:03.056103+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"762175a"}
+[2025-08-30T02:21:03.056307+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"762175a"}
+[2025-08-30T02:21:03.230701+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":175.15,"ip":"::1"} {"uid":"762175a"}
+[2025-08-30T02:21:23.695831+00:00] supermon-ng.INFO: Checking session for user {"session_user":"not set","session_id":"88013777b69e7652fc77489d6a8e663d"} {"uid":"aead31f"}
+[2025-08-30T02:21:23.696049+00:00] supermon-ng.INFO: Checking session for user {"session_user":"not set","session_id":"88013777b69e7652fc77489d6a8e663d"} {"uid":"aead31f"}
+[2025-08-30T02:21:23.724326+00:00] supermon-ng.INFO: HTTP Request {"method":"POST","uri":"/api/config/controlpanel/execute","status_code":200,"duration_ms":44.21,"ip":"::1"} {"uid":"aead31f"}
+[2025-08-30T02:21:49.492369+00:00] supermon-ng.INFO: Checking session for user {"session_user":"not set","session_id":"b9977a4decd48713ef0d6cc7a8509249"} {"uid":"65ca3ff"}
+[2025-08-30T02:21:49.494689+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/controlpanel","status_code":200,"duration_ms":27.51,"ip":"::1"} {"uid":"65ca3ff"}
+[2025-08-30T02:22:06.649425+00:00] supermon-ng.INFO: User info request [] {"uid":"49ea21e"}
+[2025-08-30T02:22:06.649865+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/auth/me","status_code":200,"duration_ms":3.42,"ip":"::1"} {"uid":"49ea21e"}
+[2025-08-30T02:22:06.699133+00:00] supermon-ng.INFO: Menu request [] {"uid":"d6721b6"}
+[2025-08-30T02:22:06.699569+00:00] supermon-ng.INFO: Checking session for user {"session_user":"not set","session_id":"35cdb76386d2de1fd56aada1728d83fc"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.699805+00:00] supermon-ng.INFO: Loading menu from INI file {"file":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini","username":"anarchy"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700005+00:00] supermon-ng.INFO: Parsed INI config {"sections":[546050,546051,546054,546055,546056,"Hubs","LsNodes","DVSwitch","D-Star","Pi-Star","QRZ","ASL3+"]} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700112+00:00] supermon-ng.INFO: Sample config data {"546050":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700167+00:00] supermon-ng.INFO: Processing config section {"name":546050,"data":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700224+00:00] supermon-ng.INFO: Menu item system assignment {"name":546050,"system":"Nodes","data_system":"Nodes"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700270+00:00] supermon-ng.INFO: Processing config section {"name":546051,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700359+00:00] supermon-ng.INFO: Menu item system assignment {"name":546051,"system":"Nodes","data_system":"Nodes"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700405+00:00] supermon-ng.INFO: Processing config section {"name":546054,"data":{"host":"10.0.0.5:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700446+00:00] supermon-ng.INFO: Menu item system assignment {"name":546054,"system":"Nodes","data_system":"Nodes"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700487+00:00] supermon-ng.INFO: Processing config section {"name":546055,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700525+00:00] supermon-ng.INFO: Menu item system assignment {"name":546055,"system":"Nodes","data_system":"Nodes"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700562+00:00] supermon-ng.INFO: Processing config section {"name":546056,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700601+00:00] supermon-ng.INFO: Menu item system assignment {"name":546056,"system":"Nodes","data_system":"Nodes"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700646+00:00] supermon-ng.INFO: Processing config section {"name":"Hubs","data":{"system":"Display Groups","menu":"1","nodes":"546051,546055,546056"}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700698+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Hubs","system":"Display Groups","data_system":"Display Groups"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700791+00:00] supermon-ng.INFO: Processing config section {"name":"LsNodes","data":{"url":"/cgi-bin/sm_lsnodes?node=546050","menu":""}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700843+00:00] supermon-ng.INFO: Skipping section - menu not enabled {"name":"LsNodes","menu":""} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700892+00:00] supermon-ng.INFO: Processing config section {"name":"DVSwitch","data":{"url":"http://DVSwitch.org/","menu":"1"}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.700945+00:00] supermon-ng.INFO: Menu item system assignment {"name":"DVSwitch","system":null,"data_system":"not set"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.701001+00:00] supermon-ng.INFO: Processing config section {"name":"D-Star","data":{"url":"http://www.DStarinfo.com/reflectors.aspx","menu":"1"}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.701054+00:00] supermon-ng.INFO: Menu item system assignment {"name":"D-Star","system":null,"data_system":"not set"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.701104+00:00] supermon-ng.INFO: Processing config section {"name":"Pi-Star","data":{"url":"http://PiStar.uk/","menu":"1"}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.701151+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Pi-Star","system":null,"data_system":"not set"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.701196+00:00] supermon-ng.INFO: Processing config section {"name":"QRZ","data":{"url":"http://QRZ.com/db/W5GLE","menu":"1"}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.701244+00:00] supermon-ng.INFO: Menu item system assignment {"name":"QRZ","system":null,"data_system":"not set"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.701290+00:00] supermon-ng.INFO: Processing config section {"name":"ASL3+","data":{"url":"https://allstarlink.org","menu":"1","default_node":"546051,546055,546056"}} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.701335+00:00] supermon-ng.INFO: Menu item system assignment {"name":"ASL3+","system":null,"data_system":"not set"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.701459+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/menu","status_code":200,"duration_ms":19.02,"ip":"::1"} {"uid":"d6721b6"}
+[2025-08-30T02:22:06.705962+00:00] supermon-ng.INFO: User info request [] {"uid":"1ec2060"}
+[2025-08-30T02:22:06.706359+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/auth/me","status_code":200,"duration_ms":1.32,"ip":"::1"} {"uid":"1ec2060"}
+[2025-08-30T02:22:07.000083+00:00] supermon-ng.INFO: Fetching node list [] {"uid":"f60a9b8"}
+[2025-08-30T02:22:07.000371+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/allmon.ini"} {"uid":"f60a9b8"}
+[2025-08-30T02:22:07.000533+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes","status_code":200,"duration_ms":12.15,"ip":"::1"} {"uid":"f60a9b8"}
+[2025-08-30T02:22:07.152138+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"8597e10"}
+[2025-08-30T02:22:07.152341+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/allmon.ini [] {"uid":"8597e10"}
+[2025-08-30T02:22:07.152571+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":22.87,"ip":"::1"} {"uid":"8597e10"}
+[2025-08-30T02:22:07.172681+00:00] supermon-ng.INFO: Menu request [] {"uid":"0580d31"}
+[2025-08-30T02:22:07.172850+00:00] supermon-ng.INFO: Checking session for user {"session_user":"not set","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.172911+00:00] supermon-ng.INFO: Loading menu from INI file {"file":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini","username":"anarchy"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173008+00:00] supermon-ng.INFO: Parsed INI config {"sections":[546050,546051,546054,546055,546056,"Hubs","LsNodes","DVSwitch","D-Star","Pi-Star","QRZ","ASL3+"]} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173056+00:00] supermon-ng.INFO: Sample config data {"546050":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173096+00:00] supermon-ng.INFO: Processing config section {"name":546050,"data":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173137+00:00] supermon-ng.INFO: Menu item system assignment {"name":546050,"system":"Nodes","data_system":"Nodes"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173176+00:00] supermon-ng.INFO: Processing config section {"name":546051,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173216+00:00] supermon-ng.INFO: Menu item system assignment {"name":546051,"system":"Nodes","data_system":"Nodes"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173254+00:00] supermon-ng.INFO: Processing config section {"name":546054,"data":{"host":"10.0.0.5:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173293+00:00] supermon-ng.INFO: Menu item system assignment {"name":546054,"system":"Nodes","data_system":"Nodes"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173331+00:00] supermon-ng.INFO: Processing config section {"name":546055,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173369+00:00] supermon-ng.INFO: Menu item system assignment {"name":546055,"system":"Nodes","data_system":"Nodes"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173406+00:00] supermon-ng.INFO: Processing config section {"name":546056,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173444+00:00] supermon-ng.INFO: Menu item system assignment {"name":546056,"system":"Nodes","data_system":"Nodes"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173480+00:00] supermon-ng.INFO: Processing config section {"name":"Hubs","data":{"system":"Display Groups","menu":"1","nodes":"546051,546055,546056"}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173519+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Hubs","system":"Display Groups","data_system":"Display Groups"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173572+00:00] supermon-ng.INFO: Processing config section {"name":"LsNodes","data":{"url":"/cgi-bin/sm_lsnodes?node=546050","menu":""}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173612+00:00] supermon-ng.INFO: Skipping section - menu not enabled {"name":"LsNodes","menu":""} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173647+00:00] supermon-ng.INFO: Processing config section {"name":"DVSwitch","data":{"url":"http://DVSwitch.org/","menu":"1"}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173685+00:00] supermon-ng.INFO: Menu item system assignment {"name":"DVSwitch","system":null,"data_system":"not set"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173722+00:00] supermon-ng.INFO: Processing config section {"name":"D-Star","data":{"url":"http://www.DStarinfo.com/reflectors.aspx","menu":"1"}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173759+00:00] supermon-ng.INFO: Menu item system assignment {"name":"D-Star","system":null,"data_system":"not set"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173796+00:00] supermon-ng.INFO: Processing config section {"name":"Pi-Star","data":{"url":"http://PiStar.uk/","menu":"1"}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173833+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Pi-Star","system":null,"data_system":"not set"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173869+00:00] supermon-ng.INFO: Processing config section {"name":"QRZ","data":{"url":"http://QRZ.com/db/W5GLE","menu":"1"}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173906+00:00] supermon-ng.INFO: Menu item system assignment {"name":"QRZ","system":null,"data_system":"not set"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173943+00:00] supermon-ng.INFO: Processing config section {"name":"ASL3+","data":{"url":"https://allstarlink.org","menu":"1","default_node":"546051,546055,546056"}} {"uid":"0580d31"}
+[2025-08-30T02:22:07.173980+00:00] supermon-ng.INFO: Menu item system assignment {"name":"ASL3+","system":null,"data_system":"not set"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.174077+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/menu","status_code":200,"duration_ms":17.35,"ip":"::1"} {"uid":"0580d31"}
+[2025-08-30T02:22:07.178383+00:00] supermon-ng.INFO: User info request [] {"uid":"83262b5"}
+[2025-08-30T02:22:07.178603+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/auth/me","status_code":200,"duration_ms":1.11,"ip":"::1"} {"uid":"83262b5"}
+[2025-08-30T02:22:07.185674+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"86d86cf"}
+[2025-08-30T02:22:07.230418+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":48.21,"ip":"::1"} {"uid":"86d86cf"}
+[2025-08-30T02:22:07.237970+00:00] supermon-ng.INFO: Fetching node list [] {"uid":"b5c2c74"}
+[2025-08-30T02:22:07.238164+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/allmon.ini"} {"uid":"b5c2c74"}
+[2025-08-30T02:22:07.238254+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes","status_code":200,"duration_ms":0.77,"ip":"::1"} {"uid":"b5c2c74"}
+[2025-08-30T02:22:07.276046+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"d39ebcc"}
+[2025-08-30T02:22:07.276243+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/allmon.ini [] {"uid":"d39ebcc"}
+[2025-08-30T02:22:07.276456+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":20.32,"ip":"::1"} {"uid":"d39ebcc"}
+[2025-08-30T02:22:07.358578+00:00] supermon-ng.INFO: System info request [] {"uid":"6032149"}
+[2025-08-30T02:22:07.358906+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/system-info","status_code":200,"duration_ms":14.9,"ip":"::1"} {"uid":"6032149"}
+[2025-08-30T02:22:07.363242+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"e5452cf"}
+[2025-08-30T02:22:07.407106+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":44.72,"ip":"::1"} {"uid":"e5452cf"}
+[2025-08-30T02:22:07.442120+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"08a7146"}
+[2025-08-30T02:22:07.442288+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/allmon.ini [] {"uid":"08a7146"}
+[2025-08-30T02:22:07.442479+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":19.16,"ip":"::1"} {"uid":"08a7146"}
+[2025-08-30T02:22:07.446756+00:00] supermon-ng.INFO: Fetching node list [] {"uid":"64428f1"}
+[2025-08-30T02:22:07.446976+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/allmon.ini"} {"uid":"64428f1"}
+[2025-08-30T02:22:07.447128+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes","status_code":200,"duration_ms":0.91,"ip":"::1"} {"uid":"64428f1"}
+[2025-08-30T02:22:07.451778+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"1d771e5"}
+[2025-08-30T02:22:07.515899+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":65.14,"ip":"::1"} {"uid":"1d771e5"}
+[2025-08-30T02:22:07.665769+00:00] supermon-ng.INFO: System info request [] {"uid":"0810dad"}
+[2025-08-30T02:22:07.666040+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/system-info","status_code":200,"duration_ms":33.47,"ip":"::1"} {"uid":"0810dad"}
+[2025-08-30T02:22:07.675497+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"20920d5"}
+[2025-08-30T02:22:07.740421+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":66.03,"ip":"::1"} {"uid":"20920d5"}
+[2025-08-30T02:22:07.772902+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"2c7986b"}
+[2025-08-30T02:22:07.773095+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/allmon.ini [] {"uid":"2c7986b"}
+[2025-08-30T02:22:07.773319+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":20.46,"ip":"::1"} {"uid":"2c7986b"}
+[2025-08-30T02:22:07.778444+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"fc47d33"}
+[2025-08-30T02:22:07.778743+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/allmon.ini"} {"uid":"fc47d33"}
+[2025-08-30T02:22:07.841096+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":63.79,"ip":"::1"} {"uid":"fc47d33"}
+[2025-08-30T02:22:12.623839+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"0636754"}
+[2025-08-30T02:22:12.624015+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/allmon.ini"} {"uid":"0636754"}
+[2025-08-30T02:22:12.663720+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":40.41,"ip":"::1"} {"uid":"0636754"}
+[2025-08-30T02:22:17.624910+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e3f67ec"}
+[2025-08-30T02:22:17.625136+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/allmon.ini"} {"uid":"e3f67ec"}
+[2025-08-30T02:22:17.676894+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":52.9,"ip":"::1"} {"uid":"e3f67ec"}
+[2025-08-30T02:22:17.682266+00:00] supermon-ng.INFO: Login attempt [] {"uid":"152e294"}
+[2025-08-30T02:22:17.946433+00:00] supermon-ng.INFO: User logged in successfully {"username":"anarchy"} {"uid":"152e294"}
+[2025-08-30T02:22:17.947299+00:00] supermon-ng.INFO: HTTP Request {"method":"POST","uri":"/api/auth/login","status_code":200,"duration_ms":266.3,"ip":"::1"} {"uid":"152e294"}
+[2025-08-30T02:22:17.975190+00:00] supermon-ng.INFO: Menu request [] {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975354+00:00] supermon-ng.INFO: Checking session for user {"session_user":"anarchy","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975420+00:00] supermon-ng.INFO: Loading menu from INI file {"file":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini","username":"anarchy"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975498+00:00] supermon-ng.INFO: Parsed INI config {"sections":[546050,546051,546054,546055,546056,"Hubs","LsNodes","DVSwitch","D-Star","Pi-Star","QRZ","ASL3+"]} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975530+00:00] supermon-ng.INFO: Sample config data {"546050":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975555+00:00] supermon-ng.INFO: Processing config section {"name":546050,"data":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975580+00:00] supermon-ng.INFO: Menu item system assignment {"name":546050,"system":"Nodes","data_system":"Nodes"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975604+00:00] supermon-ng.INFO: Processing config section {"name":546051,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975626+00:00] supermon-ng.INFO: Menu item system assignment {"name":546051,"system":"Nodes","data_system":"Nodes"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975647+00:00] supermon-ng.INFO: Processing config section {"name":546054,"data":{"host":"10.0.0.5:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975668+00:00] supermon-ng.INFO: Menu item system assignment {"name":546054,"system":"Nodes","data_system":"Nodes"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975687+00:00] supermon-ng.INFO: Processing config section {"name":546055,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975708+00:00] supermon-ng.INFO: Menu item system assignment {"name":546055,"system":"Nodes","data_system":"Nodes"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975727+00:00] supermon-ng.INFO: Processing config section {"name":546056,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975747+00:00] supermon-ng.INFO: Menu item system assignment {"name":546056,"system":"Nodes","data_system":"Nodes"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975767+00:00] supermon-ng.INFO: Processing config section {"name":"Hubs","data":{"system":"Display Groups","menu":"1","nodes":"546051,546055,546056"}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975787+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Hubs","system":"Display Groups","data_system":"Display Groups"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975807+00:00] supermon-ng.INFO: Processing config section {"name":"LsNodes","data":{"url":"/cgi-bin/sm_lsnodes?node=546050","menu":""}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975844+00:00] supermon-ng.INFO: Skipping section - menu not enabled {"name":"LsNodes","menu":""} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975863+00:00] supermon-ng.INFO: Processing config section {"name":"DVSwitch","data":{"url":"http://DVSwitch.org/","menu":"1"}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975881+00:00] supermon-ng.INFO: Menu item system assignment {"name":"DVSwitch","system":null,"data_system":"not set"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975901+00:00] supermon-ng.INFO: Processing config section {"name":"D-Star","data":{"url":"http://www.DStarinfo.com/reflectors.aspx","menu":"1"}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975920+00:00] supermon-ng.INFO: Menu item system assignment {"name":"D-Star","system":null,"data_system":"not set"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975938+00:00] supermon-ng.INFO: Processing config section {"name":"Pi-Star","data":{"url":"http://PiStar.uk/","menu":"1"}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975957+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Pi-Star","system":null,"data_system":"not set"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.975984+00:00] supermon-ng.INFO: Processing config section {"name":"QRZ","data":{"url":"http://QRZ.com/db/W5GLE","menu":"1"}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.976004+00:00] supermon-ng.INFO: Menu item system assignment {"name":"QRZ","system":null,"data_system":"not set"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.976022+00:00] supermon-ng.INFO: Processing config section {"name":"ASL3+","data":{"url":"https://allstarlink.org","menu":"1","default_node":"546051,546055,546056"}} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.976041+00:00] supermon-ng.INFO: Menu item system assignment {"name":"ASL3+","system":null,"data_system":"not set"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.976107+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/menu","status_code":200,"duration_ms":16.53,"ip":"::1"} {"uid":"bf6b3ff"}
+[2025-08-30T02:22:17.980515+00:00] supermon-ng.INFO: User info request [] {"uid":"8d59da8"}
+[2025-08-30T02:22:17.981028+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/auth/me","status_code":200,"duration_ms":1.4,"ip":"::1"} {"uid":"8d59da8"}
+[2025-08-30T02:22:22.668913+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"608d728"}
+[2025-08-30T02:22:22.669350+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"608d728"}
+[2025-08-30T02:22:22.770990+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":103.19,"ip":"::1"} {"uid":"608d728"}
+[2025-08-30T02:22:23.939593+00:00] supermon-ng.INFO: Checking session for user {"session_user":"anarchy","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"07421c1"}
+[2025-08-30T02:22:23.939860+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/controlpanel","status_code":200,"duration_ms":17.33,"ip":"::1"} {"uid":"07421c1"}
+[2025-08-30T02:22:23.967916+00:00] supermon-ng.INFO: Checking session for user {"session_user":"anarchy","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"c23bb63"}
+[2025-08-30T02:22:23.968210+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/controlpanel","status_code":200,"duration_ms":19.52,"ip":"::1"} {"uid":"c23bb63"}
+[2025-08-30T02:22:27.638941+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"819e511"}
+[2025-08-30T02:22:27.639982+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"819e511"}
+[2025-08-30T02:22:27.685220+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":48.92,"ip":"::1"} {"uid":"819e511"}
+[2025-08-30T02:22:27.918627+00:00] supermon-ng.INFO: Checking session for user {"session_user":"anarchy","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"014a738"}
+[2025-08-30T02:22:27.918885+00:00] supermon-ng.INFO: Checking session for user {"session_user":"anarchy","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"014a738"}
+[2025-08-30T02:22:27.933750+00:00] supermon-ng.INFO: HTTP Request {"method":"POST","uri":"/api/config/controlpanel/execute","status_code":200,"duration_ms":40.49,"ip":"::1"} {"uid":"014a738"}
+[2025-08-30T02:22:32.635312+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"5036106"}
+[2025-08-30T02:22:32.635648+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"5036106"}
+[2025-08-30T02:22:32.691553+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":57.2,"ip":"::1"} {"uid":"5036106"}
+[2025-08-30T02:22:37.622085+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ba2af9b"}
+[2025-08-30T02:22:37.622270+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ba2af9b"}
+[2025-08-30T02:22:37.654216+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":32.58,"ip":"::1"} {"uid":"ba2af9b"}
+[2025-08-30T02:22:42.638590+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"11a7ee6"}
+[2025-08-30T02:22:42.639138+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"11a7ee6"}
+[2025-08-30T02:22:42.680075+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":43.07,"ip":"::1"} {"uid":"11a7ee6"}
+[2025-08-30T02:22:47.641208+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"2960174"}
+[2025-08-30T02:22:47.641977+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"2960174"}
+[2025-08-30T02:22:47.693240+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":54.18,"ip":"::1"} {"uid":"2960174"}
+[2025-08-30T02:22:52.624919+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7b41c04"}
+[2025-08-30T02:22:52.625314+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7b41c04"}
+[2025-08-30T02:22:52.684852+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":61.24,"ip":"::1"} {"uid":"7b41c04"}
+[2025-08-30T02:22:57.603142+00:00] supermon-ng.INFO: User info request [] {"uid":"5a691e0"}
+[2025-08-30T02:22:57.603539+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/auth/me","status_code":200,"duration_ms":1.34,"ip":"::1"} {"uid":"5a691e0"}
+[2025-08-30T02:22:57.638402+00:00] supermon-ng.INFO: Menu request [] {"uid":"94e3c44"}
+[2025-08-30T02:22:57.638601+00:00] supermon-ng.INFO: Checking session for user {"session_user":"anarchy","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.638670+00:00] supermon-ng.INFO: Loading menu from INI file {"file":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini","username":"anarchy"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.638778+00:00] supermon-ng.INFO: Parsed INI config {"sections":[546050,546051,546054,546055,546056,"Hubs","LsNodes","DVSwitch","D-Star","Pi-Star","QRZ","ASL3+"]} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.638828+00:00] supermon-ng.INFO: Sample config data {"546050":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.638866+00:00] supermon-ng.INFO: Processing config section {"name":546050,"data":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.638903+00:00] supermon-ng.INFO: Menu item system assignment {"name":546050,"system":"Nodes","data_system":"Nodes"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.638937+00:00] supermon-ng.INFO: Processing config section {"name":546051,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.638972+00:00] supermon-ng.INFO: Menu item system assignment {"name":546051,"system":"Nodes","data_system":"Nodes"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639005+00:00] supermon-ng.INFO: Processing config section {"name":546054,"data":{"host":"10.0.0.5:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639038+00:00] supermon-ng.INFO: Menu item system assignment {"name":546054,"system":"Nodes","data_system":"Nodes"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639071+00:00] supermon-ng.INFO: Processing config section {"name":546055,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639104+00:00] supermon-ng.INFO: Menu item system assignment {"name":546055,"system":"Nodes","data_system":"Nodes"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639159+00:00] supermon-ng.INFO: Processing config section {"name":546056,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639196+00:00] supermon-ng.INFO: Menu item system assignment {"name":546056,"system":"Nodes","data_system":"Nodes"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639227+00:00] supermon-ng.INFO: Processing config section {"name":"Hubs","data":{"system":"Display Groups","menu":"1","nodes":"546051,546055,546056"}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639260+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Hubs","system":"Display Groups","data_system":"Display Groups"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639295+00:00] supermon-ng.INFO: Processing config section {"name":"LsNodes","data":{"url":"/cgi-bin/sm_lsnodes?node=546050","menu":""}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639327+00:00] supermon-ng.INFO: Skipping section - menu not enabled {"name":"LsNodes","menu":""} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639359+00:00] supermon-ng.INFO: Processing config section {"name":"DVSwitch","data":{"url":"http://DVSwitch.org/","menu":"1"}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639390+00:00] supermon-ng.INFO: Menu item system assignment {"name":"DVSwitch","system":null,"data_system":"not set"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639424+00:00] supermon-ng.INFO: Processing config section {"name":"D-Star","data":{"url":"http://www.DStarinfo.com/reflectors.aspx","menu":"1"}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639458+00:00] supermon-ng.INFO: Menu item system assignment {"name":"D-Star","system":null,"data_system":"not set"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639490+00:00] supermon-ng.INFO: Processing config section {"name":"Pi-Star","data":{"url":"http://PiStar.uk/","menu":"1"}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639525+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Pi-Star","system":null,"data_system":"not set"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639557+00:00] supermon-ng.INFO: Processing config section {"name":"QRZ","data":{"url":"http://QRZ.com/db/W5GLE","menu":"1"}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639592+00:00] supermon-ng.INFO: Menu item system assignment {"name":"QRZ","system":null,"data_system":"not set"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639626+00:00] supermon-ng.INFO: Processing config section {"name":"ASL3+","data":{"url":"https://allstarlink.org","menu":"1","default_node":"546051,546055,546056"}} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639662+00:00] supermon-ng.INFO: Menu item system assignment {"name":"ASL3+","system":null,"data_system":"not set"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.639777+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/menu","status_code":200,"duration_ms":23.25,"ip":"::1"} {"uid":"94e3c44"}
+[2025-08-30T02:22:57.645139+00:00] supermon-ng.INFO: User info request [] {"uid":"78e17e9"}
+[2025-08-30T02:22:57.645505+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/auth/me","status_code":200,"duration_ms":1.22,"ip":"::1"} {"uid":"78e17e9"}
+[2025-08-30T02:22:57.671094+00:00] supermon-ng.INFO: Menu request [] {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671305+00:00] supermon-ng.INFO: Checking session for user {"session_user":"anarchy","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671375+00:00] supermon-ng.INFO: Loading menu from INI file {"file":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini","username":"anarchy"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671489+00:00] supermon-ng.INFO: Parsed INI config {"sections":[546050,546051,546054,546055,546056,"Hubs","LsNodes","DVSwitch","D-Star","Pi-Star","QRZ","ASL3+"]} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671544+00:00] supermon-ng.INFO: Sample config data {"546050":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671591+00:00] supermon-ng.INFO: Processing config section {"name":546050,"data":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671656+00:00] supermon-ng.INFO: Menu item system assignment {"name":546050,"system":"Nodes","data_system":"Nodes"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671703+00:00] supermon-ng.INFO: Processing config section {"name":546051,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671748+00:00] supermon-ng.INFO: Menu item system assignment {"name":546051,"system":"Nodes","data_system":"Nodes"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671792+00:00] supermon-ng.INFO: Processing config section {"name":546054,"data":{"host":"10.0.0.5:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671836+00:00] supermon-ng.INFO: Menu item system assignment {"name":546054,"system":"Nodes","data_system":"Nodes"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671880+00:00] supermon-ng.INFO: Processing config section {"name":546055,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671926+00:00] supermon-ng.INFO: Menu item system assignment {"name":546055,"system":"Nodes","data_system":"Nodes"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.671969+00:00] supermon-ng.INFO: Processing config section {"name":546056,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672014+00:00] supermon-ng.INFO: Menu item system assignment {"name":546056,"system":"Nodes","data_system":"Nodes"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672056+00:00] supermon-ng.INFO: Processing config section {"name":"Hubs","data":{"system":"Display Groups","menu":"1","nodes":"546051,546055,546056"}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672100+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Hubs","system":"Display Groups","data_system":"Display Groups"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672143+00:00] supermon-ng.INFO: Processing config section {"name":"LsNodes","data":{"url":"/cgi-bin/sm_lsnodes?node=546050","menu":""}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672186+00:00] supermon-ng.INFO: Skipping section - menu not enabled {"name":"LsNodes","menu":""} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672228+00:00] supermon-ng.INFO: Processing config section {"name":"DVSwitch","data":{"url":"http://DVSwitch.org/","menu":"1"}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672271+00:00] supermon-ng.INFO: Menu item system assignment {"name":"DVSwitch","system":null,"data_system":"not set"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672315+00:00] supermon-ng.INFO: Processing config section {"name":"D-Star","data":{"url":"http://www.DStarinfo.com/reflectors.aspx","menu":"1"}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672358+00:00] supermon-ng.INFO: Menu item system assignment {"name":"D-Star","system":null,"data_system":"not set"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672401+00:00] supermon-ng.INFO: Processing config section {"name":"Pi-Star","data":{"url":"http://PiStar.uk/","menu":"1"}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672444+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Pi-Star","system":null,"data_system":"not set"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672486+00:00] supermon-ng.INFO: Processing config section {"name":"QRZ","data":{"url":"http://QRZ.com/db/W5GLE","menu":"1"}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672529+00:00] supermon-ng.INFO: Menu item system assignment {"name":"QRZ","system":null,"data_system":"not set"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672571+00:00] supermon-ng.INFO: Processing config section {"name":"ASL3+","data":{"url":"https://allstarlink.org","menu":"1","default_node":"546051,546055,546056"}} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672627+00:00] supermon-ng.INFO: Menu item system assignment {"name":"ASL3+","system":null,"data_system":"not set"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.672758+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/menu","status_code":200,"duration_ms":22.48,"ip":"::1"} {"uid":"8bb2124"}
+[2025-08-30T02:22:57.678643+00:00] supermon-ng.INFO: Fetching node list [] {"uid":"d744148"}
+[2025-08-30T02:22:57.678904+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"d744148"}
+[2025-08-30T02:22:57.679040+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes","status_code":200,"duration_ms":1.34,"ip":"::1"} {"uid":"d744148"}
+[2025-08-30T02:22:57.701933+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"36788ac"}
+[2025-08-30T02:22:57.702151+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini [] {"uid":"36788ac"}
+[2025-08-30T02:22:57.702391+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":14.63,"ip":"::1"} {"uid":"36788ac"}
+[2025-08-30T02:22:57.713598+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"f5c730e"}
+[2025-08-30T02:22:57.763078+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":50.34,"ip":"::1"} {"uid":"f5c730e"}
+[2025-08-30T02:22:57.877870+00:00] supermon-ng.INFO: System info request [] {"uid":"0b82234"}
+[2025-08-30T02:22:57.878140+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/system-info","status_code":200,"duration_ms":18.79,"ip":"::1"} {"uid":"0b82234"}
+[2025-08-30T02:22:57.883123+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"57942b6"}
+[2025-08-30T02:22:57.937933+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":55.5,"ip":"::1"} {"uid":"57942b6"}
+[2025-08-30T02:22:57.966945+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"ab69fdf"}
+[2025-08-30T02:22:57.967117+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini [] {"uid":"ab69fdf"}
+[2025-08-30T02:22:57.967311+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":20.59,"ip":"::1"} {"uid":"ab69fdf"}
+[2025-08-30T02:22:57.971587+00:00] supermon-ng.INFO: Fetching node list [] {"uid":"0ac7cdf"}
+[2025-08-30T02:22:57.971812+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"0ac7cdf"}
+[2025-08-30T02:22:57.971944+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes","status_code":200,"duration_ms":1.19,"ip":"::1"} {"uid":"0ac7cdf"}
+[2025-08-30T02:23:02.868552+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"4c815f9"}
+[2025-08-30T02:23:02.869352+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"4c815f9"}
+[2025-08-30T02:23:02.991509+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":124.94,"ip":"::1"} {"uid":"4c815f9"}
+[2025-08-30T02:23:07.866857+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"38b0f1b"}
+[2025-08-30T02:23:07.867586+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"38b0f1b"}
+[2025-08-30T02:23:08.119630+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":254.66,"ip":"::1"} {"uid":"38b0f1b"}
+[2025-08-30T02:23:12.855111+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c241fe2"}
+[2025-08-30T02:23:12.855375+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c241fe2"}
+[2025-08-30T02:23:13.349424+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":495.22,"ip":"::1"} {"uid":"c241fe2"}
+[2025-08-30T02:23:17.865090+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7d702e5"}
+[2025-08-30T02:23:17.865769+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7d702e5"}
+[2025-08-30T02:23:17.991326+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":127.96,"ip":"::1"} {"uid":"7d702e5"}
+[2025-08-30T02:23:22.872962+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"b836121"}
+[2025-08-30T02:23:22.873837+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"b836121"}
+[2025-08-30T02:23:23.000162+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":129.21,"ip":"::1"} {"uid":"b836121"}
+[2025-08-30T02:23:27.869876+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"1ce7c43"}
+[2025-08-30T02:23:27.870682+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"1ce7c43"}
+[2025-08-30T02:23:28.002558+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":134.89,"ip":"::1"} {"uid":"1ce7c43"}
+[2025-08-30T02:23:32.856776+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"f711efe"}
+[2025-08-30T02:23:32.857109+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f711efe"}
+[2025-08-30T02:23:32.970377+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":114.73,"ip":"::1"} {"uid":"f711efe"}
+[2025-08-30T02:23:37.855180+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"95128fe"}
+[2025-08-30T02:23:37.855374+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"95128fe"}
+[2025-08-30T02:23:37.985181+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":130.5,"ip":"::1"} {"uid":"95128fe"}
+[2025-08-30T02:23:42.853018+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"d2e0f98"}
+[2025-08-30T02:23:42.853194+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"d2e0f98"}
+[2025-08-30T02:23:42.948070+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":95.51,"ip":"::1"} {"uid":"d2e0f98"}
+[2025-08-30T02:23:47.873515+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e3a9112"}
+[2025-08-30T02:23:47.874336+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"e3a9112"}
+[2025-08-30T02:23:47.986552+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":115.08,"ip":"::1"} {"uid":"e3a9112"}
+[2025-08-30T02:23:52.854763+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ffbd3ef"}
+[2025-08-30T02:23:52.855007+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ffbd3ef"}
+[2025-08-30T02:23:52.957131+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":103.04,"ip":"::1"} {"uid":"ffbd3ef"}
+[2025-08-30T02:23:57.856491+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"adf0669"}
+[2025-08-30T02:23:57.856822+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"adf0669"}
+[2025-08-30T02:23:58.006670+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":151.33,"ip":"::1"} {"uid":"adf0669"}
+[2025-08-30T02:24:02.871897+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"03b93fc"}
+[2025-08-30T02:24:02.872699+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"03b93fc"}
+[2025-08-30T02:24:03.038342+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":168.53,"ip":"::1"} {"uid":"03b93fc"}
+[2025-08-30T02:24:07.854709+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c32bca6"}
+[2025-08-30T02:24:07.854977+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c32bca6"}
+[2025-08-30T02:24:07.975359+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":121.37,"ip":"::1"} {"uid":"c32bca6"}
+[2025-08-30T02:24:12.854784+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"b91ee93"}
+[2025-08-30T02:24:12.855032+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"b91ee93"}
+[2025-08-30T02:24:12.964066+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":109.93,"ip":"::1"} {"uid":"b91ee93"}
+[2025-08-30T02:24:17.855272+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"55e15dc"}
+[2025-08-30T02:24:17.855626+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"55e15dc"}
+[2025-08-30T02:24:17.977042+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":122.81,"ip":"::1"} {"uid":"55e15dc"}
+[2025-08-30T02:24:22.855120+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"b89cb20"}
+[2025-08-30T02:24:22.855401+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"b89cb20"}
+[2025-08-30T02:24:22.972125+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":117.69,"ip":"::1"} {"uid":"b89cb20"}
+[2025-08-30T02:24:27.856473+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e852126"}
+[2025-08-30T02:24:27.856880+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"e852126"}
+[2025-08-30T02:24:27.983649+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":128.3,"ip":"::1"} {"uid":"e852126"}
+[2025-08-30T02:24:32.854569+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"6137e34"}
+[2025-08-30T02:24:32.854858+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"6137e34"}
+[2025-08-30T02:24:32.957466+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":103.5,"ip":"::1"} {"uid":"6137e34"}
+[2025-08-30T02:24:37.858235+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"dd82b8e"}
+[2025-08-30T02:24:37.858544+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"dd82b8e"}
+[2025-08-30T02:24:37.988308+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":131.32,"ip":"::1"} {"uid":"dd82b8e"}
+[2025-08-30T02:24:42.855326+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"128610e"}
+[2025-08-30T02:24:42.855603+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"128610e"}
+[2025-08-30T02:24:42.967582+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":113.21,"ip":"::1"} {"uid":"128610e"}
+[2025-08-30T02:24:47.853816+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"9f7e1ba"}
+[2025-08-30T02:24:47.854065+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"9f7e1ba"}
+[2025-08-30T02:24:47.954819+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":101.62,"ip":"::1"} {"uid":"9f7e1ba"}
+[2025-08-30T02:24:52.865749+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ce62954"}
+[2025-08-30T02:24:52.866526+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ce62954"}
+[2025-08-30T02:24:53.002262+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":138.26,"ip":"::1"} {"uid":"ce62954"}
+[2025-08-30T02:24:57.855304+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"89d29bb"}
+[2025-08-30T02:24:57.855531+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"89d29bb"}
+[2025-08-30T02:24:57.963027+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":108.6,"ip":"::1"} {"uid":"89d29bb"}
+[2025-08-30T02:25:02.855985+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"0308f3f"}
+[2025-08-30T02:25:02.856246+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"0308f3f"}
+[2025-08-30T02:25:02.962743+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":107.61,"ip":"::1"} {"uid":"0308f3f"}
+[2025-08-30T02:25:07.854885+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"17631b2"}
+[2025-08-30T02:25:07.855075+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"17631b2"}
+[2025-08-30T02:25:07.963797+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":111.11,"ip":"::1"} {"uid":"17631b2"}
+[2025-08-30T02:25:12.855155+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"102f768"}
+[2025-08-30T02:25:12.855403+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"102f768"}
+[2025-08-30T02:25:12.962919+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":108.51,"ip":"::1"} {"uid":"102f768"}
+[2025-08-30T02:25:17.853862+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7561a3a"}
+[2025-08-30T02:25:17.854058+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7561a3a"}
+[2025-08-30T02:25:17.956024+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":102.66,"ip":"::1"} {"uid":"7561a3a"}
+[2025-08-30T02:25:22.865636+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"03f6150"}
+[2025-08-30T02:25:22.866026+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"03f6150"}
+[2025-08-30T02:25:22.993507+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":128.91,"ip":"::1"} {"uid":"03f6150"}
+[2025-08-30T02:25:27.855429+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"1e8b8a2"}
+[2025-08-30T02:25:27.855698+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"1e8b8a2"}
+[2025-08-30T02:25:27.976568+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":122.05,"ip":"::1"} {"uid":"1e8b8a2"}
+[2025-08-30T02:25:32.853267+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e097f04"}
+[2025-08-30T02:25:32.853494+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"e097f04"}
+[2025-08-30T02:25:32.947942+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":95.19,"ip":"::1"} {"uid":"e097f04"}
+[2025-08-30T02:25:37.854657+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"5e6e424"}
+[2025-08-30T02:25:37.854938+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"5e6e424"}
+[2025-08-30T02:25:37.957662+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":103.84,"ip":"::1"} {"uid":"5e6e424"}
+[2025-08-30T02:25:42.861914+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e6f12b1"}
+[2025-08-30T02:25:42.862560+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"e6f12b1"}
+[2025-08-30T02:25:43.003801+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":143.49,"ip":"::1"} {"uid":"e6f12b1"}
+[2025-08-30T02:25:47.868921+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"48fbd4f"}
+[2025-08-30T02:25:47.869583+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"48fbd4f"}
+[2025-08-30T02:25:48.090893+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":223.75,"ip":"::1"} {"uid":"48fbd4f"}
+[2025-08-30T02:25:52.872702+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"eee52c7"}
+[2025-08-30T02:25:52.873452+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"eee52c7"}
+[2025-08-30T02:25:53.003141+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":132.44,"ip":"::1"} {"uid":"eee52c7"}
+[2025-08-30T02:25:57.859775+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"f591eab"}
+[2025-08-30T02:25:57.860191+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f591eab"}
+[2025-08-30T02:25:57.988058+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":129.85,"ip":"::1"} {"uid":"f591eab"}
+[2025-08-30T02:26:02.855153+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"59a4f41"}
+[2025-08-30T02:26:02.855350+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"59a4f41"}
+[2025-08-30T02:26:02.948652+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":95.8,"ip":"::1"} {"uid":"59a4f41"}
+[2025-08-30T02:26:07.871532+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"42e2c9f"}
+[2025-08-30T02:26:07.871906+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"42e2c9f"}
+[2025-08-30T02:26:08.052821+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":182.77,"ip":"::1"} {"uid":"42e2c9f"}
+[2025-08-30T02:26:12.853206+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"bd7c506"}
+[2025-08-30T02:26:12.853423+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"bd7c506"}
+[2025-08-30T02:26:12.970187+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":117.46,"ip":"::1"} {"uid":"bd7c506"}
+[2025-08-30T02:26:17.855299+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"69d2a28"}
+[2025-08-30T02:26:17.855616+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"69d2a28"}
+[2025-08-30T02:26:18.260817+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":406.12,"ip":"::1"} {"uid":"69d2a28"}
+[2025-08-30T02:26:22.855241+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"dd37e12"}
+[2025-08-30T02:26:22.855479+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"dd37e12"}
+[2025-08-30T02:26:22.962658+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":108.2,"ip":"::1"} {"uid":"dd37e12"}
+[2025-08-30T02:26:27.855671+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"2ff28b8"}
+[2025-08-30T02:26:27.855924+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"2ff28b8"}
+[2025-08-30T02:26:27.973651+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":118.89,"ip":"::1"} {"uid":"2ff28b8"}
+[2025-08-30T02:26:32.868939+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ad6bbf1"}
+[2025-08-30T02:26:32.869827+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ad6bbf1"}
+[2025-08-30T02:26:33.030196+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":164.58,"ip":"::1"} {"uid":"ad6bbf1"}
+[2025-08-30T02:26:37.869627+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e3de22e"}
+[2025-08-30T02:26:37.869931+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"e3de22e"}
+[2025-08-30T02:26:41.153037+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":3284.45,"ip":"::1"} {"uid":"e3de22e"}
+[2025-08-30T02:26:42.079332+00:00] supermon-ng.INFO: Menu request [] {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.079513+00:00] supermon-ng.INFO: Checking session for user {"session_user":"anarchy","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.079575+00:00] supermon-ng.INFO: Loading menu from INI file {"file":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini","username":"anarchy"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.079675+00:00] supermon-ng.INFO: Parsed INI config {"sections":[546050,546051,546054,546055,546056,"Hubs","LsNodes","DVSwitch","D-Star","Pi-Star","QRZ","ASL3+"]} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.079720+00:00] supermon-ng.INFO: Sample config data {"546050":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.079759+00:00] supermon-ng.INFO: Processing config section {"name":546050,"data":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.079804+00:00] supermon-ng.INFO: Menu item system assignment {"name":546050,"system":"Nodes","data_system":"Nodes"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.079846+00:00] supermon-ng.INFO: Processing config section {"name":546051,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.079885+00:00] supermon-ng.INFO: Menu item system assignment {"name":546051,"system":"Nodes","data_system":"Nodes"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.079926+00:00] supermon-ng.INFO: Processing config section {"name":546054,"data":{"host":"10.0.0.5:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.079963+00:00] supermon-ng.INFO: Menu item system assignment {"name":546054,"system":"Nodes","data_system":"Nodes"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.079999+00:00] supermon-ng.INFO: Processing config section {"name":546055,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080036+00:00] supermon-ng.INFO: Menu item system assignment {"name":546055,"system":"Nodes","data_system":"Nodes"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080071+00:00] supermon-ng.INFO: Processing config section {"name":546056,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080122+00:00] supermon-ng.INFO: Menu item system assignment {"name":546056,"system":"Nodes","data_system":"Nodes"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080159+00:00] supermon-ng.INFO: Processing config section {"name":"Hubs","data":{"system":"Display Groups","menu":"1","nodes":"546051,546055,546056"}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080196+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Hubs","system":"Display Groups","data_system":"Display Groups"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080232+00:00] supermon-ng.INFO: Processing config section {"name":"LsNodes","data":{"url":"/cgi-bin/sm_lsnodes?node=546050","menu":""}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080267+00:00] supermon-ng.INFO: Skipping section - menu not enabled {"name":"LsNodes","menu":""} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080301+00:00] supermon-ng.INFO: Processing config section {"name":"DVSwitch","data":{"url":"http://DVSwitch.org/","menu":"1"}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080336+00:00] supermon-ng.INFO: Menu item system assignment {"name":"DVSwitch","system":null,"data_system":"not set"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080372+00:00] supermon-ng.INFO: Processing config section {"name":"D-Star","data":{"url":"http://www.DStarinfo.com/reflectors.aspx","menu":"1"}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080408+00:00] supermon-ng.INFO: Menu item system assignment {"name":"D-Star","system":null,"data_system":"not set"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080443+00:00] supermon-ng.INFO: Processing config section {"name":"Pi-Star","data":{"url":"http://PiStar.uk/","menu":"1"}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080478+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Pi-Star","system":null,"data_system":"not set"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080513+00:00] supermon-ng.INFO: Processing config section {"name":"QRZ","data":{"url":"http://QRZ.com/db/W5GLE","menu":"1"}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080548+00:00] supermon-ng.INFO: Menu item system assignment {"name":"QRZ","system":null,"data_system":"not set"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080583+00:00] supermon-ng.INFO: Processing config section {"name":"ASL3+","data":{"url":"https://allstarlink.org","menu":"1","default_node":"546051,546055,546056"}} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080632+00:00] supermon-ng.INFO: Menu item system assignment {"name":"ASL3+","system":null,"data_system":"not set"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.080724+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/menu","status_code":200,"duration_ms":16.77,"ip":"::1"} {"uid":"c47d3d3"}
+[2025-08-30T02:26:42.085905+00:00] supermon-ng.INFO: User info request [] {"uid":"9f061b0"}
+[2025-08-30T02:26:42.086337+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/auth/me","status_code":200,"duration_ms":1.37,"ip":"::1"} {"uid":"9f061b0"}
+[2025-08-30T02:26:42.095575+00:00] supermon-ng.INFO: Fetching node list [] {"uid":"c45cc29"}
+[2025-08-30T02:26:42.095846+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c45cc29"}
+[2025-08-30T02:26:42.095953+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes","status_code":200,"duration_ms":0.87,"ip":"::1"} {"uid":"c45cc29"}
+[2025-08-30T02:26:42.122132+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"9cb6f0c"}
+[2025-08-30T02:26:42.122324+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini [] {"uid":"9cb6f0c"}
+[2025-08-30T02:26:42.122586+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":17.09,"ip":"::1"} {"uid":"9cb6f0c"}
+[2025-08-30T02:26:42.132532+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"4628102"}
+[2025-08-30T02:26:42.191182+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":59.65,"ip":"::1"} {"uid":"4628102"}
+[2025-08-30T02:26:42.293012+00:00] supermon-ng.INFO: System info request [] {"uid":"9101cd9"}
+[2025-08-30T02:26:42.293227+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/system-info","status_code":200,"duration_ms":15.89,"ip":"::1"} {"uid":"9101cd9"}
+[2025-08-30T02:26:42.297721+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"f710a7e"}
+[2025-08-30T02:26:42.347767+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":50.87,"ip":"::1"} {"uid":"f710a7e"}
+[2025-08-30T02:26:42.376493+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"7839691"}
+[2025-08-30T02:26:42.376675+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini [] {"uid":"7839691"}
+[2025-08-30T02:26:42.376894+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":21.31,"ip":"::1"} {"uid":"7839691"}
+[2025-08-30T02:26:42.381444+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"6bbe0d0"}
+[2025-08-30T02:26:42.381715+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"6bbe0d0"}
+[2025-08-30T02:26:42.549339+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":168.61,"ip":"::1"} {"uid":"6bbe0d0"}
+[2025-08-30T02:26:47.273740+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ec5ec3f"}
+[2025-08-30T02:26:47.273961+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ec5ec3f"}
+[2025-08-30T02:26:47.401837+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":128.67,"ip":"::1"} {"uid":"ec5ec3f"}
+[2025-08-30T02:26:52.277276+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"b7a6de9"}
+[2025-08-30T02:26:52.277513+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"b7a6de9"}
+[2025-08-30T02:26:52.407144+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":130.7,"ip":"::1"} {"uid":"b7a6de9"}
+[2025-08-30T02:26:57.274486+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c86497a"}
+[2025-08-30T02:26:57.274766+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c86497a"}
+[2025-08-30T02:26:57.397471+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":123.6,"ip":"::1"} {"uid":"c86497a"}
+[2025-08-30T02:27:02.276269+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"8c0a9c0"}
+[2025-08-30T02:27:02.276595+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"8c0a9c0"}
+[2025-08-30T02:27:02.410772+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":135.69,"ip":"::1"} {"uid":"8c0a9c0"}
+[2025-08-30T02:27:03.867367+00:00] supermon-ng.INFO: Menu request [] {"uid":"ec85edd"}
+[2025-08-30T02:27:03.867539+00:00] supermon-ng.INFO: Checking session for user {"session_user":"anarchy","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.867612+00:00] supermon-ng.INFO: Loading menu from INI file {"file":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini","username":"anarchy"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.867709+00:00] supermon-ng.INFO: Parsed INI config {"sections":[546050,546051,546054,546055,546056,"Hubs","LsNodes","DVSwitch","D-Star","Pi-Star","QRZ","ASL3+"]} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.867756+00:00] supermon-ng.INFO: Sample config data {"546050":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.867813+00:00] supermon-ng.INFO: Processing config section {"name":546050,"data":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.867854+00:00] supermon-ng.INFO: Menu item system assignment {"name":546050,"system":"Nodes","data_system":"Nodes"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.867894+00:00] supermon-ng.INFO: Processing config section {"name":546051,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.867934+00:00] supermon-ng.INFO: Menu item system assignment {"name":546051,"system":"Nodes","data_system":"Nodes"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.867971+00:00] supermon-ng.INFO: Processing config section {"name":546054,"data":{"host":"10.0.0.5:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868009+00:00] supermon-ng.INFO: Menu item system assignment {"name":546054,"system":"Nodes","data_system":"Nodes"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868045+00:00] supermon-ng.INFO: Processing config section {"name":546055,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868083+00:00] supermon-ng.INFO: Menu item system assignment {"name":546055,"system":"Nodes","data_system":"Nodes"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868119+00:00] supermon-ng.INFO: Processing config section {"name":546056,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868157+00:00] supermon-ng.INFO: Menu item system assignment {"name":546056,"system":"Nodes","data_system":"Nodes"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868193+00:00] supermon-ng.INFO: Processing config section {"name":"Hubs","data":{"system":"Display Groups","menu":"1","nodes":"546051,546055,546056"}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868231+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Hubs","system":"Display Groups","data_system":"Display Groups"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868267+00:00] supermon-ng.INFO: Processing config section {"name":"LsNodes","data":{"url":"/cgi-bin/sm_lsnodes?node=546050","menu":""}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868304+00:00] supermon-ng.INFO: Skipping section - menu not enabled {"name":"LsNodes","menu":""} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868338+00:00] supermon-ng.INFO: Processing config section {"name":"DVSwitch","data":{"url":"http://DVSwitch.org/","menu":"1"}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868374+00:00] supermon-ng.INFO: Menu item system assignment {"name":"DVSwitch","system":null,"data_system":"not set"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868411+00:00] supermon-ng.INFO: Processing config section {"name":"D-Star","data":{"url":"http://www.DStarinfo.com/reflectors.aspx","menu":"1"}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868447+00:00] supermon-ng.INFO: Menu item system assignment {"name":"D-Star","system":null,"data_system":"not set"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868484+00:00] supermon-ng.INFO: Processing config section {"name":"Pi-Star","data":{"url":"http://PiStar.uk/","menu":"1"}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868520+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Pi-Star","system":null,"data_system":"not set"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868556+00:00] supermon-ng.INFO: Processing config section {"name":"QRZ","data":{"url":"http://QRZ.com/db/W5GLE","menu":"1"}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868592+00:00] supermon-ng.INFO: Menu item system assignment {"name":"QRZ","system":null,"data_system":"not set"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868641+00:00] supermon-ng.INFO: Processing config section {"name":"ASL3+","data":{"url":"https://allstarlink.org","menu":"1","default_node":"546051,546055,546056"}} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868685+00:00] supermon-ng.INFO: Menu item system assignment {"name":"ASL3+","system":null,"data_system":"not set"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.868779+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/menu","status_code":200,"duration_ms":17.84,"ip":"::1"} {"uid":"ec85edd"}
+[2025-08-30T02:27:03.873113+00:00] supermon-ng.INFO: User info request [] {"uid":"b9829de"}
+[2025-08-30T02:27:03.873490+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/auth/me","status_code":200,"duration_ms":1.17,"ip":"::1"} {"uid":"b9829de"}
+[2025-08-30T02:27:03.885308+00:00] supermon-ng.INFO: Fetching node list [] {"uid":"f166117"}
+[2025-08-30T02:27:03.885759+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f166117"}
+[2025-08-30T02:27:03.886070+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes","status_code":200,"duration_ms":1.69,"ip":"::1"} {"uid":"f166117"}
+[2025-08-30T02:27:03.909634+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"3cebfbc"}
+[2025-08-30T02:27:03.909809+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini [] {"uid":"3cebfbc"}
+[2025-08-30T02:27:03.910018+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":13.89,"ip":"::1"} {"uid":"3cebfbc"}
+[2025-08-30T02:27:03.918745+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"0437ed7"}
+[2025-08-30T02:27:03.961652+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":43.4,"ip":"::1"} {"uid":"0437ed7"}
+[2025-08-30T02:27:04.046832+00:00] supermon-ng.INFO: System info request [] {"uid":"579ba52"}
+[2025-08-30T02:27:04.047018+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/system-info","status_code":200,"duration_ms":14.93,"ip":"::1"} {"uid":"579ba52"}
+[2025-08-30T02:27:04.050071+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"e95edd2"}
+[2025-08-30T02:27:04.092236+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":42.64,"ip":"::1"} {"uid":"e95edd2"}
+[2025-08-30T02:27:04.116200+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"38dafbf"}
+[2025-08-30T02:27:04.116365+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini [] {"uid":"38dafbf"}
+[2025-08-30T02:27:04.116560+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":17.03,"ip":"::1"} {"uid":"38dafbf"}
+[2025-08-30T02:27:04.120806+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"d8ac0d8"}
+[2025-08-30T02:27:04.121079+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"d8ac0d8"}
+[2025-08-30T02:27:04.265726+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":145.64,"ip":"::1"} {"uid":"d8ac0d8"}
+[2025-08-30T02:27:09.029524+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"175bcc6"}
+[2025-08-30T02:27:09.029716+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"175bcc6"}
+[2025-08-30T02:27:09.125567+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":96.54,"ip":"::1"} {"uid":"175bcc6"}
+[2025-08-30T02:27:14.037902+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"8ddaf73"}
+[2025-08-30T02:27:14.038205+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"8ddaf73"}
+[2025-08-30T02:27:14.161474+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":124.28,"ip":"::1"} {"uid":"8ddaf73"}
+[2025-08-30T02:27:19.028693+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"afa5f05"}
+[2025-08-30T02:27:19.028878+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"afa5f05"}
+[2025-08-30T02:27:19.120542+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":92.31,"ip":"::1"} {"uid":"afa5f05"}
+[2025-08-30T02:27:24.030017+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"91b3fe0"}
+[2025-08-30T02:27:24.030274+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"91b3fe0"}
+[2025-08-30T02:27:24.127702+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":98.25,"ip":"::1"} {"uid":"91b3fe0"}
+[2025-08-30T02:27:29.029421+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"2cbe866"}
+[2025-08-30T02:27:29.029610+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"2cbe866"}
+[2025-08-30T02:27:29.133208+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":104.3,"ip":"::1"} {"uid":"2cbe866"}
+[2025-08-30T02:27:34.029705+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c6affb8"}
+[2025-08-30T02:27:34.029943+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c6affb8"}
+[2025-08-30T02:27:34.144030+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":115.24,"ip":"::1"} {"uid":"c6affb8"}
+[2025-08-30T02:27:39.029331+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"99df84b"}
+[2025-08-30T02:27:39.029536+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"99df84b"}
+[2025-08-30T02:27:39.210444+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":181.65,"ip":"::1"} {"uid":"99df84b"}
+[2025-08-30T02:27:44.030861+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"0139669"}
+[2025-08-30T02:27:44.031104+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"0139669"}
+[2025-08-30T02:27:44.135855+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":105.82,"ip":"::1"} {"uid":"0139669"}
+[2025-08-30T02:27:49.049126+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"d43263a"}
+[2025-08-30T02:27:49.049507+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"d43263a"}
+[2025-08-30T02:27:49.181644+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":133.32,"ip":"::1"} {"uid":"d43263a"}
+[2025-08-30T02:27:49.225504+00:00] supermon-ng.INFO: Menu request [] {"uid":"2f5b703"}
+[2025-08-30T02:27:49.225669+00:00] supermon-ng.INFO: Checking session for user {"session_user":"anarchy","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.225723+00:00] supermon-ng.INFO: Loading menu from INI file {"file":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini","username":"anarchy"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.225813+00:00] supermon-ng.INFO: Parsed INI config {"sections":[546050,546051,546054,546055,546056,"Hubs","LsNodes","DVSwitch","D-Star","Pi-Star","QRZ","ASL3+"]} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.225856+00:00] supermon-ng.INFO: Sample config data {"546050":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.225894+00:00] supermon-ng.INFO: Processing config section {"name":546050,"data":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.225946+00:00] supermon-ng.INFO: Menu item system assignment {"name":546050,"system":"Nodes","data_system":"Nodes"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.225984+00:00] supermon-ng.INFO: Processing config section {"name":546051,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226021+00:00] supermon-ng.INFO: Menu item system assignment {"name":546051,"system":"Nodes","data_system":"Nodes"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226056+00:00] supermon-ng.INFO: Processing config section {"name":546054,"data":{"host":"10.0.0.5:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226103+00:00] supermon-ng.INFO: Menu item system assignment {"name":546054,"system":"Nodes","data_system":"Nodes"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226140+00:00] supermon-ng.INFO: Processing config section {"name":546055,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226176+00:00] supermon-ng.INFO: Menu item system assignment {"name":546055,"system":"Nodes","data_system":"Nodes"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226210+00:00] supermon-ng.INFO: Processing config section {"name":546056,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226245+00:00] supermon-ng.INFO: Menu item system assignment {"name":546056,"system":"Nodes","data_system":"Nodes"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226279+00:00] supermon-ng.INFO: Processing config section {"name":"Hubs","data":{"system":"Display Groups","menu":"1","nodes":"546051,546055,546056"}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226314+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Hubs","system":"Display Groups","data_system":"Display Groups"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226348+00:00] supermon-ng.INFO: Processing config section {"name":"LsNodes","data":{"url":"/cgi-bin/sm_lsnodes?node=546050","menu":""}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226382+00:00] supermon-ng.INFO: Skipping section - menu not enabled {"name":"LsNodes","menu":""} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226414+00:00] supermon-ng.INFO: Processing config section {"name":"DVSwitch","data":{"url":"http://DVSwitch.org/","menu":"1"}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226448+00:00] supermon-ng.INFO: Menu item system assignment {"name":"DVSwitch","system":null,"data_system":"not set"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226482+00:00] supermon-ng.INFO: Processing config section {"name":"D-Star","data":{"url":"http://www.DStarinfo.com/reflectors.aspx","menu":"1"}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226516+00:00] supermon-ng.INFO: Menu item system assignment {"name":"D-Star","system":null,"data_system":"not set"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226550+00:00] supermon-ng.INFO: Processing config section {"name":"Pi-Star","data":{"url":"http://PiStar.uk/","menu":"1"}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226583+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Pi-Star","system":null,"data_system":"not set"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226617+00:00] supermon-ng.INFO: Processing config section {"name":"QRZ","data":{"url":"http://QRZ.com/db/W5GLE","menu":"1"}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226650+00:00] supermon-ng.INFO: Menu item system assignment {"name":"QRZ","system":null,"data_system":"not set"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226684+00:00] supermon-ng.INFO: Processing config section {"name":"ASL3+","data":{"url":"https://allstarlink.org","menu":"1","default_node":"546051,546055,546056"}} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226718+00:00] supermon-ng.INFO: Menu item system assignment {"name":"ASL3+","system":null,"data_system":"not set"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.226815+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/menu","status_code":200,"duration_ms":15.86,"ip":"::1"} {"uid":"2f5b703"}
+[2025-08-30T02:27:49.231177+00:00] supermon-ng.INFO: User info request [] {"uid":"81c115f"}
+[2025-08-30T02:27:49.231409+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/auth/me","status_code":200,"duration_ms":0.69,"ip":"::1"} {"uid":"81c115f"}
+[2025-08-30T02:27:49.241499+00:00] supermon-ng.INFO: Fetching node list [] {"uid":"fd59f24"}
+[2025-08-30T02:27:49.241688+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"fd59f24"}
+[2025-08-30T02:27:49.241772+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes","status_code":200,"duration_ms":0.74,"ip":"::1"} {"uid":"fd59f24"}
+[2025-08-30T02:27:49.262778+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"56a6253"}
+[2025-08-30T02:27:49.262948+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini [] {"uid":"56a6253"}
+[2025-08-30T02:27:49.263146+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":14.08,"ip":"::1"} {"uid":"56a6253"}
+[2025-08-30T02:27:49.271627+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"ddfd290"}
+[2025-08-30T02:27:49.314978+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":44.14,"ip":"::1"} {"uid":"ddfd290"}
+[2025-08-30T02:27:49.399485+00:00] supermon-ng.INFO: System info request [] {"uid":"fbbd663"}
+[2025-08-30T02:27:49.399698+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/system-info","status_code":200,"duration_ms":12.96,"ip":"::1"} {"uid":"fbbd663"}
+[2025-08-30T02:27:49.404042+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"c42a21a"}
+[2025-08-30T02:27:49.442771+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":39.58,"ip":"::1"} {"uid":"c42a21a"}
+[2025-08-30T02:27:49.463933+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"cb900fc"}
+[2025-08-30T02:27:49.464107+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini [] {"uid":"cb900fc"}
+[2025-08-30T02:27:49.464317+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":14.94,"ip":"::1"} {"uid":"cb900fc"}
+[2025-08-30T02:27:49.469313+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"feed2c3"}
+[2025-08-30T02:27:49.469635+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"feed2c3"}
+[2025-08-30T02:27:49.603905+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":135.71,"ip":"::1"} {"uid":"feed2c3"}
+[2025-08-30T02:27:54.383218+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ab0aaaf"}
+[2025-08-30T02:27:54.383411+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ab0aaaf"}
+[2025-08-30T02:27:54.482852+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":100.13,"ip":"::1"} {"uid":"ab0aaaf"}
+[2025-08-30T02:27:59.410074+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"8186383"}
+[2025-08-30T02:27:59.411243+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"8186383"}
+[2025-08-30T02:27:59.540192+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":134.56,"ip":"::1"} {"uid":"8186383"}
+[2025-08-30T02:28:04.383192+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"2fb2422"}
+[2025-08-30T02:28:04.383460+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"2fb2422"}
+[2025-08-30T02:28:04.489088+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":106.58,"ip":"::1"} {"uid":"2fb2422"}
+[2025-08-30T02:28:09.385540+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"be59967"}
+[2025-08-30T02:28:09.385843+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"be59967"}
+[2025-08-30T02:28:09.515334+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":130.6,"ip":"::1"} {"uid":"be59967"}
+[2025-08-30T02:28:14.395312+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"814e4af"}
+[2025-08-30T02:28:14.395790+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"814e4af"}
+[2025-08-30T02:28:14.524692+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":130.9,"ip":"::1"} {"uid":"814e4af"}
+[2025-08-30T02:28:19.384181+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"1911c57"}
+[2025-08-30T02:28:19.384390+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"1911c57"}
+[2025-08-30T02:28:19.495850+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":112.21,"ip":"::1"} {"uid":"1911c57"}
+[2025-08-30T02:28:24.401165+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e4488ac"}
+[2025-08-30T02:28:24.401859+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"e4488ac"}
+[2025-08-30T02:28:24.551769+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":152.69,"ip":"::1"} {"uid":"e4488ac"}
+[2025-08-30T02:28:29.384715+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"66328fe"}
+[2025-08-30T02:28:29.384921+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"66328fe"}
+[2025-08-30T02:28:29.488978+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":104.78,"ip":"::1"} {"uid":"66328fe"}
+[2025-08-30T02:28:31.399571+00:00] supermon-ng.INFO: Menu request [] {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.399727+00:00] supermon-ng.INFO: Checking session for user {"session_user":"anarchy","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.399778+00:00] supermon-ng.INFO: Loading menu from INI file {"file":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini","username":"anarchy"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.399861+00:00] supermon-ng.INFO: Parsed INI config {"sections":[546050,546051,546054,546055,546056,"Hubs","LsNodes","DVSwitch","D-Star","Pi-Star","QRZ","ASL3+"]} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.399901+00:00] supermon-ng.INFO: Sample config data {"546050":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.399935+00:00] supermon-ng.INFO: Processing config section {"name":546050,"data":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.399970+00:00] supermon-ng.INFO: Menu item system assignment {"name":546050,"system":"Nodes","data_system":"Nodes"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400003+00:00] supermon-ng.INFO: Processing config section {"name":546051,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400036+00:00] supermon-ng.INFO: Menu item system assignment {"name":546051,"system":"Nodes","data_system":"Nodes"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400082+00:00] supermon-ng.INFO: Processing config section {"name":546054,"data":{"host":"10.0.0.5:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400116+00:00] supermon-ng.INFO: Menu item system assignment {"name":546054,"system":"Nodes","data_system":"Nodes"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400148+00:00] supermon-ng.INFO: Processing config section {"name":546055,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400195+00:00] supermon-ng.INFO: Menu item system assignment {"name":546055,"system":"Nodes","data_system":"Nodes"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400227+00:00] supermon-ng.INFO: Processing config section {"name":546056,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400261+00:00] supermon-ng.INFO: Menu item system assignment {"name":546056,"system":"Nodes","data_system":"Nodes"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400292+00:00] supermon-ng.INFO: Processing config section {"name":"Hubs","data":{"system":"Display Groups","menu":"1","nodes":"546051,546055,546056"}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400325+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Hubs","system":"Display Groups","data_system":"Display Groups"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400358+00:00] supermon-ng.INFO: Processing config section {"name":"LsNodes","data":{"url":"/cgi-bin/sm_lsnodes?node=546050","menu":""}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400390+00:00] supermon-ng.INFO: Skipping section - menu not enabled {"name":"LsNodes","menu":""} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400421+00:00] supermon-ng.INFO: Processing config section {"name":"DVSwitch","data":{"url":"http://DVSwitch.org/","menu":"1"}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400453+00:00] supermon-ng.INFO: Menu item system assignment {"name":"DVSwitch","system":null,"data_system":"not set"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400485+00:00] supermon-ng.INFO: Processing config section {"name":"D-Star","data":{"url":"http://www.DStarinfo.com/reflectors.aspx","menu":"1"}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400517+00:00] supermon-ng.INFO: Menu item system assignment {"name":"D-Star","system":null,"data_system":"not set"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400549+00:00] supermon-ng.INFO: Processing config section {"name":"Pi-Star","data":{"url":"http://PiStar.uk/","menu":"1"}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400581+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Pi-Star","system":null,"data_system":"not set"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400612+00:00] supermon-ng.INFO: Processing config section {"name":"QRZ","data":{"url":"http://QRZ.com/db/W5GLE","menu":"1"}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400644+00:00] supermon-ng.INFO: Menu item system assignment {"name":"QRZ","system":null,"data_system":"not set"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400675+00:00] supermon-ng.INFO: Processing config section {"name":"ASL3+","data":{"url":"https://allstarlink.org","menu":"1","default_node":"546051,546055,546056"}} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400708+00:00] supermon-ng.INFO: Menu item system assignment {"name":"ASL3+","system":null,"data_system":"not set"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.400793+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/menu","status_code":200,"duration_ms":14.9,"ip":"::1"} {"uid":"8ccde9b"}
+[2025-08-30T02:28:31.404580+00:00] supermon-ng.INFO: User info request [] {"uid":"2840d26"}
+[2025-08-30T02:28:31.404907+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/auth/me","status_code":200,"duration_ms":1.07,"ip":"::1"} {"uid":"2840d26"}
+[2025-08-30T02:28:31.416329+00:00] supermon-ng.INFO: Fetching node list [] {"uid":"8899506"}
+[2025-08-30T02:28:31.416572+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"8899506"}
+[2025-08-30T02:28:31.416716+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes","status_code":200,"duration_ms":1.21,"ip":"::1"} {"uid":"8899506"}
+[2025-08-30T02:28:31.438770+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"39995ed"}
+[2025-08-30T02:28:31.438939+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini [] {"uid":"39995ed"}
+[2025-08-30T02:28:31.439149+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":13.49,"ip":"::1"} {"uid":"39995ed"}
+[2025-08-30T02:28:31.446680+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"ac84128"}
+[2025-08-30T02:28:31.485824+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":39.6,"ip":"::1"} {"uid":"ac84128"}
+[2025-08-30T02:28:31.597399+00:00] supermon-ng.INFO: System info request [] {"uid":"65cb922"}
+[2025-08-30T02:28:31.597636+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/system-info","status_code":200,"duration_ms":15.77,"ip":"::1"} {"uid":"65cb922"}
+[2025-08-30T02:28:31.602206+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"4a85fef"}
+[2025-08-30T02:28:31.657853+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":56.5,"ip":"::1"} {"uid":"4a85fef"}
+[2025-08-30T02:28:31.689913+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"ee601c9"}
+[2025-08-30T02:28:31.690082+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini [] {"uid":"ee601c9"}
+[2025-08-30T02:28:31.690288+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":20.94,"ip":"::1"} {"uid":"ee601c9"}
+[2025-08-30T02:28:31.695072+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"7df1d9d"}
+[2025-08-30T02:28:31.695379+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"7df1d9d"}
+[2025-08-30T02:28:31.861459+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":167.57,"ip":"::1"} {"uid":"7df1d9d"}
+[2025-08-30T02:28:36.595817+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e010cfe"}
+[2025-08-30T02:28:36.596144+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"e010cfe"}
+[2025-08-30T02:28:36.762574+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":167.77,"ip":"::1"} {"uid":"e010cfe"}
+[2025-08-30T02:28:41.580805+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"c3ba03b"}
+[2025-08-30T02:28:41.581205+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"c3ba03b"}
+[2025-08-30T02:28:41.758361+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":178.57,"ip":"::1"} {"uid":"c3ba03b"}
+[2025-08-30T02:28:46.578448+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"185ca78"}
+[2025-08-30T02:28:46.578637+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"185ca78"}
+[2025-08-30T02:28:46.675245+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":97.26,"ip":"::1"} {"uid":"185ca78"}
+[2025-08-30T02:28:51.518500+00:00] supermon-ng.INFO: Menu request [] {"uid":"2431d63"}
+[2025-08-30T02:28:51.518715+00:00] supermon-ng.INFO: Checking session for user {"session_user":"anarchy","session_id":"39032b8279fb1aafcd29f663bb0afb7b"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.518783+00:00] supermon-ng.INFO: Loading menu from INI file {"file":"/home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini","username":"anarchy"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.518910+00:00] supermon-ng.INFO: Parsed INI config {"sections":[546050,546051,546054,546055,546056,"Hubs","LsNodes","DVSwitch","D-Star","Pi-Star","QRZ","ASL3+"]} {"uid":"2431d63"}
+[2025-08-30T02:28:51.518954+00:00] supermon-ng.INFO: Sample config data {"546050":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.518988+00:00] supermon-ng.INFO: Processing config section {"name":546050,"data":{"host":"10.0.0.4:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519022+00:00] supermon-ng.INFO: Menu item system assignment {"name":546050,"system":"Nodes","data_system":"Nodes"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519053+00:00] supermon-ng.INFO: Processing config section {"name":546051,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519084+00:00] supermon-ng.INFO: Menu item system assignment {"name":546051,"system":"Nodes","data_system":"Nodes"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519113+00:00] supermon-ng.INFO: Processing config section {"name":546054,"data":{"host":"10.0.0.5:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519143+00:00] supermon-ng.INFO: Menu item system assignment {"name":546054,"system":"Nodes","data_system":"Nodes"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519172+00:00] supermon-ng.INFO: Processing config section {"name":546055,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519201+00:00] supermon-ng.INFO: Menu item system assignment {"name":546055,"system":"Nodes","data_system":"Nodes"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519229+00:00] supermon-ng.INFO: Processing config section {"name":546056,"data":{"host":"10.0.0.41:5038","user":"admin","passwd":"ILoveToEatPussy","menu":"1","system":"Nodes","hideNodeURL":""}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519259+00:00] supermon-ng.INFO: Menu item system assignment {"name":546056,"system":"Nodes","data_system":"Nodes"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519287+00:00] supermon-ng.INFO: Processing config section {"name":"Hubs","data":{"system":"Display Groups","menu":"1","nodes":"546051,546055,546056"}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519317+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Hubs","system":"Display Groups","data_system":"Display Groups"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519346+00:00] supermon-ng.INFO: Processing config section {"name":"LsNodes","data":{"url":"/cgi-bin/sm_lsnodes?node=546050","menu":""}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519375+00:00] supermon-ng.INFO: Skipping section - menu not enabled {"name":"LsNodes","menu":""} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519402+00:00] supermon-ng.INFO: Processing config section {"name":"DVSwitch","data":{"url":"http://DVSwitch.org/","menu":"1"}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519430+00:00] supermon-ng.INFO: Menu item system assignment {"name":"DVSwitch","system":null,"data_system":"not set"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519459+00:00] supermon-ng.INFO: Processing config section {"name":"D-Star","data":{"url":"http://www.DStarinfo.com/reflectors.aspx","menu":"1"}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519488+00:00] supermon-ng.INFO: Menu item system assignment {"name":"D-Star","system":null,"data_system":"not set"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519516+00:00] supermon-ng.INFO: Processing config section {"name":"Pi-Star","data":{"url":"http://PiStar.uk/","menu":"1"}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519545+00:00] supermon-ng.INFO: Menu item system assignment {"name":"Pi-Star","system":null,"data_system":"not set"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519589+00:00] supermon-ng.INFO: Processing config section {"name":"QRZ","data":{"url":"http://QRZ.com/db/W5GLE","menu":"1"}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519620+00:00] supermon-ng.INFO: Menu item system assignment {"name":"QRZ","system":null,"data_system":"not set"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519665+00:00] supermon-ng.INFO: Processing config section {"name":"ASL3+","data":{"url":"https://allstarlink.org","menu":"1","default_node":"546051,546055,546056"}} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519694+00:00] supermon-ng.INFO: Menu item system assignment {"name":"ASL3+","system":null,"data_system":"not set"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.519784+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/menu","status_code":200,"duration_ms":20.44,"ip":"::1"} {"uid":"2431d63"}
+[2025-08-30T02:28:51.524172+00:00] supermon-ng.INFO: User info request [] {"uid":"ffbc5b3"}
+[2025-08-30T02:28:51.524719+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/auth/me","status_code":200,"duration_ms":1.33,"ip":"::1"} {"uid":"ffbc5b3"}
+[2025-08-30T02:28:51.533984+00:00] supermon-ng.INFO: Fetching node list [] {"uid":"0e3e5ab"}
+[2025-08-30T02:28:51.534186+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"0e3e5ab"}
+[2025-08-30T02:28:51.534273+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes","status_code":200,"duration_ms":0.77,"ip":"::1"} {"uid":"0e3e5ab"}
+[2025-08-30T02:28:51.558003+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"b0edc57"}
+[2025-08-30T02:28:51.558225+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini [] {"uid":"b0edc57"}
+[2025-08-30T02:28:51.558523+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":15.55,"ip":"::1"} {"uid":"b0edc57"}
+[2025-08-30T02:28:51.568463+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"e2c2049"}
+[2025-08-30T02:28:51.628474+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":60.68,"ip":"::1"} {"uid":"e2c2049"}
+[2025-08-30T02:28:51.739911+00:00] supermon-ng.INFO: System info request [] {"uid":"b409b7f"}
+[2025-08-30T02:28:51.740167+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/system-info","status_code":200,"duration_ms":14.44,"ip":"::1"} {"uid":"b409b7f"}
+[2025-08-30T02:28:51.744478+00:00] supermon-ng.INFO: Fetching database status [] {"uid":"fae4a00"}
+[2025-08-30T02:28:51.805218+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/database/status","status_code":200,"duration_ms":61.47,"ip":"::1"} {"uid":"fae4a00"}
+[2025-08-30T02:28:51.867321+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"5c8d413"}
+[2025-08-30T02:28:51.867518+00:00] supermon-ng.INFO: Loading nodes from INI file: /home/sources/supermon-ng/src/Application/Controllers/../../../user_files/anarchy-allmon.ini [] {"uid":"5c8d413"}
+[2025-08-30T02:28:51.867732+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":53.59,"ip":"::1"} {"uid":"5c8d413"}
+[2025-08-30T02:28:51.871884+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"5d36075"}
+[2025-08-30T02:28:51.872144+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"5d36075"}
+[2025-08-30T02:28:52.001531+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":130.39,"ip":"::1"} {"uid":"5d36075"}
+[2025-08-30T02:28:56.723481+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"0aec258"}
+[2025-08-30T02:28:56.723710+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"0aec258"}
+[2025-08-30T02:28:56.823867+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":100.9,"ip":"::1"} {"uid":"0aec258"}
+[2025-08-30T02:29:01.723080+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"71e8274"}
+[2025-08-30T02:29:01.723289+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"71e8274"}
+[2025-08-30T02:29:01.816946+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":94.42,"ip":"::1"} {"uid":"71e8274"}
+[2025-08-30T02:29:06.725272+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"e591046"}
+[2025-08-30T02:29:06.725525+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"e591046"}
+[2025-08-30T02:29:06.855941+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":131.22,"ip":"::1"} {"uid":"e591046"}
+[2025-08-30T02:29:11.742529+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"924a0ae"}
+[2025-08-30T02:29:11.743417+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"924a0ae"}
+[2025-08-30T02:29:11.869177+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":129.27,"ip":"::1"} {"uid":"924a0ae"}
+[2025-08-30T02:29:16.722739+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"b130715"}
+[2025-08-30T02:29:16.722912+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"b130715"}
+[2025-08-30T02:29:16.817989+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":95.71,"ip":"::1"} {"uid":"b130715"}
+[2025-08-30T02:29:21.722862+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"096d168"}
+[2025-08-30T02:29:21.723029+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"096d168"}
+[2025-08-30T02:29:21.848474+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":126.07,"ip":"::1"} {"uid":"096d168"}
+[2025-08-30T02:29:26.723912+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"f72ea40"}
+[2025-08-30T02:29:26.724138+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f72ea40"}
+[2025-08-30T02:29:26.833484+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":110.15,"ip":"::1"} {"uid":"f72ea40"}
+[2025-08-30T02:29:31.289931+00:00] supermon-ng.INFO: HTTP Request {"method":"POST","uri":"/api/nodes/cpustats","status_code":200,"duration_ms":18.51,"ip":"::1"} {"uid":"2b23a44"}
+[2025-08-30T02:29:31.739371+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"5f54594"}
+[2025-08-30T02:29:31.740123+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"5f54594"}
+[2025-08-30T02:29:32.637149+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":900.27,"ip":"::1"} {"uid":"5f54594"}
+[2025-08-30T02:29:36.725371+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"4915fe5"}
+[2025-08-30T02:29:36.725713+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"4915fe5"}
+[2025-08-30T02:29:36.925068+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":200.39,"ip":"::1"} {"uid":"4915fe5"}
+[2025-08-30T02:29:41.724958+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ac6fe4a"}
+[2025-08-30T02:29:41.725212+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ac6fe4a"}
+[2025-08-30T02:29:41.846725+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":122.43,"ip":"::1"} {"uid":"ac6fe4a"}
+[2025-08-30T02:29:46.739510+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"bfaa767"}
+[2025-08-30T02:29:46.740120+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"bfaa767"}
+[2025-08-30T02:29:46.851918+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":115.02,"ip":"::1"} {"uid":"bfaa767"}
+[2025-08-30T02:29:51.723501+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"70d4e66"}
+[2025-08-30T02:29:51.723726+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"70d4e66"}
+[2025-08-30T02:29:51.825477+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":102.52,"ip":"::1"} {"uid":"70d4e66"}
+[2025-08-30T02:29:56.743085+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"5f108c0"}
+[2025-08-30T02:29:56.743735+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"5f108c0"}
+[2025-08-30T02:29:56.859426+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":124.11,"ip":"::1"} {"uid":"5f108c0"}
+[2025-08-30T02:30:01.729735+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"57bdf0c"}
+[2025-08-30T02:30:01.730168+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"57bdf0c"}
+[2025-08-30T02:30:01.848830+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":120.22,"ip":"::1"} {"uid":"57bdf0c"}
+[2025-08-30T02:30:06.730850+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"f158a7b"}
+[2025-08-30T02:30:06.731330+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f158a7b"}
+[2025-08-30T02:30:06.937771+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":208.27,"ip":"::1"} {"uid":"f158a7b"}
+[2025-08-30T02:30:11.738642+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"b3a1d8b"}
+[2025-08-30T02:30:11.739371+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"b3a1d8b"}
+[2025-08-30T02:30:11.863235+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":126.72,"ip":"::1"} {"uid":"b3a1d8b"}
+[2025-08-30T02:30:16.744182+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"ea1e7cb"}
+[2025-08-30T02:30:16.745009+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"ea1e7cb"}
+[2025-08-30T02:30:16.861322+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":120.29,"ip":"::1"} {"uid":"ea1e7cb"}
+[2025-08-30T02:30:21.738376+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"5c96014"}
+[2025-08-30T02:30:21.739100+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"5c96014"}
+[2025-08-30T02:30:21.859878+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":123.52,"ip":"::1"} {"uid":"5c96014"}
+[2025-08-30T02:30:26.739874+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"2e8aca7"}
+[2025-08-30T02:30:26.740608+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"2e8aca7"}
+[2025-08-30T02:30:26.873197+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":135.68,"ip":"::1"} {"uid":"2e8aca7"}
+[2025-08-30T02:30:31.738437+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"3e0dea3"}
+[2025-08-30T02:30:31.739224+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"3e0dea3"}
+[2025-08-30T02:30:31.905289+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":168.87,"ip":"::1"} {"uid":"3e0dea3"}
+[2025-08-30T02:30:36.734006+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"42e6b72"}
+[2025-08-30T02:30:36.734300+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"42e6b72"}
+[2025-08-30T02:30:36.871159+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":137.87,"ip":"::1"} {"uid":"42e6b72"}
+[2025-08-30T02:30:41.723983+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"be0a5f6"}
+[2025-08-30T02:30:41.724247+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"be0a5f6"}
+[2025-08-30T02:30:41.933115+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":210.01,"ip":"::1"} {"uid":"be0a5f6"}
+[2025-08-30T02:30:46.723562+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"fd39f03"}
+[2025-08-30T02:30:46.723769+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"fd39f03"}
+[2025-08-30T02:30:46.821628+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":98.6,"ip":"::1"} {"uid":"fd39f03"}
+[2025-08-30T02:30:51.723953+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"f8cd4be"}
+[2025-08-30T02:30:51.724180+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f8cd4be"}
+[2025-08-30T02:30:52.473434+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":750.27,"ip":"::1"} {"uid":"f8cd4be"}
+[2025-08-30T02:30:56.725396+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"de3f8e3"}
+[2025-08-30T02:30:56.725613+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"de3f8e3"}
+[2025-08-30T02:30:56.843926+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":119.12,"ip":"::1"} {"uid":"de3f8e3"}
+[2025-08-30T02:31:01.725426+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"790d067"}
+[2025-08-30T02:31:01.725610+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"790d067"}
+[2025-08-30T02:31:01.822088+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":98.84,"ip":"::1"} {"uid":"790d067"}
+[2025-08-30T02:31:06.729426+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"f8840c1"}
+[2025-08-30T02:31:06.729724+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"f8840c1"}
+[2025-08-30T02:31:06.862807+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":134.22,"ip":"::1"} {"uid":"f8840c1"}
+[2025-08-30T02:31:11.723316+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"d7a7a87"}
+[2025-08-30T02:31:11.723545+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"d7a7a87"}
+[2025-08-30T02:31:11.817322+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":94.53,"ip":"::1"} {"uid":"d7a7a87"}
+[2025-08-30T02:31:16.726564+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"5cb2ee4"}
+[2025-08-30T02:31:16.726899+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"5cb2ee4"}
+[2025-08-30T02:31:16.895144+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":169.7,"ip":"::1"} {"uid":"5cb2ee4"}
+[2025-08-30T02:31:21.725940+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"21e37a1"}
+[2025-08-30T02:31:21.726179+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"21e37a1"}
+[2025-08-30T02:31:21.825096+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":101.3,"ip":"::1"} {"uid":"21e37a1"}
+[2025-08-30T02:31:26.749017+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"3ab8c3f"}
+[2025-08-30T02:31:26.749367+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"3ab8c3f"}
+[2025-08-30T02:31:26.960262+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":212.39,"ip":"::1"} {"uid":"3ab8c3f"}
+[2025-08-30T02:31:31.736155+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"3fd1fff"}
+[2025-08-30T02:31:31.736809+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"3fd1fff"}
+[2025-08-30T02:31:31.859222+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":124.83,"ip":"::1"} {"uid":"3fd1fff"}
+[2025-08-30T02:31:34.546046+00:00] supermon-ng.INFO: HTTP Request {"method":"POST","uri":"/api/nodes/cpustats","status_code":200,"duration_ms":16.63,"ip":"::1"} {"uid":"5f81bc6"}
+[2025-08-30T02:31:36.723414+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"085cad2"}
+[2025-08-30T02:31:36.723678+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"085cad2"}
+[2025-08-30T02:31:36.875551+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":152.74,"ip":"::1"} {"uid":"085cad2"}
+[2025-08-30T02:31:41.739212+00:00] supermon-ng.INFO: Fetching AMI status for nodes [] {"uid":"b82c116"}
+[2025-08-30T02:31:41.739753+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/anarchy-allmon.ini"} {"uid":"b82c116"}
+[2025-08-30T02:31:41.881685+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":200,"duration_ms":143.76,"ip":"::1"} {"uid":"b82c116"}

@@ -117,6 +117,9 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->post('/local-monitor', [NodeController::class, 'localMonitor']);
         $group->post('/dtmf', [NodeController::class, 'dtmf']);
         $group->post('/rptstats', [NodeController::class, 'rptstats']);
+        
+        // CPU Stats Route
+        $group->post('/cpustats', [NodeController::class, 'cpustats']);
     });
 
     // Config routes
