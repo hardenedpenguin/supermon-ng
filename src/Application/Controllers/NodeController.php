@@ -268,7 +268,7 @@ class NodeController
             }
 
             // Connect to AMI
-            $fp = $this->connectToAmi($nodeConfig, $localNode);
+            $fp = $this->connectToAmi($nodeConfig, (string)$localNode);
             if (!$fp) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -278,7 +278,7 @@ class NodeController
             }
 
             // Process action and get ilink command
-            $actionResult = $this->processAction($action, $permInput, $localNode, $remoteNode, $currentUser);
+            $actionResult = $this->processAction($action, $permInput, (string)$localNode, $remoteNode, $currentUser);
             if (!$actionResult) {
                 \SimpleAmiClient::logoff($fp);
                 $response->getBody()->write(json_encode([
@@ -292,7 +292,7 @@ class NodeController
             $message = $actionResult['message'];
 
             // Execute AMI command
-            $commandResult = $this->executeAmiCommand($fp, $ilink, $localNode, $remoteNode, $action);
+            $commandResult = $this->executeAmiCommand($fp, $ilink, (string)$localNode, $remoteNode, $action);
             
             // Clean up connection
             \SimpleAmiClient::logoff($fp);
