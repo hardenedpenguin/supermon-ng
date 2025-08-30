@@ -156,18 +156,7 @@
       <b>System maintained by: <i>{{ systemInfo?.maintainer || 'W5GLE, Alvin, Texas' }}</i></b>
     </div>
     
-    <!-- Additional System Info -->
-    <div class="footer-info">
-      <div v-if="systemInfo">
-        <strong>System:</strong> {{ systemInfo.system_name || 'Supermon-ng' }} | 
-        <strong>Version:</strong> {{ systemInfo.version || 'V4.0.0' }} | 
-        <strong>Uptime:</strong> {{ systemInfo.uptime || 'N/A' }}
-      </div>
-      <div v-if="databaseStatus">
-        <strong>Database:</strong> {{ databaseStatus.status || 'Connected' }} | 
-        <strong>Nodes:</strong> {{ databaseStatus.node_count || availableNodes.length }}
-      </div>
-    </div>
+
 
     <!-- Donate Button Section -->
     <div id="donate-section" style="margin-top: 20px; text-align: center;">
@@ -1406,16 +1395,7 @@ watch(displayedNodes, (newDisplayedNodes) => {
   font-size: 14px;
 }
 
-.footer-info {
-  margin-top: 10px;
-  padding: 15px;
-  background-color: var(--background-color);
-  border: 1px solid var(--primary-color);
-  border-radius: 4px;
-  text-align: center;
-  font-size: 14px;
-  color: var(--text-color);
-}
+
 
 /* Login modal */
 .login-modal {
