@@ -538,43 +538,43 @@ defineExpose({
   line-height: 1.2;
 }
 
-/* Table row colors - matching original Supermon-ng */
+/* Table row colors - matching original Supermon-ng with theme support */
 .gridtable tr.rColor td {
-  background-color: #2a2a2a;
+  background-color: var(--local-node-header) !important;
   font-weight: bold;
-  color: var(--link-color);
+  color: var(--local-node-header-text) !important;
 }
 
 .gridtable tr.cColor td,
 .gridtable tr.cColor td a,
 .gridtable tr.tColor td {
-  background-color: #2a2a2a;
+  background-color: var(--local-node-bg) !important;
   font-weight: bold;
-  color: var(--link-color);
+  color: var(--local-node-text) !important;
 }
 
 .gridtable tr.bColor td {
-  background-color: var(--success-color);
+  background-color: var(--success-color) !important;
   font-weight: bold;
-  color: var(--background-color);
+  color: var(--background-color) !important;
 }
 
 .gridtable tr.gColor td {
-  background-color: #404040;
+  background-color: var(--table-header-bg) !important;
   font-weight: bold;
-  color: var(--text-color);
+  color: var(--text-color) !important;
 }
 
 .gridtable tr.lColor td {
-  background-color: #585858;
+  background-color: var(--warning-color) !important;
   font-weight: bold;
-  color: var(--text-color);
+  color: var(--background-color) !important;
 }
 
 .gridtable tr.rxkColor td {
-  background-color: #2a2a2a;
+  background-color: var(--error-color) !important;
   font-weight: bold;
-  color: var(--link-color);
+  color: var(--background-color) !important;
 }
 
 
