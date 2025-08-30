@@ -15,6 +15,36 @@
           {{ error }}
         </div>
 
+        <div v-else-if="!props.nodeNumber" class="no-node-selected">
+          <div class="node-input-section">
+            <h3>Enter Node Number</h3>
+            <p>Please enter a node number to add to your favorites:</p>
+            <div class="form-group">
+              <label for="node-input">Node Number:</label>
+              <input
+                id="node-input"
+                v-model="manualNodeNumber"
+                type="text"
+                placeholder="Enter node number (e.g., 2000)"
+                class="form-input"
+                @keyup.enter="loadNodeInfo(manualNodeNumber)"
+              />
+            </div>
+            <div class="button-group">
+              <button
+                @click="loadNodeInfo(manualNodeNumber)"
+                :disabled="!manualNodeNumber || loading"
+                class="add-button"
+              >
+                {{ loading ? 'Loading...' : 'Load Node Info' }}
+              </button>
+              <button @click="closeModal" class="cancel-button">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div v-else-if="nodeInfo" class="add-favorite-form">
           <div class="node-info">
             <h3>Node Information</h3>
@@ -95,6 +125,7 @@ const error = ref('')
 const nodeInfo = ref(null)
 const customLabel = ref('')
 const addToGeneral = ref(true)
+const manualNodeNumber = ref('')
 
 // Watch for changes in nodeNumber and load node info
 watch(() => props.nodeNumber, async (newNode) => {
@@ -119,32 +150,47 @@ const loadNodeInfo = async (node) => {
   error.value = ''
   
   try {
-    // For now, we'll create a simple node info object
-    // The backend will look up the actual node info from astdb.txt
+    // Get actual node info from astdb.txt via backend
+    const response = await api.get(`/api/config/node-info?node=${node}`)
+    
+    if (response.data.success) {
+      nodeInfo.value = response.data.nodeInfo
+      // Set default label using actual node info
+      customLabel.value = `${nodeInfo.value.callsign} ${nodeInfo.value.description} ${node}`
+    } else {
+      // Fallback if node not found in astdb.txt
+      nodeInfo.value = {
+        node: node,
+        callsign: `Node ${node}`,
+        description: 'Node',
+        location: 'Unknown'
+      }
+      customLabel.value = `Node ${node}`
+    }
+  } catch (err) {
+    // Fallback if API call fails
     nodeInfo.value = {
       node: node,
       callsign: `Node ${node}`,
       description: 'Node',
       location: 'Unknown'
     }
-    // Set default label
     customLabel.value = `Node ${node}`
-  } catch (err) {
-    error.value = 'Failed to load node information'
   } finally {
     loading.value = false
   }
 }
 
 const addFavorite = async () => {
-  if (!props.nodeNumber) return
+  const nodeToUse = props.nodeNumber || manualNodeNumber.value
+  if (!nodeToUse) return
   
   saving.value = true
   error.value = ''
   
   try {
     const response = await api.post('/api/config/favorites/add', {
-      node: props.nodeNumber,
+      node: nodeToUse,
       custom_label: customLabel.value,
       add_to_general: addToGeneral.value ? '1' : '0'
     })
@@ -178,6 +224,7 @@ const resetForm = () => {
   nodeInfo.value = null
   customLabel.value = ''
   addToGeneral.value = true
+  manualNodeNumber.value = ''
 }
 </script>
 
@@ -369,6 +416,20 @@ const resetForm = () => {
 
 .no-node-info {
   text-align: center;
+  color: #a0aec0;
+}
+
+.node-input-section {
+  text-align: center;
+}
+
+.node-input-section h3 {
+  margin: 0 0 15px 0;
+  color: #e2e8f0;
+}
+
+.node-input-section p {
+  margin: 0 0 20px 0;
   color: #a0aec0;
 }
 </style>

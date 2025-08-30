@@ -2709,6 +2709,61 @@ class ConfigController
     }
 
     /**
+     * Get node information from astdb.txt
+     */
+    public function getNodeInfo(Request $request, Response $response): Response
+    {
+        try {
+            $currentUser = $this->getCurrentUser();
+            if (!$currentUser) {
+                $currentUser = 'default';
+            }
+            
+            // Check user permissions
+            if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'FAVUSER permission required'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+            }
+
+            $node = $request->getQueryParams()['node'] ?? '';
+            
+            if (empty($node)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Node parameter is required'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+
+            $nodeInfo = $this->lookupNodeInfo($node);
+            
+            if ($nodeInfo === false) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Node $node not found in astdb.txt database"
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+            }
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'nodeInfo' => $nodeInfo
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Failed to get node information: ' . $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
+    /**
      * Look up node information in astdb.txt
      */
     private function lookupNodeInfo(string $node): array|false
