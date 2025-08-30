@@ -40,7 +40,7 @@ export const themes: Theme[] = [
       border: '#404040',
       input: '#1a1a1a',
       inputText: '#e0e0e0',
-      tableHeader: '#3b82f6',
+      tableHeader: '#404040',
       success: '#4caf50',
       warning: '#ff9800',
       error: '#f44336',
@@ -49,8 +49,8 @@ export const themes: Theme[] = [
       localNodeBg: '#2a2a2a',
       localNodeText: '#e0e0e0',
       localNodeBorder: '#404040',
-      localNodeHeader: '#3b82f6',
-      localNodeHeaderText: '#ffffff'
+      localNodeHeader: '#404040',
+      localNodeHeaderText: '#e0e0e0'
     }
   },
   {
@@ -64,7 +64,7 @@ export const themes: Theme[] = [
       border: '#dddddd',
       input: '#ffffff',
       inputText: '#333333',
-      tableHeader: '#4f46e5',
+      tableHeader: '#e0e0e0',
       success: '#4caf50',
       warning: '#ff9800',
       error: '#f44336',
@@ -73,8 +73,8 @@ export const themes: Theme[] = [
       localNodeBg: '#f5f5f5',
       localNodeText: '#333333',
       localNodeBorder: '#dddddd',
-      localNodeHeader: '#4f46e5',
-      localNodeHeaderText: '#ffffff'
+      localNodeHeader: '#e0e0e0',
+      localNodeHeaderText: '#333333'
     }
   },
   {
@@ -88,7 +88,7 @@ export const themes: Theme[] = [
       border: '#3b82f6',
       input: '#1e40af',
       inputText: '#ffffff',
-      tableHeader: '#f59e0b',
+      tableHeader: '#3b82f6',
       success: '#10b981',
       warning: '#f59e0b',
       error: '#ef4444',
@@ -97,8 +97,8 @@ export const themes: Theme[] = [
       localNodeBg: '#1e40af',
       localNodeText: '#ffffff',
       localNodeBorder: '#3b82f6',
-      localNodeHeader: '#f59e0b',
-      localNodeHeaderText: '#1e3a8a'
+      localNodeHeader: '#3b82f6',
+      localNodeHeaderText: '#ffffff'
     }
   },
   {
@@ -112,7 +112,7 @@ export const themes: Theme[] = [
       border: '#059669',
       input: '#065f46',
       inputText: '#ffffff',
-      tableHeader: '#fbbf24',
+      tableHeader: '#059669',
       success: '#10b981',
       warning: '#f59e0b',
       error: '#ef4444',
@@ -121,8 +121,8 @@ export const themes: Theme[] = [
       localNodeBg: '#065f46',
       localNodeText: '#ffffff',
       localNodeBorder: '#059669',
-      localNodeHeader: '#fbbf24',
-      localNodeHeaderText: '#064e3b'
+      localNodeHeader: '#059669',
+      localNodeHeaderText: '#ffffff'
     }
   }
 ]
