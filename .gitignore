@@ -7,6 +7,11 @@ css/custom.css
 *.log
 *.log.*
 user_files/*.log
+logs-*.log
+
+# Cache and temporary directories
+cache/
+cache/*
 
 # Temporary files
 *.tmp
