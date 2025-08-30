@@ -2378,13 +2378,6 @@ class NodeController
         
         // Get the log file path from common.inc
         $log_file_path = $WEB_ERROR_LOG ?? '/var/log/apache2/error.log';
-        
-        if (!isset($WEB_ERROR_LOG)) {
-            return [
-                'success' => false,
-                'message' => 'Log file path (WEB_ERROR_LOG) not defined in configuration'
-            ];
-        }
 
         // Validate log file exists and is readable
         $fileStatus = $this->validateWeberrlogFile($log_file_path);
