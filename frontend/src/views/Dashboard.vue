@@ -233,6 +233,9 @@
           
           <!-- IRLP Log Modal -->
           <IRLPLog v-model:isVisible="showIrlpLogModal" />
+          
+          <!-- Linux Log Modal -->
+          <LinuxLog v-model:isVisible="showLinuxLogModal" />
     
   </div>
 </template>
@@ -260,6 +263,7 @@ import Donate from '@/components/Donate.vue'
 import ExtNodes from '@/components/ExtNodes.vue'
 import FastRestart from '@/components/FastRestart.vue'
 import IRLPLog from '@/components/IRLPLog.vue'
+import LinuxLog from '@/components/LinuxLog.vue'
 
 
 const appStore = useAppStore()
@@ -286,6 +290,7 @@ const showDonateModal = ref(false)
   const showExtNodesModal = ref(false)
   const showFastRestartModal = ref(false)
   const showIrlpLogModal = ref(false)
+  const showLinuxLogModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -857,9 +862,12 @@ const openpigpio = async () => {
 
 const linuxlog = async () => {
   try {
-    console.log('Linux Log')
+    console.log('Opening Linux Log modal')
+    showLinuxLogModal.value = true
   } catch (error) {
     console.error('Linux Log error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert(`Failed to open Linux Log: ${errorMessage}`)
   }
 }
 

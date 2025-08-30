@@ -874,7 +874,7 @@ class NodeController
         $defaultPermissions = [
             'ADMINUSER', 'AUTHUSER', 'CONNUSER', 'DISCONNUSER', 'MONUSER', 
             'LOCALMONUSER', 'PERMCONNUSER', 'RPTUSER', 'RPTSTATSUSER', 
-            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER'
+            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER'
         ];
 
         // Check if user has the specific permission
@@ -1428,6 +1428,53 @@ class NodeController
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve IRLP log file', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve IRLP log file: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    public function linuxlog(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'LLOGUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to view Linux system logs.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Get command paths from configuration or use defaults
+            $sudo = $this->config['sudo'] ?? 'export TERM=vt100 && /usr/bin/sudo';
+            $journalctl = $this->config['journalctl'] ?? '/usr/bin/journalctl';
+            $sed = $this->config['sed'] ?? '/usr/bin/sed';
+
+            // Build the command with proper filtering
+            $command = "$sudo $journalctl --no-pager --since \"1 day ago\" | $sed -e \"/sudo/ d\"";
+
+            // Execute the command
+            $output = shell_exec($command . " 2>&1");
+
+            if ($output === null) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Failed to execute Linux log command'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => [
+                    'command' => $command,
+                    'content' => $output,
+                    'timestamp' => date('c'),
+                    'description' => 'System Log (journalctl, last 24 hours, sudo lines filtered)'
+                ],
+                'message' => 'Linux system log retrieved successfully'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve Linux system log', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve Linux system log: ' . $e->getMessage()]));
             return $response->withHeader('Content-Type', 'application/json');
         }
     }

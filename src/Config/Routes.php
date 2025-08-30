@@ -132,6 +132,9 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         
         // IRLP Log Route
         $group->post('/irlplog', [NodeController::class, 'irlplog']);
+        
+        // Linux Log Route
+        $group->post('/linuxlog', [NodeController::class, 'linuxlog']);
     });
 
     // Config routes
