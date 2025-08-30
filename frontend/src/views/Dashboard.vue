@@ -117,6 +117,9 @@
       <input v-if="appStore.hasPermission('WLOGUSER')" type="button" class="submit" value="Web Access Log" @click="webacclog">
       <input v-if="appStore.hasPermission('WERRUSER')" type="button" class="submit" value="Web Error Log" @click="weberrlog">
       
+      <!-- Voter Button -->
+      <input type="button" class="submit2" value="Voter" @click="showVoterModal = true">
+      
       <!-- Access List Button -->
       <input v-if="appStore.hasPermission('BANUSER')" type="button" class="submit2" value="Access List" @click="openbanallow">
     </div>
@@ -261,6 +264,9 @@
           <!-- Web Error Log Modal -->
           <WebErrLog v-model:isVisible="showWebErrLogModal" />
     
+    <!-- Voter Modal -->
+    <Voter :show="showVoterModal" @close="showVoterModal = false" />
+    
   </div>
 </template>
 
@@ -295,6 +301,7 @@ import SMLog from '@/components/SMLog.vue'
 import Stats from '@/components/Stats.vue'
 import WebAccLog from '@/components/WebAccLog.vue'
 import WebErrLog from '@/components/WebErrLog.vue'
+import Voter from '@/components/Voter.vue'
 
 
 const appStore = useAppStore()
@@ -329,6 +336,7 @@ const showDonateModal = ref(false)
   const showStatsModal = ref(false)
 const showWebAccLogModal = ref(false)
 const showWebErrLogModal = ref(false)
+const showVoterModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)

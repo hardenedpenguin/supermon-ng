@@ -2492,4 +2492,207 @@ class NodeController
             'rows' => $rows
         ];
     }
+
+    /**
+     * Get voter status for a node
+     */
+    public function voterStatus(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $node = $request->getQueryParams()['node'] ?? null;
+            
+            if (!$node) {
+                return $this->jsonResponse($response, ['error' => 'Node parameter is required'], 400);
+            }
+
+            // Validate node format
+            if (!preg_match('/^\d+(,\d+)*$/', $node)) {
+                return $this->jsonResponse($response, ['error' => 'Invalid node format'], 400);
+            }
+
+            // Get node configuration
+            $nodeConfig = $this->getNodeConfig($node);
+            if (!$nodeConfig) {
+                return $this->jsonResponse($response, ['error' => 'Node configuration not found'], 404);
+            }
+
+            // Connect to AMI
+            $ami = $this->connectAMI($nodeConfig);
+            if (!$ami) {
+                return $this->jsonResponse($response, ['error' => 'Failed to connect to AMI'], 500);
+            }
+
+            // Get voter status
+            $actionID = 'voter' . preg_replace('/[^a-zA-Z0-9]/', '', $node) . mt_rand(1000, 9999);
+            $voterResponse = $this->getVoterStatus($ami, $actionID);
+            
+            if ($voterResponse === false) {
+                return $this->jsonResponse($response, ['error' => 'Failed to get voter status'], 500);
+            }
+
+            // Parse voter response
+            list($nodesData, $votedData) = $this->parseVoterResponse($voterResponse);
+            
+            // Format HTML for the node
+            $html = $this->formatVoterHTML($node, $nodesData, $votedData, $nodeConfig);
+
+            return $this->jsonResponse($response, [
+                'html' => $html,
+                'spinner' => '*'
+            ]);
+
+        } catch (Exception $e) {
+            error_log("Voter status error: " . $e->getMessage());
+            return $this->jsonResponse($response, ['error' => 'Internal server error'], 500);
+        }
+    }
+
+    /**
+     * Get voter status via AMI
+     */
+    private function getVoterStatus($ami, $actionID): string|false
+    {
+        $action = "Action: VoterStatus\r\n";
+        $action .= "ActionID: " . $actionID . "\r\n\r\n";
+
+        if (fwrite($ami, $action) > 0) {
+            return $this->getAMIResponse($ami, $actionID);
+        }
+        
+        return false;
+    }
+
+    /**
+     * Parse voter response from AMI
+     */
+    private function parseVoterResponse(string $response): array
+    {
+        $lines = explode("\n", $response);
+        $parsedNodesData = [];
+        $parsedVotedData = [];
+        $currentNodeContext = null;
+        $currentClientData = [];
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+
+            $parts = explode(": ", $line, 2);
+            if (count($parts) < 2) continue;
+            
+            list($key, $value) = $parts;
+
+            switch ($key) {
+                case 'Node':
+                    if ($currentNodeContext && !empty($currentClientData) && isset($currentClientData['name'])) {
+                        $parsedNodesData[$currentNodeContext][$currentClientData['name']] = $currentClientData;
+                    }
+                    $currentNodeContext = $value;
+                    $currentClientData = [];
+                    if (!isset($parsedNodesData[$currentNodeContext])) {
+                        $parsedNodesData[$currentNodeContext] = [];
+                    }
+                    break;
+
+                case 'Client':
+                    if ($currentNodeContext && !empty($currentClientData) && isset($currentClientData['name'])) {
+                        $parsedNodesData[$currentNodeContext][$currentClientData['name']] = $currentClientData;
+                    }
+                    // Check for the "Mix" suffix BEFORE cleaning it
+                    $isMix = (strpos($value, ' Mix') !== false);
+                    
+                    // Clean all known suffixes from the client name
+                    $cleanName = preg_replace('/(\sMaster\sActiveMaster|\sLocal\sLocal|\sMix)$/', '', $value);
+                    
+                    // Store the clean name and the isMix flag
+                    $currentClientData = ['name' => $cleanName, 'isMix' => $isMix, 'rssi' => 'N/A', 'ip' => 'N/A'];
+                    break;
+                    
+                case 'RSSI':
+                    if (isset($currentClientData['name'])) {
+                        $currentClientData['rssi'] = $value;
+                    }
+                    break;
+                    
+                case 'IP':
+                    if (isset($currentClientData['name'])) {
+                        $currentClientData['ip'] = $value;
+                    }
+                    break;
+
+                case 'Voted':
+                    if ($currentNodeContext) {
+                        $parsedVotedData[$currentNodeContext] = $value;
+                    }
+                    break;
+            }
+        }
+
+        if ($currentNodeContext && !empty($currentClientData) && isset($currentClientData['name'])) {
+            $parsedNodesData[$currentNodeContext][$currentClientData['name']] = $currentClientData;
+        }
+
+        return [$parsedNodesData, $parsedVotedData];
+    }
+
+    /**
+     * Format voter HTML for display
+     */
+    private function formatVoterHTML(string $nodeNum, array $nodesData, array $votedData, array $currentConfig): string
+    {
+        $message = '';
+        $info = $this->getAstInfo($nodeNum); 
+
+        if (!empty($currentConfig['hideNodeURL'])) {
+            $message .= "<table class='rtcm'><tr><th colspan=2><i>   Node $nodeNum - $info   </i></th></tr>";
+        } else {
+            $nodeURL = "http://stats.allstarlink.org/nodeinfo.cgi?node=$nodeNum";
+            $message .= "<table class='rtcm'><tr><th colspan=2><i>   Node <a href=\"$nodeURL\" target=\"_blank\">$nodeNum</a> - $info   </i></th></tr>";
+        }
+        $message .= "<tr><th>Client</th><th>RSSI</th></tr>";
+
+        if (!isset($nodesData[$nodeNum]) || empty($nodesData[$nodeNum])) {
+            $message .= "<tr><td><div class='voter-no-clients'>&nbsp;No clients&nbsp;</div></td>";
+            $message .= "<td><div class='voter-empty-bar'>&nbsp;</div></td></tr>";
+        } else {
+            $clients = $nodesData[$nodeNum];
+            $votedClient = isset($votedData[$nodeNum]) && $votedData[$nodeNum] !== 'none' ? $votedData[$nodeNum] : null;
+
+            foreach($clients as $clientName => $client) {
+                $rssi = isset($client['rssi']) ? (int)$client['rssi'] : 0;
+                $bar_width_px = round(($rssi / 255) * 300); 
+                $bar_width_px = ($rssi == 0) ? 3 : max(1, $bar_width_px);
+                
+                $barcolor = "#0099FF"; 
+                $textcolor = 'white'; 
+                
+                if ($votedClient && $clientName === $votedClient) {
+                    $barcolor = 'greenyellow'; 
+                    $textcolor = 'black';
+                } elseif (isset($client['isMix']) && $client['isMix'] === true) {
+                    $barcolor = 'cyan'; 
+                    $textcolor = 'black';
+                }
+
+                $message .= "<tr>";
+                $message .= "<td><div>" . htmlspecialchars($clientName) . "</div></td>";
+                $message .= "<td><div class='text'> <div class='barbox_a'>";
+                $message .= "<div class='bar' style='width: " . $bar_width_px . "px; background-color: $barcolor; color: $textcolor'>" . $rssi . "</div>";
+                $message .= "</div></td></tr>";
+            }
+        }
+        $message .= "<tr><td colspan=2> </td></tr>";
+        $message .= "</table><br/>";
+        
+        return str_replace(["\r", "\n"], '', $message);
+    }
+
+    /**
+     * Get Asterisk info for a node
+     */
+    private function getAstInfo(string $nodeNum): string
+    {
+        // This would typically get info from AMI, but for now return a placeholder
+        return "Voter Node";
+    }
 }

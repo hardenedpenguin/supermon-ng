@@ -158,6 +158,9 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         
         // Web Error Log Route
         $group->post('/weberrlog', [NodeController::class, 'weberrlog']);
+        
+        // Voter Route
+        $group->get('/voter/status', [NodeController::class, 'voterStatus']);
     });
 
     // Config routes
