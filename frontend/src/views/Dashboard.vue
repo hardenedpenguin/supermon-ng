@@ -491,12 +491,17 @@ const clearData = () => {
 
 // Additional button methods to match link.php
 const dtmf = async () => {
-  if (!targetNode.value || !selectedLocalNode.value) return
-  
-  // Prompt user for DTMF command
+  // Always prompt user for DTMF command first
   const dtmfCommand = prompt('Enter DTMF command:')
   if (!dtmfCommand || dtmfCommand.trim() === '') {
     console.log('DTMF command cancelled or empty')
+    return
+  }
+  
+  // Check if we have a local node selected
+  if (!selectedLocalNode.value) {
+    console.error('No local node selected. Please select a node first.')
+    alert('No local node selected. Please select a node first.')
     return
   }
   
