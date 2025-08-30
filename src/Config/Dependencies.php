@@ -97,6 +97,7 @@ return [
     'ami.client' => function ($container) {
         return new class($container->get(AllStarConfigService::class)) {
             private AllStarConfigService $configService;
+            private array $connections = [];
             
             public function __construct(AllStarConfigService $configService) {
                 $this->configService = $configService;
@@ -105,8 +106,23 @@ return [
             public function connect(string $nodeId, ?string $username = null): bool {
                 try {
                     $config = $this->configService->getAmiConfig($nodeId, $username);
-                    // Placeholder implementation - would use actual AMI connection
-                    return true;
+                    
+                    // Include AMI functions
+                    require_once __DIR__ . '/../includes/amifunctions.inc';
+                    
+                    // Create AMI connection
+                    $ami = new \SimpleAmiClient();
+                    $connected = $ami->connect($config['host'], $config['port']);
+                    
+                    if ($connected) {
+                        $loggedIn = $ami->login($config['username'], $config['password']);
+                        if ($loggedIn) {
+                            $this->connections[$nodeId] = $ami;
+                            return true;
+                        }
+                    }
+                    
+                    return false;
                 } catch (Exception $e) {
                     return false;
                 }
@@ -114,16 +130,25 @@ return [
             
             public function sendCommand(string $nodeId, string $command, ?string $username = null): string {
                 try {
-                    $config = $this->configService->getAmiConfig($nodeId, $username);
-                    // Placeholder implementation - would send actual AMI command
-                    return "Response: $command";
+                    if (!isset($this->connections[$nodeId])) {
+                        if (!$this->connect($nodeId, $username)) {
+                            return "Error: Failed to connect to AMI";
+                        }
+                    }
+                    
+                    $ami = $this->connections[$nodeId];
+                    $response = \SimpleAmiClient::command($ami, "Command", ["Command" => $command]);
+                    
+                    return $response ?: "No response";
                 } catch (Exception $e) {
                     return "Error: " . $e->getMessage();
                 }
             }
             
             public function disconnect(string $nodeId): void {
-                // Placeholder implementation
+                if (isset($this->connections[$nodeId])) {
+                    unset($this->connections[$nodeId]);
+                }
             }
         };
     },

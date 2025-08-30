@@ -74,12 +74,43 @@ class SystemController
     {
         $this->logger->info('System reload request');
         
-        // TODO: Implement actual Asterisk reload
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => 'System reload initiated',
-            'timestamp' => date('c')
-        ]));
+        try {
+            // Execute Asterisk reload command
+            $command = "asterisk -rx 'core reload'";
+            $output = shell_exec($command . " 2>&1");
+            $returnCode = $this->getLastReturnCode();
+            
+            if ($returnCode === 0) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'message' => 'System reload completed successfully',
+                    'output' => $output,
+                    'timestamp' => date('c')
+                ]));
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'System reload failed',
+                    'output' => $output,
+                    'timestamp' => date('c')
+                ]));
+                
+                return $response
+                    ->withStatus(500)
+                    ->withHeader('Content-Type', 'application/json');
+            }
+        } catch (Exception $e) {
+            $this->logger->error('System reload error', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'System reload error: ' . $e->getMessage(),
+                'timestamp' => date('c')
+            ]));
+            
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json');
+        }
 
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -88,12 +119,43 @@ class SystemController
     {
         $this->logger->info('System start request');
         
-        // TODO: Implement actual Asterisk start
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => 'System start initiated',
-            'timestamp' => date('c')
-        ]));
+        try {
+            // Execute Asterisk start command
+            $command = "systemctl start asterisk";
+            $output = shell_exec($command . " 2>&1");
+            $returnCode = $this->getLastReturnCode();
+            
+            if ($returnCode === 0) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'message' => 'Asterisk started successfully',
+                    'output' => $output,
+                    'timestamp' => date('c')
+                ]));
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Failed to start Asterisk',
+                    'output' => $output,
+                    'timestamp' => date('c')
+                ]));
+                
+                return $response
+                    ->withStatus(500)
+                    ->withHeader('Content-Type', 'application/json');
+            }
+        } catch (Exception $e) {
+            $this->logger->error('System start error', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'System start error: ' . $e->getMessage(),
+                'timestamp' => date('c')
+            ]));
+            
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json');
+        }
 
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -102,12 +164,43 @@ class SystemController
     {
         $this->logger->info('System stop request');
         
-        // TODO: Implement actual Asterisk stop
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => 'System stop initiated',
-            'timestamp' => date('c')
-        ]));
+        try {
+            // Execute Asterisk stop command
+            $command = "systemctl stop asterisk";
+            $output = shell_exec($command . " 2>&1");
+            $returnCode = $this->getLastReturnCode();
+            
+            if ($returnCode === 0) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'message' => 'Asterisk stopped successfully',
+                    'output' => $output,
+                    'timestamp' => date('c')
+                ]));
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Failed to stop Asterisk',
+                    'output' => $output,
+                    'timestamp' => date('c')
+                ]));
+                
+                return $response
+                    ->withStatus(500)
+                    ->withHeader('Content-Type', 'application/json');
+            }
+        } catch (Exception $e) {
+            $this->logger->error('System stop error', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'System stop error: ' . $e->getMessage(),
+                'timestamp' => date('c')
+            ]));
+            
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json');
+        }
 
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -116,12 +209,43 @@ class SystemController
     {
         $this->logger->info('System fast restart request');
         
-        // TODO: Implement actual Asterisk fast restart
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => 'System fast restart initiated',
-            'timestamp' => date('c')
-        ]));
+        try {
+            // Execute Asterisk fast restart command
+            $command = "asterisk -rx 'core restart now'";
+            $output = shell_exec($command . " 2>&1");
+            $returnCode = $this->getLastReturnCode();
+            
+            if ($returnCode === 0) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'message' => 'Asterisk fast restart completed successfully',
+                    'output' => $output,
+                    'timestamp' => date('c')
+                ]));
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Failed to fast restart Asterisk',
+                    'output' => $output,
+                    'timestamp' => date('c')
+                ]));
+                
+                return $response
+                    ->withStatus(500)
+                    ->withHeader('Content-Type', 'application/json');
+            }
+        } catch (Exception $e) {
+            $this->logger->error('System fast restart error', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'System fast restart error: ' . $e->getMessage(),
+                'timestamp' => date('c')
+            ]));
+            
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json');
+        }
 
         return $response->withHeader('Content-Type', 'application/json');
     }
@@ -130,13 +254,52 @@ class SystemController
     {
         $this->logger->info('System reboot request');
         
-        // TODO: Implement actual system reboot
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => 'System reboot initiated',
-            'timestamp' => date('c')
-        ]));
+        try {
+            // Execute system reboot command
+            $command = "sudo reboot";
+            $output = shell_exec($command . " 2>&1");
+            $returnCode = $this->getLastReturnCode();
+            
+            if ($returnCode === 0) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'message' => 'System reboot initiated successfully',
+                    'output' => $output,
+                    'timestamp' => date('c')
+                ]));
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Failed to initiate system reboot',
+                    'output' => $output,
+                    'timestamp' => date('c')
+                ]));
+                
+                return $response
+                    ->withStatus(500)
+                    ->withHeader('Content-Type', 'application/json');
+            }
+        } catch (Exception $e) {
+            $this->logger->error('System reboot error', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'System reboot error: ' . $e->getMessage(),
+                'timestamp' => date('c')
+            ]));
+            
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json');
+        }
 
         return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    /**
+     * Get the return code from the last shell_exec command
+     */
+    private function getLastReturnCode(): int
+    {
+        return $GLOBALS['?'] ?? 0;
     }
 }

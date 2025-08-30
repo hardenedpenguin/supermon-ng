@@ -135,24 +135,63 @@ class NodeController
 
         $this->logger->info("Fetching node details", ['node_id' => $nodeId]);
 
-        // Mock data for now
+        // Get node configuration
+        try {
+            $nodeConfig = $this->configService->getNodeConfig($nodeId);
+            if (!$nodeConfig) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Node configuration not found'
+                ]));
+                
+                return $response
+                    ->withStatus(404)
+                    ->withHeader('Content-Type', 'application/json');
+            }
+        } catch (Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Node configuration not found: ' . $e->getMessage()
+            ]));
+            
+            return $response
+                ->withStatus(404)
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        // Get real node status from AMI
+        $ami = $this->connectToAmi($nodeConfig, $nodeId);
+        if (!$ami) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Failed to connect to AMI'
+            ]));
+            
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        // Get node status information
+        $statusInfo = $this->getNodeStatusInfo($ami, $nodeId);
+        
         $node = [
             'id' => Uuid::uuid4()->toString(),
             'node_number' => $nodeId,
-            'callsign' => 'W1AW',
-            'description' => 'ARRL HQ',
-            'location' => 'Newington, CT',
-            'status' => 'online',
-            'last_heard' => date('Y-m-d H:i:s'),
-            'connected_nodes' => '123456,789012',
-            'cos_keyed' => '0',
-            'tx_keyed' => '0',
-            'cpu_temp' => '45.2',
-            'alert' => null,
-            'wx' => null,
-            'disk' => null,
-            'is_online' => true,
-            'is_keyed' => false,
+            'callsign' => $nodeConfig['callsign'] ?? 'Unknown',
+            'description' => $nodeConfig['description'] ?? 'Unknown',
+            'location' => $nodeConfig['location'] ?? 'Unknown',
+            'status' => $statusInfo['status'] ?? 'unknown',
+            'last_heard' => $statusInfo['last_heard'] ?? date('Y-m-d H:i:s'),
+            'connected_nodes' => $statusInfo['connected_nodes'] ?? '',
+            'cos_keyed' => $statusInfo['cos_keyed'] ?? '0',
+            'tx_keyed' => $statusInfo['tx_keyed'] ?? '0',
+            'cpu_temp' => $statusInfo['cpu_temp'] ?? 'N/A',
+            'alert' => $statusInfo['alert'] ?? null,
+            'wx' => $statusInfo['wx'] ?? null,
+            'disk' => $statusInfo['disk'] ?? null,
+            'is_online' => $statusInfo['is_online'] ?? false,
+            'is_keyed' => $statusInfo['is_keyed'] ?? false,
             'created_at' => date('c'),
             'updated_at' => date('c'),
         ];
@@ -183,18 +222,57 @@ class NodeController
 
         $this->logger->info("Fetching node status", ['node_id' => $nodeId]);
 
-        // Mock status data
+        // Get node configuration
+        try {
+            $nodeConfig = $this->configService->getNodeConfig($nodeId);
+            if (!$nodeConfig) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Node configuration not found'
+                ]));
+                
+                return $response
+                    ->withStatus(404)
+                    ->withHeader('Content-Type', 'application/json');
+            }
+        } catch (Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Node configuration not found: ' . $e->getMessage()
+            ]));
+            
+            return $response
+                ->withStatus(404)
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        // Get real node status from AMI
+        $ami = $this->connectToAmi($nodeConfig, $nodeId);
+        if (!$ami) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Failed to connect to AMI'
+            ]));
+            
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json');
+        }
+
+        // Get node status information
+        $statusInfo = $this->getNodeStatusInfo($ami, $nodeId);
+        
         $status = [
             'node_id' => $nodeId,
-            'status' => 'online',
-            'last_heard' => date('Y-m-d H:i:s'),
-            'connected_nodes' => '123456,789012',
-            'cos_keyed' => '0',
-            'tx_keyed' => '0',
-            'cpu_temp' => '45.2',
-            'alert' => null,
-            'wx' => null,
-            'disk' => null,
+            'status' => $statusInfo['status'] ?? 'unknown',
+            'last_heard' => $statusInfo['last_heard'] ?? date('Y-m-d H:i:s'),
+            'connected_nodes' => $statusInfo['connected_nodes'] ?? '',
+            'cos_keyed' => $statusInfo['cos_keyed'] ?? '0',
+            'tx_keyed' => $statusInfo['tx_keyed'] ?? '0',
+            'cpu_temp' => $statusInfo['cpu_temp'] ?? 'N/A',
+            'alert' => $statusInfo['alert'] ?? null,
+            'wx' => $statusInfo['wx'] ?? null,
+            'disk' => $statusInfo['disk'] ?? null,
             'timestamp' => date('c')
         ];
 
@@ -860,6 +938,48 @@ class NodeController
         ];
         
         return $permissions[$action] ?? 'CONNECTUSER';
+    }
+
+    /**
+     * Get user configuration from INI file
+     */
+    private function getUserConfig(?string $user): array
+    {
+        // Include necessary files
+        require_once __DIR__ . '/../../../includes/common.inc';
+        
+        // Determine INI file path
+        $iniFile = null;
+        if ($user) {
+            // Try user-specific INI file
+            $userIniFile = __DIR__ . '/../../../user_files/' . $user . '.ini';
+            if (file_exists($userIniFile)) {
+                $iniFile = $userIniFile;
+            }
+        }
+        
+        // Fallback to allmon.ini
+        if (!$iniFile) {
+            $allmonIni = __DIR__ . '/../../../user_files/allmon.ini';
+            if (file_exists($allmonIni)) {
+                $iniFile = $allmonIni;
+            }
+        }
+        
+        // Fallback to anarchy-allmon.ini
+        if (!$iniFile) {
+            $anarchyIni = __DIR__ . '/../../../user_files/anarchy-allmon.ini';
+            if (file_exists($anarchyIni)) {
+                $iniFile = $anarchyIni;
+            }
+        }
+        
+        if (!$iniFile || !file_exists($iniFile)) {
+            return [];
+        }
+        
+        $config = parse_ini_file($iniFile, true);
+        return $config ?: [];
     }
 
     /**
@@ -2498,28 +2618,59 @@ class NodeController
      */
     public function voterStatus(Request $request, Response $response, array $args): Response
     {
+        require_once __DIR__ . '/../../../includes/amifunctions.inc';
+        require_once __DIR__ . '/../../../includes/nodeinfo.inc';
+        
         try {
             $node = $request->getQueryParams()['node'] ?? null;
             
             if (!$node) {
-                return $this->jsonResponse($response, ['error' => 'Node parameter is required'], 400);
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Node parameter is required'
+                ]));
+                
+                return $response
+                    ->withStatus(400)
+                    ->withHeader('Content-Type', 'application/json');
             }
 
             // Validate node format
             if (!preg_match('/^\d+(,\d+)*$/', $node)) {
-                return $this->jsonResponse($response, ['error' => 'Invalid node format'], 400);
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Invalid node format'
+                ]));
+                
+                return $response
+                    ->withStatus(400)
+                    ->withHeader('Content-Type', 'application/json');
             }
 
             // Get node configuration
-            $nodeConfig = $this->getNodeConfig($node);
+            $nodeConfig = $this->configService->getNodeConfig($node);
             if (!$nodeConfig) {
-                return $this->jsonResponse($response, ['error' => 'Node configuration not found'], 404);
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Node configuration not found'
+                ]));
+                
+                return $response
+                    ->withStatus(404)
+                    ->withHeader('Content-Type', 'application/json');
             }
 
             // Connect to AMI
-            $ami = $this->connectAMI($nodeConfig);
+            $ami = $this->connectToAmi($nodeConfig, $node);
             if (!$ami) {
-                return $this->jsonResponse($response, ['error' => 'Failed to connect to AMI'], 500);
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Failed to connect to AMI'
+                ]));
+                
+                return $response
+                    ->withStatus(500)
+                    ->withHeader('Content-Type', 'application/json');
             }
 
             // Get voter status
@@ -2527,7 +2678,14 @@ class NodeController
             $voterResponse = $this->getVoterStatus($ami, $actionID);
             
             if ($voterResponse === false) {
-                return $this->jsonResponse($response, ['error' => 'Failed to get voter status'], 500);
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Failed to get voter status'
+                ]));
+                
+                return $response
+                    ->withStatus(500)
+                    ->withHeader('Content-Type', 'application/json');
             }
 
             // Parse voter response
@@ -2536,14 +2694,25 @@ class NodeController
             // Format HTML for the node
             $html = $this->formatVoterHTML($node, $nodesData, $votedData, $nodeConfig);
 
-            return $this->jsonResponse($response, [
+            $response->getBody()->write(json_encode([
+                'success' => true,
                 'html' => $html,
                 'spinner' => '*'
-            ]);
+            ]));
+
+            return $response->withHeader('Content-Type', 'application/json');
 
         } catch (Exception $e) {
             error_log("Voter status error: " . $e->getMessage());
-            return $this->jsonResponse($response, ['error' => 'Internal server error'], 500);
+            
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Internal server error'
+            ]));
+            
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -2552,11 +2721,10 @@ class NodeController
      */
     private function getVoterStatus($ami, $actionID): string|false
     {
-        $action = "Action: VoterStatus\r\n";
-        $action .= "ActionID: " . $actionID . "\r\n\r\n";
-
-        if (fwrite($ami, $action) > 0) {
-            return $this->getAMIResponse($ami, $actionID);
+        $result = \SimpleAmiClient::command($ami, "VoterStatus");
+        
+        if ($result !== false) {
+            return $result;
         }
         
         return false;
@@ -2692,7 +2860,88 @@ class NodeController
      */
     private function getAstInfo(string $nodeNum): string
     {
-        // This would typically get info from AMI, but for now return a placeholder
-        return "Voter Node";
+        // Get real Asterisk info from AMI
+        try {
+            $nodeConfig = $this->configService->getNodeConfig($nodeNum);
+            if (!$nodeConfig) {
+                return "Unknown Node";
+            }
+
+            $ami = $this->connectToAmi($nodeConfig, $nodeNum);
+            if (!$ami) {
+                return "Voter Node";
+            }
+
+            // Get Asterisk version info
+            $versionResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -V"]);
+            if ($versionResponse && strpos($versionResponse, 'Asterisk') !== false) {
+                return "Asterisk Node";
+            }
+
+            return "Voter Node";
+        } catch (Exception $e) {
+            return "Voter Node";
+        }
+    }
+
+    /**
+     * Get node status information from AMI
+     */
+    private function getNodeStatusInfo($ami, string $nodeId): array
+    {
+        $statusInfo = [
+            'status' => 'unknown',
+            'last_heard' => date('Y-m-d H:i:s'),
+            'connected_nodes' => '',
+            'cos_keyed' => '0',
+            'tx_keyed' => '0',
+            'cpu_temp' => 'N/A',
+            'alert' => null,
+            'wx' => null,
+            'disk' => null,
+            'is_online' => false,
+            'is_keyed' => false
+        ];
+
+        try {
+            // Get node status
+            $statusResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt status $nodeId'"]);
+            if ($statusResponse) {
+                if (strpos($statusResponse, 'Online') !== false) {
+                    $statusInfo['status'] = 'online';
+                    $statusInfo['is_online'] = true;
+                } elseif (strpos($statusResponse, 'Offline') !== false) {
+                    $statusInfo['status'] = 'offline';
+                    $statusInfo['is_online'] = false;
+                }
+            }
+
+            // Get connected nodes
+            $connectedResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt nodes $nodeId'"]);
+            if ($connectedResponse) {
+                $lines = explode("\n", $connectedResponse);
+                $connectedNodes = [];
+                foreach ($lines as $line) {
+                    if (preg_match('/Node\s+(\d+)/', $line, $matches)) {
+                        $connectedNodes[] = $matches[1];
+                    }
+                }
+                $statusInfo['connected_nodes'] = implode(',', $connectedNodes);
+            }
+
+            // Get key status
+            $keyResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt keyed $nodeId'"]);
+            if ($keyResponse) {
+                if (strpos($keyResponse, 'Keyed') !== false) {
+                    $statusInfo['is_keyed'] = true;
+                    $statusInfo['tx_keyed'] = '1';
+                }
+            }
+
+        } catch (Exception $e) {
+            $this->logger->error("Error getting node status info", ['node_id' => $nodeId, 'error' => $e->getMessage()]);
+        }
+
+        return $statusInfo;
     }
 }

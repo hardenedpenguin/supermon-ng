@@ -109,6 +109,10 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->get('', [NodeController::class, 'list']);
         $group->get('/available', [NodeController::class, 'available']);
         $group->get('/ami/status', [NodeController::class, 'getAmiStatus']);
+        
+        // Voter Route (must come before variable routes)
+        $group->get('/voter/status', [NodeController::class, 'voterStatus']);
+        
         $group->get('/{id}', [NodeController::class, 'get']);
         $group->get('/{id}/status', [NodeController::class, 'status']);
         $group->post('/connect', [NodeController::class, 'connect']);
@@ -158,9 +162,6 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         
         // Web Error Log Route
         $group->post('/weberrlog', [NodeController::class, 'weberrlog']);
-        
-        // Voter Route
-        $group->get('/voter/status', [NodeController::class, 'voterStatus']);
     });
 
     // Config routes
