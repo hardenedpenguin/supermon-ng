@@ -15,7 +15,7 @@
           {{ error }}
         </div>
 
-        <div v-else-if="!props.nodeNumber" class="no-node-selected">
+        <div v-else-if="!props.nodeNumber && !nodeInfo" class="no-node-selected">
           <div class="node-input-section">
             <h3>Enter Node Number</h3>
             <p>Please enter a node number to add to your favorites:</p>
@@ -151,7 +151,7 @@ const loadNodeInfo = async (node) => {
   
   try {
     // Get actual node info from astdb.txt via backend
-    const response = await api.get(`/api/config/node-info?node=${node}`)
+    const response = await api.get(`/config/node-info?node=${node}`)
     
     if (response.data.success) {
       nodeInfo.value = response.data.nodeInfo
@@ -189,7 +189,7 @@ const addFavorite = async () => {
   error.value = ''
   
   try {
-    const response = await api.post('/api/config/favorites/add', {
+    const response = await api.post('/config/favorites/add', {
       node: nodeToUse,
       custom_label: customLabel.value,
       add_to_general: addToGeneral.value ? '1' : '0'
