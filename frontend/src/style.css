@@ -107,22 +107,126 @@ table {
   background-color: var(--container-bg);
   border-radius: var(--border-radius-md);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 th, td {
   padding: var(--spacing-sm) var(--spacing-md);
   text-align: left;
   border-bottom: 1px solid var(--border-color);
+  vertical-align: top;
 }
 
 th {
   background-color: var(--table-header-bg);
   font-weight: 600;
   color: var(--text-color);
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 tr:hover {
   background-color: var(--button-hover);
+}
+
+/* Table body */
+tbody tr:nth-child(even) {
+  background-color: var(--card-bg);
+}
+
+tbody tr:nth-child(odd) {
+  background-color: var(--container-bg);
+}
+
+/* Table responsive */
+@media (max-width: 768px) {
+  table {
+    font-size: 0.9rem;
+  }
+  
+  th, td {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+}
+
+/* Specific table styles */
+.display-config-table {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.display-config-table td {
+  padding: var(--spacing-md);
+  vertical-align: top;
+}
+
+.display-config-table input[type="radio"] {
+  margin-right: var(--spacing-xs);
+}
+
+.display-config-table input[type="text"] {
+  width: 60px;
+  text-align: center;
+}
+
+.fxwidth {
+  width: 100%;
+}
+
+.fxwidth td {
+  padding: var(--spacing-sm);
+  vertical-align: top;
+}
+
+/* Log tables */
+.log-table {
+  width: 100%;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.log-table th,
+.log-table td {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--border-color);
+}
+
+/* Results tables */
+.results-table {
+  width: 100%;
+  margin: var(--spacing-md) 0;
+}
+
+.results-table th,
+.results-table td {
+  padding: var(--spacing-sm);
+  text-align: left;
+}
+
+/* Database tables */
+.database-table {
+  width: 100%;
+  margin: var(--spacing-md) 0;
+}
+
+.database-table th,
+.database-table td {
+  padding: var(--spacing-sm);
+  text-align: left;
+}
+
+/* Favorites tables */
+.favorites-table {
+  width: 100%;
+  margin: var(--spacing-md) 0;
+}
+
+.favorites-table th,
+.favorites-table td {
+  padding: var(--spacing-sm);
+  text-align: left;
 }
 
 /* Cards */

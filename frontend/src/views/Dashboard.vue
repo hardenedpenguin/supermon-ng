@@ -137,18 +137,20 @@
         Select a node or group from the menu to display node tables
       </div>
       <table v-else class="fxwidth">
-        <tr v-for="(node, index) in displayedNodes" :key="node.id">
-          <td>
-            <NodeTable 
-              :node="node"
-              :show-detail="true"
-              :astdb="realTimeStore.astdb"
-              :config="realTimeStore.nodeConfig"
-              :ref="el => { if (el) nodeTableRefs[index] = el }"
-              @node-click="handleNodeClick"
-            />
-          </td>
-        </tr>
+        <tbody>
+          <tr v-for="(node, index) in displayedNodes" :key="node.id">
+            <td>
+              <NodeTable 
+                :node="node"
+                :show-detail="true"
+                :astdb="realTimeStore.astdb"
+                :config="realTimeStore.nodeConfig"
+                :ref="el => { if (el) nodeTableRefs[index] = el }"
+                @node-click="handleNodeClick"
+              />
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
 

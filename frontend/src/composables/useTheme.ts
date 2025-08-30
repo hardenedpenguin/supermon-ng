@@ -158,6 +158,7 @@ export function useTheme() {
     changeTheme,
     getCurrentTheme,
     setCustomThemeVariables,
-    loadCustomTheme
+    loadCustomTheme,
+    loadTheme
   }
 }

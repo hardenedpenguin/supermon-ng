@@ -8,82 +8,84 @@
       
       <form @submit.prevent="saveSettings" class="display-config-form">
         <table class="display-config-table">
-          <tr>
-            <td valign="top">
-              Display Detailed View<br>
-              <input 
-                type="radio" 
-                class="display-config-radio display-config-radio-top" 
-                name="show_detailed" 
-                value="1" 
-                v-model="settings.show_detailed"
-              > YES
-              <input 
-                type="radio" 
-                class="display-config-radio display-config-radio-spaced" 
-                name="show_detailed" 
-                value="0" 
-                v-model="settings.show_detailed"
-              > NO<br>
-            </td>
-          </tr>
-          <tr>
-            <td valign="top">
-              Show the number of connections (Displays x of y)<br>
-              <input 
-                type="radio" 
-                class="display-config-radio display-config-radio-top" 
-                name="show_number" 
-                value="1" 
-                v-model="settings.show_number"
-              > YES
-              <input 
-                type="radio" 
-                class="display-config-radio display-config-radio-spaced" 
-                name="show_number" 
-                value="0" 
-                v-model="settings.show_number"
-              > NO<br>
-            </td>
-          </tr>
-          <tr>
-            <td valign="top">
-              Show ALL Connections (NO omits NEVER Keyed)<br>
-              <input 
-                type="radio" 
-                class="display-config-radio display-config-radio-top" 
-                name="show_all" 
-                value="1" 
-                v-model="settings.show_all"
-              > YES
-              <input 
-                type="radio" 
-                class="display-config-radio display-config-radio-spaced" 
-                name="show_all" 
-                value="0" 
-                v-model="settings.show_all"
-              > NO<br>
-            </td>
-          </tr>
-          <tr>
-            <td valign="top">
-              Maximum Number of Connections to Display in Each Node (0=ALL)<br><br>
-              <input 
-                type="text" 
-                class="display-config-input" 
-                name="number_displayed" 
-                v-model="settings.number_displayed" 
-                maxlength="4" 
-                size="3"
-              >
-            </td>
-          </tr>
-          <tr>
-            <td align="center">
-              <input type="submit" class="submit-large" value="Update">
-              <input type="button" class="submit-large" value="Close Window" @click="closeModal">
-            </td>
-          </tr>
+          <tbody>
+            <tr>
+              <td valign="top">
+                Display Detailed View<br>
+                <input 
+                  type="radio" 
+                  class="display-config-radio display-config-radio-top" 
+                  name="show_detailed" 
+                  value="1" 
+                  v-model="settings.show_detailed"
+                > YES
+                <input 
+                  type="radio" 
+                  class="display-config-radio display-config-radio-spaced" 
+                  name="show_detailed" 
+                  value="0" 
+                  v-model="settings.show_detailed"
+                > NO<br>
+              </td>
+            </tr>
+            <tr>
+              <td valign="top">
+                Show the number of connections (Displays x of y)<br>
+                <input 
+                  type="radio" 
+                  class="display-config-radio display-config-radio-top" 
+                  name="show_number" 
+                  value="1" 
+                  v-model="settings.show_number"
+                > YES
+                <input 
+                  type="radio" 
+                  class="display-config-radio display-config-radio-spaced" 
+                  name="show_number" 
+                  value="0" 
+                  v-model="settings.show_number"
+                > NO<br>
+              </td>
+            </tr>
+            <tr>
+              <td valign="top">
+                Show ALL Connections (NO omits NEVER Keyed)<br>
+                <input 
+                  type="radio" 
+                  class="display-config-radio display-config-radio-top" 
+                  name="show_all" 
+                  value="1" 
+                  v-model="settings.show_all"
+                > YES
+                <input 
+                  type="radio" 
+                  class="display-config-radio display-config-radio-spaced" 
+                  name="show_all" 
+                  value="0" 
+                  v-model="settings.show_all"
+                > NO<br>
+              </td>
+            </tr>
+            <tr>
+              <td valign="top">
+                Maximum Number of Connections to Display in Each Node (0=ALL)<br><br>
+                <input 
+                  type="text" 
+                  class="display-config-input" 
+                  name="number_displayed" 
+                  v-model="settings.number_displayed" 
+                  maxlength="4" 
+                  size="3"
+                >
+              </td>
+            </tr>
+            <tr>
+              <td align="center">
+                <input type="submit" class="submit-large" value="Update">
+                <input type="button" class="submit-large" value="Close Window" @click="closeModal">
+              </td>
+            </tr>
+          </tbody>
         </table>
       </form>
     </div>
