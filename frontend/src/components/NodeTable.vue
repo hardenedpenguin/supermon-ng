@@ -511,6 +511,18 @@ defineExpose({
   border-color: var(--local-node-border) !important;
 }
 
+/* Connected nodes table styling with custom theme support */
+.gridtable tr:not(.rColor):not(.cColor) {
+  background-color: var(--table-bg) !important;
+  color: var(--text-color) !important;
+}
+
+.gridtable tr:not(.rColor):not(.cColor) td {
+  background-color: var(--table-bg) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+}
+
 
 .gridtable th {
   padding: 2px 4px;

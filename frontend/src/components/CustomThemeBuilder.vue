@@ -206,6 +206,22 @@
                 />
               </div>
             </div>
+            <div class="color-item">
+              <label>Table Background</label>
+              <div class="color-picker-wrapper">
+                <input 
+                  v-model="themeData.colors.tableBg" 
+                  type="color" 
+                  class="color-picker"
+                />
+                <input 
+                  v-model="themeData.colors.tableBg" 
+                  type="text" 
+                  class="color-input"
+                  placeholder="#1a1a1a"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
@@ -430,7 +446,8 @@ const themeData = ref({
     localNodeText: '#e0e0e0',
     localNodeBorder: '#404040',
     localNodeHeader: '#404040',
-    localNodeHeaderText: '#e0e0e0'
+    localNodeHeaderText: '#e0e0e0',
+    tableBg: '#1a1a1a'
   }
 })
 

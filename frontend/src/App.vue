@@ -39,7 +39,7 @@ onMounted(async () => {
 <style>
 /* Global CSS Variables - These will be overridden by theme selectors */
 :root {
-  /* Default fallback values - will be overridden by theme system */
+  /* Theme variables with fallbacks */
   --primary-color: #e0e0e0;
   --text-color: #e0e0e0;
   --background-color: #000000;
@@ -48,41 +48,36 @@ onMounted(async () => {
   --input-bg: #1a1a1a;
   --input-text: #e0e0e0;
   --table-header-bg: #404040;
+  --table-bg: #1a1a1a;
   --success-color: #4caf50;
   --warning-color: #ff9800;
   --error-color: #f44336;
   --link-color: #2196f3;
   --menu-background: #2a2a2a;
-  
+
   /* Local node table specific colors */
   --local-node-bg: #2a2a2a;
   --local-node-text: #e0e0e0;
   --local-node-border: #404040;
   --local-node-header: #404040;
   --local-node-header-text: #e0e0e0;
-  
+
   /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
   --spacing-md: 1rem;
   --spacing-lg: 1.5rem;
-  --spacing-xl: 3rem;
-  
+  --spacing-xl: 2rem;
+
   /* Border radius */
-  --border-radius-sm: 3px;
-  --border-radius-md: 5px;
-  --border-radius-lg: 10px;
-  --border-radius-xl: 15px;
-  
+  --border-radius-sm: 0.25rem;
+  --border-radius-md: 0.5rem;
+  --border-radius-lg: 0.75rem;
+
   /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-  
-  /* Transitions */
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.3s ease;
-  --transition-slow: 0.5s ease;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 /* Global styles */

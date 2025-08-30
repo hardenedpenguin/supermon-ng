@@ -1,5 +1,6 @@
 import { ref, watch, readonly } from 'vue'
 
+// Theme interface
 export interface Theme {
   name: string
   label: string
@@ -12,12 +13,12 @@ export interface Theme {
     input: string
     inputText: string
     tableHeader: string
+    tableBg: string
     success: string
     warning: string
     error: string
     link: string
     menu: string
-    // Local node table specific colors
     localNodeBg: string
     localNodeText: string
     localNodeBorder: string
@@ -41,6 +42,7 @@ export const themes: Theme[] = [
       input: '#1a1a1a',
       inputText: '#e0e0e0',
       tableHeader: '#404040',
+      tableBg: '#1a1a1a',
       success: '#4caf50',
       warning: '#ff9800',
       error: '#f44336',
@@ -65,6 +67,7 @@ export const themes: Theme[] = [
       input: '#ffffff',
       inputText: '#333333',
       tableHeader: '#e0e0e0',
+      tableBg: '#ffffff',
       success: '#4caf50',
       warning: '#ff9800',
       error: '#f44336',
@@ -89,6 +92,7 @@ export const themes: Theme[] = [
       input: '#1e40af',
       inputText: '#ffffff',
       tableHeader: '#3b82f6',
+      tableBg: '#1e1b4b',
       success: '#10b981',
       warning: '#f59e0b',
       error: '#ef4444',
@@ -113,6 +117,7 @@ export const themes: Theme[] = [
       input: '#065f46',
       inputText: '#ffffff',
       tableHeader: '#059669',
+      tableBg: '#022c22',
       success: '#10b981',
       warning: '#f59e0b',
       error: '#ef4444',
@@ -171,6 +176,7 @@ export function useTheme() {
     root.style.setProperty('--input-bg', theme.colors.input)
     root.style.setProperty('--input-text', theme.colors.inputText)
     root.style.setProperty('--table-header-bg', theme.colors.tableHeader)
+    root.style.setProperty('--table-bg', theme.colors.tableBg)
     root.style.setProperty('--success-color', theme.colors.success)
     root.style.setProperty('--warning-color', theme.colors.warning)
     root.style.setProperty('--error-color', theme.colors.error)
