@@ -231,6 +231,9 @@
             v-model:isVisible="showDatabaseModal" 
             :localnode="selectedLocalNode || selectedNode" 
           />
+          
+          <!-- Donate Modal -->
+          <Donate v-model:isVisible="showDonateModal" />
     
   </div>
 </template>
@@ -254,6 +257,7 @@ import ControlPanel from '@/components/ControlPanel.vue'
 import RptStats from '@/components/RptStats.vue'
 import CpuStats from '@/components/CpuStats.vue'
 import Database from '@/components/Database.vue'
+import Donate from '@/components/Donate.vue'
 
 
 const appStore = useAppStore()
@@ -276,6 +280,7 @@ const showControlPanelModal = ref(false)
 const showRptStatsModal = ref(false)
 const showCpuStatsModal = ref(false)
 const showDatabaseModal = ref(false)
+const showDonateModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -878,14 +883,7 @@ const handleLogout = async () => {
 }
 
 const openDonatePopup = () => {
-  const width = 600
-  const height = 700
-  const left = (screen.width - width) / 2
-  const top = (screen.height - height) / 2
-  const popup = window.open('donate.php', 'Donate', `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`)
-  if (popup) {
-    popup.focus()
-  }
+  showDonateModal.value = true
 }
 
   // Handle menu node selection
