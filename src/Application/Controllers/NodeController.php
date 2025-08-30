@@ -792,6 +792,7 @@ class NodeController
                 'DISCUSER' => true,
                 'MONUSER' => true,
                 'LMONUSER' => true,
+                'DTMFUSER' => true,
                 'PERMUSER' => true
             ];
             return $defaultPermissions[$permission] ?? false;
@@ -804,6 +805,7 @@ class NodeController
             'DISCUSER' => true,
             'MONUSER' => true,
             'LMONUSER' => true,
+            'DTMFUSER' => true,
             'PERMUSER' => true
         ];
         return $defaultPermissions[$permission] ?? false;
