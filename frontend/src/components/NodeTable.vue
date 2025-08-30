@@ -41,7 +41,7 @@
             :class="getConnectedNodeClass(connectedNode)"
           >
             <td 
-              class="node-num clickable-node" 
+              class="nodeNum" 
               align="center"
               @click="handleNodeClick(connectedNode.node)"
               :title="`Click to set ${connectedNode.node} as target node`"
@@ -435,14 +435,18 @@ defineExpose({
   overflow: hidden;
 }
 
-/* Node number cell */
-.node-num {
+/* Node number cell - matches original Supermon-ng styling */
+.nodeNum {
+  color: var(--link-color);
+  text-decoration: none;
+  transition: color 0.3s ease;
   cursor: pointer;
   user-select: none;
 }
 
-.node-num:hover {
-  background-color: var(--border-color) !important;
+.nodeNum:hover {
+  color: var(--link-hover);
+  font-weight: bold;
 }
 
 /* Header status details */
