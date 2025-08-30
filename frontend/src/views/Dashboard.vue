@@ -221,6 +221,9 @@
           
           <!-- Donate Modal -->
           <Donate v-model:isVisible="showDonateModal" />
+          
+          <!-- ExtNodes Modal -->
+          <ExtNodes v-model:isVisible="showExtNodesModal" />
     
   </div>
 </template>
@@ -245,6 +248,7 @@ import RptStats from '@/components/RptStats.vue'
 import CpuStats from '@/components/CpuStats.vue'
 import Database from '@/components/Database.vue'
 import Donate from '@/components/Donate.vue'
+import ExtNodes from '@/components/ExtNodes.vue'
 
 
 const appStore = useAppStore()
@@ -268,6 +272,7 @@ const showRptStatsModal = ref(false)
 const showCpuStatsModal = ref(false)
 const showDatabaseModal = ref(false)
 const showDonateModal = ref(false)
+const showExtNodesModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -569,10 +574,12 @@ const bubble = async () => {
 
 const extnodes = async () => {
   try {
-    // Implement Registry functionality
-    console.log('Registry')
+    console.log('Opening ExtNodes modal')
+    showExtNodesModal.value = true
   } catch (error) {
-    console.error('Registry error:', error)
+    console.error('ExtNodes error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert(`Failed to open ExtNodes: ${errorMessage}`)
   }
 }
 

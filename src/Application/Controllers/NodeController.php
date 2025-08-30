@@ -1232,6 +1232,57 @@ class NodeController
     }
 
     /**
+     * Get external nodes file contents
+     */
+    public function extnodes(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'EXNUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to access external nodes.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Get the external nodes file path from configuration
+            $extnodesPath = $this->config['extnodes'] ?? '/etc/asterisk/rpt_extnodes';
+            
+            if (!file_exists($extnodesPath)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false, 
+                    'message' => 'External nodes file not found: ' . $extnodesPath
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $fileContent = file_get_contents($extnodesPath);
+            
+            if ($fileContent === false) {
+                $response->getBody()->write(json_encode([
+                    'success' => false, 
+                    'message' => 'Failed to read external nodes file'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => [
+                    'file_path' => $extnodesPath,
+                    'content' => $fileContent,
+                    'timestamp' => date('c')
+                ],
+                'message' => 'External nodes file retrieved successfully'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve external nodes file', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve external nodes file: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    /**
      * Execute a single CPU statistics command
      */
     private function executeCpuStatsCommand(string $command): string
