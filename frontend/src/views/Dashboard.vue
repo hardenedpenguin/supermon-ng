@@ -52,7 +52,7 @@
         </select>
         
         <!-- Hidden input for single node -->
-        <input v-else-if="displayedNodes.length === 1" type="hidden" :value="displayedNodes[0].id" v-model="selectedLocalNode">
+        <input v-else-if="displayedNodes.length === 1" type="hidden" v-model="selectedLocalNode">
         
         <!-- Hidden input for single node (matches original) -->
         <input v-else class="submit" type="hidden" :value="displayedNodes[0]">
@@ -320,6 +320,13 @@ watch(selectedNode, (newValue) => {
       // Single node mode
       selectedLocalNode.value = selectedNodeStr
     }
+  }
+}, { immediate: true })
+
+// Watcher to update selectedLocalNode when displayedNodes changes (for single node case)
+watch(displayedNodes, (newNodes) => {
+  if (newNodes.length === 1 && !selectedLocalNode.value) {
+    selectedLocalNode.value = String(newNodes[0].id)
   }
 }, { immediate: true })
 
