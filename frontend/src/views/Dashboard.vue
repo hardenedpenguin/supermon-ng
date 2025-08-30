@@ -155,11 +155,9 @@
     <div id="footer">
       <b>System maintained by: <i>{{ systemInfo?.maintainer || 'W5GLE, Alvin, Texas' }}</i></b>
     </div>
-    
-
 
     <!-- Donate Button Section -->
-    <div id="donate-section" style="margin-top: 20px; text-align: center;">
+    <div id="donate-section" style="margin-top: 10px; text-align: center;">
       <button id="donatebutton" class="submit-large" @click="openDonatePopup" style="background-color: #6b4ce6; color: white; border: none; padding: 12px 24px; font-size: 1.1em; font-weight: bold; border-radius: 6px; cursor: pointer; transition: background-color 0.3s ease;">
         💝 Support This Project
       </button>
@@ -657,7 +655,7 @@ const astreload = async () => {
     } else {
       alert('Error: ' + response.data.message)
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('AST RELOAD error:', error)
     alert('Error executing Asterisk reload: ' + (error.response?.data?.message || error.message))
   }
@@ -680,7 +678,7 @@ const astaron = async () => {
     } else {
       alert('Error: ' + response.data.message)
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('AST START error:', error)
     alert('Error starting AllStar service: ' + (error.response?.data?.message || error.message))
   }
@@ -703,7 +701,7 @@ const astaroff = async () => {
     } else {
       alert('Error: ' + response.data.message)
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('AST STOP error:', error)
     alert('Error stopping AllStar service: ' + (error.response?.data?.message || error.message))
   }
@@ -966,7 +964,7 @@ onMounted(async () => {
         // Start monitoring the default node(s)
         if (defaultNode.includes(',')) {
           // Group mode - monitor each node individually
-          const nodeIds = defaultNode.split(',').map(id => id.trim())
+          const nodeIds = defaultNode.split(',').map((id: string) => id.trim())
           for (const nodeId of nodeIds) {
             await realTimeStore.startMonitoring(nodeId)
           }
