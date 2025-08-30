@@ -139,6 +139,10 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         // Ban/Allow Routes
         $group->post('/banallow', [NodeController::class, 'banallow']);
         $group->post('/banallow/action', [NodeController::class, 'banallowAction']);
+        
+        // Pi GPIO Routes
+        $group->post('/pigpio', [NodeController::class, 'pigpio']);
+        $group->post('/pigpio/action', [NodeController::class, 'pigpioAction']);
     });
 
     // Config routes

@@ -874,7 +874,7 @@ class NodeController
         $defaultPermissions = [
             'ADMINUSER', 'AUTHUSER', 'CONNUSER', 'DISCONNUSER', 'MONUSER', 
             'LOCALMONUSER', 'PERMCONNUSER', 'RPTUSER', 'RPTSTATSUSER', 
-            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER', 'BANUSER'
+            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER', 'BANUSER', 'GPIOUSER'
         ];
 
         // Check if user has the specific permission
@@ -1704,6 +1704,172 @@ class NodeController
             return [
                 'success' => false,
                 'message' => 'Failed to execute command. Check Asterisk logs for details.'
+            ];
+        }
+    }
+
+    public function pigpio(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'GPIOUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to control GPIO pins.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Get GPIO status
+            $gpioStatus = $this->getGPIOStatus();
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => [
+                    'gpio_status' => $gpioStatus,
+                    'timestamp' => date('c')
+                ],
+                'message' => 'GPIO status retrieved successfully'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve GPIO status', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve GPIO status: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    public function pigpioAction(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'GPIOUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to control GPIO pins.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        $data = $request->getParsedBody();
+        $pin = $data['pin'] ?? null;
+        $state = $data['state'] ?? null;
+
+        // Validate inputs
+        if (!is_numeric($pin) || $pin < 0 || $pin > 40) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid GPIO pin number. Must be 0-40.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        if (!in_array($state, ['input', 'output', 'up', 'down', '0', '1'])) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid GPIO state.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Execute GPIO command
+            $result = $this->executeGPIOCommand($pin, $state);
+
+            if ($result['success']) {
+                // Get updated GPIO status
+                $gpioStatus = $this->getGPIOStatus();
+
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'data' => [
+                        'pin' => $pin,
+                        'state' => $state,
+                        'gpio_status' => $gpioStatus,
+                        'timestamp' => date('c')
+                    ],
+                    'message' => $result['message']
+                ]));
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => $result['message']
+                ]));
+            }
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to execute GPIO command', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to execute GPIO command: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    private function getGPIOStatus(): array
+    {
+        $command = "gpio readall";
+        $output = shell_exec($command . " 2>/dev/null");
+
+        if ($output === null) {
+            return ['error' => 'Could not read GPIO status. Make sure gpio command is available.'];
+        }
+
+        $lines = explode("\n", trim($output));
+        $pins = [];
+
+        foreach ($lines as $line) {
+            if (preg_match('/^(\d+)\s+(\w+)\s+(\w+)$/', trim($line), $matches)) {
+                $pins[] = [
+                    'pin' => $matches[1],
+                    'mode' => $matches[2],
+                    'value' => $matches[3]
+                ];
+            }
+        }
+
+        return ['pins' => $pins];
+    }
+
+    private function executeGPIOCommand(int $pin, string $state): array
+    {
+        $escapedPin = escapeshellarg($pin);
+        $escapedState = escapeshellarg($state);
+
+        switch ($state) {
+            case 'input':
+                $command = "gpio mode {$escapedPin} input";
+                break;
+            case 'up':
+                $command = "gpio mode {$escapedPin} up";
+                break;
+            case 'down':
+                $command = "gpio mode {$escapedPin} down";
+                break;
+            case 'output':
+                $command = "gpio mode {$escapedPin} output";
+                break;
+            case '0':
+            case '1':
+                $command = "gpio write {$escapedPin} {$escapedState}";
+                break;
+            default:
+                return [
+                    'success' => false,
+                    'message' => 'Invalid GPIO state.'
+                ];
+        }
+
+        $output = shell_exec($command . " 2>/dev/null");
+        $returnVar = 0;
+        exec($command . " 2>/dev/null", $output, $returnVar);
+
+        if ($returnVar === 0) {
+            $actionText = match($state) {
+                'input' => 'set to input mode',
+                'output' => 'set to output mode',
+                'up' => 'set to pull-up mode',
+                'down' => 'set to pull-down mode',
+                '0' => 'set to LOW (0)',
+                '1' => 'set to HIGH (1)',
+                default => 'configured'
+            };
+            
+            return [
+                'success' => true,
+                'message' => "GPIO pin {$pin} successfully {$actionText}."
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to execute GPIO command. Check if gpio command is available and you have proper permissions.'
             ];
         }
     }
