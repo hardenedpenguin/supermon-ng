@@ -226,7 +226,7 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useRealTimeStore } from '@/stores/realTime'
-import axios from 'axios'
+import { api } from '@/utils/api'
 import NodeTable from '@/components/NodeTable.vue'
 import LoginForm from '@/components/LoginForm.vue'
 import Menu from '@/components/Menu.vue'
@@ -364,7 +364,7 @@ const connect = async () => {
   if (!targetNode.value || !selectedLocalNode.value) return
   
   try {
-    const response = await axios.post('/api/nodes/connect', {
+    const response = await api.post('/nodes/connect', {
       localnode: selectedLocalNode.value,
       remotenode: targetNode.value,
       perm: permConnect.value ? 'on' : null
@@ -386,7 +386,7 @@ const disconnect = async () => {
   if (!targetNode.value || !selectedLocalNode.value) return
   
   try {
-    const response = await axios.post('/api/nodes/disconnect', {
+    const response = await api.post('/nodes/disconnect', {
       localnode: selectedLocalNode.value,
       remotenode: targetNode.value,
       perm: null
@@ -407,7 +407,7 @@ const disconnect = async () => {
 const monitor = async () => {
   if (!targetNode.value || !selectedLocalNode.value) return
   try {
-    const response = await axios.post('/api/nodes/monitor', {
+    const response = await api.post('/nodes/monitor', {
       localnode: selectedLocalNode.value,
       remotenode: targetNode.value,
       perm: null
@@ -429,7 +429,7 @@ const permconnect = async () => {
   if (!targetNode.value || !selectedLocalNode.value) return
   
   try {
-    const response = await axios.post('/api/nodes/connect', {
+    const response = await api.post('/nodes/connect', {
       localnode: selectedLocalNode.value,
       remotenode: targetNode.value,
       perm: 'on'
@@ -450,7 +450,7 @@ const permconnect = async () => {
 const localmonitor = async () => {
   if (!targetNode.value || !selectedLocalNode.value) return
   try {
-    const response = await axios.post('/api/nodes/local-monitor', {
+    const response = await api.post('/nodes/local-monitor', {
       localnode: selectedLocalNode.value,
       remotenode: targetNode.value,
       perm: null
@@ -592,10 +592,8 @@ const astreload = async () => {
       return
     }
 
-    const response = await axios.post('/api/config/asterisk/reload', {
+    const response = await api.post('/config/asterisk/reload', {
       localnode: selectedNode.value
-    }, { 
-      withCredentials: true 
     })
 
     if (response.data.success) {
@@ -617,10 +615,8 @@ const astaron = async () => {
       return
     }
 
-    const response = await axios.post('/api/config/asterisk/control', {
+    const response = await api.post('/config/asterisk/control', {
       action: 'start'
-    }, { 
-      withCredentials: true 
     })
 
     if (response.data.success) {
@@ -642,10 +638,8 @@ const astaroff = async () => {
       return
     }
 
-    const response = await axios.post('/api/config/asterisk/control', {
+    const response = await api.post('/config/asterisk/control', {
       action: 'stop'
-    }, { 
-      withCredentials: true 
     })
 
     if (response.data.success) {
