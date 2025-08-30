@@ -149,6 +149,9 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         
         // SMLog Route
         $group->post('/smlog', [NodeController::class, 'smlog']);
+        
+        // Stats Route
+        $group->post('/stats', [NodeController::class, 'stats']);
     });
 
     // Config routes

@@ -874,7 +874,7 @@ class NodeController
         $defaultPermissions = [
             'ADMINUSER', 'AUTHUSER', 'CONNUSER', 'DISCONNUSER', 'MONUSER', 
             'LOCALMONUSER', 'PERMCONNUSER', 'RPTUSER', 'RPTSTATSUSER', 
-            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER', 'BANUSER', 'GPIOUSER', 'RBTUSER', 'SMLOGUSER'
+            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER', 'BANUSER', 'GPIOUSER', 'RBTUSER', 'SMLOGUSER', 'ASTATUSER'
         ];
 
         // Check if user has the specific permission
@@ -2009,5 +2009,195 @@ class NodeController
             'log_content' => $escaped_log_content,
             'message' => 'Supermon log content retrieved successfully'
         ];
+    }
+
+    public function stats(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'ASTATUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to view AllStar statistics.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            $body = $request->getParsedBody() ?? [];
+            $localnode = $body['localnode'] ?? null;
+
+            if (empty($localnode)) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Local node parameter is required.']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            // Get user configuration
+            $config = $this->getUserConfig($currentUser);
+            
+            if (!isset($config[$localnode])) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => "Node $localnode is not in your configuration file."]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            // Retrieve statistics data
+            $statsData = $this->getAllStarStats($config[$localnode]);
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => $statsData,
+                'message' => 'AllStar statistics retrieved successfully'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve AllStar statistics', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve AllStar statistics: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    private function getAllStarStats(array $nodeConfig): array
+    {
+        // Connect to AMI
+        $fp = \SimpleAmiClient::connect($nodeConfig['host']);
+        if ($fp === false) {
+            throw new \Exception("Could not connect to Asterisk Manager on host {$nodeConfig['host']}");
+        }
+
+        try {
+            $loginSuccess = \SimpleAmiClient::login($fp, $nodeConfig['user'], $nodeConfig['passwd']);
+            if ($loginSuccess === false) {
+                throw new \Exception("Could not login to Asterisk Manager using user {$nodeConfig['user']}");
+            }
+
+            // Get all statistics sections
+            $stats = [
+                'header' => $this->getStatsHeader(),
+                'all_nodes' => $this->getAllNodesStats($fp),
+                'peers' => $this->getPeersStats($fp),
+                'channels' => $this->getChannelsStats($fp),
+                'netstats' => $this->getNetstatsStats($fp)
+            ];
+
+            return $stats;
+
+        } finally {
+            \SimpleAmiClient::logoff($fp);
+        }
+    }
+
+    private function getStatsHeader(): array
+    {
+        $host = trim(shell_exec('hostname | awk -F. \'{printf ("%s", $1);}\' 2>/dev/null') ?: 'Unknown');
+        $date = trim(shell_exec('date 2>/dev/null') ?: 'Unknown');
+        
+        return [
+            'host' => $host,
+            'date' => $date
+        ];
+    }
+
+    private function getAllNodesStats($fp): array
+    {
+        $nodes_output = \SimpleAmiClient::command($fp, "rpt localnodes");
+        
+        if ($nodes_output === false) {
+            return ['error' => 'Failed to execute rpt localnodes command'];
+        }
+
+        if (trim($nodes_output) === '') {
+            return ['message' => 'No local nodes reported by Asterisk'];
+        }
+
+        $nodelist = explode("\n", $nodes_output);
+        $nodes = [];
+
+        foreach ($nodelist as $line) {
+            $node_num_raw_candidate = $line;
+            $prefix = "Output: ";
+            if (strpos($line, $prefix) === 0) {
+                $node_num_raw_candidate = substr($line, strlen($prefix));
+            }
+
+            $node_num_raw = trim($node_num_raw_candidate);
+            if (empty($node_num_raw) || $node_num_raw === "Node" || $node_num_raw === "----" || !ctype_digit($node_num_raw)) {
+                continue;
+            }
+
+            $node_num = $node_num_raw;
+            $xnode_info = \SimpleAmiClient::command($fp, "rpt xnode $node_num");
+            $lstats_info = \SimpleAmiClient::command($fp, "rpt lstats $node_num");
+
+            $nodes[] = [
+                'node_number' => $node_num,
+                'xnode_info' => $this->cleanAmiOutput($xnode_info),
+                'lstats_info' => $this->cleanAmiOutput($lstats_info)
+            ];
+        }
+
+        return ['nodes' => $nodes];
+    }
+
+    private function getPeersStats($fp): array
+    {
+        $peers_output = \SimpleAmiClient::command($fp, "iax2 show peers");
+        
+        if ($peers_output === false) {
+            return ['error' => 'Failed to retrieve IAX2 peer info'];
+        }
+
+        if (trim($peers_output) === '') {
+            return ['message' => 'No IAX2 peers reported'];
+        }
+
+        return ['peers' => $this->cleanAmiOutput($peers_output)];
+    }
+
+    private function getChannelsStats($fp): array
+    {
+        $channels_output = \SimpleAmiClient::command($fp, "iax2 show channels");
+        
+        if ($channels_output === false) {
+            return ['error' => 'Failed to retrieve IAX2 channel info'];
+        }
+
+        if (trim($channels_output) === '') {
+            return ['message' => 'No IAX2 channels reported'];
+        }
+
+        return ['channels' => $this->cleanAmiOutput($channels_output)];
+    }
+
+    private function getNetstatsStats($fp): array
+    {
+        $netstats_output = \SimpleAmiClient::command($fp, "iax2 show netstats");
+        
+        if ($netstats_output === false) {
+            return ['error' => 'Failed to retrieve IAX2 netstats info'];
+        }
+
+        if (trim($netstats_output) === '') {
+            return ['message' => 'No IAX2 netstats reported'];
+        }
+
+        return ['netstats' => $this->cleanAmiOutput($netstats_output)];
+    }
+
+    private function cleanAmiOutput($raw_output): string
+    {
+        if ($raw_output === null || trim($raw_output) === '') {
+            return $raw_output;
+        }
+        
+        $lines = explode("\n", $raw_output);
+        $cleaned_lines = [];
+        $prefix = "Output: ";
+        
+        foreach ($lines as $line) {
+            if (strpos($line, $prefix) === 0) {
+                $cleaned_lines[] = substr($line, strlen($prefix));
+            } else {
+                $cleaned_lines[] = $line;
+            }
+        }
+        
+        return implode("\n", $cleaned_lines);
     }
 }

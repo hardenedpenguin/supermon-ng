@@ -251,6 +251,9 @@
           
           <!-- SMLog Modal -->
           <SMLog v-model:isVisible="showSMLogModal" />
+          
+          <!-- Stats Modal -->
+          <Stats v-model:isVisible="showStatsModal" :localnode="targetNode" />
     
   </div>
 </template>
@@ -283,6 +286,7 @@ import BanAllow from '@/components/BanAllow.vue'
 import PiGPIO from '@/components/PiGPIO.vue'
 import Reboot from '@/components/Reboot.vue'
 import SMLog from '@/components/SMLog.vue'
+import Stats from '@/components/Stats.vue'
 
 
 const appStore = useAppStore()
@@ -314,6 +318,7 @@ const showDonateModal = ref(false)
   const showPiGPIOModal = ref(false)
   const showRebootModal = ref(false)
   const showSMLogModal = ref(false)
+  const showStatsModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -838,9 +843,16 @@ const cpustats = async () => {
 
 const aststats = async () => {
   try {
-    console.log('AllStar Status')
+    console.log('Opening AllStar Statistics modal')
+    if (!targetNode.value) {
+      alert('Please select a node first')
+      return
+    }
+    showStatsModal.value = true
   } catch (error) {
-    console.error('AllStar Status error:', error)
+    console.error('AllStar Statistics error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert(`Failed to open AllStar Statistics: ${errorMessage}`)
   }
 }
 
