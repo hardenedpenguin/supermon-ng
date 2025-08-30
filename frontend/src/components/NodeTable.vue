@@ -85,7 +85,7 @@ import { computed, ref, watch, watchEffect } from 'vue'
 
 // Emits
 const emit = defineEmits<{
-  'node-click': [nodeId: string]
+  'node-click': [nodeId: string, localNodeId: string]
 }>()
 
 // Props
@@ -328,8 +328,8 @@ const scrollToTop = () => {
 }
 
 const handleNodeClick = (nodeId: string) => {
-  // Emit event to parent component
-  emit('node-click', nodeId)
+  // Emit event to parent component with both the clicked node and the local node (table owner)
+  emit('node-click', nodeId, props.node.id)
 }
 
 // Update node data from real-time store

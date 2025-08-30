@@ -822,31 +822,14 @@ const openDonatePopup = () => {
   }
 
   // Handle node click from NodeTable (for quick target node selection)
-  const handleNodeClick = (nodeId: string) => {
+  const handleNodeClick = (nodeId: string, localNodeId: string) => {
     // Set the clicked node as the target node
     targetNode.value = nodeId
     
-    // If we're in group mode (multiple displayed nodes), try to find and select the appropriate local node
-    if (displayedNodes.value.length > 1) {
-      // Find the local node that has this connected node
-      const localNode = displayedNodes.value.find(node => {
-        // Check if this local node has the clicked node as a connected node
-        const nodeData = realTimeStore.getNodeById(node.id)
-        if (nodeData && nodeData.remote_nodes) {
-          return nodeData.remote_nodes.some((remoteNode: any) => 
-            remoteNode.node === nodeId || remoteNode.node.toString() === nodeId
-          )
-        }
-        return false
-      })
-      
-      if (localNode) {
-        // Don't change the group selection - just update the target node
-        // The group selection should remain intact
-        console.log('🔍 Node clicked in group mode, keeping group selection:', selectedNode.value)
-        console.log('🔍 Updated target node to:', nodeId)
-      }
-    }
+    // Update the local node selection to the table owner
+    selectedLocalNode.value = localNodeId
+    
+    console.log('🔍 Node clicked - Target node:', nodeId, 'Local node:', localNodeId)
     
     // Scroll to the control panel
     const controlPanel = document.getElementById('connect_form')
