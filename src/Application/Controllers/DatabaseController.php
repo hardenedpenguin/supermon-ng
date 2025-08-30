@@ -104,6 +104,66 @@ class DatabaseController
     }
     
     /**
+     * Check and perform automatic update if needed
+     */
+    public function autoUpdate(Request $request, Response $response): Response
+    {
+        $this->logger->info('Checking for automatic database update');
+        
+        $success = $this->databaseService->checkAndPerformAutomaticUpdate();
+        
+        if ($success) {
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'message' => 'Automatic update performed successfully'
+            ]));
+            
+            return $response
+                ->withStatus(200)
+                ->withHeader('Content-Type', 'application/json');
+        } else {
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'message' => 'No automatic update needed at this time'
+            ]));
+            
+            return $response
+                ->withStatus(200)
+                ->withHeader('Content-Type', 'application/json');
+        }
+    }
+    
+    /**
+     * Force immediate update regardless of timing
+     */
+    public function forceUpdate(Request $request, Response $response): Response
+    {
+        $this->logger->info('Forcing immediate database update');
+        
+        $success = $this->databaseService->forceUpdate();
+        
+        if ($success) {
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'message' => 'Database updated successfully'
+            ]));
+            
+            return $response
+                ->withStatus(200)
+                ->withHeader('Content-Type', 'application/json');
+        } else {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Failed to update database'
+            ]));
+            
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json');
+        }
+    }
+    
+    /**
      * Search nodes in the database
      */
     public function search(Request $request, Response $response): Response

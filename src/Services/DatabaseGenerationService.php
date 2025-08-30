@@ -10,6 +10,7 @@ use Exception;
  * Service for generating and managing AllStar database
  * 
  * Replicates the functionality of astdb.php in a modern service-oriented approach
+ * with automatic scheduling capabilities
  */
 class DatabaseGenerationService
 {
@@ -23,6 +24,8 @@ class DatabaseGenerationService
     private const MAX_RETRIES = 5;
     private const RETRY_SLEEP_SECONDS = 5;
     private const HTTP_TIMEOUT_SECONDS = 20;
+    private const CRON_MAX_DELAY_SECONDS = 1800; // 30 minutes
+    private const AUTO_UPDATE_INTERVAL = 10800; // 3 hours in seconds
     
     public function __construct(
         LoggerInterface $logger,
@@ -41,15 +44,25 @@ class DatabaseGenerationService
     /**
      * Generate the AllStar database by combining private nodes and public database
      */
-    public function generateDatabase(bool $isStrictlyPrivate = false): bool
+    public function generateDatabase(bool $isStrictlyPrivate = false, bool $isCronMode = false): bool
     {
         $this->logger->info('Starting AllStar database generation', [
             'strictly_private' => $isStrictlyPrivate,
+            'cron_mode' => $isCronMode,
             'astdb_file' => $this->astdbFile,
             'private_nodes_file' => $this->privateNodesFile
         ]);
         
         try {
+            // Add random delay for cron mode (like original script)
+            if ($isCronMode && !$isStrictlyPrivate) {
+                $delaySeconds = mt_rand(0, self::CRON_MAX_DELAY_SECONDS);
+                if ($delaySeconds > 0) {
+                    $this->logger->info('Cron mode: Adding random delay', ['delay_seconds' => $delaySeconds]);
+                    sleep($delaySeconds);
+                }
+            }
+            
             // Load private nodes
             $privateNodesContent = $this->loadPrivateNodes();
             
@@ -78,6 +91,9 @@ class DatabaseGenerationService
             
             $this->writeDatabaseFile($finalContent);
             
+            // Update last generation timestamp
+            $this->updateLastGenerationTime();
+            
             $this->logger->info('AllStar database generation completed successfully', [
                 'bytes_written' => strlen($finalContent)
             ]);
@@ -91,6 +107,59 @@ class DatabaseGenerationService
                 'line' => $e->getLine()
             ]);
             return false;
+        }
+    }
+    
+    /**
+     * Check if automatic update is needed and perform it
+     */
+    public function checkAndPerformAutomaticUpdate(): bool
+    {
+        $lastUpdate = $this->getLastGenerationTime();
+        $currentTime = time();
+        
+        // Check if enough time has passed since last update
+        if ($lastUpdate && ($currentTime - $lastUpdate) < self::AUTO_UPDATE_INTERVAL) {
+            $this->logger->debug('Automatic update not needed yet', [
+                'last_update' => $lastUpdate,
+                'current_time' => $currentTime,
+                'time_since_last' => $currentTime - $lastUpdate,
+                'interval' => self::AUTO_UPDATE_INTERVAL
+            ]);
+            return false;
+        }
+        
+        $this->logger->info('Performing automatic database update');
+        return $this->generateDatabase(false, true);
+    }
+    
+    /**
+     * Get the last generation time from cache
+     */
+    private function getLastGenerationTime(): ?int
+    {
+        try {
+            return $this->cache->get('astdb_last_generation', function() {
+                return null;
+            });
+        } catch (Exception $e) {
+            $this->logger->warning('Could not retrieve last generation time', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+    
+    /**
+     * Update the last generation time in cache
+     */
+    private function updateLastGenerationTime(): void
+    {
+        try {
+            $this->cache->delete('astdb_last_generation');
+            $this->cache->get('astdb_last_generation', function() {
+                return time();
+            });
+        } catch (Exception $e) {
+            $this->logger->warning('Could not update last generation time', ['error' => $e->getMessage()]);
         }
     }
     
@@ -237,10 +306,17 @@ class DatabaseGenerationService
      */
     public function getDatabaseStatus(): array
     {
+        $lastUpdate = $this->getLastGenerationTime();
+        $currentTime = time();
+        
         $status = [
             'file_exists' => file_exists($this->astdbFile),
             'file_size' => file_exists($this->astdbFile) ? filesize($this->astdbFile) : 0,
             'last_modified' => file_exists($this->astdbFile) ? filemtime($this->astdbFile) : null,
+            'last_generation' => $lastUpdate,
+            'next_auto_update' => $lastUpdate ? $lastUpdate + self::AUTO_UPDATE_INTERVAL : null,
+            'auto_update_enabled' => true,
+            'auto_update_interval_hours' => self::AUTO_UPDATE_INTERVAL / 3600,
             'private_nodes_file_exists' => file_exists($this->privateNodesFile),
             'private_nodes_count' => 0,
             'allstar_db_url' => $this->allstarDbUrl
@@ -258,5 +334,14 @@ class DatabaseGenerationService
         }
         
         return $status;
+    }
+    
+    /**
+     * Force immediate update regardless of timing
+     */
+    public function forceUpdate(): bool
+    {
+        $this->logger->info('Forcing immediate database update');
+        return $this->generateDatabase(false, false);
     }
 }

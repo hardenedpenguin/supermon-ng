@@ -195,6 +195,8 @@ $app->group('/api', function (RouteCollectorProxy $group) {
     $group->group('/database', function (RouteCollectorProxy $group) {
         $group->get('/status', [DatabaseController::class, 'status']);
         $group->post('/generate', [DatabaseController::class, 'generate']);
+        $group->post('/auto-update', [DatabaseController::class, 'autoUpdate']);
+        $group->post('/force-update', [DatabaseController::class, 'forceUpdate']);
         $group->get('/search', [DatabaseController::class, 'search']);
         $group->get('/{id}', [DatabaseController::class, 'get']);
     });

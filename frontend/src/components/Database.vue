@@ -12,6 +12,40 @@
           <h4>Generate ASTDB</h4>
           <p>Generate or update the AllStar database (astdb.txt) file.</p>
           
+          <!-- Database Status -->
+          <div v-if="databaseStatus" class="database-status">
+            <div class="status-item">
+              <strong>File Status:</strong> 
+              <span :class="databaseStatus.file_exists ? 'status-ok' : 'status-error'">
+                {{ databaseStatus.file_exists ? 'Exists' : 'Missing' }}
+              </span>
+            </div>
+            <div v-if="databaseStatus.file_exists" class="status-item">
+              <strong>File Size:</strong> {{ formatFileSize(databaseStatus.file_size) }}
+            </div>
+            <div v-if="databaseStatus.last_modified" class="status-item">
+              <strong>Last Modified:</strong> {{ formatTimestamp(databaseStatus.last_modified * 1000) }}
+            </div>
+            <div v-if="databaseStatus.last_generation" class="status-item">
+              <strong>Last Generated:</strong> {{ formatTimestamp(databaseStatus.last_generation * 1000) }}
+            </div>
+            <div v-if="databaseStatus.next_auto_update" class="status-item">
+              <strong>Next Auto Update:</strong> {{ formatTimestamp(databaseStatus.next_auto_update * 1000) }}
+            </div>
+            <div class="status-item">
+              <strong>Auto Update:</strong> 
+              <span :class="databaseStatus.auto_update_enabled ? 'status-ok' : 'status-warning'">
+                {{ databaseStatus.auto_update_enabled ? 'Enabled' : 'Disabled' }}
+              </span>
+              <span v-if="databaseStatus.auto_update_enabled">
+                (every {{ databaseStatus.auto_update_interval_hours }} hours)
+              </span>
+            </div>
+            <div class="status-item">
+              <strong>Private Nodes:</strong> {{ databaseStatus.private_nodes_count }}
+            </div>
+          </div>
+          
           <div class="generation-controls">
             <label class="checkbox-label">
               <input 
@@ -120,6 +154,7 @@ const loading = ref(false)
 const error = ref('')
 const databaseData = ref(null)
 const showRawOutput = ref(false)
+const databaseStatus = ref(null)
 
 // ASTDB Generation state
 const generating = ref(false)
@@ -131,6 +166,7 @@ const generationSuccess = ref(false)
 watch(() => props.isVisible, (newVal) => {
   if (newVal) {
     loadDatabase()
+    loadDatabaseStatus()
   } else {
     resetState()
   }
@@ -147,6 +183,7 @@ const resetState = () => {
   error.value = ''
   databaseData.value = null
   showRawOutput.value = false
+  databaseStatus.value = null
 }
 
 const loadDatabase = async () => {
@@ -172,6 +209,17 @@ const loadDatabase = async () => {
   }
 }
 
+const loadDatabaseStatus = async () => {
+  try {
+    const response = await api.get('/database/status')
+    if (response.data.success) {
+      databaseStatus.value = response.data.data
+    }
+  } catch (err) {
+    console.error('Failed to load database status:', err)
+  }
+}
+
 const formatTimestamp = (timestamp) => {
   if (!timestamp) return ''
   return new Date(timestamp).toLocaleString()
@@ -190,6 +238,7 @@ const generateAstdb = async () => {
     if (response.data.success) {
       generationSuccess.value = true
       generationMessage.value = response.data.message || 'ASTDB generated successfully!'
+      loadDatabaseStatus() // Refresh status after generation
     } else {
       generationSuccess.value = false
       generationMessage.value = response.data.message || 'Failed to generate ASTDB'
@@ -201,6 +250,15 @@ const generateAstdb = async () => {
   } finally {
     generating.value = false
   }
+}
+
+const formatFileSize = (bytes) => {
+  if (bytes === null || bytes === undefined) return 'N/A'
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 </script>
 
@@ -510,5 +568,39 @@ const generateAstdb = async () => {
   max-height: 300px;
   overflow-y: auto;
   border: 1px solid #333333;
+}
+
+.database-status {
+  background-color: #111111;
+  border: 1px solid #333333;
+  border-radius: 4px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 0.9rem;
+  color: #cccccc;
+}
+
+.status-item {
+  margin-bottom: 0.25rem;
+}
+
+.status-item strong {
+  color: #00ff00;
+}
+
+.status-ok {
+  color: #00ff00;
+  font-weight: bold;
+}
+
+.status-error {
+  color: #ff0000;
+  font-weight: bold;
+}
+
+.status-warning {
+  color: #ffff00;
+  font-weight: bold;
 }
 </style>
