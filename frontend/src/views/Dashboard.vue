@@ -236,6 +236,12 @@
           
           <!-- Linux Log Modal -->
           <LinuxLog v-model:isVisible="showLinuxLogModal" />
+          
+          <!-- Ban/Allow Modal -->
+          <BanAllow 
+            v-model:isVisible="showBanAllowModal" 
+            :available-nodes="availableNodes"
+          />
     
   </div>
 </template>
@@ -264,6 +270,7 @@ import ExtNodes from '@/components/ExtNodes.vue'
 import FastRestart from '@/components/FastRestart.vue'
 import IRLPLog from '@/components/IRLPLog.vue'
 import LinuxLog from '@/components/LinuxLog.vue'
+import BanAllow from '@/components/BanAllow.vue'
 
 
 const appStore = useAppStore()
@@ -291,6 +298,7 @@ const showDonateModal = ref(false)
   const showFastRestartModal = ref(false)
   const showIrlpLogModal = ref(false)
   const showLinuxLogModal = ref(false)
+  const showBanAllowModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -898,9 +906,12 @@ const weberrlog = async () => {
 
 const openbanallow = async () => {
   try {
-    console.log('Access List')
+    console.log('Opening Ban/Allow modal')
+    showBanAllowModal.value = true
   } catch (error) {
-    console.error('Access List error:', error)
+    console.error('Ban/Allow error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert(`Failed to open Ban/Allow: ${errorMessage}`)
   }
 }
 

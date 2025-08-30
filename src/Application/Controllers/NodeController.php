@@ -874,7 +874,7 @@ class NodeController
         $defaultPermissions = [
             'ADMINUSER', 'AUTHUSER', 'CONNUSER', 'DISCONNUSER', 'MONUSER', 
             'LOCALMONUSER', 'PERMCONNUSER', 'RPTUSER', 'RPTSTATSUSER', 
-            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER'
+            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER', 'BANUSER'
         ];
 
         // Check if user has the specific permission
@@ -1476,6 +1476,235 @@ class NodeController
             $this->logger->error('Failed to retrieve Linux system log', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve Linux system log: ' . $e->getMessage()]));
             return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    public function banallow(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'BANUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to manage node access control lists.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        $data = $request->getParsedBody();
+        $localnode = $data['localnode'] ?? null;
+
+        if (empty($localnode) || !preg_match('/^\d+$/', $localnode)) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Valid local node parameter is required.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Get user configuration
+            $config = $this->getUserConfig($currentUser);
+            if (!isset($config[$localnode])) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Node configuration not found.']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $amiConfig = $config[$localnode];
+            if (!isset($amiConfig['host']) || !isset($amiConfig['user']) || !isset($amiConfig['passwd'])) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid AMI configuration for node.']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            // Get allowlist and denylist data
+            $allowlistData = $this->getBanAllowList($amiConfig, 'allowlist', $localnode);
+            $denylistData = $this->getBanAllowList($amiConfig, 'denylist', $localnode);
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => [
+                    'localnode' => $localnode,
+                    'allowlist' => $allowlistData,
+                    'denylist' => $denylistData,
+                    'timestamp' => date('c')
+                ],
+                'message' => 'Node access control lists retrieved successfully'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve node access control lists', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve node access control lists: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    public function banallowAction(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'BANUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to manage node access control lists.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        $data = $request->getParsedBody();
+        $localnode = $data['localnode'] ?? null;
+        $node = $data['node'] ?? null;
+        $listtype = $data['listtype'] ?? null;
+        $deleteadd = $data['deleteadd'] ?? null;
+        $comment = $data['comment'] ?? '';
+
+        // Validate inputs
+        if (empty($localnode) || !preg_match('/^\d+$/', $localnode)) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Valid local node parameter is required.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        if (empty($node) || !preg_match('/^\d+$/', $node)) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Valid node number is required.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        if (!in_array($listtype, ['allowlist', 'denylist'])) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid list type.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        if (!in_array($deleteadd, ['add', 'delete'])) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid action.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Get user configuration
+            $config = $this->getUserConfig($currentUser);
+            if (!isset($config[$localnode])) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Node configuration not found.']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $amiConfig = $config[$localnode];
+            if (!isset($amiConfig['host']) || !isset($amiConfig['user']) || !isset($amiConfig['passwd'])) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid AMI configuration for node.']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            // Execute the ban/allow action
+            $result = $this->executeBanAllowAction($amiConfig, $localnode, $node, $listtype, $deleteadd, $comment);
+
+            if ($result['success']) {
+                // Get updated lists
+                $allowlistData = $this->getBanAllowList($amiConfig, 'allowlist', $localnode);
+                $denylistData = $this->getBanAllowList($amiConfig, 'denylist', $localnode);
+
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'data' => [
+                        'localnode' => $localnode,
+                        'node' => $node,
+                        'action' => $deleteadd,
+                        'listtype' => $listtype,
+                        'comment' => $comment,
+                        'allowlist' => $allowlistData,
+                        'denylist' => $denylistData,
+                        'timestamp' => date('c')
+                    ],
+                    'message' => $result['message']
+                ]));
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => $result['message']
+                ]));
+            }
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to execute ban/allow action', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to execute ban/allow action: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    private function getBanAllowList(array $amiConfig, string $listType, string $localnode): array
+    {
+        $fp = \SimpleAmiClient::connect($amiConfig['host']);
+        if ($fp === false) {
+            return ['error' => 'Could not connect to Asterisk Manager'];
+        }
+
+        if (\SimpleAmiClient::login($fp, $amiConfig['user'], $amiConfig['passwd']) === false) {
+            \SimpleAmiClient::logoff($fp);
+            return ['error' => 'Could not authenticate with Asterisk Manager'];
+        }
+
+        $dbFamily = $listType . "/" . $localnode;
+        $rawData = \SimpleAmiClient::command($fp, "database show " . $dbFamily);
+        \SimpleAmiClient::logoff($fp);
+
+        if ($rawData === false || trim($rawData) === "") {
+            return ['entries' => []];
+        }
+
+        $lines = explode("\n", $rawData);
+        $entries = [];
+
+        foreach ($lines as $line) {
+            $processedLine = trim($line);
+            if (strpos($processedLine, "Output: ") === 0) {
+                $processedLine = substr($processedLine, strlen("Output: "));
+                $processedLine = trim($processedLine);
+            }
+            
+            if (preg_match('/^\d+\s+results found\.?$/i', $processedLine)) {
+                continue;
+            }
+
+            if (trim($processedLine) !== "") {
+                $parts = explode(' ', $processedLine, 2);
+                $entries[] = [
+                    'node' => $parts[0] ?? '',
+                    'comment' => $parts[1] ?? ''
+                ];
+            }
+        }
+
+        return ['entries' => $entries];
+    }
+
+    private function executeBanAllowAction(array $amiConfig, string $localnode, string $node, string $listtype, string $deleteadd, string $comment): array
+    {
+        $fp = \SimpleAmiClient::connect($amiConfig['host']);
+        if ($fp === false) {
+            return [
+                'success' => false,
+                'message' => 'Could not connect to Asterisk Manager'
+            ];
+        }
+
+        if (\SimpleAmiClient::login($fp, $amiConfig['user'], $amiConfig['passwd']) === false) {
+            \SimpleAmiClient::logoff($fp);
+            return [
+                'success' => false,
+                'message' => 'Could not authenticate with Asterisk Manager'
+            ];
+        }
+
+        $dbName = $listtype . "/" . $localnode;
+        $cmdAction = ($deleteadd == "add") ? "put" : "del";
+        
+        $amiCmdString = "database $cmdAction $dbName $node";
+        if ($cmdAction == "put" && !empty($comment)) {
+            $amiCmdString .= " \"" . addslashes($comment) . "\"";
+        }
+
+        $result = \SimpleAmiClient::command($fp, $amiCmdString);
+        \SimpleAmiClient::logoff($fp);
+
+        if ($result !== false) {
+            $actionText = $deleteadd === 'add' ? 'added to' : 'removed from';
+            return [
+                'success' => true,
+                'message' => "Node $node successfully $actionText the $listtype."
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to execute command. Check Asterisk logs for details.'
+            ];
         }
     }
 }

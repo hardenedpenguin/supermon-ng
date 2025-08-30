@@ -135,6 +135,10 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         
         // Linux Log Route
         $group->post('/linuxlog', [NodeController::class, 'linuxlog']);
+        
+        // Ban/Allow Routes
+        $group->post('/banallow', [NodeController::class, 'banallow']);
+        $group->post('/banallow/action', [NodeController::class, 'banallowAction']);
     });
 
     // Config routes
