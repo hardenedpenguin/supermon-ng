@@ -346,9 +346,6 @@ const generateAstdb = async () => {
   border-top: 1px solid #333333;
   margin: 1rem 0;
 }
-  background-color: #333333;
-  border-radius: 4px;
-}
 
 .modal-body {
   padding: 1.5rem;
