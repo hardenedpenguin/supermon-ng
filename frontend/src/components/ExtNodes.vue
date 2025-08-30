@@ -36,9 +36,12 @@
 import { ref, watch } from 'vue'
 import { api } from '@/utils/api'
 
-const props = defineProps<{
-  isVisible: boolean
-}>()
+const props = defineProps({
+  isVisible: {
+    type: Boolean,
+    default: false
+  }
+})
 
 const emit = defineEmits(['update:isVisible'])
 
