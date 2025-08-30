@@ -1,0 +1,139 @@
+/*
+ * Supermon-ng Custom Theme
+ * 
+ * This file allows you to create a custom theme for Supermon-ng.
+ * You can override any CSS variables defined in the theme system.
+ * 
+ * To use this theme:
+ * 1. Modify the colors below to your preference
+ * 2. Save this file
+ * 3. The theme will be automatically applied when you select "Custom" theme
+ * 
+ * Available variables you can customize:
+ * - --primary-color: Main accent color
+ * - --text-color: Primary text color
+ * - --background-color: Main background color
+ * - --container-bg: Container/card background color
+ * - --border-color: Border color
+ * - --input-bg: Input field background
+ * - --input-text: Input field text color
+ * - --table-header-bg: Table header background
+ * - --success-color: Success/online status color
+ * - --warning-color: Warning status color
+ * - --error-color: Error/offline status color
+ * - --link-color: Link color
+ * - --menu-background: Menu background color
+ * - --modal-bg: Modal background color
+ * - --modal-overlay: Modal overlay color
+ * - --button-bg: Button background color
+ * - --button-hover: Button hover state
+ * - --button-active: Button active state
+ * - --card-bg: Card background color
+ * - --card-border: Card border color
+ * - --tooltip-bg: Tooltip background
+ * - --tooltip-text: Tooltip text color
+ */
+
+[data-theme="custom"] {
+  /* Example custom theme - modify these colors to your preference */
+  
+  /* Main colors */
+  --primary-color: #00d4ff;
+  --text-color: #ffffff;
+  --background-color: #0a0a0a;
+  
+  /* Container and card colors */
+  --container-bg: #1a1a1a;
+  --card-bg: #1a1a1a;
+  --card-border: #333333;
+  
+  /* Border and input colors */
+  --border-color: #333333;
+  --input-bg: #0a0a0a;
+  --input-text: #ffffff;
+  
+  /* Table colors */
+  --table-header-bg: #333333;
+  
+  /* Status colors */
+  --success-color: #00ff88;
+  --warning-color: #ffaa00;
+  --error-color: #ff4444;
+  
+  /* Link and menu colors */
+  --link-color: #00d4ff;
+  --menu-background: #1a1a1a;
+  
+  /* Modal colors */
+  --modal-bg: #0a0a0a;
+  --modal-overlay: rgba(0, 0, 0, 0.8);
+  
+  /* Button colors */
+  --button-bg: #333333;
+  --button-hover: #444444;
+  --button-active: #555555;
+  
+  /* Tooltip colors */
+  --tooltip-bg: #1a1a1a;
+  --tooltip-text: #ffffff;
+}
+
+/*
+ * Additional custom styles
+ * You can add any additional CSS rules below
+ */
+
+/* Example: Custom button styles */
+[data-theme="custom"] button {
+  border-radius: 8px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Example: Custom table styles */
+[data-theme="custom"] table {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Example: Custom card styles */
+[data-theme="custom"] .card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--card-border);
+}
+
+/* Example: Custom input styles */
+[data-theme="custom"] input,
+[data-theme="custom"] textarea,
+[data-theme="custom"] select {
+  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+[data-theme="custom"] input:focus,
+[data-theme="custom"] textarea:focus,
+[data-theme="custom"] select:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+}
+
+/* Example: Custom scrollbar */
+[data-theme="custom"] ::-webkit-scrollbar {
+  width: 8px;
+}
+
+[data-theme="custom"] ::-webkit-scrollbar-track {
+  background: var(--background-color);
+}
+
+[data-theme="custom"] ::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+[data-theme="custom"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color);
+}

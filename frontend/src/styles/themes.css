@@ -1,0 +1,261 @@
+/* Supermon-ng Theme System */
+
+/* Default Dark Theme (Current) */
+[data-theme="dark"] {
+  /* Colors */
+  --primary-color: #e0e0e0;
+  --text-color: #e0e0e0;
+  --background-color: #000000;
+  --container-bg: #2a2a2a;
+  --border-color: #404040;
+  --input-bg: #1a1a1a;
+  --input-text: #e0e0e0;
+  --table-header-bg: #404040;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --error-color: #f44336;
+  --link-color: #2196f3;
+  --menu-background: #2a2a2a;
+  --modal-bg: #1a1a1a;
+  --modal-overlay: rgba(0, 0, 0, 0.8);
+  --button-bg: #404040;
+  --button-hover: #505050;
+  --button-active: #606060;
+  --card-bg: #2a2a2a;
+  --card-border: #404040;
+  --tooltip-bg: #1a1a1a;
+  --tooltip-text: #e0e0e0;
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  --primary-color: #333333;
+  --text-color: #333333;
+  --background-color: #f5f5f5;
+  --container-bg: #ffffff;
+  --border-color: #dddddd;
+  --input-bg: #ffffff;
+  --input-text: #333333;
+  --table-header-bg: #f8f9fa;
+  --success-color: #28a745;
+  --warning-color: #ffc107;
+  --error-color: #dc3545;
+  --link-color: #007bff;
+  --menu-background: #ffffff;
+  --modal-bg: #ffffff;
+  --modal-overlay: rgba(0, 0, 0, 0.5);
+  --button-bg: #007bff;
+  --button-hover: #0056b3;
+  --button-active: #004085;
+  --card-bg: #ffffff;
+  --card-border: #dddddd;
+  --tooltip-bg: #333333;
+  --tooltip-text: #ffffff;
+}
+
+/* Blue Theme */
+[data-theme="blue"] {
+  --primary-color: #ffffff;
+  --text-color: #ffffff;
+  --background-color: #1e3a8a;
+  --container-bg: #1e40af;
+  --border-color: #3b82f6;
+  --input-bg: #1e3a8a;
+  --input-text: #ffffff;
+  --table-header-bg: #1d4ed8;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --link-color: #60a5fa;
+  --menu-background: #1e40af;
+  --modal-bg: #1e3a8a;
+  --modal-overlay: rgba(30, 58, 138, 0.8);
+  --button-bg: #3b82f6;
+  --button-hover: #2563eb;
+  --button-active: #1d4ed8;
+  --card-bg: #1e40af;
+  --card-border: #3b82f6;
+  --tooltip-bg: #1e3a8a;
+  --tooltip-text: #ffffff;
+}
+
+/* Green Theme */
+[data-theme="green"] {
+  --primary-color: #ffffff;
+  --text-color: #ffffff;
+  --background-color: #065f46;
+  --container-bg: #047857;
+  --border-color: #10b981;
+  --input-bg: #065f46;
+  --input-text: #ffffff;
+  --table-header-bg: #059669;
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --link-color: #34d399;
+  --menu-background: #047857;
+  --modal-bg: #065f46;
+  --modal-overlay: rgba(6, 95, 70, 0.8);
+  --button-bg: #10b981;
+  --button-hover: #059669;
+  --button-active: #047857;
+  --card-bg: #047857;
+  --card-border: #10b981;
+  --tooltip-bg: #065f46;
+  --tooltip-text: #ffffff;
+}
+
+/* Purple Theme */
+[data-theme="purple"] {
+  --primary-color: #ffffff;
+  --text-color: #ffffff;
+  --background-color: #581c87;
+  --container-bg: #7c3aed;
+  --border-color: #a855f7;
+  --input-bg: #581c87;
+  --input-text: #ffffff;
+  --table-header-bg: #9333ea;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --link-color: #c084fc;
+  --menu-background: #7c3aed;
+  --modal-bg: #581c87;
+  --modal-overlay: rgba(88, 28, 135, 0.8);
+  --button-bg: #a855f7;
+  --button-hover: #9333ea;
+  --button-active: #7c3aed;
+  --card-bg: #7c3aed;
+  --card-border: #a855f7;
+  --tooltip-bg: #581c87;
+  --tooltip-text: #ffffff;
+}
+
+/* Red Theme */
+[data-theme="red"] {
+  --primary-color: #ffffff;
+  --text-color: #ffffff;
+  --background-color: #7f1d1d;
+  --container-bg: #991b1b;
+  --border-color: #dc2626;
+  --input-bg: #7f1d1d;
+  --input-text: #ffffff;
+  --table-header-bg: #b91c1c;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --link-color: #f87171;
+  --menu-background: #991b1b;
+  --modal-bg: #7f1d1d;
+  --modal-overlay: rgba(127, 29, 29, 0.8);
+  --button-bg: #dc2626;
+  --button-hover: #b91c1c;
+  --button-active: #991b1b;
+  --card-bg: #991b1b;
+  --card-border: #dc2626;
+  --tooltip-bg: #7f1d1d;
+  --tooltip-text: #ffffff;
+}
+
+/* Orange Theme */
+[data-theme="orange"] {
+  --primary-color: #ffffff;
+  --text-color: #ffffff;
+  --background-color: #9a3412;
+  --container-bg: #c2410c;
+  --border-color: #ea580c;
+  --input-bg: #9a3412;
+  --input-text: #ffffff;
+  --table-header-bg: #dc2626;
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  --link-color: #fb923c;
+  --menu-background: #c2410c;
+  --modal-bg: #9a3412;
+  --modal-overlay: rgba(154, 52, 18, 0.8);
+  --button-bg: #ea580c;
+  --button-hover: #dc2626;
+  --button-active: #c2410c;
+  --card-bg: #c2410c;
+  --card-border: #ea580c;
+  --tooltip-bg: #9a3412;
+  --tooltip-text: #ffffff;
+}
+
+/* Custom Theme - Users can override these variables */
+[data-theme="custom"] {
+  /* These will be overridden by user's custom CSS */
+  --primary-color: var(--custom-primary-color, #e0e0e0);
+  --text-color: var(--custom-text-color, #e0e0e0);
+  --background-color: var(--custom-background-color, #000000);
+  --container-bg: var(--custom-container-bg, #2a2a2a);
+  --border-color: var(--custom-border-color, #404040);
+  --input-bg: var(--custom-input-bg, #1a1a1a);
+  --input-text: var(--custom-input-text, #e0e0e0);
+  --table-header-bg: var(--custom-table-header-bg, #404040);
+  --success-color: var(--custom-success-color, #4caf50);
+  --warning-color: var(--custom-warning-color, #ff9800);
+  --error-color: var(--custom-error-color, #f44336);
+  --link-color: var(--custom-link-color, #2196f3);
+  --menu-background: var(--custom-menu-background, #2a2a2a);
+  --modal-bg: var(--custom-modal-bg, #1a1a1a);
+  --modal-overlay: var(--custom-modal-overlay, rgba(0, 0, 0, 0.8));
+  --button-bg: var(--custom-button-bg, #404040);
+  --button-hover: var(--custom-button-hover, #505050);
+  --button-active: var(--custom-button-active, #606060);
+  --card-bg: var(--custom-card-bg, #2a2a2a);
+  --card-border: var(--custom-card-border, #404040);
+  --tooltip-bg: var(--custom-tooltip-bg, #1a1a1a);
+  --tooltip-text: var(--custom-tooltip-text, #e0e0e0);
+}
+
+/* Fallback theme (if no theme is set) */
+:root {
+  /* Colors */
+  --primary-color: #e0e0e0;
+  --text-color: #e0e0e0;
+  --background-color: #000000;
+  --container-bg: #2a2a2a;
+  --border-color: #404040;
+  --input-bg: #1a1a1a;
+  --input-text: #e0e0e0;
+  --table-header-bg: #404040;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --error-color: #f44336;
+  --link-color: #2196f3;
+  --menu-background: #2a2a2a;
+  --modal-bg: #1a1a1a;
+  --modal-overlay: rgba(0, 0, 0, 0.8);
+  --button-bg: #404040;
+  --button-hover: #505050;
+  --button-active: #606060;
+  --card-bg: #2a2a2a;
+  --card-border: #404040;
+  --tooltip-bg: #1a1a1a;
+  --tooltip-text: #e0e0e0;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 3rem;
+  
+  /* Border radius */
+  --border-radius-sm: 3px;
+  --border-radius-md: 5px;
+  --border-radius-lg: 10px;
+  --border-radius-xl: 15px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
+}

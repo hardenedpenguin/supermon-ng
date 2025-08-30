@@ -1,17 +1,35 @@
 <template>
   <div id="app">
+    <!-- Theme Toggle Button -->
+    <div class="theme-toggle">
+      <button @click="showThemeSelector = true" class="theme-toggle-btn" title="Theme Settings">
+        🎨
+      </button>
+    </div>
+
+    <!-- Main App Content -->
     <router-view />
+
+    <!-- Theme Selector Modal -->
+    <div v-if="showThemeSelector" class="modal-overlay" @click="showThemeSelector = false">
+      <div class="modal-content" @click.stop>
+        <ThemeSelector @close="showThemeSelector = false" />
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
-import { useAppStore } from '@/stores/app'
+import { ref, onMounted } from 'vue'
+import { useTheme } from '@/composables/useTheme'
+import ThemeSelector from '@/components/ThemeSelector.vue'
 
-const appStore = useAppStore()
+const showThemeSelector = ref(false)
+const { loadTheme } = useTheme()
 
-onMounted(async () => {
-  await appStore.initialize()
+onMounted(() => {
+  // Initialize theme
+  loadTheme()
 })
 </script>
 
@@ -52,6 +70,9 @@ body {
 
 #app {
   min-height: 100vh;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 /* Utility classes */
@@ -96,6 +117,51 @@ body {
   .hide-desktop {
     display: none !important;
   }
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.theme-toggle-btn {
+  background: var(--button-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-toggle-btn:hover {
+  background: var(--button-hover);
+  transform: scale(1.1);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: var(--spacing-md);
+}
+
+.modal-content {
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
 }
 </style>
 
