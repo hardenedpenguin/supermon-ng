@@ -481,7 +481,7 @@ defineExpose({
 
 /* Table row colors - matching original Supermon-ng */
 .gridtable tr.rColor td {
-  background-color: #2a2a2a;
+  background-color: var(--container-bg);
   font-weight: bold;
   color: var(--link-color);
 }
@@ -489,7 +489,7 @@ defineExpose({
 .gridtable tr.cColor td,
 .gridtable tr.cColor td a,
 .gridtable tr.tColor td {
-  background-color: #2a2a2a;
+  background-color: var(--container-bg);
   font-weight: bold;
   color: var(--link-color);
 }
@@ -501,19 +501,19 @@ defineExpose({
 }
 
 .gridtable tr.gColor td {
-  background-color: #404040;
+  background-color: var(--border-color);
   font-weight: bold;
   color: var(--text-color);
 }
 
 .gridtable tr.lColor td {
-  background-color: #585858;
+  background-color: var(--button-hover);
   font-weight: bold;
   color: var(--text-color);
 }
 
 .gridtable tr.rxkColor td {
-  background-color: #2a2a2a;
+  background-color: var(--container-bg);
   font-weight: bold;
   color: var(--link-color);
 }

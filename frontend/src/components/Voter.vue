@@ -185,13 +185,13 @@ watch(() => props.show, (newVal) => {
 }
 
 .voter-modal {
-  background-color: #1a1a1a;
+  background-color: var(--modal-bg);
   border-radius: 8px;
   width: 90%;
   max-width: 800px;
   max-height: 90vh;
   overflow-y: auto;
-  color: #ffffff;
+  color: var(--text-color);
 }
 
 .voter-modal-header {
@@ -199,18 +199,18 @@ watch(() => props.show, (newVal) => {
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .voter-modal-header h2 {
   margin: 0;
-  color: #ffffff;
+  color: var(--text-color);
 }
 
 .close-button {
   background: none;
   border: none;
-  color: #ffffff;
+  color: var(--text-color);
   font-size: 24px;
   cursor: pointer;
   padding: 0;
@@ -222,7 +222,7 @@ watch(() => props.show, (newVal) => {
 }
 
 .close-button:hover {
-  background-color: #333;
+  background-color: var(--border-color);
   border-radius: 4px;
 }
 
@@ -240,34 +240,34 @@ watch(() => props.show, (newVal) => {
 
 .voter-input-section label {
   font-weight: bold;
-  color: #ffffff;
+  color: var(--text-color);
 }
 
 .voter-input-section input {
   flex: 1;
   min-width: 200px;
   padding: 8px 12px;
-  border: 1px solid #333;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-  background-color: #2a2a2a;
-  color: #ffffff;
+  background-color: var(--container-bg);
+  color: var(--text-color);
 }
 
 .voter-input-section button {
   padding: 8px 16px;
-  background-color: #007bff;
-  color: white;
+  background-color: var(--button-bg);
+  color: var(--text-color);
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
 
 .voter-input-section button:hover {
-  background-color: #0056b3;
+  background-color: var(--button-hover);
 }
 
 .voter-input-section button:disabled {
-  background-color: #666;
+  background-color: var(--border-color);
   cursor: not-allowed;
 }
 
@@ -278,9 +278,9 @@ watch(() => props.show, (newVal) => {
 .voter-container {
   margin-bottom: 20px;
   padding: 15px;
-  border: 1px solid #333;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
-  background-color: #2a2a2a;
+  background-color: var(--container-bg);
 }
 
 .voter-content {
@@ -294,19 +294,19 @@ watch(() => props.show, (newVal) => {
 .spinner-text {
   font-family: monospace;
   font-size: 18px;
-  color: #007bff;
+  color: var(--link-color);
 }
 
 .voter-info-container {
-  background-color: #2a2a2a;
+  background-color: var(--container-bg);
   padding: 15px;
   border-radius: 4px;
-  border: 1px solid #333;
+  border: 1px solid var(--border-color);
 }
 
 .voter-description {
   margin-bottom: 15px;
-  color: #cccccc;
+  color: var(--text-color);
   line-height: 1.5;
 }
 
@@ -323,25 +323,25 @@ watch(() => props.show, (newVal) => {
 }
 
 .legend-voting {
-  background-color: #0099FF;
-  color: white;
+  background-color: var(--link-color);
+  color: var(--background-color);
 }
 
 .legend-voted {
-  background-color: #90EE90;
-  color: black;
+  background-color: var(--success-color);
+  color: var(--background-color);
 }
 
 .legend-mix {
-  background-color: #00FFFF;
-  color: black;
+  background-color: var(--warning-color);
+  color: var(--background-color);
 }
 
 .error-message {
-  color: #ff6b6b;
+  color: var(--error-color);
   padding: 10px;
-  background-color: #2a1a1a;
-  border: 1px solid #ff6b6b;
+  background-color: var(--container-bg);
+  border: 1px solid var(--error-color);
   border-radius: 4px;
 }
 
@@ -353,21 +353,21 @@ watch(() => props.show, (newVal) => {
 }
 
 :deep(.rtcm th) {
-  background-color: #333;
-  color: white;
+  background-color: var(--table-header-bg);
+  color: var(--text-color);
   padding: 8px;
   text-align: left;
-  border: 1px solid #555;
+  border: 1px solid var(--border-color);
 }
 
 :deep(.rtcm td) {
   padding: 8px;
-  border: 1px solid #555;
-  background-color: #2a2a2a;
+  border: 1px solid var(--border-color);
+  background-color: var(--container-bg);
 }
 
 :deep(.rtcm a) {
-  color: #007bff;
+  color: var(--link-color);
   text-decoration: none;
 }
 

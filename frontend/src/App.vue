@@ -34,11 +34,12 @@ onMounted(() => {
 </script>
 
 <style>
-/* Global CSS Variables */
+/* Global CSS Variables - These will be overridden by theme selectors */
 :root {
+  /* Default fallback values - will be overridden by [data-theme] selectors */
   --primary-color: #e0e0e0;
   --text-color: #e0e0e0;
-  --background-color: #1a1a1a;
+  --background-color: #000000;
   --container-bg: #2a2a2a;
   --border-color: #404040;
   --input-bg: #1a1a1a;
@@ -49,6 +50,15 @@ onMounted(() => {
   --error-color: #f44336;
   --link-color: #2196f3;
   --menu-background: #2a2a2a;
+  --modal-bg: #1a1a1a;
+  --modal-overlay: rgba(0, 0, 0, 0.8);
+  --button-bg: #404040;
+  --button-hover: #505050;
+  --button-active: #606060;
+  --card-bg: #2a2a2a;
+  --card-border: #404040;
+  --tooltip-bg: #1a1a1a;
+  --tooltip-text: #e0e0e0;
 }
 
 /* Global styles */

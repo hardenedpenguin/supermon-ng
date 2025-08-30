@@ -85,6 +85,15 @@ export function useTheme() {
     html.setAttribute('data-theme', theme)
     console.log('Document data-theme attribute set to:', html.getAttribute('data-theme'))
     
+    // Debug: Check if CSS variables are being applied
+    setTimeout(() => {
+      const computedStyle = getComputedStyle(document.documentElement)
+      console.log('CSS Variables after theme change:')
+      console.log('--background-color:', computedStyle.getPropertyValue('--background-color'))
+      console.log('--text-color:', computedStyle.getPropertyValue('--text-color'))
+      console.log('--primary-color:', computedStyle.getPropertyValue('--primary-color'))
+    }, 100)
+    
     // If custom theme, load custom CSS
     if (theme === 'custom') {
       loadCustomTheme()
