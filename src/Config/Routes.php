@@ -56,6 +56,7 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) {
         $group->post('/{id}/disconnect', [NodeController::class, 'disconnect']);
         $group->post('/{id}/monitor', [NodeController::class, 'monitor']);
         $group->post('/{id}/local-monitor', [NodeController::class, 'localMonitor']);
+        $group->post('/{id}/dtmf', [NodeController::class, 'dtmf']);
     })->add(ApiAuthMiddleware::class);
 
     // System routes
@@ -114,6 +115,7 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->post('/disconnect', [NodeController::class, 'disconnect']);
         $group->post('/monitor', [NodeController::class, 'monitor']);
         $group->post('/local-monitor', [NodeController::class, 'localMonitor']);
+        $group->post('/dtmf', [NodeController::class, 'dtmf']);
     });
 
     // Config routes

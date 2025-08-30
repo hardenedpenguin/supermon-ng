@@ -491,12 +491,35 @@ const clearData = () => {
 
 // Additional button methods to match link.php
 const dtmf = async () => {
-  if (!targetNode.value) return
+  if (!targetNode.value || !selectedLocalNode.value) return
+  
+  // Prompt user for DTMF command
+  const dtmfCommand = prompt('Enter DTMF command:')
+  if (!dtmfCommand || dtmfCommand.trim() === '') {
+    console.log('DTMF command cancelled or empty')
+    return
+  }
+  
   try {
-    // Implement DTMF functionality
-    console.log('DTMF for node:', targetNode.value)
+    const response = await api.post('/nodes/dtmf', {
+      localnode: selectedLocalNode.value,
+      dtmf: dtmfCommand.trim()
+    })
+    
+    if (response.data.success) {
+      console.log('DTMF success:', response.data.message)
+      // Show success message to user
+      console.log('DTMF command executed successfully:', response.data.message)
+      // Refresh node data after successful DTMF command
+      await realTimeStore.fetchNodeData()
+    } else {
+      console.error('DTMF failed:', response.data.message)
+      console.error('DTMF command failed:', response.data.message || 'DTMF command failed')
+    }
   } catch (error) {
     console.error('DTMF error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('DTMF command failed:', errorMessage)
   }
 }
 

@@ -226,6 +226,116 @@ class NodeController
         return $this->executeNodeAction($request, $response, $args, 'localmonitor');
     }
 
+    public function dtmf(Request $request, Response $response, array $args): Response
+    {
+        return $this->executeDtmfAction($request, $response, $args);
+    }
+
+    /**
+     * Execute DTMF action
+     */
+    private function executeDtmfAction(Request $request, Response $response, array $args): Response
+    {
+        // Get and validate parameters
+        $data = $request->getParsedBody();
+        $localNode = $data['localnode'] ?? null;
+        $dtmfCommand = $data['dtmf'] ?? null;
+        
+        // Validate local node
+        if (!$localNode || !preg_match("/^\d+$/", (string)$localNode)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Please provide a valid local node number.'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        // Validate DTMF command
+        if (!$dtmfCommand || empty(trim($dtmfCommand))) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Please provide a DTMF command.'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        // Check user permissions
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'DTMFUSER')) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'You are not authorized to perform DTMF commands.'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Load node configuration
+            $nodeConfig = $this->loadNodeConfig($currentUser, (string)$localNode);
+            if (!$nodeConfig) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Configuration for local node $localNode not found."
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            // Connect to AMI
+            $fp = $this->connectToAmi($nodeConfig, (string)$localNode);
+            if (!$fp) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Could not connect to Asterisk Manager for node $localNode."
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            // Execute DTMF command
+            $commandResult = $this->executeDtmfCommand($fp, (string)$localNode, $dtmfCommand);
+            
+            // Clean up connection
+            \SimpleAmiClient::logoff($fp);
+
+            // Return success response
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'message' => "DTMF command '$dtmfCommand' executed successfully on node $localNode",
+                'data' => [
+                    'action' => 'dtmf',
+                    'local_node' => $localNode,
+                    'dtmf_command' => $dtmfCommand,
+                    'ami_response' => $commandResult,
+                    'timestamp' => date('c')
+                ]
+            ]));
+
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to execute DTMF command', [
+                'local_node' => $localNode,
+                'dtmf_command' => $dtmfCommand,
+                'error' => $e->getMessage()
+            ]);
+
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Failed to execute DTMF command: ' . $e->getMessage()
+            ]));
+
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    /**
+     * Execute DTMF command via AMI
+     */
+    private function executeDtmfCommand(mixed $fp, string $localNode, string $dtmfCommand): string|false
+    {
+        $asteriskCommand = "rpt fun " . $localNode . " " . $dtmfCommand;
+        return \SimpleAmiClient::command($fp, $asteriskCommand);
+    }
+
     /**
      * Execute node action (connect, disconnect, monitor, localmonitor)
      */
