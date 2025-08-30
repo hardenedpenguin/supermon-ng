@@ -54,6 +54,13 @@ onMounted(async () => {
   --link-color: #2196f3;
   --menu-background: #2a2a2a;
   
+  /* Local node table specific colors */
+  --local-node-bg: #2a2a2a;
+  --local-node-text: #e0e0e0;
+  --local-node-border: #404040;
+  --local-node-header: #404040;
+  --local-node-header-text: #e0e0e0;
+  
   /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;

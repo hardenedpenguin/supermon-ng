@@ -488,6 +488,28 @@ defineExpose({
   display: table-cell !important;
 }
 
+/* Local node table styling with custom theme support */
+.gridtable tr.rColor {
+  background-color: var(--local-node-header) !important;
+  color: var(--local-node-header-text) !important;
+}
+
+.gridtable tr.rColor td {
+  background-color: var(--local-node-header) !important;
+  color: var(--local-node-header-text) !important;
+  border-color: var(--local-node-border) !important;
+}
+
+.gridtable tr.cColor {
+  background-color: var(--local-node-bg) !important;
+  color: var(--local-node-text) !important;
+}
+
+.gridtable tr.cColor td {
+  background-color: var(--local-node-bg) !important;
+  color: var(--local-node-text) !important;
+  border-color: var(--local-node-border) !important;
+}
 
 
 .gridtable th {
