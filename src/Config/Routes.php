@@ -146,6 +146,9 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         
         // Reboot Route
         $group->post('/reboot', [NodeController::class, 'reboot']);
+        
+        // SMLog Route
+        $group->post('/smlog', [NodeController::class, 'smlog']);
     });
 
     // Config routes

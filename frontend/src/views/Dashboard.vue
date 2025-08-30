@@ -248,6 +248,9 @@
           
           <!-- Reboot Modal -->
           <Reboot v-model:isVisible="showRebootModal" />
+          
+          <!-- SMLog Modal -->
+          <SMLog v-model:isVisible="showSMLogModal" />
     
   </div>
 </template>
@@ -279,6 +282,7 @@ import LinuxLog from '@/components/LinuxLog.vue'
 import BanAllow from '@/components/BanAllow.vue'
 import PiGPIO from '@/components/PiGPIO.vue'
 import Reboot from '@/components/Reboot.vue'
+import SMLog from '@/components/SMLog.vue'
 
 
 const appStore = useAppStore()
@@ -309,6 +313,7 @@ const showDonateModal = ref(false)
   const showBanAllowModal = ref(false)
   const showPiGPIOModal = ref(false)
   const showRebootModal = ref(false)
+  const showSMLogModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -792,6 +797,17 @@ const reboot = async () => {
     console.error('Server Reboot error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     alert(`Failed to open Server Reboot: ${errorMessage}`)
+  }
+}
+
+const smlog = async () => {
+  try {
+    console.log('Opening SMLog modal')
+    showSMLogModal.value = true
+  } catch (error) {
+    console.error('SMLog error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert(`Failed to open SMLog: ${errorMessage}`)
   }
 }
 

@@ -874,7 +874,7 @@ class NodeController
         $defaultPermissions = [
             'ADMINUSER', 'AUTHUSER', 'CONNUSER', 'DISCONNUSER', 'MONUSER', 
             'LOCALMONUSER', 'PERMCONNUSER', 'RPTUSER', 'RPTSTATSUSER', 
-            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER', 'BANUSER', 'GPIOUSER', 'RBTUSER'
+            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER', 'BANUSER', 'GPIOUSER', 'RBTUSER', 'SMLOGUSER'
         ];
 
         // Check if user has the specific permission
@@ -1931,5 +1931,83 @@ class NodeController
                 'message' => 'Failed to execute reboot command. Check if you have proper sudo privileges.'
             ];
         }
+    }
+
+    public function smlog(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'SMLOGUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to view Supermon logs.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Get log file path and content
+            $result = $this->getSmlogContent();
+
+            if ($result['success']) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'data' => [
+                        'log_file_path' => $result['log_file_path'],
+                        'log_content' => $result['log_content'],
+                        'timestamp' => date('c')
+                    ],
+                    'message' => 'Supermon log content retrieved successfully'
+                ]));
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => $result['message']
+                ]));
+            }
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve Supermon log content', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve Supermon log content: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    private function getSmlogContent(): array
+    {
+        // Include necessary files to get the log file path
+        require_once __DIR__ . '/../../../includes/common.inc';
+        
+        // Get the log file path from common.inc
+        $log_file_path = '/tmp/SMLOG.txt'; // Default path from common.inc
+        
+        if (!file_exists($log_file_path)) {
+            return [
+                'success' => false,
+                'message' => 'Supermon log file does not exist: ' . $log_file_path
+            ];
+        }
+
+        // Read log file content
+        $log_content = @file($log_file_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        
+        if ($log_content === false) {
+            return [
+                'success' => false,
+                'message' => 'Could not read the Supermon log file: ' . $log_file_path
+            ];
+        }
+
+        // Process log content (reverse chronological order)
+        $reversed_log_content = array_reverse($log_content);
+        
+        // Escape HTML characters for safe display
+        $escaped_log_content = array_map(function($line) {
+            return htmlspecialchars(trim($line), ENT_QUOTES, 'UTF-8');
+        }, $reversed_log_content);
+
+        return [
+            'success' => true,
+            'log_file_path' => $log_file_path,
+            'log_content' => $escaped_log_content,
+            'message' => 'Supermon log content retrieved successfully'
+        ];
     }
 }
