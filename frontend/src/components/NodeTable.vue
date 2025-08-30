@@ -409,6 +409,8 @@ defineExpose({
   padding: 4px;
   border-collapse: collapse;
   width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 /* Clickable node styling */
@@ -429,6 +431,8 @@ defineExpose({
   color: var(--text-color);
   padding: 4px;
   border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 /* Node number cell */

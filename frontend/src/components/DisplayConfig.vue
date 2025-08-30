@@ -242,6 +242,8 @@ onMounted(() => {
 .display-config-table {
   width: 100%;
   border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .display-config-table td {
