@@ -361,25 +361,14 @@ const onNodeChange = () => {
 }
 
 const connect = async () => {
-  console.log('🔍 Connect called with:')
-  console.log('  - selectedLocalNode.value:', selectedLocalNode.value)
-  console.log('  - targetNode.value:', targetNode.value)
-  console.log('  - permConnect.value:', permConnect.value)
-  
-  if (!targetNode.value || !selectedLocalNode.value) {
-    console.log('❌ Connect aborted - missing required values')
-    return
-  }
+  if (!targetNode.value || !selectedLocalNode.value) return
   
   try {
-    const requestData = {
+    const response = await api.post('/nodes/connect', {
       localnode: selectedLocalNode.value,
       remotenode: targetNode.value,
       perm: permConnect.value ? 'on' : null
-    }
-    console.log('🔍 Sending connect request with data:', requestData)
-    
-    const response = await api.post('/nodes/connect', requestData)
+    })
     
     if (response.data.success) {
       console.log('Connect success:', response.data.message)
@@ -394,24 +383,14 @@ const connect = async () => {
 }
 
 const disconnect = async () => {
-  console.log('🔍 Disconnect called with:')
-  console.log('  - selectedLocalNode.value:', selectedLocalNode.value)
-  console.log('  - targetNode.value:', targetNode.value)
-  
-  if (!targetNode.value || !selectedLocalNode.value) {
-    console.log('❌ Disconnect aborted - missing required values')
-    return
-  }
+  if (!targetNode.value || !selectedLocalNode.value) return
   
   try {
-    const requestData = {
+    const response = await api.post('/nodes/disconnect', {
       localnode: selectedLocalNode.value,
       remotenode: targetNode.value,
       perm: null
-    }
-    console.log('🔍 Sending disconnect request with data:', requestData)
-    
-    const response = await api.post('/nodes/disconnect', requestData)
+    })
     
     if (response.data.success) {
       console.log('Disconnect success:', response.data.message)
