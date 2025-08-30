@@ -44,17 +44,15 @@
     <div v-if="hasControlPermissions" id="connect_form" style="text-align: center;">
       <!-- Node Selection (matches original layout exactly) -->
       <div v-if="displayedNodes.length > 0">
-        <!-- Multiple node dropdown (only show if multiple nodes) -->
-        <select v-if="displayedNodes.length > 1 && dropdownOptions.length > 0" v-model="selectedNode" class="submit" @change="onNodeChange">
-          <option v-for="node in dropdownOptions" :key="node.id" :value="node.id" class="submit">
+        <!-- Local node dropdown (only show if multiple nodes) -->
+        <select v-if="displayedNodes.length > 1" v-model="selectedLocalNode" class="submit">
+          <option v-for="node in displayedNodes" :key="node.id" :value="node.id" class="submit">
             {{ node.id }} => {{ node.info || 'Node not in database' }}
           </option>
         </select>
         
-        <!-- Visual indicator for selected target node in group mode -->
-        <div v-if="displayedNodes.length > 1 && targetNode && selectedTargetNodeDisplay" class="target-node-indicator">
-          <strong>Managing:</strong> {{ selectedTargetNodeDisplay }}
-        </div>
+        <!-- Hidden input for single node -->
+        <input v-else-if="displayedNodes.length === 1" type="hidden" :value="displayedNodes[0].id" v-model="selectedLocalNode">
         
         <!-- Hidden input for single node (matches original) -->
         <input v-else class="submit" type="hidden" :value="displayedNodes[0]">
@@ -247,6 +245,7 @@ const realTimeStore = useRealTimeStore()
 
 // Reactive data
 const selectedNode = ref('')
+const selectedLocalNode = ref('')
 const targetNode = ref('')
 const permConnect = ref(false)
 const showLoginModal = ref(false)
@@ -307,151 +306,60 @@ const displayedNodes = computed(() => {
   return filteredNodes
 })
 
-// Dropdown options - show displayed nodes when available, otherwise show all available nodes
-const dropdownOptions = computed(() => {
-  // If we have displayed nodes (from a group selection), show those
-  if (displayedNodes.value.length > 0) {
-    return displayedNodes.value
-  }
-  
-  // If we have a selectedNode but no displayedNodes yet, try to find the nodes
-  if (selectedNode.value) {
-    const selectedNodeStr = String(selectedNode.value)
-    
-    // Handle comma-separated node IDs (for groups)
+// Watcher to update selectedLocalNode when selectedNode changes
+watch(selectedNode, (newValue) => {
+  if (newValue) {
+    const selectedNodeStr = String(newValue)
     if (selectedNodeStr.includes(',')) {
+      // Group mode - set first node as local node
       const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
-      return availableNodes.value.filter(node => 
-        nodeIds.includes(node.id.toString()) || 
-        nodeIds.includes((node.node_number || node.id).toString())
-      )
-    }
-    
-    // Handle single node ID
-    const singleNode = availableNodes.value.find(node => 
-      node.id.toString() === selectedNodeStr || 
-      (node.node_number || node.id).toString() === selectedNodeStr
-    )
-    if (singleNode) {
-      return [singleNode]
+      if (nodeIds.length > 0) {
+        selectedLocalNode.value = nodeIds[0]
+      }
+    } else {
+      // Single node mode
+      selectedLocalNode.value = selectedNodeStr
     }
   }
-  
-  // Fallback to all available nodes
-  return availableNodes.value
-})
-
-// Computed property to show which node is selected for management in group mode
-const selectedTargetNodeDisplay = computed(() => {
-  if (!targetNode.value) return ''
-  
-  const targetNodeStr = String(targetNode.value)
-  const node = availableNodes.value.find(n => 
-    String(n.id) === targetNodeStr || 
-    String(n.node_number || n.id) === targetNodeStr
-  )
-  
-  if (node) {
-    return `${node.id} => ${node.info || 'Node not in database'}`
-  }
-  
-  return targetNodeStr
-})
+}, { immediate: true })
 
 // Methods
-let isNodeChangeInProgress = false
-let previousSelectedNode: string | null = null
-
 const onNodeChange = () => {
-  if (isNodeChangeInProgress) {
-    console.log('🔍 onNodeChange already in progress, skipping')
-    return
-  }
-  
-  isNodeChangeInProgress = true
   console.log('🔍 onNodeChange called with selectedNode:', selectedNode.value)
-  console.log('🔍 onNodeChange - previousSelectedNode:', previousSelectedNode)
-  console.log('🔍 onNodeChange - realTimeStore.monitoringNodes before:', realTimeStore.monitoringNodes)
   
-  try {
-    // Ensure selectedNode is always a string for processing
-    const selectedNodeStr = String(selectedNode.value)
+  // Ensure selectedNode is always a string for processing
+  const selectedNodeStr = String(selectedNode.value)
+  
+  if (selectedNodeStr.includes(',')) {
+    // Handle group selection
+    const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
+    console.log('🔍 Starting monitoring for group nodes:', nodeIds)
     
-    // Check if we were previously in group mode and now have a single node selection
-    // This happens when a node is selected from the dropdown in group mode
-    const wasInGroupMode = previousSelectedNode && String(previousSelectedNode).includes(',') && !selectedNodeStr.includes(',')
+    // Start monitoring each node in the group
+    nodeIds.forEach(nodeId => {
+      console.log('🔍 Starting monitoring for nodeId:', nodeId)
+      realTimeStore.startMonitoring(nodeId)
+    })
     
-    if (wasInGroupMode) {
-      // We're in group mode but a single node was selected from dropdown
-      // Set this as the target node but maintain the group selection
-      targetNode.value = selectedNodeStr
-      console.log('🔍 Group mode: setting target node to:', selectedNodeStr)
-      
-      // Restore the group selection from the previous state
-      selectedNode.value = previousSelectedNode
-      console.log('🔍 Group mode: restored group selection:', previousSelectedNode)
-      
-      // Start monitoring the group nodes
-      const nodeIds = String(previousSelectedNode).split(',').map(id => id.trim())
-      console.log('🔍 Starting monitoring for group nodes:', nodeIds)
-      nodeIds.forEach(nodeId => {
-        console.log('🔍 Starting monitoring for nodeId:', nodeId)
-        realTimeStore.startMonitoring(nodeId)
-      })
-    } else {
-      // Normal single node or group selection
-      if (selectedNodeStr.includes(',')) {
-        // Handle group selection
-        const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
-        console.log('🔍 Starting monitoring for group nodes:', nodeIds)
-        
-        // Store the current group selection to prevent it from being overridden
-        const currentGroupSelection = selectedNode.value
-        
-        // Start monitoring each node in the group
-        nodeIds.forEach(nodeId => {
-          console.log('🔍 Starting monitoring for nodeId:', nodeId)
-          realTimeStore.startMonitoring(nodeId)
-        })
-        
-        // Ensure the group selection is maintained after monitoring starts
-        if (selectedNode.value !== currentGroupSelection) {
-          console.log('🔍 Restoring group selection after monitoring start')
-          selectedNode.value = currentGroupSelection
-        }
-      } else {
-        // Handle single node selection
-        console.log('🔍 Starting monitoring for single node:', selectedNodeStr)
-        targetNode.value = selectedNodeStr
-        realTimeStore.startMonitoring(selectedNodeStr)
-      }
+    // Set the first node as the default local node for operations
+    if (nodeIds.length > 0) {
+      selectedLocalNode.value = nodeIds[0]
     }
-    
-    // Update the previous selected node for next time
-    previousSelectedNode = selectedNode.value || null
-    
-    console.log('🔍 onNodeChange - realTimeStore.monitoringNodes after:', realTimeStore.monitoringNodes)
-  } finally {
-    isNodeChangeInProgress = false
+  } else {
+    // Handle single node selection
+    console.log('🔍 Starting monitoring for single node:', selectedNodeStr)
+    selectedLocalNode.value = selectedNodeStr
+    realTimeStore.startMonitoring(selectedNodeStr)
   }
 }
 
 const connect = async () => {
-  if (!targetNode.value) return
-  
-  // In group mode, we need to determine which node to connect to
-  let remoteNode = selectedNode.value
-  
-  // If we're in group mode (selectedNode contains multiple nodes), 
-  // we need to use the targetNode as the remote node
-  if (String(selectedNode.value).includes(',')) {
-    remoteNode = targetNode.value
-  }
+  if (!targetNode.value || !selectedLocalNode.value) return
   
   try {
     const response = await axios.post('/api/nodes/connect', {
-      localnode: targetNode.value,
-      remotenode: remoteNode,
+      localnode: selectedLocalNode.value,
+      remotenode: targetNode.value,
       perm: permConnect.value ? 'on' : null
     })
     
@@ -468,21 +376,12 @@ const connect = async () => {
 }
 
 const disconnect = async () => {
-  if (!targetNode.value) return
-  
-  // In group mode, we need to determine which node to disconnect from
-  let remoteNode = selectedNode.value
-  
-  // If we're in group mode (selectedNode contains multiple nodes), 
-  // we need to use the targetNode as the remote node
-  if (String(selectedNode.value).includes(',')) {
-    remoteNode = targetNode.value
-  }
+  if (!targetNode.value || !selectedLocalNode.value) return
   
   try {
     const response = await axios.post('/api/nodes/disconnect', {
-      localnode: targetNode.value,
-      remotenode: remoteNode,
+      localnode: selectedLocalNode.value,
+      remotenode: targetNode.value,
       perm: null
     })
     
@@ -499,11 +398,11 @@ const disconnect = async () => {
 }
 
 const monitor = async () => {
-  if (!targetNode.value) return
+  if (!targetNode.value || !selectedLocalNode.value) return
   try {
     const response = await axios.post('/api/nodes/monitor', {
-      localnode: targetNode.value,
-      remotenode: selectedNode.value,
+      localnode: selectedLocalNode.value,
+      remotenode: targetNode.value,
       perm: null
     })
     
@@ -520,21 +419,12 @@ const monitor = async () => {
 }
 
 const permconnect = async () => {
-  if (!targetNode.value) return
-  
-  // In group mode, we need to determine which node to connect to
-  let remoteNode = selectedNode.value
-  
-  // If we're in group mode (selectedNode contains multiple nodes), 
-  // we need to use the targetNode as the remote node
-  if (String(selectedNode.value).includes(',')) {
-    remoteNode = targetNode.value
-  }
+  if (!targetNode.value || !selectedLocalNode.value) return
   
   try {
     const response = await axios.post('/api/nodes/connect', {
-      localnode: targetNode.value,
-      remotenode: remoteNode,
+      localnode: selectedLocalNode.value,
+      remotenode: targetNode.value,
       perm: 'on'
     })
     
@@ -551,11 +441,11 @@ const permconnect = async () => {
 }
 
 const localmonitor = async () => {
-  if (!targetNode.value) return
+  if (!targetNode.value || !selectedLocalNode.value) return
   try {
     const response = await axios.post('/api/nodes/local-monitor', {
-      localnode: targetNode.value,
-      remotenode: selectedNode.value,
+      localnode: selectedLocalNode.value,
+      remotenode: targetNode.value,
       perm: null
     })
     
