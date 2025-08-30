@@ -277,14 +277,14 @@ const formatFileSize = (bytes) => {
 }
 
 .modal-content {
-  background-color: #000000;
+  background-color: var(--modal-bg);
   border-radius: 8px;
   width: 90%;
   max-width: 1000px;
   max-height: 85vh;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  border: 1px solid #333333;
+  border: 1px solid var(--border-color);
 }
 
 .modal-header {
@@ -292,13 +292,13 @@ const formatFileSize = (bytes) => {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #333333;
-  background-color: #111111;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--card-bg);
 }
 
 .modal-header h3 {
   margin: 0;
-  color: #00ff00;
+  color: var(--text-color);
   font-family: 'Courier New', Consolas, monospace;
 }
 
@@ -307,7 +307,7 @@ const formatFileSize = (bytes) => {
   border: none;
   font-size: 1.5rem;
   cursor: pointer;
-  color: #00ff00;
+  color: var(--text-color);
   padding: 0;
   width: 30px;
   height: 30px;
@@ -317,24 +317,24 @@ const formatFileSize = (bytes) => {
 }
 
 .close-button:hover {
-  color: #ffffff;
+  color: var(--primary-color);
 }
 
 .astdb-generation-section {
   padding: 1rem;
-  background-color: #111111;
+  background-color: var(--card-bg);
   border-radius: 4px;
   margin-bottom: 1rem;
 }
 
 .astdb-generation-section h4 {
-  color: #00ff00;
+  color: var(--text-color);
   margin: 0 0 0.5rem 0;
   font-family: 'Courier New', Consolas, monospace;
 }
 
 .astdb-generation-section p {
-  color: #cccccc;
+  color: var(--text-color);
   margin: 0 0 1rem 0;
   font-size: 0.9rem;
 }
@@ -350,7 +350,7 @@ const formatFileSize = (bytes) => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: #cccccc;
+  color: var(--text-color);
   font-size: 0.9rem;
   cursor: pointer;
 }
@@ -360,8 +360,8 @@ const formatFileSize = (bytes) => {
 }
 
 .generate-btn {
-  background-color: #00ff00;
-  color: #000000;
+  background-color: var(--success-color);
+  color: var(--background-color);
   border: none;
   padding: 0.5rem 1rem;
   border-radius: 4px;
@@ -372,11 +372,12 @@ const formatFileSize = (bytes) => {
 }
 
 .generate-btn:hover:not(:disabled) {
-  background-color: #00cc00;
+  background-color: var(--success-color);
+  opacity: 0.8;
 }
 
 .generate-btn:disabled {
-  background-color: #666666;
+  background-color: var(--border-color);
   cursor: not-allowed;
 }
 
@@ -388,9 +389,9 @@ const formatFileSize = (bytes) => {
 }
 
 .generation-message.success {
-  background-color: #004400;
-  color: #00ff00;
-  border: 1px solid #00ff00;
+  background-color: var(--success-color);
+  color: var(--background-color);
+  border: 1px solid var(--success-color);
 }
 
 .generation-message.error {

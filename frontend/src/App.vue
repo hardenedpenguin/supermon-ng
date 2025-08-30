@@ -21,13 +21,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useAppStore } from '@/stores/app'
 import { useTheme } from '@/composables/useTheme'
 import ThemeSelector from '@/components/ThemeSelector.vue'
 
-const showThemeSelector = ref(false)
+const appStore = useAppStore()
 const { loadTheme } = useTheme()
+const showThemeSelector = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
+  await appStore.initialize()
   // Initialize theme
   loadTheme()
 })
@@ -36,7 +39,7 @@ onMounted(() => {
 <style>
 /* Global CSS Variables - These will be overridden by theme selectors */
 :root {
-  /* Default fallback values - will be overridden by [data-theme] selectors */
+  /* Default fallback values - will be overridden by theme system */
   --primary-color: #e0e0e0;
   --text-color: #e0e0e0;
   --background-color: #000000;
@@ -50,15 +53,29 @@ onMounted(() => {
   --error-color: #f44336;
   --link-color: #2196f3;
   --menu-background: #2a2a2a;
-  --modal-bg: #1a1a1a;
-  --modal-overlay: rgba(0, 0, 0, 0.8);
-  --button-bg: #404040;
-  --button-hover: #505050;
-  --button-active: #606060;
-  --card-bg: #2a2a2a;
-  --card-border: #404040;
-  --tooltip-bg: #1a1a1a;
-  --tooltip-text: #e0e0e0;
+  
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 3rem;
+  
+  /* Border radius */
+  --border-radius-sm: 3px;
+  --border-radius-md: 5px;
+  --border-radius-lg: 10px;
+  --border-radius-xl: 15px;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
 }
 
 /* Global styles */
@@ -76,6 +93,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--background-color);
   color: var(--text-color);
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
 #app {
@@ -83,6 +101,53 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
   transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+/* Theme toggle button */
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.theme-toggle-btn {
+  background: var(--container-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-md);
+}
+
+.theme-toggle-btn:hover {
+  background: var(--border-color);
+  transform: scale(1.1);
+}
+
+/* Modal overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: var(--spacing-md);
+}
+
+.modal-content {
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
 }
 
 /* Utility classes */
@@ -127,51 +192,6 @@ body {
   .hide-desktop {
     display: none !important;
   }
-}
-
-.theme-toggle {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 1000;
-}
-
-.theme-toggle-btn {
-  background: var(--button-bg);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  box-shadow: var(--shadow-md);
-}
-
-.theme-toggle-btn:hover {
-  background: var(--button-hover);
-  transform: scale(1.1);
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--modal-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  padding: var(--spacing-md);
-}
-
-.modal-content {
-  max-width: 90vw;
-  max-height: 90vh;
-  overflow: auto;
 }
 </style>
 

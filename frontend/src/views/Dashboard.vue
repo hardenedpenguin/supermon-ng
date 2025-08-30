@@ -1206,6 +1206,7 @@ watch(displayedNodes, (newDisplayedNodes) => {
 /* Original Supermon-ng table container styling */
 .fxwidth {
   width: auto;
+  min-width: 50%;
   max-width: 880px;
   margin: 0 auto;
   border-collapse: collapse;
@@ -1375,8 +1376,6 @@ watch(displayedNodes, (newDisplayedNodes) => {
   right: 12px;
 }
 
-
-
 /* Configuration buttons */
 .config-buttons {
   display: flex;
@@ -1505,8 +1504,6 @@ watch(displayedNodes, (newDisplayedNodes) => {
   background-color: var(--table-header-bg);
 }
 
-
-
 .no-nodes-message {
   text-align: center;
   padding: 40px;
@@ -1527,8 +1524,6 @@ watch(displayedNodes, (newDisplayedNodes) => {
   color: var(--text-color);
   font-size: 14px;
 }
-
-
 
 /* Login modal */
 .login-modal {
