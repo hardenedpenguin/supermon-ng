@@ -26,7 +26,7 @@
       <template v-else>
         <!-- Header Status Row -->
         <tr :class="headerStatusClass">
-          <td colspan="1" align="center">{{ node.id }}</td>
+          <td colspan="1" align="center" class="local-node-number">{{ node.id }}</td>
           <td :colspan="headerColspan" align="center">
             <b>{{ headerStatusText }}<span v-html="headerStatusDetails"></span></b>
           </td>
@@ -411,9 +411,9 @@ defineExpose({
   width: auto;
   min-width: 50%;
   max-width: 100%;
-  margin: var(--spacing-md) auto;
   border-radius: 8px;
   overflow: hidden;
+  margin: 0 auto;
 }
 
 /* Clickable node styling */
@@ -434,10 +434,6 @@ defineExpose({
   color: var(--text-color);
   padding: 4px;
   border-collapse: collapse;
-  width: auto;
-  min-width: 50%;
-  max-width: 100%;
-  margin: var(--spacing-md) auto;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -470,6 +466,28 @@ defineExpose({
   font-weight: normal;
 }
 
+/* Ensure proper centering for header status row */
+.gridtable tr.rColor td {
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Ensure proper centering for local node number in header status row */
+.gridtable tr.rColor td:first-child {
+  text-align: center !important;
+  vertical-align: middle !important;
+  line-height: normal !important;
+}
+
+/* Specific styling for local node number */
+.gridtable .local-node-number {
+  text-align: center !important;
+  vertical-align: middle !important;
+  line-height: normal !important;
+  height: 100% !important;
+  display: table-cell !important;
+}
+
 
 
 .gridtable th {
@@ -488,7 +506,7 @@ defineExpose({
 
 /* Table row colors - matching original Supermon-ng */
 .gridtable tr.rColor td {
-  background-color: var(--container-bg);
+  background-color: #2a2a2a;
   font-weight: bold;
   color: var(--link-color);
 }
@@ -496,7 +514,7 @@ defineExpose({
 .gridtable tr.cColor td,
 .gridtable tr.cColor td a,
 .gridtable tr.tColor td {
-  background-color: var(--container-bg);
+  background-color: #2a2a2a;
   font-weight: bold;
   color: var(--link-color);
 }
@@ -508,23 +526,22 @@ defineExpose({
 }
 
 .gridtable tr.gColor td {
-  background-color: var(--border-color);
+  background-color: #404040;
   font-weight: bold;
   color: var(--text-color);
 }
 
 .gridtable tr.lColor td {
-  background-color: var(--button-hover);
+  background-color: #585858;
   font-weight: bold;
   color: var(--text-color);
 }
 
 .gridtable tr.rxkColor td {
-  background-color: var(--container-bg);
+  background-color: #2a2a2a;
   font-weight: bold;
   color: var(--link-color);
 }
-
 
 
 /* Responsive design */
