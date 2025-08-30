@@ -7,6 +7,36 @@
       </div>
 
       <div class="modal-body">
+        <!-- ASTDB Generation Section -->
+        <div class="astdb-generation-section">
+          <h4>Generate ASTDB</h4>
+          <p>Generate or update the AllStar database (astdb.txt) file.</p>
+          
+          <div class="generation-controls">
+            <label class="checkbox-label">
+              <input 
+                type="checkbox" 
+                v-model="strictlyPrivate"
+              />
+              Strictly Private (only local nodes)
+            </label>
+            
+            <button 
+              @click="generateAstdb" 
+              :disabled="generating"
+              class="generate-btn"
+            >
+              {{ generating ? 'Generating...' : 'Generate ASTDB' }}
+            </button>
+          </div>
+          
+          <div v-if="generationMessage" class="generation-message" :class="generationSuccess ? 'success' : 'error'">
+            {{ generationMessage }}
+          </div>
+        </div>
+
+        <hr class="section-divider">
+
         <!-- Loading State -->
         <div v-if="loading" class="loading">
           <div class="spinner"></div>
@@ -91,6 +121,12 @@ const error = ref('')
 const databaseData = ref(null)
 const showRawOutput = ref(false)
 
+// ASTDB Generation state
+const generating = ref(false)
+const strictlyPrivate = ref(false)
+const generationMessage = ref('')
+const generationSuccess = ref(false)
+
 // Watch for modal visibility changes
 watch(() => props.isVisible, (newVal) => {
   if (newVal) {
@@ -139,6 +175,32 @@ const loadDatabase = async () => {
 const formatTimestamp = (timestamp) => {
   if (!timestamp) return ''
   return new Date(timestamp).toLocaleString()
+}
+
+const generateAstdb = async () => {
+  generating.value = true
+  generationMessage.value = ''
+  generationSuccess.value = false
+
+  try {
+    const response = await api.post('/database/generate', {
+      strictly_private: strictlyPrivate.value
+    })
+
+    if (response.data.success) {
+      generationSuccess.value = true
+      generationMessage.value = response.data.message || 'ASTDB generated successfully!'
+    } else {
+      generationSuccess.value = false
+      generationMessage.value = response.data.message || 'Failed to generate ASTDB'
+    }
+  } catch (err) {
+    console.error('ASTDB generation error:', err)
+    generationSuccess.value = false
+    generationMessage.value = err.response?.data?.message || 'Failed to generate ASTDB'
+  } finally {
+    generating.value = false
+  }
 }
 </script>
 
@@ -198,6 +260,92 @@ const formatTimestamp = (timestamp) => {
 
 .close-button:hover {
   color: #ffffff;
+}
+
+.astdb-generation-section {
+  padding: 1rem;
+  background-color: #111111;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.astdb-generation-section h4 {
+  color: #00ff00;
+  margin: 0 0 0.5rem 0;
+  font-family: 'Courier New', Consolas, monospace;
+}
+
+.astdb-generation-section p {
+  color: #cccccc;
+  margin: 0 0 1rem 0;
+  font-size: 0.9rem;
+}
+
+.generation-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #cccccc;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin: 0;
+}
+
+.generate-btn {
+  background-color: #00ff00;
+  color: #000000;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: 'Courier New', Consolas, monospace;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.generate-btn:hover:not(:disabled) {
+  background-color: #00cc00;
+}
+
+.generate-btn:disabled {
+  background-color: #666666;
+  cursor: not-allowed;
+}
+
+.generation-message {
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 0.9rem;
+}
+
+.generation-message.success {
+  background-color: #004400;
+  color: #00ff00;
+  border: 1px solid #00ff00;
+}
+
+.generation-message.error {
+  background-color: #440000;
+  color: #ff0000;
+  border: 1px solid #ff0000;
+}
+
+.section-divider {
+  border: none;
+  border-top: 1px solid #333333;
+  margin: 1rem 0;
+}
   background-color: #333333;
   border-radius: 4px;
 }

@@ -80,8 +80,10 @@ export function useTheme() {
 
   // Apply theme to document
   const applyTheme = (theme: string) => {
+    console.log('Applying theme:', theme)
     const html = document.documentElement
     html.setAttribute('data-theme', theme)
+    console.log('Document data-theme attribute set to:', html.getAttribute('data-theme'))
     
     // If custom theme, load custom CSS
     if (theme === 'custom') {
@@ -111,7 +113,7 @@ export function useTheme() {
   // Set custom theme variables
   const setCustomThemeVariables = (variables: Record<string, string>) => {
     const css = Object.entries(variables)
-      .map(([key, value]) => `--custom-${key}: ${value};`)
+      .map(([key, value]) => `--${key}: ${value};`)
       .join('\n')
     
     const customCSS = `
@@ -129,10 +131,12 @@ export function useTheme() {
 
   // Change theme
   const changeTheme = (theme: string) => {
+    console.log('Changing theme to:', theme)
     currentTheme.value = theme
     applyTheme(theme)
     saveTheme(theme)
     isCustomTheme.value = theme === 'custom'
+    console.log('Theme changed, current theme:', currentTheme.value)
   }
 
   // Get current theme info
