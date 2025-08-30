@@ -245,6 +245,9 @@
           
           <!-- Pi GPIO Modal -->
           <PiGPIO v-model:isVisible="showPiGPIOModal" />
+          
+          <!-- Reboot Modal -->
+          <Reboot v-model:isVisible="showRebootModal" />
     
   </div>
 </template>
@@ -275,6 +278,7 @@ import IRLPLog from '@/components/IRLPLog.vue'
 import LinuxLog from '@/components/LinuxLog.vue'
 import BanAllow from '@/components/BanAllow.vue'
 import PiGPIO from '@/components/PiGPIO.vue'
+import Reboot from '@/components/Reboot.vue'
 
 
 const appStore = useAppStore()
@@ -304,6 +308,7 @@ const showDonateModal = ref(false)
   const showLinuxLogModal = ref(false)
   const showBanAllowModal = ref(false)
   const showPiGPIOModal = ref(false)
+  const showRebootModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -781,9 +786,12 @@ const astaroff = async () => {
 
 const reboot = async () => {
   try {
-    console.log('Server REBOOT command')
+    console.log('Opening Server Reboot modal')
+    showRebootModal.value = true
   } catch (error) {
-    console.error('Server REBOOT error:', error)
+    console.error('Server Reboot error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert(`Failed to open Server Reboot: ${errorMessage}`)
   }
 }
 

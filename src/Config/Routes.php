@@ -143,6 +143,9 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         // Pi GPIO Routes
         $group->post('/pigpio', [NodeController::class, 'pigpio']);
         $group->post('/pigpio/action', [NodeController::class, 'pigpioAction']);
+        
+        // Reboot Route
+        $group->post('/reboot', [NodeController::class, 'reboot']);
     });
 
     // Config routes

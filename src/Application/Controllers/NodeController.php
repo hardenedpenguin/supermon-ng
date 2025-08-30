@@ -874,7 +874,7 @@ class NodeController
         $defaultPermissions = [
             'ADMINUSER', 'AUTHUSER', 'CONNUSER', 'DISCONNUSER', 'MONUSER', 
             'LOCALMONUSER', 'PERMCONNUSER', 'RPTUSER', 'RPTSTATSUSER', 
-            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER', 'BANUSER', 'GPIOUSER'
+            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER', 'BANUSER', 'GPIOUSER', 'RBTUSER'
         ];
 
         // Check if user has the specific permission
@@ -1870,6 +1870,65 @@ class NodeController
             return [
                 'success' => false,
                 'message' => 'Failed to execute GPIO command. Check if gpio command is available and you have proper permissions.'
+            ];
+        }
+    }
+
+    public function reboot(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'RBTUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to reboot the server.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Execute reboot command
+            $result = $this->executeReboot();
+
+            if ($result['success']) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'data' => [
+                        'message' => $result['message'],
+                        'timestamp' => date('c')
+                    ],
+                    'message' => 'Server reboot initiated successfully'
+                ]));
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => $result['message']
+                ]));
+            }
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to execute reboot command', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to execute reboot command: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    private function executeReboot(): array
+    {
+        $command = "sudo /usr/sbin/reboot";
+        $escapedCommand = escapeshellcmd($command);
+        
+        // Execute the reboot command
+        $output = [];
+        $returnVar = 0;
+        exec($escapedCommand . " 2>/dev/null", $output, $returnVar);
+
+        if ($returnVar === 0) {
+            return [
+                'success' => true,
+                'message' => 'Server reboot command executed successfully. The system is now rebooting.'
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => 'Failed to execute reboot command. Check if you have proper sudo privileges.'
             ];
         }
     }
