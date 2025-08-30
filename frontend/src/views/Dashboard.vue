@@ -79,26 +79,18 @@
       <br>
       
       <!-- Secondary Control Buttons (matches original order exactly) -->
-      <input v-if="appStore.hasPermission('DTMFUSER')" type="button" class="submit2" value="DTMF" @click="dtmf">
-      <input v-if="appStore.hasPermission('ASTLKUSER')" type="button" class="submit2" value="Lookup" @click="astlookup">
+      <input v-if="appStore.hasPermission('DTMFUSER')" type="button" class="submit" value="DTMF" @click="dtmf">
+      <input v-if="appStore.hasPermission('ASTLKUSER')" type="button" class="submit" value="Lookup" @click="astlookup">
       <input v-if="appStore.hasPermission('RSTATUSER')" type="button" class="submit" value="Rpt Stats" @click="rptstats">
-      <input v-if="appStore.hasPermission('BUBLUSER')" type="button" class="submit2" value="Bubble" @click="bubble">
-      <input v-if="appStore.hasPermission('CTRLUSER')" type="button" class="submit2" value="Control" @click="controlpanel">
-      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit2" value="Favorites" @click="showFavoritesModal = true">
-      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit2" value="Add Favorite" @click="showAddFavoriteModal = true">
-        <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit2" value="Delete Favorite" @click="showDeleteFavoriteModal = true">
-      
-      <!-- Detailed View Additional Buttons (matches original exactly) -->
-      <hr class="button-separator">
-      <input v-if="appStore.hasPermission('CFGEDUSER')" type="button" class="submit" value="Configuration Editor" @click="configeditor">
-      <input v-if="appStore.hasPermission('ASTRELUSER')" type="button" class="submit" value="Iax/Rpt/DP RELOAD" @click="astreload">
-      <input v-if="appStore.hasPermission('ASTSTRUSER')" type="button" class="submit" value="AST START" @click="astaron">
-      <input v-if="appStore.hasPermission('ASTSTPUSER')" type="button" class="submit" value="AST STOP" @click="astaroff">
-      <input v-if="appStore.hasPermission('FSTRESUSER')" type="button" class="submit" value="RESTART" @click="fastrestart">
-      <input v-if="appStore.hasPermission('RBTUSER')" type="button" class="submit" value="Server REBOOT" @click="reboot">
+      <input v-if="appStore.hasPermission('BUBLUSER')" type="button" class="submit" value="Bubble" @click="bubble">
+      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Favorites" @click="showFavoritesModal = true">
+      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Add Favorite" @click="showAddFavoriteModal = true">
       <br>
+      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Delete Favorite" @click="showDeleteFavoriteModal = true">
       
-      <!-- Information Buttons -->
+      <!-- Configuration Editor Section -->
+      <hr class="button-separator">
+      <div class="section-label">Configuration Editor</div>
       <input v-if="appStore.hasPermission('HWTOUSER')" type="button" class="submit" value="AllStar How To's" @click="openHelp">
       <input v-if="appStore.hasPermission('WIKIUSER')" type="button" class="submit" value="AllStar Wiki" @click="openWiki">
       <input v-if="appStore.hasPermission('CSTATUSER')" type="button" class="submit" value="CPU Status" @click="cpustats">
@@ -107,28 +99,35 @@
       <input v-if="appStore.hasPermission('NINFUSER')" type="button" class="submit" value="Node Info" @click="astnodes">
       <input v-if="appStore.hasPermission('ACTNUSER')" type="button" class="submit" value="Active Nodes" @click="openActiveNodes">
       <input v-if="appStore.hasPermission('ALLNUSER')" type="button" class="submit" value="All Nodes" @click="openAllNodes">
-      <input v-if="appStore.hasPermission('DBTUSER')" type="button" class="submit" value="Database" @click="database">
       <br>
       
-      <!-- System Buttons -->
-      <input v-if="appStore.hasPermission('GPIOUSER')" type="button" class="submit" value="GPIO" @click="openpigpio">
+      <!-- Database Section -->
+      <div class="section-label">Database</div>
       <input v-if="appStore.hasPermission('LLOGUSER')" type="button" class="submit" value="Linux Log" @click="linuxlog">
       <input v-if="appStore.hasPermission('ASTLUSER')" type="button" class="submit" value="AST Log" @click="astlog">
       <input v-if="appStore.hasPermission('WLOGUSER')" type="button" class="submit" value="Web Access Log" @click="webacclog">
       <input v-if="appStore.hasPermission('WERRUSER')" type="button" class="submit" value="Web Error Log" @click="weberrlog">
+      <input type="button" class="submit" value="Voter" @click="showVoterModal = true">
+      <br>
       
-      <!-- Voter Button -->
-      <input type="button" class="submit2" value="Voter" @click="showVoterModal = true">
+      <!-- System Control Buttons -->
+      <input v-if="appStore.hasPermission('ASTRELUSER')" type="button" class="submit" value="Iax/Rpt/DP RELOAD" @click="astreload">
+      <input v-if="appStore.hasPermission('ASTSTRUSER')" type="button" class="submit" value="AST START" @click="astaron">
+      <input v-if="appStore.hasPermission('ASTSTPUSER')" type="button" class="submit" value="AST STOP" @click="astaroff">
+      <input v-if="appStore.hasPermission('FSTRESUSER')" type="button" class="submit" value="RESTART" @click="fastrestart">
+      <input v-if="appStore.hasPermission('RBTUSER')" type="button" class="submit" value="Server REBOOT" @click="reboot">
+      <br>
       
-      <!-- Access List Button -->
-      <input v-if="appStore.hasPermission('BANUSER')" type="button" class="submit2" value="Access List" @click="openbanallow">
+      <!-- Additional System Buttons -->
+      <input v-if="appStore.hasPermission('GPIOUSER')" type="button" class="submit" value="GPIO" @click="openpigpio">
+      <input v-if="appStore.hasPermission('BANUSER')" type="button" class="submit" value="Access List" @click="openbanallow">
     </div>
 
     <!-- Bottom Utility Buttons (matches original exactly) -->
     <p class="button-container">
-      <input type="button" class="submit2" value="Display Configuration" @click="showDisplayConfigModal = true">
-      <input v-if="systemInfo?.dvmUrl" type="button" class="submit2" value="Digital Dashboard" @click="digitaldashboard">
-      <input v-if="appStore.hasPermission('SYSINFUSER')" type="button" class="submit2" value="System Info" @click="systeminfo">
+      <input type="button" class="submit" value="Display Configuration" @click="showDisplayConfigModal = true">
+      <input v-if="systemInfo?.dvmUrl" type="button" class="submit" value="Digital Dashboard" @click="digitaldashboard">
+      <input v-if="appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="System Info" @click="systeminfo">
     </p>
 
     <!-- Node Tables (mimics link.php structure) -->
@@ -1461,9 +1460,20 @@ watch(displayedNodes, (newDisplayedNodes) => {
 .button-separator {
   border: none;
   height: 1px;
-  background-color: #8a2be2;
+  background-color: var(--border-color);
   margin: 10px 0;
-  width: 100%;
+}
+
+.section-label {
+  background-color: var(--table-header-bg);
+  color: var(--text-color);
+  padding: 8px 16px;
+  margin: 10px 0;
+  border-radius: 15px;
+  font-weight: bold;
+  font-size: 14px;
+  display: inline-block;
+  border: 1px solid var(--border-color);
 }
 
 .button-container {
