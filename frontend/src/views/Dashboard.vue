@@ -254,6 +254,12 @@
           
           <!-- Stats Modal -->
           <Stats v-model:isVisible="showStatsModal" :localnode="targetNode" />
+          
+          <!-- Web Access Log Modal -->
+          <WebAccLog v-model:isVisible="showWebAccLogModal" />
+          
+          <!-- Web Error Log Modal -->
+          <WebErrLog v-model:isVisible="showWebErrLogModal" />
     
   </div>
 </template>
@@ -287,6 +293,8 @@ import PiGPIO from '@/components/PiGPIO.vue'
 import Reboot from '@/components/Reboot.vue'
 import SMLog from '@/components/SMLog.vue'
 import Stats from '@/components/Stats.vue'
+import WebAccLog from '@/components/WebAccLog.vue'
+import WebErrLog from '@/components/WebErrLog.vue'
 
 
 const appStore = useAppStore()
@@ -319,6 +327,8 @@ const showDonateModal = ref(false)
   const showRebootModal = ref(false)
   const showSMLogModal = ref(false)
   const showStatsModal = ref(false)
+const showWebAccLogModal = ref(false)
+const showWebErrLogModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -934,17 +944,23 @@ const astlog = async () => {
 
 const webacclog = async () => {
   try {
-    console.log('Web Access Log')
+    console.log('Opening Web Access Log modal')
+    showWebAccLogModal.value = true
   } catch (error) {
     console.error('Web Access Log error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert(`Failed to open Web Access Log: ${errorMessage}`)
   }
 }
 
 const weberrlog = async () => {
   try {
-    console.log('Web Error Log')
+    console.log('Opening Web Error Log modal')
+    showWebErrLogModal.value = true
   } catch (error) {
     console.error('Web Error Log error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert(`Failed to open Web Error Log: ${errorMessage}`)
   }
 }
 

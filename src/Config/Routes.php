@@ -152,6 +152,12 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         
         // Stats Route
         $group->post('/stats', [NodeController::class, 'stats']);
+        
+        // Web Access Log Route
+        $group->post('/webacclog', [NodeController::class, 'webacclog']);
+        
+        // Web Error Log Route
+        $group->post('/weberrlog', [NodeController::class, 'weberrlog']);
     });
 
     // Config routes

@@ -874,7 +874,7 @@ class NodeController
         $defaultPermissions = [
             'ADMINUSER', 'AUTHUSER', 'CONNUSER', 'DISCONNUSER', 'MONUSER', 
             'LOCALMONUSER', 'PERMCONNUSER', 'RPTUSER', 'RPTSTATSUSER', 
-            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER', 'BANUSER', 'GPIOUSER', 'RBTUSER', 'SMLOGUSER', 'ASTATUSER'
+            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER', 'BANUSER', 'GPIOUSER', 'RBTUSER', 'SMLOGUSER', 'ASTATUSER', 'WLOGUSER', 'WERRUSER'
         ];
 
         // Check if user has the specific permission
@@ -2199,5 +2199,304 @@ class NodeController
         }
         
         return implode("\n", $cleaned_lines);
+    }
+
+    public function webacclog(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'WLOGUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to view web access logs.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Get log file path and content
+            $result = $this->getWebacclogContent();
+
+            if ($result['success']) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'data' => [
+                        'log_file_path' => $result['log_file_path'],
+                        'log_lines' => $result['log_lines'],
+                        'timestamp' => date('c')
+                    ],
+                    'message' => 'Web access log content retrieved successfully'
+                ]));
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => $result['message']
+                ]));
+            }
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve web access log content', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve web access log content: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    private function getWebacclogContent(): array
+    {
+        // Include necessary files to get the log file path
+        require_once __DIR__ . '/../../../includes/common.inc';
+        
+        // Get the log file path from common.inc
+        $log_file_path = $WEB_ACCESS_LOG ?? '/var/log/apache2/access.log';
+        
+        // Validate file path for security
+        if (!$this->isSafeWebLogPath($log_file_path)) {
+            return [
+                'success' => false,
+                'message' => 'Invalid or unsafe log file path: ' . $log_file_path
+            ];
+        }
+
+        // Read log file content with fallback methods
+        $logLines = $this->readWebacclogContent($log_file_path);
+        
+        if ($logLines === false) {
+            return [
+                'success' => false,
+                'message' => 'Could not read the web access log file: ' . $log_file_path
+            ];
+        }
+
+        return [
+            'success' => true,
+            'log_file_path' => $log_file_path,
+            'log_lines' => $logLines,
+            'message' => 'Web access log content retrieved successfully'
+        ];
+    }
+
+    private function isSafeWebLogPath(string $path): bool
+    {
+        // Only allow specific log files
+        $allowed_paths = [
+            '/var/log/apache2/access.log',
+            '/var/log/httpd/access_log',
+            '/var/log/nginx/access.log'
+        ];
+        
+        return in_array($path, $allowed_paths) && file_exists($path);
+    }
+
+    private function readWebacclogContent(string $file): array|false
+    {
+        $logLines = false;
+
+        // Try to read the file directly first
+        if (is_readable($file)) {
+            $logContent = file_get_contents($file);
+            if ($logContent !== false) {
+                $logLines = explode("\n", $logContent);
+                $logLines = array_slice($logLines, -100); // Show last 100 lines
+                $logLines = array_reverse($logLines); // Most recent first
+                $logLines = array_filter($logLines); // Remove empty lines
+            } else {
+                $logLines = [];
+            }
+        } else {
+            // Fallback to sudo if direct read fails
+            $logContent = $this->safeExec("sudo", "tail -100 " . escapeshellarg($file));
+            if ($logContent !== false) {
+                $logLines = explode("\n", $logContent);
+                $logLines = array_reverse($logLines); // Most recent first
+                $logLines = array_filter($logLines); // Remove empty lines
+            } else {
+                $logLines = [];
+            }
+        }
+
+        return $logLines;
+    }
+
+    private function safeExec(string $command, string $args = ''): string|false
+    {
+        $escaped_command = escapeshellcmd($command);
+        if (!empty($args)) {
+            $full_command = "{$escaped_command} {$args}";
+        } else {
+            $full_command = $escaped_command;
+        }
+        
+        $output = [];
+        $return_var = 0;
+        exec($full_command . " 2>/dev/null", $output, $return_var);
+        
+        if ($return_var !== 0) {
+            return false;
+        }
+        
+        return implode("\n", $output);
+    }
+
+    public function weberrlog(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'WERRUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to view web error logs.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Get log file path and content
+            $result = $this->getWeberrlogContent();
+
+            if ($result['success']) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'data' => [
+                        'log_file_path' => $result['log_file_path'],
+                        'parsed_data' => $result['parsed_data'],
+                        'timestamp' => date('c')
+                    ],
+                    'message' => 'Web error log content retrieved successfully'
+                ]));
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => $result['message']
+                ]));
+            }
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve web error log content', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve web error log content: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    private function getWeberrlogContent(): array
+    {
+        // Include necessary files to get the log file path
+        require_once __DIR__ . '/../../../includes/common.inc';
+        
+        // Get the log file path from common.inc
+        $log_file_path = $WEB_ERROR_LOG ?? '/var/log/apache2/error.log';
+        
+        if (!isset($WEB_ERROR_LOG)) {
+            return [
+                'success' => false,
+                'message' => 'Log file path (WEB_ERROR_LOG) not defined in configuration'
+            ];
+        }
+
+        // Validate log file exists and is readable
+        $fileStatus = $this->validateWeberrlogFile($log_file_path);
+        if (!$fileStatus['readable']) {
+            return [
+                'success' => false,
+                'message' => $fileStatus['error']
+            ];
+        }
+
+        // Read log file content
+        $lines = $this->readWeberrlogContent($log_file_path);
+        if ($lines === false) {
+            return [
+                'success' => false,
+                'message' => 'Could not read the web error log file: ' . $log_file_path
+            ];
+        }
+
+        if (count($lines) === 0) {
+            return [
+                'success' => false,
+                'message' => 'Web error log file is empty: ' . $log_file_path
+            ];
+        }
+
+        // Parse log lines
+        $parsedData = $this->parseWeberrlogLines($lines);
+
+        return [
+            'success' => true,
+            'log_file_path' => $log_file_path,
+            'parsed_data' => $parsedData,
+            'message' => 'Web error log content retrieved successfully'
+        ];
+    }
+
+    private function validateWeberrlogFile(string $logFilePath): array
+    {
+        $status = [
+            'exists' => false,
+            'readable' => false,
+            'error' => ''
+        ];
+        
+        if (!file_exists($logFilePath)) {
+            $status['error'] = "Log file not found: " . $logFilePath;
+            return $status;
+        }
+        
+        $status['exists'] = true;
+        
+        if (!is_readable($logFilePath)) {
+            $status['error'] = "Log file not readable: " . $logFilePath;
+            return $status;
+        }
+        
+        $status['readable'] = true;
+        return $status;
+    }
+
+    private function readWeberrlogContent(string $logFilePath): array|false
+    {
+        $lines = file($logFilePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        
+        if ($lines === false) {
+            return false;
+        }
+        
+        return $lines;
+    }
+
+    private function parseWeberrlogLines(array $lines): array
+    {
+        $logRegex = '/^\[(?<timestamp>.*?)\] (?:\[(?<module>[^:]+):(?<level_m>[^\]]+)\]|\[(?<level>[^\]]+)\])(?: \[pid (?<pid>\d+)(?::tid (?<tid>\d+))?\])?(?: \[client (?<client>.*?)\])? (?<message>.*)$/';
+        
+        $headers = ['Line', 'Timestamp', 'Level', 'Client', 'Details'];
+        $rows = [];
+        
+        foreach ($lines as $index => $line) {
+            $lineNumber = $index + 1;
+            $matched = preg_match($logRegex, $line, $matches);
+            
+            if ($matched) {
+                $timestamp = $matches['timestamp'] ?? '';
+                $level_raw_captured = $matches['level_m'] ?? ($matches['level'] ?? '');
+                $level_raw = strtolower(trim($level_raw_captured));
+                $level_display = strtoupper($level_raw);
+                $client = $matches['client'] ?? '';
+                $message = $matches['message'] ?? '';
+                
+                $rows[] = [
+                    $lineNumber,
+                    $timestamp,
+                    $level_display,
+                    $client,
+                    $message
+                ];
+            } else {
+                $rows[] = [
+                    $lineNumber,
+                    'N/A',
+                    'N/A',
+                    'N/A',
+                    $line
+                ];
+            }
+        }
+        
+        return [
+            'headers' => $headers,
+            'rows' => $rows
+        ];
     }
 }
