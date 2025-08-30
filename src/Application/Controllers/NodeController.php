@@ -1125,6 +1125,113 @@ class NodeController
     }
 
     /**
+     * Get database contents for a specific node
+     */
+    public function database(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'DBTUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to access database contents.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        $data = $request->getParsedBody();
+        $localnode = $data['localnode'] ?? null;
+
+        if (empty($localnode)) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Local node parameter is required.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Get user configuration
+            $config = $this->getUserConfig($currentUser);
+            if (!isset($config[$localnode])) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Node configuration not found.']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $amiConfig = $config[$localnode];
+            if (!isset($amiConfig['host']) || !isset($amiConfig['user']) || !isset($amiConfig['passwd'])) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid AMI configuration for node.']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            // Connect to AMI and retrieve database
+            $databaseOutput = $this->retrieveDatabaseFromAmi($amiConfig);
+            $dbEntries = $this->processDatabaseOutput($databaseOutput);
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => [
+                    'localnode' => $localnode,
+                    'entries' => $dbEntries,
+                    'raw_output' => $databaseOutput,
+                    'timestamp' => date('c')
+                ],
+                'message' => 'Database contents retrieved successfully'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to retrieve database contents', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve database contents: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    /**
+     * Retrieve database contents from AMI
+     */
+    private function retrieveDatabaseFromAmi(array $amiConfig): string
+    {
+        $fp = \SimpleAmiClient::connect($amiConfig['host']);
+        if ($fp === false) {
+            throw new \Exception('Could not connect to Asterisk Manager');
+        }
+
+        if (\SimpleAmiClient::login($fp, $amiConfig['user'], $amiConfig['passwd']) === false) {
+            \SimpleAmiClient::logoff($fp);
+            throw new \Exception('Could not authenticate with Asterisk Manager');
+        }
+
+        $databaseOutput = \SimpleAmiClient::command($fp, "database show");
+        \SimpleAmiClient::logoff($fp);
+        
+        return $databaseOutput ?: '';
+    }
+
+    /**
+     * Process raw database output into structured entries
+     */
+    private function processDatabaseOutput(string $databaseOutput): array
+    {
+        $processedOutput = trim($databaseOutput);
+        $dbEntries = [];
+
+        if (!empty($processedOutput)) {
+            $processedOutput = preg_replace('/^Output: /m', '', $processedOutput);
+            $lines = explode("\n", trim($processedOutput));
+
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) {
+                    continue;
+                }
+                $parts = explode(':', $line, 2);
+                if (count($parts) === 2) {
+                    $dbEntries[] = [
+                        'key' => trim($parts[0]),
+                        'value' => trim($parts[1])
+                    ];
+                }
+            }
+        }
+
+        return $dbEntries;
+    }
+
+    /**
      * Execute a single CPU statistics command
      */
     private function executeCpuStatsCommand(string $command): string

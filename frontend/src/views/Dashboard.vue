@@ -225,6 +225,12 @@
           
           <!-- CPU Stats Modal -->
           <CpuStats v-model:isVisible="showCpuStatsModal" />
+          
+          <!-- Database Modal -->
+          <Database 
+            v-model:isVisible="showDatabaseModal" 
+            :localnode="selectedLocalNode || selectedNode" 
+          />
     
   </div>
 </template>
@@ -247,6 +253,7 @@ import BubbleChart from '@/components/BubbleChart.vue'
 import ControlPanel from '@/components/ControlPanel.vue'
 import RptStats from '@/components/RptStats.vue'
 import CpuStats from '@/components/CpuStats.vue'
+import Database from '@/components/Database.vue'
 
 
 const appStore = useAppStore()
@@ -268,6 +275,7 @@ const showBubbleChartModal = ref(false)
 const showControlPanelModal = ref(false)
 const showRptStatsModal = ref(false)
 const showCpuStatsModal = ref(false)
+const showDatabaseModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -782,9 +790,22 @@ const openAllNodes = async () => {
 
 const database = async () => {
   try {
-    console.log('Database')
+    console.log('Opening Database modal')
+    
+    // Use selectedLocalNode if available, otherwise use selectedNode
+    if (selectedLocalNode.value) {
+      showDatabaseModal.value = true
+    } else if (selectedNode.value) {
+      showDatabaseModal.value = true
+    } else {
+      console.error('No node selected for database')
+      alert('Please select a node first to view its database contents.')
+      return
+    }
   } catch (error) {
     console.error('Database error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert(`Failed to open Database: ${errorMessage}`)
   }
 }
 

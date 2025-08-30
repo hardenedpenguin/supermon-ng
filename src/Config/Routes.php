@@ -118,8 +118,11 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->post('/dtmf', [NodeController::class, 'dtmf']);
         $group->post('/rptstats', [NodeController::class, 'rptstats']);
         
-        // CPU Stats Route
-        $group->post('/cpustats', [NodeController::class, 'cpustats']);
+               // CPU Stats Route
+       $group->post('/cpustats', [NodeController::class, 'cpustats']);
+       
+       // Database Route
+       $group->post('/database', [NodeController::class, 'database']);
     });
 
     // Config routes
