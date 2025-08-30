@@ -17717,3 +17717,9 @@
 [2025-08-30T16:43:08.481642+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":500,"duration_ms":0.87,"ip":"::1"} {"uid":"2634874"}
 [2025-08-30T16:43:13.482651+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":500,"duration_ms":0.8,"ip":"::1"} {"uid":"975c987"}
 [2025-08-30T16:43:18.481494+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":500,"duration_ms":0.86,"ip":"::1"} {"uid":"1563c4e"}
+[2025-08-30T16:43:23.481188+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":500,"duration_ms":0.6,"ip":"::1"} {"uid":"1a75973"}
+[2025-08-30T16:43:28.482227+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":500,"duration_ms":1.27,"ip":"::1"} {"uid":"3bb351b"}
+[2025-08-30T16:43:33.483993+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":500,"duration_ms":1.32,"ip":"::1"} {"uid":"f985594"}
+[2025-08-30T16:43:38.481478+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":500,"duration_ms":0.63,"ip":"::1"} {"uid":"33a9474"}
+[2025-08-30T16:43:43.500804+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":500,"duration_ms":3.12,"ip":"::1"} {"uid":"703224f"}
+[2025-08-30T16:43:48.497914+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes/ami/status","status_code":500,"duration_ms":1.84,"ip":"::1"} {"uid":"1ee3dc7"}

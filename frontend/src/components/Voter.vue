@@ -51,7 +51,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { useApi } from '@/composables/useApi'
+import { api } from '@/utils/api'
 
 const props = defineProps({
   show: {
@@ -132,17 +132,17 @@ const initializeEventSources = () => {
 
 const pollVoterStatus = async (node) => {
   try {
-    const response = await api.get(`/api/nodes/voter/status?node=${encodeURIComponent(node)}`)
+    const response = await api.get(`/nodes/voter/status?node=${encodeURIComponent(node)}`)
     
-    if (response.html) {
+    if (response.data.html) {
       const element = document.getElementById(`link_list_${node}`)
       if (element) {
-        element.innerHTML = response.html
+        element.innerHTML = response.data.html
       }
     }
     
-    if (response.spinner) {
-      spinners.value[node] = response.spinner
+    if (response.data.spinner) {
+      spinners.value[node] = response.data.spinner
     }
     
     // Continue polling
