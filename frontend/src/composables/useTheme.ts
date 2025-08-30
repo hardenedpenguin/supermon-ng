@@ -129,6 +129,31 @@ export const themes: Theme[] = [
       localNodeHeader: '#059669',
       localNodeHeaderText: '#ffffff'
     }
+  },
+  {
+    name: 'seafoam',
+    label: 'Seafoam Green',
+    colors: {
+      primary: '#2d5a4a',
+      text: '#2d5a4a',
+      background: '#f5f5dc',
+      container: '#e8f4f0',
+      border: '#7fb3a3',
+      input: '#ffffff',
+      inputText: '#2d5a4a',
+      tableHeader: '#7fb3a3',
+      tableBg: '#f0f8f5',
+      success: '#4caf50',
+      warning: '#ff9800',
+      error: '#f44336',
+      link: '#2196f3',
+      menu: '#e8f4f0',
+      localNodeBg: '#e8f4f0',
+      localNodeText: '#2d5a4a',
+      localNodeBorder: '#7fb3a3',
+      localNodeHeader: '#7fb3a3',
+      localNodeHeaderText: '#ffffff'
+    }
   }
 ]
 
