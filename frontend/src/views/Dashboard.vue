@@ -1461,8 +1461,9 @@ watch(displayedNodes, (newDisplayedNodes) => {
 .button-separator {
   border: none;
   height: 1px;
-  background-color: var(--border-color);
+  background-color: #8a2be2;
   margin: 10px 0;
+  width: 100%;
 }
 
 .button-container {
