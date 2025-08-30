@@ -101,9 +101,11 @@ button:disabled {
 
 /* Tables */
 table {
-  width: 100%;
+  width: auto;
+  min-width: 50%;
+  max-width: 100%;
   border-collapse: collapse;
-  margin: var(--spacing-md) 0;
+  margin: var(--spacing-md) auto;
   background-color: var(--container-bg);
   border-radius: var(--border-radius-md);
   overflow: hidden;
@@ -152,9 +154,10 @@ tbody tr:nth-child(odd) {
 
 /* Specific table styles */
 .display-config-table {
-  width: 100%;
+  width: auto;
+  min-width: 400px;
   max-width: 600px;
-  margin: 0 auto;
+  margin: var(--spacing-md) auto;
 }
 
 .display-config-table td {
@@ -172,7 +175,10 @@ tbody tr:nth-child(odd) {
 }
 
 .fxwidth {
-  width: 100%;
+  width: auto;
+  min-width: 50%;
+  max-width: 100%;
+  margin: var(--spacing-md) auto;
 }
 
 .fxwidth td {
@@ -182,7 +188,10 @@ tbody tr:nth-child(odd) {
 
 /* Log tables */
 .log-table {
-  width: 100%;
+  width: auto;
+  min-width: 50%;
+  max-width: 100%;
+  margin: var(--spacing-md) auto;
   font-family: 'Courier New', monospace;
   font-size: 0.9rem;
 }
@@ -195,8 +204,10 @@ tbody tr:nth-child(odd) {
 
 /* Results tables */
 .results-table {
-  width: 100%;
-  margin: var(--spacing-md) 0;
+  width: auto;
+  min-width: 50%;
+  max-width: 100%;
+  margin: var(--spacing-md) auto;
 }
 
 .results-table th,
@@ -207,8 +218,10 @@ tbody tr:nth-child(odd) {
 
 /* Database tables */
 .database-table {
-  width: 100%;
-  margin: var(--spacing-md) 0;
+  width: auto;
+  min-width: 50%;
+  max-width: 100%;
+  margin: var(--spacing-md) auto;
 }
 
 .database-table th,
@@ -219,8 +232,10 @@ tbody tr:nth-child(odd) {
 
 /* Favorites tables */
 .favorites-table {
-  width: 100%;
-  margin: var(--spacing-md) 0;
+  width: auto;
+  min-width: 50%;
+  max-width: 100%;
+  margin: var(--spacing-md) auto;
 }
 
 .favorites-table th,

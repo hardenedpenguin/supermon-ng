@@ -408,7 +408,10 @@ defineExpose({
   color: var(--text-color);
   padding: 4px;
   border-collapse: collapse;
-  width: 100%;
+  width: auto;
+  min-width: 50%;
+  max-width: 100%;
+  margin: var(--spacing-md) auto;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -431,6 +434,10 @@ defineExpose({
   color: var(--text-color);
   padding: 4px;
   border-collapse: collapse;
+  width: auto;
+  min-width: 50%;
+  max-width: 100%;
+  margin: var(--spacing-md) auto;
   border-radius: 8px;
   overflow: hidden;
 }
