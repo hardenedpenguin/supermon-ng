@@ -219,6 +219,9 @@
         
         <!-- Control Panel Modal -->
         <ControlPanel v-model:isVisible="showControlPanelModal" :local-node="targetNode" />
+        
+        <!-- RPT Stats Modal -->
+        <RptStats v-model:isVisible="showRptStatsModal" :node-number="targetNode" />
     
   </div>
 </template>
@@ -239,6 +242,7 @@ import AstLog from '@/components/AstLog.vue'
 import AstLookup from '@/components/AstLookup.vue'
 import BubbleChart from '@/components/BubbleChart.vue'
 import ControlPanel from '@/components/ControlPanel.vue'
+import RptStats from '@/components/RptStats.vue'
 
 
 const appStore = useAppStore()
@@ -258,6 +262,7 @@ const showAstLogModal = ref(false)
 const showAstLookupModal = ref(false)
 const showBubbleChartModal = ref(false)
 const showControlPanelModal = ref(false)
+const showRptStatsModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -539,8 +544,8 @@ const astlookup = async () => {
 
 const rptstats = async () => {
   try {
-    // Implement RPT stats functionality
-    console.log('RPT stats')
+    console.log('Opening RPT Stats modal')
+    showRptStatsModal.value = true
   } catch (error) {
     console.error('RPT stats error:', error)
   }

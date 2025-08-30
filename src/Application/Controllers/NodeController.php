@@ -337,6 +337,91 @@ class NodeController
     }
 
     /**
+     * Handle RPT Stats requests
+     * Supports both external AllStar Link stats and local AMI stats
+     */
+    public function rptstats(Request $request, Response $response, array $args): Response
+    {
+        $data = $request->getParsedBody();
+        $node = $data['node'] ?? null;
+        $localnode = $data['localnode'] ?? null;
+
+        // Check authentication
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'RSTATUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to access RPT statistics.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        // External node stats - redirect to AllStar Link
+        if ($node && is_numeric($node) && $node > 0) {
+            $externalUrl = "http://stats.allstarlink.org/stats/$node";
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'type' => 'external',
+                'url' => $externalUrl,
+                'message' => "Redirecting to external AllStar Link stats for node $node"
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        // Local node stats via AMI
+        if ($localnode && is_numeric($localnode) && $localnode > 0) {
+            try {
+                $nodeConfig = $this->loadNodeConfig($currentUser, (string)$localnode);
+                if (!$nodeConfig) {
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => "Configuration for local node $localnode not found."]));
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+
+                $fp = $this->connectToAmi($nodeConfig, (string)$localnode);
+                if (!$fp) {
+                    $response->getBody()->write(json_encode(['success' => false, 'message' => "Could not connect to Asterisk Manager for node $localnode."]));
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+
+                $statsResult = $this->executeRptStatsCommand($fp, (string)$localnode);
+                \SimpleAmiClient::logoff($fp);
+
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'type' => 'local',
+                    'data' => [
+                        'node' => $localnode,
+                        'stats' => $statsResult,
+                        'timestamp' => date('c')
+                    ],
+                    'message' => "RPT stats retrieved successfully for node $localnode"
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+
+            } catch (\Exception $e) {
+                $this->logger->error('Failed to retrieve RPT stats', ['local_node' => $localnode, 'error' => $e->getMessage()]);
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve RPT stats: ' . $e->getMessage()]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+        }
+
+        // No valid parameters
+        $response->getBody()->write(json_encode(['success' => false, 'message' => 'No valid node specified. Please provide a node or localnode parameter.']));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    /**
+     * Execute RPT stats command via AMI
+     */
+    private function executeRptStatsCommand(mixed $fp, string $localNode): string
+    {
+        $commandOutput = \SimpleAmiClient::command($fp, "rpt stats $localNode");
+        
+        if ($commandOutput !== false && !empty(trim($commandOutput))) {
+            return trim($commandOutput);
+        } else {
+            return "<NONE_OR_EMPTY_STATS>";
+        }
+    }
+
+    /**
      * Execute node action (connect, disconnect, monitor, localmonitor)
      */
     private function executeNodeAction(Request $request, Response $response, array $args, string $action): Response
@@ -806,6 +891,7 @@ class NodeController
             'MONUSER' => true,
             'LMONUSER' => true,
             'DTMFUSER' => true,
+            'RSTATUSER' => true,
             'PERMUSER' => true
         ];
         return $defaultPermissions[$permission] ?? false;
