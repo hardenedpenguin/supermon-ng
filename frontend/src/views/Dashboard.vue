@@ -883,7 +883,9 @@ const handleLogout = async () => {
 }
 
 const openDonatePopup = () => {
+  console.log('Donate button clicked!')
   showDonateModal.value = true
+  console.log('showDonateModal.value set to:', showDonateModal.value)
 }
 
   // Handle menu node selection

@@ -77,12 +77,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-interface Props {
-  isVisible: {
-    type: Boolean,
-    default: false
-  }
-}
+const props = defineProps<{
+  isVisible: boolean
+}>()
 
 const emit = defineEmits(['update:isVisible'])
 
