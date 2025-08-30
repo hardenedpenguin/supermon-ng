@@ -238,7 +238,7 @@ class NodeController
         $permInput = $data['perm'] ?? null;
         
         // Validate local node
-        if (!$localNode || !preg_match("/^\d+$/", $localNode)) {
+        if (!$localNode || !preg_match("/^\d+$/", (string)$localNode)) {
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'message' => 'Please provide a valid local node number.'

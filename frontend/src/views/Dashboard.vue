@@ -826,8 +826,8 @@ const openDonatePopup = () => {
     // Set the clicked node as the target node
     targetNode.value = nodeId
     
-    // If we have a dropdown with multiple nodes, try to find and select the appropriate local node
-    if (dropdownOptions.value.length > 1) {
+    // If we're in group mode (multiple displayed nodes), try to find and select the appropriate local node
+    if (displayedNodes.value.length > 1) {
       // Find the local node that has this connected node
       const localNode = displayedNodes.value.find(node => {
         // Check if this local node has the clicked node as a connected node
