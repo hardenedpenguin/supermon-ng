@@ -191,7 +191,8 @@
 
     <!-- Add Favorite Modal -->
     <AddFavorite 
-      v-model:open="showAddFavoriteModal"
+      v-model:isVisible="showAddFavoriteModal"
+      :node-number="targetNode"
       @favorite-added="handleFavoriteAdded"
     />
 

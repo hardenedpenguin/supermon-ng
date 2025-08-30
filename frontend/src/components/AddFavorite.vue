@@ -74,7 +74,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import axios from 'axios'
+import { api } from '@/utils/api'
 
 const props = defineProps({
   isVisible: {
@@ -119,21 +119,18 @@ const loadNodeInfo = async (node) => {
   error.value = ''
   
   try {
-    // For now, we'll use a mock response since we don't have a direct API
-    // In a real implementation, you'd call an API to get node info
-    const response = await axios.get(`/api/config/node-info?node=${node}`, {
-      withCredentials: true
-    })
-    
-    if (response.data.success) {
-      nodeInfo.value = response.data.nodeInfo
-      // Set default label
-      customLabel.value = `${nodeInfo.value.callsign} ${nodeInfo.value.description} ${node}`
-    } else {
-      error.value = response.data.message || 'Failed to load node information'
+    // For now, we'll create a simple node info object
+    // The backend will look up the actual node info from astdb.txt
+    nodeInfo.value = {
+      node: node,
+      callsign: `Node ${node}`,
+      description: 'Node',
+      location: 'Unknown'
     }
+    // Set default label
+    customLabel.value = `Node ${node}`
   } catch (err) {
-    error.value = err.response?.data?.message || 'Failed to load node information'
+    error.value = 'Failed to load node information'
   } finally {
     loading.value = false
   }
@@ -146,12 +143,10 @@ const addFavorite = async () => {
   error.value = ''
   
   try {
-    const response = await axios.post('/api/config/favorites/add', {
+    const response = await api.post('/api/config/favorites/add', {
       node: props.nodeNumber,
       custom_label: customLabel.value,
       add_to_general: addToGeneral.value ? '1' : '0'
-    }, {
-      withCredentials: true
     })
     
     if (response.data.success) {
