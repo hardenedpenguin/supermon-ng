@@ -124,8 +124,11 @@ $app->group('/api', function (RouteCollectorProxy $group) {
        // Database Route
        $group->post('/database', [NodeController::class, 'database']);
        
-       // ExtNodes Route
-       $group->post('/extnodes', [NodeController::class, 'extnodes']);
+               // ExtNodes Route
+        $group->post('/extnodes', [NodeController::class, 'extnodes']);
+        
+        // FastRestart Route
+        $group->post('/fastrestart', [NodeController::class, 'fastrestart']);
     });
 
     // Config routes

@@ -224,6 +224,12 @@
           
           <!-- ExtNodes Modal -->
           <ExtNodes v-model:isVisible="showExtNodesModal" />
+          
+          <!-- FastRestart Modal -->
+          <FastRestart 
+            v-model:isVisible="showFastRestartModal" 
+            :localnode="selectedLocalNode || selectedNode" 
+          />
     
   </div>
 </template>
@@ -249,6 +255,7 @@ import CpuStats from '@/components/CpuStats.vue'
 import Database from '@/components/Database.vue'
 import Donate from '@/components/Donate.vue'
 import ExtNodes from '@/components/ExtNodes.vue'
+import FastRestart from '@/components/FastRestart.vue'
 
 
 const appStore = useAppStore()
@@ -272,7 +279,8 @@ const showRptStatsModal = ref(false)
 const showCpuStatsModal = ref(false)
 const showDatabaseModal = ref(false)
 const showDonateModal = ref(false)
-const showExtNodesModal = ref(false)
+  const showExtNodesModal = ref(false)
+  const showFastRestartModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -583,6 +591,8 @@ const extnodes = async () => {
   }
 }
 
+
+
 const controlpanel = async () => {
   try {
     console.log('Opening Control Panel modal')
@@ -716,9 +726,22 @@ const astaroff = async () => {
 
 const fastrestart = async () => {
   try {
-    console.log('FAST RESTART command')
+    console.log('Opening FastRestart modal')
+    
+    // Use selectedLocalNode if available, otherwise use selectedNode
+    if (selectedLocalNode.value) {
+      showFastRestartModal.value = true
+    } else if (selectedNode.value) {
+      showFastRestartModal.value = true
+    } else {
+      console.error('No node selected for fast restart')
+      alert('Please select a node first to perform fast restart.')
+      return
+    }
   } catch (error) {
-    console.error('FAST RESTART error:', error)
+    console.error('FastRestart error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert(`Failed to open FastRestart: ${errorMessage}`)
   }
 }
 

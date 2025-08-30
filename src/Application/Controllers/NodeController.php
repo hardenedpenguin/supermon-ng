@@ -870,32 +870,20 @@ class NodeController
         // Include necessary files
         require_once __DIR__ . '/../../../includes/common.inc';
         
-        // If no user, use default permissions
-        if (!$user) {
-            $defaultPermissions = [
-                'CONNECTUSER' => true,
-                'DISCUSER' => true,
-                'MONUSER' => true,
-                'LMONUSER' => true,
-                'DTMFUSER' => true,
-                'PERMUSER' => true
-            ];
-                    return $defaultPermissions[$permission] ?? false;
-    }
-    
-    // For now, use default permissions for all users
-    // TODO: Implement proper user-specific permission checking
-    $defaultPermissions = [
-        'CONNECTUSER' => true,
-        'DISCUSER' => true,
-        'MONUSER' => true,
-        'LMONUSER' => true,
-        'DTMFUSER' => true,
-        'RSTATUSER' => true,
-        'CSTATUSER' => true,
-        'PERMUSER' => true
-    ];
-    return $defaultPermissions[$permission] ?? false;
+        // Default permissions for backward compatibility
+        $defaultPermissions = [
+            'ADMINUSER', 'AUTHUSER', 'CONNUSER', 'DISCONNUSER', 'MONUSER', 
+            'LOCALMONUSER', 'PERMCONNUSER', 'RPTUSER', 'RPTSTATSUSER', 
+            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER'
+        ];
+
+        // Check if user has the specific permission
+        if (in_array($permission, $defaultPermissions)) {
+            return true;
+        }
+
+        // Additional permission checks can be added here
+        return false;
     }
 
     /**
@@ -1301,5 +1289,98 @@ class NodeController
         $formatted .= htmlspecialchars($output);
         $formatted .= "\n\n";
         return $formatted;
+    }
+
+    public function fastrestart(Request $request, Response $response, array $args): Response
+    {
+        $currentUser = $this->getCurrentUser();
+        if (!$this->hasUserPermission($currentUser, 'FSTRESUSER')) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to perform fast restart operations.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        $data = $request->getParsedBody();
+        $localnode = $data['localnode'] ?? null;
+
+        if (empty($localnode)) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Local node parameter is required.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        try {
+            // Get user configuration
+            $config = $this->loadNodeConfig($currentUser, $localnode);
+            if (!isset($config[$localnode])) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Node configuration not found.']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $amiConfig = $config[$localnode];
+            if (!isset($amiConfig['host']) || !isset($amiConfig['user']) || !isset($amiConfig['passwd'])) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid AMI configuration for node.']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            // Connect to AMI and execute restart
+            $restartResult = $this->executeFastRestart($amiConfig);
+
+            if ($restartResult['success']) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'data' => [
+                        'localnode' => $localnode,
+                        'message' => $restartResult['message'],
+                        'timestamp' => date('c')
+                    ],
+                    'message' => 'Fast restart command executed successfully'
+                ]));
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => $restartResult['message']
+                ]));
+            }
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to execute fast restart', ['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to execute fast restart: ' . $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+    }
+
+    private function executeFastRestart(array $amiConfig): array
+    {
+        $fp = \SimpleAmiClient::connect($amiConfig['host']);
+        if ($fp === false) {
+            return [
+                'success' => false,
+                'message' => 'Could not connect to Asterisk Manager on host ' . $amiConfig['host']
+            ];
+        }
+
+        if (\SimpleAmiClient::login($fp, $amiConfig['user'], $amiConfig['passwd']) === false) {
+            \SimpleAmiClient::logoff($fp);
+            return [
+                'success' => false,
+                'message' => 'Could not authenticate with Asterisk Manager'
+            ];
+        }
+
+        $restartOutput = \SimpleAmiClient::command($fp, "restart now");
+        \SimpleAmiClient::logoff($fp);
+
+        if ($restartOutput === false) {
+            return [
+                'success' => false,
+                'message' => 'Failed to send restart command to Asterisk'
+            ];
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Fast restart command sent successfully. Asterisk is restarting now.',
+            'output' => $restartOutput
+        ];
     }
 }
