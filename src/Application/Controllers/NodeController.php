@@ -258,7 +258,7 @@ class NodeController
 
         try {
             // Load node configuration
-            $nodeConfig = $this->loadNodeConfig($currentUser, $localNode);
+            $nodeConfig = $this->loadNodeConfig($currentUser, (string)$localNode);
             if (!$nodeConfig) {
                 $response->getBody()->write(json_encode([
                     'success' => false,

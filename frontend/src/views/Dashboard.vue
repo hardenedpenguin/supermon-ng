@@ -915,8 +915,17 @@ onMounted(async () => {
         // Set the default node as selected
         selectedNode.value = defaultNode
         
-        // Start monitoring the default node
-        await realTimeStore.startMonitoring(defaultNode)
+        // Start monitoring the default node(s)
+        if (defaultNode.includes(',')) {
+          // Group mode - monitor each node individually
+          const nodeIds = defaultNode.split(',').map(id => id.trim())
+          for (const nodeId of nodeIds) {
+            await realTimeStore.startMonitoring(nodeId)
+          }
+        } else {
+          // Single node mode
+          await realTimeStore.startMonitoring(defaultNode)
+        }
       }
     }
   } catch (error) {
