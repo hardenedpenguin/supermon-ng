@@ -125,8 +125,8 @@ import CustomThemeBuilder from './CustomThemeBuilder.vue'
 
 const { 
   currentTheme, 
-  builtInThemes, 
-  customThemes, 
+  getBuiltInThemes, 
+  getCustomThemes, 
   setTheme, 
   deleteCustomTheme 
 } = useTheme()
@@ -134,6 +134,10 @@ const {
 const activeTab = ref<'themes' | 'custom'>('themes')
 const showCustomBuilder = ref(false)
 const editingTheme = ref<Theme | undefined>(undefined)
+
+// Get the themes
+const builtInThemes = getBuiltInThemes()
+const customThemes = getCustomThemes()
 
 const selectTheme = (themeName: string) => {
   setTheme(themeName)
