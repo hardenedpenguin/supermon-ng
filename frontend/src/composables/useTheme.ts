@@ -154,6 +154,31 @@ export const themes: Theme[] = [
       localNodeHeader: '#7fb3a3',
       localNodeHeaderText: '#ffffff'
     }
+  },
+  {
+    name: 'neon-purple',
+    label: 'Neon Purple',
+    colors: {
+      primary: '#e0b0ff',
+      text: '#e0b0ff',
+      background: '#000000',
+      container: '#1a0a2e',
+      border: '#8a2be2',
+      input: '#1a0a2e',
+      inputText: '#e0b0ff',
+      tableHeader: '#8a2be2',
+      tableBg: '#0d0519',
+      success: '#00ff88',
+      warning: '#ffaa00',
+      error: '#ff0066',
+      link: '#00ffff',
+      menu: '#1a0a2e',
+      localNodeBg: '#1a0a2e',
+      localNodeText: '#e0b0ff',
+      localNodeBorder: '#8a2be2',
+      localNodeHeader: '#8a2be2',
+      localNodeHeaderText: '#ffffff'
+    }
   }
 ]
 
