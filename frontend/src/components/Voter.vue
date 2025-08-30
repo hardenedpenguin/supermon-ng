@@ -62,7 +62,6 @@ const props = defineProps({
 
 const emit = defineEmits(['close'])
 
-const api = useApi()
 const nodeInput = ref('')
 const nodes = ref([])
 const eventSources = ref({})
