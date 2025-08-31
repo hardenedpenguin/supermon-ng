@@ -1231,7 +1231,7 @@ watch(displayedNodes, (newDisplayedNodes) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
   width: 100%;
 }
 
