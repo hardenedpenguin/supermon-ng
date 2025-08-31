@@ -207,13 +207,24 @@ const headerStatusClass = computed(() => {
   const cosKeyed = nodeData.value.cos_keyed || 0
   const txKeyed = nodeData.value.tx_keyed || 0
   
+  let statusClass = ''
+  
   if (cosKeyed === 0) {
-    if (txKeyed === 0) return 'gColor' // Idle
-    else return 'tColor' // PTT-Keyed
+    if (txKeyed === 0) statusClass = 'gColor' // Idle
+    else statusClass = 'tColor' // PTT-Keyed
   } else {
-    if (txKeyed === 0) return 'lColor' // COS-Detected
-    else return 'bColor' // COS-Detected and PTT-Keyed (Full-Duplex)
+    if (txKeyed === 0) statusClass = 'lColor' // COS-Detected
+    else statusClass = 'bColor' // COS-Detected and PTT-Keyed (Full-Duplex)
   }
+  
+  console.log('🎨 Status class for node', props.node.id, ':', {
+    cosKeyed,
+    txKeyed,
+    statusClass,
+    nodeData: nodeData.value
+  })
+  
+  return statusClass
 })
 
 const headerStatusText = computed(() => {
