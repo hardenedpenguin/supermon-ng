@@ -588,34 +588,44 @@ defineExpose({
 }
 
 .gridtable tr.cColor td,
-.gridtable tr.cColor td a,
-.gridtable tr.tColor td {
+.gridtable tr.cColor td a {
   background-color: var(--local-node-bg) !important;
   font-weight: bold;
   color: var(--local-node-text) !important;
   text-align: center !important;
 }
 
-.gridtable tr.bColor td {
-  background-color: var(--success-color) !important;
+/* Status colors for local node - should override local node styling */
+.gridtable tr.gColor td {
+  background-color: var(--primary-color) !important;
   font-weight: bold;
   color: var(--background-color) !important;
 }
 
-.gridtable tr.gColor td {
-  background-color: var(--table-header-bg) !important;
+.gridtable tr.tColor td {
+  background-color: var(--primary-color) !important;
+  opacity: 0.8;
   font-weight: bold;
-  color: var(--text-color) !important;
+  color: var(--background-color) !important;
+}
+
+.gridtable tr.bColor td {
+  background-color: var(--primary-color) !important;
+  opacity: 0.9;
+  font-weight: bold;
+  color: var(--background-color) !important;
 }
 
 .gridtable tr.lColor td {
-  background-color: var(--warning-color) !important;
+  background-color: var(--primary-color) !important;
+  opacity: 0.7;
   font-weight: bold;
   color: var(--background-color) !important;
 }
 
 .gridtable tr.rxkColor td {
-  background-color: var(--error-color) !important;
+  background-color: var(--primary-color) !important;
+  opacity: 0.6;
   font-weight: bold;
   color: var(--background-color) !important;
 }
