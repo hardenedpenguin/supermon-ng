@@ -130,22 +130,18 @@
       <div v-if="displayedNodes.length === 0" class="no-nodes-message">
         Select a node or group from the menu to display node tables
       </div>
-      <table v-else class="fxwidth">
-        <tbody>
-          <tr v-for="(node, index) in displayedNodes" :key="node.id">
-            <td>
-              <NodeTable 
-                :node="node"
-                :show-detail="true"
-                :astdb="realTimeStore.astdb"
-                :config="realTimeStore.nodeConfig"
-                :ref="el => { if (el) nodeTableRefs[index] = el }"
-                @node-click="handleNodeClick"
-              />
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-else class="node-tables-container">
+        <NodeTable 
+          v-for="(node, index) in displayedNodes"
+          :key="node.id"
+          :node="node"
+          :show-detail="true"
+          :astdb="realTimeStore.astdb"
+          :config="realTimeStore.nodeConfig"
+          :ref="el => { if (el) nodeTableRefs[index] = el }"
+          @node-click="handleNodeClick"
+        />
+      </div>
     </div>
 
     <!-- Footer Info -->
@@ -1229,6 +1225,14 @@ watch(displayedNodes, (newDisplayedNodes) => {
   border: 1px solid var(--primary-color);
   border-radius: 4px;
   margin: 20px 0;
+}
+
+.node-tables-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
 }
 
 /* Header styling (mimics header.inc layout) */
