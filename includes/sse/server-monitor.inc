@@ -180,11 +180,11 @@ function runMonitoringLoop($fp, $servers, $nodes, $config) {
             $saved = $current;
             sendSSEData($current, $nodeTime);
             $x = 0;
-            usleep(500000);
+            usleep(100000); // Reduced from 500000 (0.5s) to 100000 (0.1s)
         } else {
             $x++;
-            usleep(500000);
-            if ($x >= ($looptime * 2)) {
+            usleep(100000); // Reduced from 500000 (0.5s) to 100000 (0.1s)
+            if ($x >= 10) { // Send timing updates every 1 second instead of looptime * 2
                 sendPeriodicTimingUpdate($nodeTime);
                 $x = 0;
             }
