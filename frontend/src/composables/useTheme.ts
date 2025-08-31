@@ -211,6 +211,23 @@ export function useTheme() {
     isLoaded.value = true
   }
 
+  // Generate shade variations of a color
+  const generateShades = (baseColor: string) => {
+    // Convert hex to RGB
+    const hex = baseColor.replace('#', '')
+    const r = parseInt(hex.substr(0, 2), 16)
+    const g = parseInt(hex.substr(2, 2), 16)
+    const b = parseInt(hex.substr(4, 2), 16)
+    
+    // Generate lighter and darker shades
+    const lighter = `rgb(${Math.min(255, r + 60)}, ${Math.min(255, g + 60)}, ${Math.min(255, b + 60)})`
+    const light = `rgb(${Math.min(255, r + 30)}, ${Math.min(255, g + 30)}, ${Math.min(255, b + 30)})`
+    const dark = `rgb(${Math.max(0, r - 30)}, ${Math.max(0, g - 30)}, ${Math.max(0, b - 30)})`
+    const darker = `rgb(${Math.max(0, r - 60)}, ${Math.max(0, g - 60)}, ${Math.max(0, b - 60)})`
+    
+    return { lighter, light, dark, darker }
+  }
+
   // Apply theme to CSS variables
   const applyTheme = (themeName: string) => {
     const allThemes = [...themes, ...customThemes.value]
@@ -239,6 +256,13 @@ export function useTheme() {
     root.style.setProperty('--local-node-border', theme.colors.localNodeBorder)
     root.style.setProperty('--local-node-header', theme.colors.localNodeHeader)
     root.style.setProperty('--local-node-header-text', theme.colors.localNodeHeaderText)
+    
+    // Generate and apply primary color shades for status indicators
+    const shades = generateShades(theme.colors.primary)
+    root.style.setProperty('--primary-color-lighter', shades.lighter)
+    root.style.setProperty('--primary-color-light', shades.light)
+    root.style.setProperty('--primary-color-dark', shades.dark)
+    root.style.setProperty('--primary-color-darker', shades.darker)
   }
 
   // Set theme
