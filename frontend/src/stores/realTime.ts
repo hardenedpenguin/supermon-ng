@@ -134,10 +134,10 @@ export const useRealTimeStore = defineStore('realTime', () => {
     // Initial data fetch
     fetchNodeData()
     
-    // Set up polling every 5 seconds
+    // Set up polling every 1 second for faster updates
     pollingInterval = setInterval(() => {
       fetchNodeData()
-    }, 5000)
+    }, 1000)
 
     isConnected.value = true
     error.value = null
