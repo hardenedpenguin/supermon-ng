@@ -591,12 +591,7 @@ defineExpose({
 }
 
 /* Table row colors - matching original Supermon-ng with theme support */
-.gridtable tr.rColor td {
-  background-color: var(--local-node-header) !important;
-  font-weight: bold;
-  color: var(--local-node-header-text) !important;
-  text-align: center !important;
-}
+/* Removed duplicate rule - handled by status colors above */
 
 .gridtable tr.cColor td,
 .gridtable tr.cColor td a {
@@ -608,9 +603,9 @@ defineExpose({
 
 /* Status colors for local node - different shades of theme color */
 .gridtable tr.gColor td {
-  background-color: var(--primary-color) !important;
+  background-color: var(--local-node-bg) !important;
   font-weight: bold;
-  color: var(--background-color) !important;
+  color: var(--local-node-text) !important;
 }
 
 .gridtable tr.tColor td {
