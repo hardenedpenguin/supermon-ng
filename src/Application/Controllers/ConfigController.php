@@ -414,11 +414,8 @@ class ConfigController
 
     private function getIniFileName(?string $username): string
     {
-        if (!$username) {
-            // No user logged in, use default allmon.ini
-            return __DIR__ . '/../../../user_files/allmon.ini';
-        }
-        
+        // Always use the same INI file regardless of authentication status
+        // This ensures consistent menu items whether logged in or not
         $authIniFile = __DIR__ . '/../../../user_files/authini.inc';
         
         if (!file_exists($authIniFile)) {
@@ -428,12 +425,14 @@ class ConfigController
         // Include the authini file to get the INI mapping
         include_once $authIniFile;
         
-        // Check if user has a specific INI file mapped
-        if (isset($ININAME[$username])) {
+        // If user is logged in and has a specific INI file mapped, use it
+        if ($username && isset($ININAME[$username])) {
             return __DIR__ . "/../../../user_files/{$ININAME[$username]}";
         }
         
-        return __DIR__ . '/../../../user_files/allmon.ini';
+        // For consistency, use the same INI file as the default authenticated user
+        // This prevents menu items from changing based on authentication status
+        return __DIR__ . '/../../../user_files/anarchy-allmon.ini';
     }
 
     /**

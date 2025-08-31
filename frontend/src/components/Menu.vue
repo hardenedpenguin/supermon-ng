@@ -6,11 +6,10 @@
         v-for="item in (menuItems.mainItems || [])" 
         :key="item.name"
       >
-                         <a 
-                   href="#"
-                   :target="item.targetBlank ? '_blank' : undefined"
-                   @click="handleMenuClick(item, $event)"
-                 >
+        <a 
+          href="#"
+          @click="handleMenuClick(item, $event)"
+        >
           {{ item.name }}
         </a>
       </li>
@@ -23,25 +22,32 @@
       >
         <a href="#" class="dropbtn">{{ systemName }}</a>
         <div class="dropdown-content">
-                             <a 
-                     v-for="item in items" 
-                     :key="item.name"
-                     href="#"
-                     :target="item.targetBlank ? '_blank' : undefined"
-                     @click="handleMenuClick(item, $event)"
-                   >
+          <a 
+            v-for="item in items" 
+            :key="item.name"
+            href="#"
+            @click="handleMenuClick(item, $event)"
+          >
             {{ item.name }}
           </a>
         </div>
       </li>
     </ul>
   </div>
+  
+  <!-- URL Modal for external links -->
+  <UrlModal
+    v-model:isVisible="showUrlModal"
+    :url="currentUrl"
+    :title="currentUrlTitle"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { api } from '@/utils/api'
 import { useAppStore } from '@/stores/app'
+import UrlModal from './UrlModal.vue'
 
 interface MenuItem {
   name: string
@@ -55,6 +61,11 @@ interface MenuItems {
 
 const appStore = useAppStore()
 const menuItems = ref<MenuItems>({})
+
+// URL Modal state
+const showUrlModal = ref(false)
+const currentUrl = ref('')
+const currentUrlTitle = ref('')
 
 const loadMenu = async () => {
   try {
@@ -90,12 +101,10 @@ const handleMenuClick = (item: MenuItem, event: Event) => {
       emit('nodeSelection', nodes)
     }
   } else if (item.url.startsWith('http')) {
-    // External links - open in new tab if targetBlank is true
-    if (item.targetBlank) {
-      window.open(item.url, '_blank')
-    } else {
-      window.location.href = item.url
-    }
+    // External links - open in modal instead of leaving dashboard
+    currentUrl.value = item.url
+    currentUrlTitle.value = item.name
+    showUrlModal.value = true
   } else {
     // For other internal links, just emit the nodeSelection if it's a node-related URL
     // This handles cases where the URL might contain node information in other formats
