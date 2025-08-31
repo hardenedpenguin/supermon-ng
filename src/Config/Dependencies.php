@@ -89,7 +89,7 @@ return [
     AllStarConfigService::class => function ($container) {
         return new AllStarConfigService(
             $container->get(LoggerInterface::class),
-            $_ENV['USER_FILES_PATH'] ?? 'user_files/'
+            $_ENV['USER_FILES_PATH'] ?? '/var/www/html/supermon-ng/user_files/'
         );
     },
     

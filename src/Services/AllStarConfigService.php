@@ -79,10 +79,30 @@ class AllStarConfigService
     public function getAvailableNodes(?string $username = null): array
     {
         $iniFile = $this->getIniFileName($username);
+        
+        // Add debugging to error log
+        error_log("DEBUG: INI file path: " . $iniFile);
+        error_log("DEBUG: File exists: " . (file_exists($iniFile) ? 'YES' : 'NO'));
+        
+        if (!file_exists($iniFile)) {
+            error_log("DEBUG: File does not exist at: " . $iniFile);
+            return [];
+        }
+        
         $config = $this->parseIniFile($iniFile);
+        
+        // Add debugging
+        error_log("DEBUG: Config array keys: " . implode(', ', array_keys($config)));
+        error_log("DEBUG: Config count: " . count($config));
         
         $nodes = [];
         foreach ($config as $nodeId => $nodeConfig) {
+            error_log("DEBUG: Processing nodeId: " . $nodeId . ", is_array: " . (is_array($nodeConfig) ? 'YES' : 'NO'));
+            if (is_array($nodeConfig)) {
+                error_log("DEBUG: Node config keys: " . implode(', ', array_keys($nodeConfig)));
+                error_log("DEBUG: Has host: " . (isset($nodeConfig['host']) ? 'YES' : 'NO'));
+            }
+            
             // Skip non-node sections like [Hubs], [ASL3+], etc.
             if (is_array($nodeConfig) && isset($nodeConfig['host'])) {
                 $nodes[] = [
@@ -93,8 +113,11 @@ class AllStarConfigService
                     'menu' => $nodeConfig['menu'] ?? 'yes',
                     'hideNodeURL' => $nodeConfig['hideNodeURL'] ?? 'no'
                 ];
+                error_log("DEBUG: Added node: " . $nodeId);
             }
         }
+
+        error_log("DEBUG: Final nodes count: " . count($nodes));
 
         $this->logger->info("Loaded available nodes", [
             'count' => count($nodes),
