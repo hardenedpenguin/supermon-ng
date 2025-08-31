@@ -76,7 +76,7 @@
       <input v-if="appStore.hasPermission('DISCUSER')" type="button" class="submit" value="Disconnect" @click="disconnect">
       <input v-if="appStore.hasPermission('MONUSER')" type="button" class="submit" value="Monitor" @click="monitor">
       <input v-if="appStore.hasPermission('LMONUSER')" type="button" class="submit" value="Local Monitor" @click="localmonitor">
-      <br>
+      <input type="button" class="submit" value="Voter" @click="showVoterModal = true">
       
       <!-- Secondary Control Buttons (matches original order exactly) -->
       <input v-if="appStore.hasPermission('DTMFUSER')" type="button" class="submit" value="DTMF" @click="dtmf">
@@ -85,7 +85,6 @@
       <input v-if="appStore.hasPermission('BUBLUSER')" type="button" class="submit" value="Bubble" @click="bubble">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Favorites" @click="showFavoritesModal = true">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Add Favorite" @click="showAddFavoriteModal = true">
-      <br>
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Delete Favorite" @click="showDeleteFavoriteModal = true">
       
       <!-- Configuration Editor Section -->
@@ -99,7 +98,6 @@
       <input v-if="appStore.hasPermission('NINFUSER')" type="button" class="submit" value="Node Info" @click="astnodes">
       <input v-if="appStore.hasPermission('ACTNUSER')" type="button" class="submit" value="Active Nodes" @click="openActiveNodes">
       <input v-if="appStore.hasPermission('ALLNUSER')" type="button" class="submit" value="All Nodes" @click="openAllNodes">
-      <br>
       
       <!-- Database Section -->
       <div class="section-label">Database</div>
@@ -107,8 +105,6 @@
       <input v-if="appStore.hasPermission('ASTLUSER')" type="button" class="submit" value="AST Log" @click="astlog">
       <input v-if="appStore.hasPermission('WLOGUSER')" type="button" class="submit" value="Web Access Log" @click="webacclog">
       <input v-if="appStore.hasPermission('WERRUSER')" type="button" class="submit" value="Web Error Log" @click="weberrlog">
-      <input type="button" class="submit" value="Voter" @click="showVoterModal = true">
-      <br>
       
       <!-- System Control Buttons -->
       <input v-if="appStore.hasPermission('ASTRELUSER')" type="button" class="submit" value="Iax/Rpt/DP RELOAD" @click="astreload">
@@ -116,7 +112,6 @@
       <input v-if="appStore.hasPermission('ASTSTPUSER')" type="button" class="submit" value="AST STOP" @click="astaroff">
       <input v-if="appStore.hasPermission('FSTRESUSER')" type="button" class="submit" value="RESTART" @click="fastrestart">
       <input v-if="appStore.hasPermission('RBTUSER')" type="button" class="submit" value="Server REBOOT" @click="reboot">
-      <br>
       
       <!-- Additional System Buttons -->
       <input v-if="appStore.hasPermission('GPIOUSER')" type="button" class="submit" value="GPIO" @click="openpigpio">
@@ -1502,6 +1497,8 @@ watch(displayedNodes, (newDisplayedNodes) => {
   font-weight: bold;
   transition: all 0.3s ease;
   font-size: 14px;
+  display: inline-block;
+  white-space: nowrap;
 }
 
 .submit:hover, .submit-large:hover, .submit2:hover {
