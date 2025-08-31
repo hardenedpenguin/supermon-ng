@@ -422,7 +422,7 @@ defineExpose({
   min-width: 50%;
   max-width: 100%;
   margin: 0 auto;
-  background: var(--background-color);
+  background: transparent;
 }
 
 /* Clickable node styling */
@@ -560,7 +560,7 @@ defineExpose({
 .gridtable tr:not(.rColor):not(.cColor) td {
   background-color: var(--table-bg) !important;
   color: var(--text-color) !important;
-  border-color: var(--border-color) !important;
+  border-color: transparent !important;
 }
 
 
