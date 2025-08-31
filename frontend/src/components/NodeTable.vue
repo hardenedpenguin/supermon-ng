@@ -619,7 +619,7 @@ defineExpose({
   text-align: center !important;
 }
 
-/* Status colors for local node - different shades of theme color */
+/* Status colors for local node - theme-appropriate colors */
 .gridtable tr.gColor td {
   background-color: var(--local-node-bg) !important;
   font-weight: bold;
@@ -627,25 +627,25 @@ defineExpose({
 }
 
 .gridtable tr.tColor td {
-  background-color: var(--primary-color-light) !important;
+  background-color: var(--success-color) !important;
   font-weight: bold;
   color: var(--background-color) !important;
 }
 
 .gridtable tr.bColor td {
-  background-color: var(--primary-color-dark) !important;
+  background-color: var(--warning-color) !important;
   font-weight: bold;
   color: var(--background-color) !important;
 }
 
 .gridtable tr.lColor td {
-  background-color: var(--primary-color-lighter) !important;
+  background-color: var(--link-color) !important;
   font-weight: bold;
   color: var(--background-color) !important;
 }
 
 .gridtable tr.rxkColor td {
-  background-color: var(--primary-color-darker) !important;
+  background-color: var(--error-color) !important;
   font-weight: bold;
   color: var(--background-color) !important;
 }
