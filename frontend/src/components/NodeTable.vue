@@ -330,7 +330,7 @@ const getConnectedNodeClass = (node: any, index: number): string => {
     } else if (node.mode === 'R') {
       return 'rxColor'
     }
-    return 'tColor' // Lighter color for first connected node when idle
+    return 'lColor' // Lighter color for first connected node when idle (different from gColor)
   } else {
     // Subsequent nodes get darker gColor (idle state)
     return 'gColor'
