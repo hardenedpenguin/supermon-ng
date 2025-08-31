@@ -112,14 +112,20 @@ class ConfigController
     {
         $this->logger->info('User preferences request');
         
-        // For now, return default preferences
-        // TODO: Implement user-specific preference storage
-        $preferences = [
-            'showDetail' => true,
-            'displayedNodes' => 999,
-            'showCount' => false,
-            'showAll' => true
-        ];
+        $currentUser = $this->getCurrentUser();
+        
+        if (!$currentUser) {
+            // Return default preferences for non-authenticated users
+            $preferences = [
+                'showDetail' => true,
+                'displayedNodes' => 999,
+                'showCount' => false,
+                'showAll' => true
+            ];
+        } else {
+            // Load user-specific preferences from file
+            $preferences = $this->loadUserPreferences($currentUser);
+        }
         
         $response->getBody()->write(json_encode([
             'success' => true,
@@ -133,17 +139,143 @@ class ConfigController
     {
         $this->logger->info('User preferences update request');
         
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json')
+                ->withBody($response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'User must be authenticated to update preferences'
+                ])));
+        }
+        
         $body = $request->getParsedBody() ?? [];
         
-        // For now, just acknowledge the update
-        // TODO: Implement user-specific preference storage
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => 'Preferences updated successfully',
-            'data' => $body
-        ]));
+        // Validate and sanitize preferences
+        $validPreferences = $this->validatePreferences($body);
+        
+        // Save user preferences
+        $saved = $this->saveUserPreferences($currentUser, $validPreferences);
+        
+        if ($saved) {
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'message' => 'Preferences updated successfully',
+                'data' => $validPreferences
+            ]));
+        } else {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Failed to save preferences'
+            ]));
+        }
 
         return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    /**
+     * Load user preferences from file
+     */
+    private function loadUserPreferences(string $username): array
+    {
+        $prefsFile = __DIR__ . "/../../../user_files/preferences/{$username}.json";
+        
+        if (file_exists($prefsFile)) {
+            $content = file_get_contents($prefsFile);
+            if ($content !== false) {
+                $preferences = json_decode($content, true);
+                if (is_array($preferences)) {
+                    return $this->mergeWithDefaults($preferences);
+                }
+            }
+        }
+        
+        // Return default preferences if file doesn't exist or is invalid
+        return $this->getDefaultPreferences();
+    }
+
+    /**
+     * Save user preferences to file
+     */
+    private function saveUserPreferences(string $username, array $preferences): bool
+    {
+        $prefsDir = __DIR__ . "/../../../user_files/preferences";
+        $prefsFile = "{$prefsDir}/{$username}.json";
+        
+        // Create directory if it doesn't exist
+        if (!is_dir($prefsDir)) {
+            if (!mkdir($prefsDir, 0755, true)) {
+                $this->logger->error('Failed to create preferences directory', ['dir' => $prefsDir]);
+                return false;
+            }
+        }
+        
+        // Save preferences as JSON
+        $content = json_encode($preferences, JSON_PRETTY_PRINT);
+        if ($content === false) {
+            $this->logger->error('Failed to encode preferences as JSON', ['preferences' => $preferences]);
+            return false;
+        }
+        
+        $result = file_put_contents($prefsFile, $content);
+        if ($result === false) {
+            $this->logger->error('Failed to save preferences file', ['file' => $prefsFile]);
+            return false;
+        }
+        
+        return true;
+    }
+
+    /**
+     * Validate and sanitize user preferences
+     */
+    private function validatePreferences(array $preferences): array
+    {
+        $validated = [];
+        
+        // Validate showDetail (boolean)
+        if (isset($preferences['showDetail'])) {
+            $validated['showDetail'] = (bool) $preferences['showDetail'];
+        }
+        
+        // Validate displayedNodes (integer, 1-9999)
+        if (isset($preferences['displayedNodes'])) {
+            $nodes = (int) $preferences['displayedNodes'];
+            $validated['displayedNodes'] = max(1, min(9999, $nodes));
+        }
+        
+        // Validate showCount (boolean)
+        if (isset($preferences['showCount'])) {
+            $validated['showCount'] = (bool) $preferences['showCount'];
+        }
+        
+        // Validate showAll (boolean)
+        if (isset($preferences['showAll'])) {
+            $validated['showAll'] = (bool) $preferences['showAll'];
+        }
+        
+        return $validated;
+    }
+
+    /**
+     * Get default preferences
+     */
+    private function getDefaultPreferences(): array
+    {
+        return [
+            'showDetail' => true,
+            'displayedNodes' => 999,
+            'showCount' => false,
+            'showAll' => true
+        ];
+    }
+
+    /**
+     * Merge user preferences with defaults
+     */
+    private function mergeWithDefaults(array $userPrefs): array
+    {
+        $defaults = $this->getDefaultPreferences();
+        return array_merge($defaults, $userPrefs);
     }
 
     public function getSystemInfo(Request $request, Response $response): Response

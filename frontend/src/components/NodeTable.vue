@@ -82,11 +82,15 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, watchEffect } from 'vue'
+import { useAppStore } from '@/stores/app'
 
 // Emits
 const emit = defineEmits<{
   'node-click': [nodeId: string, localNodeId: string]
 }>()
+
+// Store
+const appStore = useAppStore()
 
 // Props
 interface Props {
@@ -291,9 +295,13 @@ const displayedConnectedNodes = computed(() => {
     node.node !== 1 || (node.info && node.info !== 'NO CONNECTION')
   )
   
-  // Apply display logic based on showAll and displayCount
-  // TODO: Implement proper display logic based on user preferences
+  // Apply display logic based on user preferences
+if (appStore.user?.preferences?.showAll) {
   return filteredNodes
+} else {
+  const maxNodes = appStore.user?.preferences?.displayedNodes || 999
+  return filteredNodes.slice(0, maxNodes)
+}
 })
 
 const showNodeCount = computed(() => {
@@ -339,7 +347,9 @@ const updateNodeData = (data: any) => {
   if (data && data.remote_nodes) {
     connectedNodes.value = data.remote_nodes
     totalNodes.value = connectedNodes.value.length
-    displayedNodes.value = Math.min(totalNodes.value, 999) // TODO: Use actual display count
+    // Use user preferences for display count, fallback to 999
+    const maxDisplay = appStore.user?.preferences?.displayedNodes || 999
+    displayedNodes.value = Math.min(totalNodes.value, maxDisplay)
   } else {
     connectedNodes.value = []
     totalNodes.value = 0
