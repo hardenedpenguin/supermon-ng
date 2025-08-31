@@ -340,6 +340,11 @@ const databaseStatus = ref<any>(null)
 
 // Computed properties
 const hasControlPermissions = computed(() => {
+  // Only show controls if user is authenticated
+  if (!appStore.isAuthenticated) {
+    return false
+  }
+  
   return appStore.hasPermission('CONNECTUSER') || 
          appStore.hasPermission('DISCONNECTUSER') || 
          appStore.hasPermission('MONITORUSER') || 

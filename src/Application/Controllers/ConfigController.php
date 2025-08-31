@@ -319,6 +319,12 @@ class ConfigController
         
         $this->logger->info("Loading menu from INI file", ['file' => $iniFile, 'username' => $username]);
         
+        // If no INI file (user not logged in), return empty menu
+        if (empty($iniFile)) {
+            $this->logger->info("No INI file - user not logged in", ['username' => $username]);
+            return [];
+        }
+        
         if (!file_exists($iniFile)) {
             $this->logger->warning("INI file not found", ['file' => $iniFile]);
             return [];
@@ -414,8 +420,11 @@ class ConfigController
 
     private function getIniFileName(?string $username): string
     {
-        // Always use the same INI file regardless of authentication status
-        // This ensures consistent menu items whether logged in or not
+        // If no user is logged in, don't show any menu items
+        if (!$username) {
+            return '';
+        }
+        
         $authIniFile = __DIR__ . '/../../../user_files/authini.inc';
         
         if (!file_exists($authIniFile)) {
@@ -425,14 +434,12 @@ class ConfigController
         // Include the authini file to get the INI mapping
         include_once $authIniFile;
         
-        // If user is logged in and has a specific INI file mapped, use it
-        if ($username && isset($ININAME[$username])) {
+        // Check if user has a specific INI file mapped
+        if (isset($ININAME[$username])) {
             return __DIR__ . "/../../../user_files/{$ININAME[$username]}";
         }
         
-        // For consistency, use the same INI file as the default authenticated user
-        // This prevents menu items from changing based on authentication status
-        return __DIR__ . '/../../../user_files/anarchy-allmon.ini';
+        return __DIR__ . '/../../../user_files/allmon.ini';
     }
 
     /**
