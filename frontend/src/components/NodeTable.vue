@@ -553,6 +553,7 @@ defineExpose({
   background-color: var(--local-node-header) !important;
   font-weight: bold;
   color: var(--local-node-header-text) !important;
+  text-align: center !important;
 }
 
 .gridtable tr.cColor td,
@@ -561,6 +562,7 @@ defineExpose({
   background-color: var(--local-node-bg) !important;
   font-weight: bold;
   color: var(--local-node-text) !important;
+  text-align: center !important;
 }
 
 .gridtable tr.bColor td {
