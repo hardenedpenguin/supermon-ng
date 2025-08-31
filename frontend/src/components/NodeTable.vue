@@ -512,6 +512,23 @@ defineExpose({
   text-align: center !important;
 }
 
+/* Ultra-specific centering for local node info */
+.gridtable tr.rColor td:nth-child(2),
+.gridtable tr.cColor td:nth-child(2),
+.gridtable tr.tColor td:nth-child(2),
+.gridtable tr.rColor td:nth-child(2) b,
+.gridtable tr.cColor td:nth-child(2) b,
+.gridtable tr.tColor td:nth-child(2) b,
+.gridtable tr.rColor td:nth-child(2) span,
+.gridtable tr.cColor td:nth-child(2) span,
+.gridtable tr.tColor td:nth-child(2) span,
+.gridtable tr.rColor td:nth-child(2) i,
+.gridtable tr.cColor td:nth-child(2) i,
+.gridtable tr.tColor td:nth-child(2) i {
+  text-align: center !important;
+  display: block !important;
+}
+
 /* Local node table styling with custom theme support */
 .gridtable tr.rColor {
   background-color: var(--local-node-header) !important;
