@@ -38,7 +38,7 @@
           <tr 
             v-for="(connectedNode, index) in displayedConnectedNodes" 
             :key="`${node.id}-${index}`"
-            :class="getConnectedNodeClass(connectedNode)"
+            :class="getConnectedNodeClass(connectedNode, index)"
           >
             <td 
               class="nodeNum" 
@@ -320,15 +320,21 @@ const showNodeCount = computed(() => {
 })
 
 // Methods
-const getConnectedNodeClass = (node: any): string => {
-  if (node.keyed === 'yes') {
-    return node.mode === 'R' ? 'rxkColor' : 'rColor'
-  } else if (node.mode === 'C') {
-    return 'cColor'
-  } else if (node.mode === 'R') {
-    return 'rxColor'
+const getConnectedNodeClass = (node: any, index: number): string => {
+  // First connected node gets lighter header color, others get darker gColor
+  if (index === 0) {
+    if (node.keyed === 'yes') {
+      return node.mode === 'R' ? 'rxkColor' : 'rColor'
+    } else if (node.mode === 'C') {
+      return 'cColor'
+    } else if (node.mode === 'R') {
+      return 'rxColor'
+    }
+    return 'tColor' // Lighter color for first connected node when idle
+  } else {
+    // Subsequent nodes get darker gColor (idle state)
+    return 'gColor'
   }
-  return ''
 }
 
 const getModeText = (mode: string): string => {
