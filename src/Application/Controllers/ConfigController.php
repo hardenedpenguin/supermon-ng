@@ -319,12 +319,6 @@ class ConfigController
         
         $this->logger->info("Loading menu from INI file", ['file' => $iniFile, 'username' => $username]);
         
-        // If no INI file (user not logged in), return empty menu
-        if (empty($iniFile)) {
-            $this->logger->info("No INI file - user not logged in", ['username' => $username]);
-            return [];
-        }
-        
         if (!file_exists($iniFile)) {
             $this->logger->warning("INI file not found", ['file' => $iniFile]);
             return [];
@@ -420,9 +414,9 @@ class ConfigController
 
     private function getIniFileName(?string $username): string
     {
-        // If no user is logged in, don't show any menu items
+        // If no user is logged in, use the default allmon.ini (original supermon-ng behavior)
         if (!$username) {
-            return '';
+            return __DIR__ . '/../../../user_files/allmon.ini';
         }
         
         $authIniFile = __DIR__ . '/../../../user_files/authini.inc';
