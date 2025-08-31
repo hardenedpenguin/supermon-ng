@@ -421,9 +421,8 @@ defineExpose({
   width: auto;
   min-width: 50%;
   max-width: 100%;
-  border-radius: 8px;
-  overflow: hidden;
   margin: 0 auto;
+  background: var(--background-color);
 }
 
 /* Clickable node styling */
