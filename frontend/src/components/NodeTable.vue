@@ -620,6 +620,11 @@ defineExpose({
   color: var(--background-color) !important;
 }
 
+/* Always center Node Information column content */
+.gridtable td:nth-child(2) {
+  text-align: center !important;
+}
+
 
 /* Responsive design */
 @media (max-width: 768px) {
