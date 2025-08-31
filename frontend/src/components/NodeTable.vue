@@ -539,6 +539,7 @@ defineExpose({
   background-color: var(--table-header-bg);
   color: var(--primary-color);
   font-size: 12px;
+  text-align: center;
 }
 
 .gridtable td {
