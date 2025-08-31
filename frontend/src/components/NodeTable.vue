@@ -322,19 +322,31 @@ const showNodeCount = computed(() => {
 // Methods
 const getConnectedNodeClass = (node: any, index: number): string => {
   // First connected node gets lighter header color, others get darker gColor
+  let className = ''
+  
   if (index === 0) {
     if (node.keyed === 'yes') {
-      return node.mode === 'R' ? 'rxkColor' : 'rColor'
+      className = node.mode === 'R' ? 'rxkColor' : 'rColor'
     } else if (node.mode === 'C') {
-      return 'cColor'
+      className = 'cColor'
     } else if (node.mode === 'R') {
-      return 'rxColor'
+      className = 'rxColor'
+    } else {
+      className = 'lColor' // Lighter color for first connected node when idle (different from gColor)
     }
-    return 'lColor' // Lighter color for first connected node when idle (different from gColor)
   } else {
     // Subsequent nodes get darker gColor (idle state)
-    return 'gColor'
+    className = 'gColor'
   }
+  
+  console.log('🎨 Connected node class for index', index, ':', {
+    nodeId: node.node,
+    keyed: node.keyed,
+    mode: node.mode,
+    className: className
+  })
+  
+  return className
 }
 
 const getModeText = (mode: string): string => {
