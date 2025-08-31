@@ -298,8 +298,15 @@ class ConfigController
         // Check if user is logged in via session
         $this->logger->info("Checking session for user", ['session_user' => $_SESSION['user'] ?? 'not set', 'session_id' => session_id()]);
         
-        if (isset($_SESSION['user']) && !empty($_SESSION['user'])) {
-            return $_SESSION['user'];
+        if (isset($_SESSION['user']) && !empty($_SESSION['user']) && isset($_SESSION['authenticated']) && $_SESSION['authenticated']) {
+            // Check if session is not too old (24 hours)
+            if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) < 86400) {
+                return $_SESSION['user'];
+            } else {
+                // Session expired, clear it
+                session_destroy();
+                return null;
+            }
         }
         
         // Check if there's a user in the request headers (for API calls)
@@ -308,8 +315,8 @@ class ConfigController
             return $headers['X-User'];
         }
         
-        // For now, return 'anarchy' as default user since we know that's the user with favorites
-        return 'anarchy';
+        // No user logged in
+        return null;
     }
 
     private function loadMenuItems(?string $username): array
