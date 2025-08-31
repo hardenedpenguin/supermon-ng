@@ -952,7 +952,7 @@ class NodeController
         $iniFile = null;
         if ($user) {
             // Try user-specific INI file
-            $userIniFile = __DIR__ . '/../../../user_files/' . $user . '.ini';
+            $userIniFile = '/var/www/html/supermon-ng/user_files/' . $user . '.ini';
             if (file_exists($userIniFile)) {
                 $iniFile = $userIniFile;
             }
@@ -960,17 +960,17 @@ class NodeController
         
         // Fallback to allmon.ini
         if (!$iniFile) {
-            $allmonIni = __DIR__ . '/../../../user_files/allmon.ini';
+            $allmonIni = '/var/www/html/supermon-ng/user_files/allmon.ini';
             if (file_exists($allmonIni)) {
                 $iniFile = $allmonIni;
             }
         }
         
-        // Fallback to anarchy-allmon.ini
+        // Fallback to default user INI file
         if (!$iniFile) {
-            $anarchyIni = __DIR__ . '/../../../user_files/anarchy-allmon.ini';
-            if (file_exists($anarchyIni)) {
-                $iniFile = $anarchyIni;
+            $defaultIni = '/var/www/html/supermon-ng/user_files/default-allmon.ini';
+            if (file_exists($defaultIni)) {
+                $iniFile = $defaultIni;
             }
         }
         
@@ -1018,7 +1018,7 @@ class NodeController
         $iniFile = null;
         if ($user) {
             // Try user-specific INI file
-            $userIniFile = __DIR__ . '/../../../user_files/' . $user . '.ini';
+            $userIniFile = '/var/www/html/supermon-ng/user_files/' . $user . '.ini';
             if (file_exists($userIniFile)) {
                 $iniFile = $userIniFile;
             }
@@ -1026,17 +1026,17 @@ class NodeController
         
         // Fallback to allmon.ini
         if (!$iniFile) {
-            $allmonIni = __DIR__ . '/../../../user_files/allmon.ini';
+            $allmonIni = '/var/www/html/supermon-ng/user_files/allmon.ini';
             if (file_exists($allmonIni)) {
                 $iniFile = $allmonIni;
             }
         }
         
-        // Fallback to anarchy-allmon.ini
+        // Fallback to default user INI file
         if (!$iniFile) {
-            $anarchyIni = __DIR__ . '/../../../user_files/anarchy-allmon.ini';
-            if (file_exists($anarchyIni)) {
-                $iniFile = $anarchyIni;
+            $defaultIni = '/var/www/html/supermon-ng/user_files/default-allmon.ini';
+            if (file_exists($defaultIni)) {
+                $iniFile = $defaultIni;
             }
         }
         
