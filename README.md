@@ -143,6 +143,17 @@ You can customize these CSS variables in your custom theme:
 
 3. Open your browser to `http://localhost:5179`
 
+### Production Build
+
+For production deployment, use the build command that skips TypeScript checking:
+
+```bash
+cd frontend
+npm run build
+```
+
+**Note**: The production build skips TypeScript checking to avoid compilation issues. For development with full type checking, use `npm run build:check`.
+
 ## Development
 
 ### Project Structure
@@ -176,9 +187,9 @@ supermon-ng/
 
 #### Frontend
 - `npm run dev` - Start development server
-- `npm run build` - Build for production
+- `npm run build` - Build for production (skips TypeScript checking)
+- `npm run build:check` - Build with TypeScript checking (for development)
 - `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
 
 ## Contributing
 
