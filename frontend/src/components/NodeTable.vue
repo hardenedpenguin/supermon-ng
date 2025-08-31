@@ -581,12 +581,12 @@ defineExpose({
 }
 
 /* Connected nodes table styling with custom theme support */
-.gridtable tr:not(.rColor):not(.cColor) {
+.gridtable tr:not(.rColor):not(.cColor):not(.gColor):not(.tColor):not(.bColor):not(.lColor):not(.rxkColor) {
   background-color: var(--table-bg) !important;
   color: var(--text-color) !important;
 }
 
-.gridtable tr:not(.rColor):not(.cColor) td {
+.gridtable tr:not(.rColor):not(.cColor):not(.gColor):not(.tColor):not(.bColor):not(.lColor):not(.rxkColor) td {
   background-color: var(--table-bg) !important;
   color: var(--text-color) !important;
   border-color: transparent !important;
