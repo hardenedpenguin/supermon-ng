@@ -498,6 +498,13 @@ defineExpose({
   display: table-cell !important;
 }
 
+/* Center local node information column */
+.gridtable tr.rColor td:nth-child(2),
+.gridtable tr.cColor td:nth-child(2),
+.gridtable tr.tColor td:nth-child(2) {
+  text-align: center !important;
+}
+
 /* Local node table styling with custom theme support */
 .gridtable tr.rColor {
   background-color: var(--local-node-header) !important;
