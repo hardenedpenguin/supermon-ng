@@ -156,8 +156,13 @@ SESSION_HTTP_ONLY=true
 ```bash
 cd /var/www/html/supermon-ng/frontend
 
+# Fix npm cache permissions (if needed)
+sudo mkdir -p /tmp/npm-cache-www-data
+sudo chown www-data:www-data /tmp/npm-cache-www-data
+sudo -u www-data npm config set cache /tmp/npm-cache-www-data
+
 # Install Node.js dependencies
-sudo -u www-data npm install
+sudo -u www-data npm install --cache /tmp/npm-cache-www-data
 
 # Build for production
 sudo -u www-data npm run build
@@ -376,7 +381,14 @@ sudo -u www-data cat /var/www/html/supermon-ng/astdb.txt | head -1
 cd /var/www/html/supermon-ng/frontend
 sudo -u www-data npm cache clean --force
 sudo -u www-data rm -rf node_modules package-lock.json
-sudo -u www-data npm install
+
+# Fix npm cache permissions
+sudo mkdir -p /tmp/npm-cache-www-data
+sudo chown www-data:www-data /tmp/npm-cache-www-data
+sudo -u www-data npm config set cache /tmp/npm-cache-www-data
+
+# Reinstall and build
+sudo -u www-data npm install --cache /tmp/npm-cache-www-data
 sudo -u www-data npm run build
 ```
 
