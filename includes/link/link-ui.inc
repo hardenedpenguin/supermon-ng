@@ -131,7 +131,8 @@ function renderControlPanel($nodes, $astdb, $displaySettings) {
         // Detailed view additional buttons
         if ($isDetailed) {
             echo "<hr class='button-separator'>";
-            print_auth_button("CFGEDUSER", $SUBMITTER, "Configuration Editor", "", "class=\"button-margin-top\"", "OpenConfigEditor()");
+            // Disable original PHP buttons when Vue interface is being used
+            // print_auth_button("CFGEDUSER", $SUBMITTER, "Configuration Editor", "", "class=\"button-margin-top\"", "OpenConfigEditor()");
             print_auth_button("ASTRELUSER", $SUBMITTER, "Iax/Rpt/DP RELOAD", "astreload");
             print_auth_button("ASTSTRUSER", $SUBMITTER, "AST START", "astaron");
             print_auth_button("ASTSTPUSER", $SUBMITTER, "AST STOP", "astaroff");
@@ -153,7 +154,8 @@ function renderControlPanel($nodes, $astdb, $displaySettings) {
             
             global $DATABASE_TXT;
             if (!empty($DATABASE_TXT)) {
-                 print_auth_button("DBTUSER", "submit", "Database", "database", "class=\"button-margin-bottom\"");
+                 // Disable original PHP buttons when Vue interface is being used
+                 // print_auth_button("DBTUSER", "submit", "Database", "database", "class=\"button-margin-bottom\"");
             }
             print "<br>";
             print_auth_button("GPIOUSER", $SUBMITTER, "GPIO", "openpigpio", "class=\"button-margin-top\"");

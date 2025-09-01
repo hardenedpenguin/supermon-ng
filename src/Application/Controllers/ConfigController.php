@@ -71,6 +71,12 @@ class ConfigController
         
         // Get the current user's INI file
         $iniFile = $this->getCurrentUserIniFile();
+        
+        // Add user_files prefix if not already present
+        if (!str_starts_with($iniFile, 'user_files/') && !str_starts_with($iniFile, '/')) {
+            $iniFile = 'user_files/' . $iniFile;
+        }
+        
         $this->logger->info("Loading nodes from INI file: $iniFile");
         
         // Read from user-specific INI file
@@ -89,10 +95,69 @@ class ConfigController
         // Get default node from INI file
         $defaultNode = null;
         if (file_exists($iniFile)) {
+            // Debug: Log what we're trying to read
+            $this->logger->info("Reading INI file for default node: $iniFile");
+            
+            // Try parse_ini_file first - parse both with and without sections
             $iniConfig = parse_ini_file($iniFile, true);
-            if (isset($iniConfig['ASL3+']['default_node'])) {
-                $defaultNode = $iniConfig['ASL3+']['default_node'];
+            $iniConfigGlobal = parse_ini_file($iniFile, false);
+            
+            if ($iniConfig === false || $iniConfigGlobal === false) {
+                $this->logger->error("Failed to parse INI file: $iniFile");
+            } else {
+                $this->logger->info("Parsed INI sections: " . implode(', ', array_keys($iniConfig)));
+                $this->logger->info("Global INI keys: " . implode(', ', array_keys($iniConfigGlobal)));
+
+                
+                // Check for default_node in global scope first
+                if (isset($iniConfigGlobal['default_node'])) {
+                    $defaultNodeRaw = $iniConfigGlobal['default_node'];
+                    $this->logger->info("Found default_node in global scope: $defaultNodeRaw");
+                    
+                    // Return the full default_node value (including comma-separated nodes)
+                    $defaultNode = $defaultNodeRaw;
+                    $this->logger->info("Using default node(s): $defaultNode");
+                } elseif (isset($iniConfig['ASL3+'])) {
+                    $this->logger->info("ASL3+ section found with keys: " . implode(', ', array_keys($iniConfig['ASL3+'])));
+                    if (isset($iniConfig['ASL3+']['default_node'])) {
+                        $defaultNodeRaw = $iniConfig['ASL3+']['default_node'];
+                        $this->logger->info("Found default_node in ASL3+ section: $defaultNodeRaw");
+                        
+                        // Return the full default_node value (including comma-separated nodes)
+                        $defaultNode = $defaultNodeRaw;
+                        $this->logger->info("Using default node(s) from ASL3+ section: $defaultNode");
+                    } else {
+                        $this->logger->info("default_node not found in ASL3+ section");
+                    }
+                } else {
+                    $this->logger->info("ASL3+ section not found in INI file");
+                }
             }
+            
+            // If parse_ini_file didn't work, try manual parsing
+            if (!$defaultNode) {
+                $this->logger->info("Trying manual parsing...");
+                $iniContent = file_get_contents($iniFile);
+                $lines = explode("\n", $iniContent);
+                
+                foreach ($lines as $lineNum => $line) {
+                    $line = trim($line);
+                    if (strpos($line, 'default_node=') === 0) {
+                        $defaultNode = trim(substr($line, strlen('default_node=')));
+                        $this->logger->info("Found default_node via manual parsing at line " . ($lineNum + 1) . ": $defaultNode");
+                        break;
+                    }
+                }
+            }
+        } else {
+            $this->logger->error("INI file does not exist: $iniFile");
+        }
+        
+        // If still no default node, use the first available node as fallback
+        if (!$defaultNode && !empty($config)) {
+            $firstNodeId = array_keys($config)[0];
+            $defaultNode = $firstNodeId;
+            $this->logger->info("Using first available node as fallback: $defaultNode");
         }
 
         $response->getBody()->write(json_encode([
@@ -360,64 +425,229 @@ class ConfigController
 
     private function loadSystemInfo(): array
     {
-        $globalIniFile = 'user_files/global.inc';
+        // Start session if not already started
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        $userFilesDir = 'user_files';
+        
+        // Check if user is authenticated - use less strict check for now
+        $isAuthenticated = isset($_SESSION['user']) && !empty($_SESSION['user']);
+        $currentUser = $isAuthenticated ? $_SESSION['user'] : 'NOT LOGGED IN';
+        
+        // Get current INI file based on authentication status
+        if ($isAuthenticated) {
+            // User is logged in - use their selective INI file
+            $currentIni = $this->getCurrentUserIniFile();
+            $selectiveIniActive = file_exists("$userFilesDir/authini.inc") && $this->iniValid();
+        } else {
+            // User is NOT logged in - use default allmon.ini
+            $currentIni = 'allmon.ini';
+            $selectiveIniActive = false; // No selective INI for non-authenticated users
+        }
+        
+        // Check other selective settings
+        $buttonSelectiveActive = file_exists("$userFilesDir/authusers.inc");
+        $selectiveFavoritesActive = $isAuthenticated && file_exists("$userFilesDir/favini.inc") && $this->faviniValid();
+        $selectiveControlPanelActive = $isAuthenticated && file_exists("$userFilesDir/cntrlini.inc") && $this->cntrliniValid() && function_exists('get_cntrl_ini_name');
+        
+        // Get current favorites INI and control panel INI
+        $currentFavIni = $isAuthenticated ? $this->getCurrentFavoritesIni() : 'favorites.ini';
+        $currentControlPanelIni = $isAuthenticated ? $this->getCurrentControlPanelIni() : 'controlpanel.ini';
+        
+        // Get system uptime and load
+        $uptime = $this->getSystemUptime();
+        $loadAverage = $this->getSystemLoad();
+        $coreDumps = $this->getCoreDumps();
+        $cpuInfo = $this->getCPUInfo();
+        
         $systemInfo = [
-            'call' => 'W5GLE',
-            'name' => 'Jory A. Pratt',
-            'location' => 'Alvin, Texas',
-            'title2' => 'ASL3+ Management Dashboard',
-            'title3' => 'AllStarLink/IRLP/EchoLink/Digital - Bridging Control Center',
-            'titleLogged' => 'Supermon-ng',
-            'titleNotLogged' => 'Supermon-ng',
-            'maintainer' => 'Jory A. Pratt, W5GLE',
-            'background' => '',
-            'backgroundColor' => 'black',
-            'backgroundHeight' => '164px',
-            'displayBackground' => 'black',
-            'dvmUrl' => ''
+            'username' => $currentUser,
+            'iniFile' => $currentIni,
+            'selectiveIni' => $selectiveIniActive ? 'ACTIVE' : 'INACTIVE',
+            'buttonSelective' => $buttonSelectiveActive ? 'ACTIVE' : 'INACTIVE',
+            'selectiveFavorites' => $selectiveFavoritesActive ? 'ACTIVE' : 'INACTIVE',
+            'selectiveControlPanel' => $selectiveControlPanelActive ? 'ACTIVE' : 'INACTIVE',
+            'favoritesIni' => $currentFavIni,
+            'controlPanelIni' => $currentControlPanelIni,
+            'uptime' => $uptime['uptime'] ?? 'N/A',
+            'upSince' => $uptime['upSince'] ?? 'N/A',
+            'loadAverage' => $loadAverage,
+            'coreDumps' => $coreDumps,
+            'cpuTemp' => $cpuInfo['temp'] ?? 'N/A',
+            'cpuTime' => $cpuInfo['time'] ?? 'N/A'
         ];
         
-        if (file_exists($globalIniFile)) {
-            // Include the file to get the variables
-            $CALL = '';
-            $NAME = '';
-            $LOCATION = '';
-            $TITLE2 = '';
-            $TITLE3 = '';
-            $TITLE_LOGGED = '';
-            $TITLE_NOT_LOGGED = '';
-            $BACKGROUND = '';
-            $BACKGROUND_COLOR = '';
-            $BACKGROUND_HEIGHT = '';
-            $DISPLAY_BACKGROUND = '';
-            $DVM_URL = '';
+        return $systemInfo;
+    }
+    
+
+    
+    private function getCurrentFavoritesIni(): string
+    {
+        $currentUser = $_SESSION['user'] ?? 'anarchy';
+        $userFilesDir = 'user_files';
+        
+        if (file_exists("$userFilesDir/favini.inc")) {
+            $FAVININAME = [];
+            include "$userFilesDir/favini.inc";
             
-            include $globalIniFile;
-            
-            // Update system info with values from global.inc
-            if (!empty($CALL)) $systemInfo['call'] = $CALL;
-            if (!empty($NAME)) $systemInfo['name'] = $NAME;
-            if (!empty($LOCATION)) $systemInfo['location'] = $LOCATION;
-            if (!empty($TITLE2)) $systemInfo['title2'] = $TITLE2;
-            if (!empty($TITLE3)) $systemInfo['title3'] = $TITLE3;
-            if (!empty($TITLE_LOGGED)) $systemInfo['titleLogged'] = $TITLE_LOGGED;
-            if (!empty($TITLE_NOT_LOGGED)) $systemInfo['titleNotLogged'] = $TITLE_NOT_LOGGED;
-            if (!empty($BACKGROUND)) $systemInfo['background'] = $BACKGROUND;
-            if (!empty($BACKGROUND_COLOR)) $systemInfo['backgroundColor'] = $BACKGROUND_COLOR;
-            if (!empty($BACKGROUND_HEIGHT)) $systemInfo['backgroundHeight'] = $BACKGROUND_HEIGHT;
-            if (!empty($DISPLAY_BACKGROUND)) $systemInfo['displayBackground'] = $DISPLAY_BACKGROUND;
-            if (!empty($DVM_URL)) $systemInfo['dvmUrl'] = $DVM_URL;
-            
-            // Create maintainer string
-            $maintainerParts = [];
-            if (!empty($NAME)) $maintainerParts[] = $NAME;
-            if (!empty($CALL)) $maintainerParts[] = $CALL;
-            if (!empty($maintainerParts)) {
-                $systemInfo['maintainer'] = implode(', ', $maintainerParts);
+            if (isset($FAVININAME[$currentUser])) {
+                return $FAVININAME[$currentUser];
             }
         }
         
-        return $systemInfo;
+        return 'favorites.ini';
+    }
+    
+    private function getCurrentControlPanelIni(): string
+    {
+        $currentUser = $_SESSION['user'] ?? 'anarchy';
+        $userFilesDir = 'user_files';
+        
+        if (file_exists("$userFilesDir/cntrlini.inc") && function_exists('get_cntrl_ini_name')) {
+            return get_cntrl_ini_name($currentUser);
+        }
+        
+        return 'controlpanel.ini';
+    }
+    
+    private function iniValid(): bool
+    {
+        // Check if selective INI is valid
+        $currentUser = $_SESSION['user'] ?? 'anarchy';
+        $userFilesDir = 'user_files';
+        
+        if (file_exists("$userFilesDir/authini.inc")) {
+            $ININAME = [];
+            include "$userFilesDir/authini.inc";
+            
+            if (isset($ININAME[$currentUser])) {
+                $iniFile = $ININAME[$currentUser];
+                return file_exists("$userFilesDir/$iniFile");
+            }
+        }
+        
+        return false;
+    }
+    
+    private function faviniValid(): bool
+    {
+        // Check if selective favorites INI is valid
+        $currentUser = $_SESSION['user'] ?? 'anarchy';
+        $userFilesDir = 'user_files';
+        
+        if (file_exists("$userFilesDir/favini.inc")) {
+            $FAVININAME = [];
+            include "$userFilesDir/favini.inc";
+            
+            if (isset($FAVININAME[$currentUser])) {
+                $favIniFile = $FAVININAME[$currentUser];
+                return file_exists("$userFilesDir/$favIniFile");
+            }
+        }
+        
+        return false;
+    }
+    
+    private function cntrliniValid(): bool
+    {
+        // Check if selective control panel INI is valid
+        $currentUser = $_SESSION['user'] ?? 'anarchy';
+        $userFilesDir = 'user_files';
+        
+        if (file_exists("$userFilesDir/cntrlini.inc") && function_exists('get_cntrl_ini_name')) {
+            $cntrlIniFile = get_cntrl_ini_name($currentUser);
+            return file_exists("$userFilesDir/$cntrlIniFile");
+        }
+        
+        return false;
+    }
+    
+    private function getSystemUptime(): array
+    {
+        $uptime = 'N/A';
+        $upSince = 'N/A';
+        
+        if (file_exists('/proc/uptime')) {
+            $uptimeSeconds = file_get_contents('/proc/uptime');
+            $uptimeParts = explode(' ', $uptimeSeconds);
+            if (isset($uptimeParts[0])) {
+                $seconds = (int)$uptimeParts[0];
+                $days = floor($seconds / 86400);
+                $hours = floor(($seconds % 86400) / 3600);
+                $minutes = floor(($seconds % 3600) / 60);
+                
+                if ($days > 0) {
+                    $uptime = "$days days, $hours hours, $minutes minutes";
+                } elseif ($hours > 0) {
+                    $uptime = "$hours hours, $minutes minutes";
+                } else {
+                    $uptime = "$minutes minutes";
+                }
+                
+                $upSince = date('Y-m-d H:i:s', time() - $seconds);
+            }
+        }
+        
+        return ['uptime' => $uptime, 'upSince' => $upSince];
+    }
+    
+    private function getSystemLoad(): string
+    {
+        if (file_exists('/proc/loadavg')) {
+            $loadParts = explode(' ', file_get_contents('/proc/loadavg'));
+            return $loadParts[0] . ', ' . $loadParts[1] . ', ' . $loadParts[2];
+        }
+        
+        return 'N/A';
+    }
+    
+    private function getCoreDumps(): string
+    {
+        $coreDir = '/var/crash';
+        if (is_dir($coreDir) && is_readable($coreDir)) {
+            $coreFiles = glob($coreDir . '/*');
+            return is_array($coreFiles) ? (string)count($coreFiles) : '0';
+        }
+        
+        return '0';
+    }
+    
+    private function getCPUInfo(): array
+    {
+        $temp = 'N/A';
+        $time = 'N/A';
+        
+        // Try to get CPU temperature
+        if (file_exists('/sys/class/thermal/thermal_zone0/temp')) {
+            $tempRaw = file_get_contents('/sys/class/thermal/thermal_zone0/temp');
+            if ($tempRaw !== false) {
+                $temp = round($tempRaw / 1000, 1) . '°C';
+            }
+        }
+        
+        // Get CPU time info
+        if (file_exists('/proc/stat')) {
+            $stat = file_get_contents('/proc/stat');
+            $lines = explode("\n", $stat);
+            if (isset($lines[0])) {
+                $cpuLine = $lines[0];
+                $cpuParts = explode(' ', preg_replace('/\s+/', ' ', trim($cpuLine)));
+                if (count($cpuParts) >= 5) {
+                    $user = (int)$cpuParts[1];
+                    $nice = (int)$cpuParts[2];
+                    $system = (int)$cpuParts[3];
+                    $idle = (int)$cpuParts[4];
+                    $total = $user + $nice + $system + $idle;
+                    $usage = round((($total - $idle) / $total) * 100, 1);
+                    $time = $usage . '%';
+                }
+            }
+        }
+        
+        return ['temp' => $temp, 'time' => $time];
     }
 
     private function getCurrentUser(): ?string
@@ -455,6 +685,11 @@ class ConfigController
     {
         // Determine which INI file to use
         $iniFile = $this->getIniFileName($username);
+        
+        // Add user_files prefix if not already present
+        if (!str_starts_with($iniFile, 'user_files/') && !str_starts_with($iniFile, '/')) {
+            $iniFile = 'user_files/' . $iniFile;
+        }
         
         $this->logger->info("Loading menu from INI file", ['file' => $iniFile, 'username' => $username]);
         
@@ -548,6 +783,11 @@ class ConfigController
         // Get current user from session
         $currentUser = $_SESSION['user'] ?? null;
         
+        // If no user is set, return default
+        if (!$currentUser) {
+            return 'allmon.ini';
+        }
+        
         return $this->getIniFileName($currentUser);
     }
 
@@ -555,13 +795,13 @@ class ConfigController
     {
         // If no user is logged in, use the default allmon.ini (original supermon-ng behavior)
         if (!$username) {
-            return __DIR__ . '/../../../user_files/allmon.ini';
+            return 'allmon.ini';
         }
         
-        $authIniFile = __DIR__ . '/../../../user_files/authini.inc';
+        $authIniFile = 'user_files/authini.inc';
         
         if (!file_exists($authIniFile)) {
-            return __DIR__ . '/../../../user_files/allmon.ini';
+            return 'allmon.ini';
         }
         
         // Include the authini file to get the INI mapping
@@ -569,10 +809,10 @@ class ConfigController
         
         // Check if user has a specific INI file mapped
         if (isset($ININAME[$username])) {
-            return __DIR__ . "/../../../user_files/{$ININAME[$username]}";
+            return $ININAME[$username];
         }
         
-        return __DIR__ . '/../../../user_files/allmon.ini';
+        return 'allmon.ini';
     }
 
     /**

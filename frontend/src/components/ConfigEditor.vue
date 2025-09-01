@@ -276,13 +276,15 @@ onMounted(() => {
   padding: 10px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  background: white;
+  background: var(--background-color);
+  color: var(--text-color);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .file-button:hover {
-  background: var(--hover-color);
+  background: var(--primary-color);
+  color: white;
   border-color: var(--primary-color);
 }
 
@@ -359,7 +361,8 @@ onMounted(() => {
   font-size: 12px;
   line-height: 1.4;
   resize: none;
-  background: #f8f9fa;
+  background: var(--background-color);
+  color: var(--text-color);
 }
 
 .file-editor:focus {

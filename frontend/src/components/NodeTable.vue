@@ -217,12 +217,7 @@ const headerStatusClass = computed(() => {
     else statusClass = 'bColor' // COS-Detected and PTT-Keyed (Full-Duplex)
   }
   
-  console.log('🎨 Status class for node', props.node.id, ':', {
-    cosKeyed,
-    txKeyed,
-    statusClass,
-    nodeData: nodeData.value
-  })
+
   
   return statusClass
 })
@@ -339,12 +334,7 @@ const getConnectedNodeClass = (node: any, index: number): string => {
     className = 'gColor'
   }
   
-  console.log('🎨 Connected node class for index', index, ':', {
-    nodeId: node.node,
-    keyed: node.keyed,
-    mode: node.mode,
-    className: className
-  })
+
   
   return className
 }

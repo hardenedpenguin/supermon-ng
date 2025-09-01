@@ -3,3 +3,15 @@ Order Allow,Deny
 Deny from all
 </FilesMatch>
 
+# Enable rewrite engine
+RewriteEngine On
+
+# Route API requests to the backend
+RewriteCond %{REQUEST_URI} ^/api/
+RewriteRule ^ public/index.php [QSA,L]
+
+# Serve Vue app for all other requests
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]
+

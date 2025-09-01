@@ -1,0 +1,24 @@
+[2025-09-01T16:24:28.857777+00:00] supermon-ng.INFO: Fetching node list [] {"uid":"ad9f12b"}
+[2025-09-01T16:24:28.858234+00:00] supermon-ng.INFO: Loaded available nodes {"count":5,"ini_file":"user_files/allmon.ini"} {"uid":"ad9f12b"}
+[2025-09-01T16:24:28.858383+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/nodes","status_code":200,"duration_ms":7.17,"ip":"::1"} {"uid":"ad9f12b"}
+[2025-09-01T16:25:01.834361+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"050cedf"}
+[2025-09-01T16:25:01.834786+00:00] supermon-ng.INFO: Loading nodes from INI file: anarchy-allmon.ini [] {"uid":"050cedf"}
+[2025-09-01T16:25:01.834888+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":21.17,"ip":"::1"} {"uid":"050cedf"}
+[2025-09-01T16:26:09.286870+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"61ee59e"}
+[2025-09-01T16:26:09.287125+00:00] supermon-ng.INFO: Loading nodes from INI file: anarchy-allmon.ini [] {"uid":"61ee59e"}
+[2025-09-01T16:26:09.287166+00:00] supermon-ng.INFO: INI file does not exist: anarchy-allmon.ini [] {"uid":"61ee59e"}
+[2025-09-01T16:26:09.287236+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":16.09,"ip":"::1"} {"uid":"61ee59e"}
+[2025-09-01T16:32:46.580558+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"dad0390"}
+[2025-09-01T16:32:46.580807+00:00] supermon-ng.INFO: Loading nodes from INI file: allmon.ini [] {"uid":"dad0390"}
+[2025-09-01T16:32:46.580910+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":20.4,"ip":"::1"} {"uid":"dad0390"}
+[2025-09-01T16:32:50.567209+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"a222b46"}
+[2025-09-01T16:32:50.567447+00:00] supermon-ng.INFO: Loading nodes from INI file: allmon.ini [] {"uid":"a222b46"}
+[2025-09-01T16:32:50.567560+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":10.38,"ip":"::1"} {"uid":"a222b46"}
+[2025-09-01T17:36:30.576893+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"ecde3c4"}
+[2025-09-01T17:36:30.577131+00:00] supermon-ng.INFO: Loading nodes from INI file: allmon.ini [] {"uid":"ecde3c4"}
+[2025-09-01T17:36:30.577181+00:00] supermon-ng.ERROR: INI file does not exist: allmon.ini [] {"uid":"ecde3c4"}
+[2025-09-01T17:36:30.577269+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":15.72,"ip":"::1"} {"uid":"ecde3c4"}
+[2025-09-01T17:36:34.071415+00:00] supermon-ng.INFO: Config nodes request [] {"uid":"45afb0b"}
+[2025-09-01T17:36:34.071594+00:00] supermon-ng.INFO: Loading nodes from INI file: allmon.ini [] {"uid":"45afb0b"}
+[2025-09-01T17:36:34.071632+00:00] supermon-ng.ERROR: INI file does not exist: allmon.ini [] {"uid":"45afb0b"}
+[2025-09-01T17:36:34.071698+00:00] supermon-ng.INFO: HTTP Request {"method":"GET","uri":"/api/config/nodes","status_code":200,"duration_ms":10.13,"ip":"::1"} {"uid":"45afb0b"}

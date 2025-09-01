@@ -1,6 +1,15 @@
 RewriteEngine On
+
+# Serve Vue app for root and non-API requests
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/api/
+RewriteRule ^ index.html [QSA,L]
+
+# Route API requests to PHP backend
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} ^/api/
 RewriteRule ^ index.php [QSA,L]
 
 

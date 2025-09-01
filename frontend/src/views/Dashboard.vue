@@ -72,8 +72,8 @@
       </div>
       
       <!-- Primary Control Buttons (matches original order exactly) -->
-      <input v-if="appStore.hasPermission('CONNECTUSER')" type="button" class="submit" value="Connect" @click="connect">
-      <input v-if="appStore.hasPermission('DISCUSER')" type="button" class="submit" value="Disconnect" @click="disconnect">
+      <input type="button" class="submit" value="Connect" @click="connect">
+      <input type="button" class="submit" value="Disconnect" @click="disconnect">
       <input v-if="appStore.hasPermission('MONUSER')" type="button" class="submit" value="Monitor" @click="monitor">
       <input v-if="appStore.hasPermission('LMONUSER')" type="button" class="submit" value="Local Monitor" @click="localmonitor">
       <input type="button" class="submit" value="Voter" @click="showVoterModal = true">
@@ -89,18 +89,17 @@
       
       <!-- Configuration Editor Section -->
       <hr class="button-separator">
-      <div class="section-label">Configuration Editor</div>
+      <input v-if="appStore.hasPermission('CFGEDUSER')" type="button" class="submit" value="Configuration Editor" @click="configeditor">
       <input v-if="appStore.hasPermission('HWTOUSER')" type="button" class="submit" value="AllStar How To's" @click="openHelp">
       <input v-if="appStore.hasPermission('WIKIUSER')" type="button" class="submit" value="AllStar Wiki" @click="openWiki">
       <input v-if="appStore.hasPermission('CSTATUSER')" type="button" class="submit" value="CPU Status" @click="cpustats">
       <input v-if="appStore.hasPermission('ASTATUSER')" type="button" class="submit" value="AllStar Status" @click="aststats">
-      <input v-if="appStore.hasPermission('EXNUSER')" type="button" class="submit" value="Registry" @click="extnodes">
       <input v-if="appStore.hasPermission('NINFUSER')" type="button" class="submit" value="Node Info" @click="astnodes">
       <input v-if="appStore.hasPermission('ACTNUSER')" type="button" class="submit" value="Active Nodes" @click="openActiveNodes">
       <input v-if="appStore.hasPermission('ALLNUSER')" type="button" class="submit" value="All Nodes" @click="openAllNodes">
       
       <!-- Database Section -->
-      <div class="section-label">Database</div>
+      <input v-if="appStore.hasPermission('DBTUSER')" type="button" class="submit" value="Database" @click="database">
       <input v-if="appStore.hasPermission('LLOGUSER')" type="button" class="submit" value="Linux Log" @click="linuxlog">
       <input v-if="appStore.hasPermission('ASTLUSER')" type="button" class="submit" value="AST Log" @click="astlog">
       <input v-if="appStore.hasPermission('WLOGUSER')" type="button" class="submit" value="Web Access Log" @click="webacclog">
@@ -259,6 +258,12 @@
     <!-- Voter Modal -->
     <Voter :show="showVoterModal" @close="showVoterModal = false" />
     
+    <!-- ConfigEditor Modal -->
+    <ConfigEditor v-model:open="showConfigEditorModal" />
+    
+    <!-- SystemInfo Modal -->
+    <SystemInfo v-model:open="showSystemInfoModal" />
+    
   </div>
 </template>
 
@@ -294,6 +299,8 @@ import Stats from '@/components/Stats.vue'
 import WebAccLog from '@/components/WebAccLog.vue'
 import WebErrLog from '@/components/WebErrLog.vue'
 import Voter from '@/components/Voter.vue'
+import ConfigEditor from '@/components/ConfigEditor.vue'
+import SystemInfo from '@/components/SystemInfo.vue'
 
 
 const appStore = useAppStore()
@@ -329,6 +336,9 @@ const showDonateModal = ref(false)
 const showWebAccLogModal = ref(false)
 const showWebErrLogModal = ref(false)
 const showVoterModal = ref(false)
+const showConfigEditorModal = ref(false)
+const showSystemInfoModal = ref(false)
+
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
@@ -354,23 +364,26 @@ const availableNodes = computed(() => {
 
 
 const displayedNodes = computed(() => {
+  // If no node is selected, show all available nodes as fallback
   if (!selectedNode.value) {
-    return []
+    console.log('🔍 No node selected, showing all available nodes:', availableNodes.value.length)
+    return availableNodes.value
   }
   
   const selectedNodeStr = String(selectedNode.value)
-  console.log('🔍 displayedNodes computed - selectedNode:', selectedNodeStr)
-  console.log('🔍 displayedNodes computed - availableNodes count:', availableNodes.value.length)
-  
+
   // Handle comma-separated node IDs (for groups)
   if (selectedNodeStr.includes(',')) {
     const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
-    console.log('🔍 displayedNodes computed - group nodeIds:', nodeIds)
+    console.log('🔍 Group mode - looking for nodes:', nodeIds)
+    console.log('🔍 Available nodes:', availableNodes.value.map(n => n.id))
+
     const filteredNodes = availableNodes.value.filter(node => 
       nodeIds.includes(node.id.toString()) || 
       nodeIds.includes((node.node_number || node.id).toString())
     )
-    console.log('🔍 displayedNodes computed - filtered group nodes:', filteredNodes.map(n => n.id))
+    
+    console.log('🔍 Filtered nodes found:', filteredNodes.map(n => n.id))
     return filteredNodes
   }
   
@@ -379,7 +392,7 @@ const displayedNodes = computed(() => {
     node.id.toString() === selectedNodeStr || 
     (node.node_number || node.id).toString() === selectedNodeStr
   )
-  console.log('🔍 displayedNodes computed - filtered single node:', filteredNodes.map(n => n.id))
+
   return filteredNodes
 })
 
@@ -409,7 +422,6 @@ watch(displayedNodes, (newNodes) => {
 
 // Methods
 const onNodeChange = () => {
-  console.log('🔍 onNodeChange called with selectedNode:', selectedNode.value)
   
   // Ensure selectedNode is always a string for processing
   const selectedNodeStr = String(selectedNode.value)
@@ -417,11 +429,11 @@ const onNodeChange = () => {
   if (selectedNodeStr.includes(',')) {
     // Handle group selection
     const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
-    console.log('🔍 Starting monitoring for group nodes:', nodeIds)
+
     
     // Start monitoring each node in the group
     nodeIds.forEach(nodeId => {
-      console.log('🔍 Starting monitoring for nodeId:', nodeId)
+
       realTimeStore.startMonitoring(nodeId)
     })
     
@@ -431,7 +443,7 @@ const onNodeChange = () => {
     }
   } else {
     // Handle single node selection
-    console.log('🔍 Starting monitoring for single node:', selectedNodeStr)
+
     selectedLocalNode.value = selectedNodeStr
     realTimeStore.startMonitoring(selectedNodeStr)
   }
@@ -700,12 +712,13 @@ const digitaldashboard = async () => {
 // Additional button methods to match original Supermon-ng
 const configeditor = async () => {
   try {
-    console.log('Opening Config Editor in new window')
-    window.open('http://localhost:8000/configeditor.html', 'ConfigEditor', 'status=no,location=no,toolbar=no,width=1200,height=800,left=100,top=100')
+    showConfigEditorModal.value = true
   } catch (error) {
     console.error('Config editor error:', error)
   }
 }
+
+
 
 const astreload = async () => {
   try {
@@ -897,18 +910,7 @@ const openAllNodes = async () => {
 
 const database = async () => {
   try {
-    console.log('Opening Database modal')
-    
-    // Use selectedLocalNode if available, otherwise use selectedNode
-    if (selectedLocalNode.value) {
-      showDatabaseModal.value = true
-    } else if (selectedNode.value) {
-      showDatabaseModal.value = true
-    } else {
-      console.error('No node selected for database')
-      alert('Please select a node first to view its database contents.')
-      return
-    }
+    showDatabaseModal.value = true
   } catch (error) {
     console.error('Database error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -982,7 +984,7 @@ const openbanallow = async () => {
 
 const systeminfo = async () => {
   try {
-    window.open('system-info.php', 'SystemInfo', 'status=no,location=no,toolbar=yes,width=950,height=550,left=100,top=100')
+    showSystemInfoModal.value = true
   } catch (error) {
     console.error('System info error:', error)
   }
@@ -991,12 +993,68 @@ const systeminfo = async () => {
 const handleLoginSuccess = async () => {
   showLoginModal.value = false
   await appStore.checkAuth()
-  // Node state is preserved during login - displayed nodes remain visible
+  
+  // Refetch configuration data after login to get user's personal default node
+  try {
+    const nodesResponse = await fetch('/api/config/nodes')
+    if (nodesResponse.ok) {
+      const nodesData = await nodesResponse.json()
+      if (nodesData.data?.default_node) {
+        const defaultNode = nodesData.data.default_node
+        console.log('🔍 Loading default node after login:', defaultNode)
+        
+        // Set the default node as selected
+        selectedNode.value = defaultNode
+        
+        // Start monitoring the default node(s)
+        if (defaultNode.includes(',')) {
+          // Group mode - monitor each node individually
+          const nodeIds = defaultNode.split(',').map((id: string) => id.trim())
+          for (const nodeId of nodeIds) {
+            await realTimeStore.startMonitoring(nodeId)
+          }
+        } else {
+          // Single node mode
+          await realTimeStore.startMonitoring(defaultNode)
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error refetching configuration after login:', error)
+  }
 }
 
 const handleLogout = async () => {
   await appStore.logout()
-  // Menu will automatically refresh due to authentication state change
+  
+  // Refetch configuration data after logout to get new default node
+  try {
+    const nodesResponse = await fetch('/api/config/nodes')
+    if (nodesResponse.ok) {
+      const nodesData = await nodesResponse.json()
+      if (nodesData.data?.default_node) {
+        const defaultNode = nodesData.data.default_node
+        console.log('🔍 Loading default node after logout:', defaultNode)
+        
+        // Set the default node as selected
+        selectedNode.value = defaultNode
+        
+        // Start monitoring the default node(s)
+        if (defaultNode.includes(',')) {
+          // Group mode - monitor each node individually
+          const nodeIds = defaultNode.split(',').map((id: string) => id.trim())
+          for (const nodeId of nodeIds) {
+            await realTimeStore.startMonitoring(nodeId)
+          }
+        } else {
+          // Single node mode
+          await realTimeStore.startMonitoring(defaultNode)
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Error refetching configuration after logout:', error)
+  }
 }
 
 const openDonatePopup = () => {
@@ -1101,6 +1159,21 @@ onMounted(async () => {
         } else {
           // Single node mode
           await realTimeStore.startMonitoring(defaultNode)
+        }
+        
+        // Force a reactive update to ensure displayedNodes recomputes
+        await nextTick()
+        
+        // Small delay to ensure the default node is properly set
+        await new Promise(resolve => setTimeout(resolve, 100))
+      } else {
+        // No default node from backend, use first available node as fallback
+        console.log('🔍 No default node from backend, checking available nodes')
+        if (realTimeStore.nodes.length > 0) {
+          const firstNode = realTimeStore.nodes[0]
+          selectedNode.value = String(firstNode.id)
+          console.log('🔍 Using first available node as fallback:', firstNode.id)
+          await realTimeStore.startMonitoring(String(firstNode.id))
         }
       }
     }

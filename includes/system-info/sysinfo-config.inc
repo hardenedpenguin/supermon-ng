@@ -17,10 +17,10 @@ function initializeSystemInfo() {
     include("includes/security.inc");
     include("includes/common.inc");
     include("user_files/global.inc");
-    include("authusers.php");
-    include("authini.php");
-    include("favini.php");
-    include("cntrlini.php");
+    include("user_files/authusers.inc");
+    include("user_files/authini.inc");
+    include("user_files/favini.inc");
+    include("user_files/cntrlini.inc");
 
     // Check authentication
     if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("SYSINFUSER"))) {

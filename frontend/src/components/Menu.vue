@@ -70,10 +70,8 @@ const currentUrlTitle = ref('')
 const loadMenu = async () => {
   try {
     const response = await api.get('/config/menu')
-    console.log('🔍 Menu API response:', response.data)
-    if (response.data.success) {
-      menuItems.value = response.data.data
-      console.log('🔍 Loaded menu items:', menuItems.value)
+          if (response.data.success) {
+        menuItems.value = response.data.data
     }
   } catch (error) {
     console.error('Failed to load menu:', error)
@@ -88,16 +86,14 @@ const handleMenuClick = (item: MenuItem, event: Event) => {
   // Prevent default link behavior
   event.preventDefault()
   
-  console.log('🔍 Menu item clicked:', item)
+  
   
   // Handle internal navigation if needed
   if (item.url.startsWith('link.php') || item.url.startsWith('voter.php')) {
     // Parse node selection from URL
     const urlParams = new URLSearchParams(item.url.split('?')[1])
     const nodes = urlParams.get('nodes')
-    console.log('🔍 Parsed nodes from URL:', nodes)
     if (nodes) {
-      console.log('🔍 Emitting nodeSelection:', nodes)
       emit('nodeSelection', nodes)
     }
   } else if (item.url.startsWith('http')) {
@@ -111,10 +107,8 @@ const handleMenuClick = (item: MenuItem, event: Event) => {
     if (item.url.includes('nodes=')) {
       const urlParams = new URLSearchParams(item.url.split('?')[1])
       const nodes = urlParams.get('nodes')
-      console.log('🔍 Parsed nodes from other URL:', nodes)
-      if (nodes) {
-        console.log('🔍 Emitting nodeSelection from other URL:', nodes)
-        emit('nodeSelection', nodes)
+              if (nodes) {
+          emit('nodeSelection', nodes)
       }
     }
   }
@@ -135,8 +129,7 @@ onMounted(() => {
 })
 
 // Watch for authentication changes and reload menu
-watch(() => appStore.isAuthenticated, (newAuthState) => {
-  console.log('🔍 Authentication state changed:', newAuthState)
+watch(() => appStore.isAuthenticated, () => {
   loadMenu()
 })
 </script>

@@ -987,22 +987,66 @@ class NodeController
      */
     private function hasUserPermission(?string $user, string $permission): bool
     {
-        // Include necessary files
-        require_once __DIR__ . '/../../../includes/common.inc';
-        
-        // Default permissions for backward compatibility
-        $defaultPermissions = [
-            'ADMINUSER', 'AUTHUSER', 'CONNUSER', 'DISCONNUSER', 'MONUSER', 
-            'LOCALMONUSER', 'PERMCONNUSER', 'RPTUSER', 'RPTSTATSUSER', 
-            'CSTATUSER', 'DBTUSER', 'EXNUSER', 'FSTRESUSER', 'IRLPLOGUSER', 'LLOGUSER', 'BANUSER', 'GPIOUSER', 'RBTUSER', 'SMLOGUSER', 'ASTATUSER', 'WLOGUSER', 'WERRUSER'
-        ];
+        // If no user is provided, use default permissions for unauthenticated users
+        if (!$user) {
+            $defaultPermissions = [
+                'CONNECTUSER' => true,
+                'DISCUSER' => true,
+                'MONUSER' => true,
+                'LMONUSER' => true,
+                'DTMFUSER' => false,
+                'ASTLKUSER' => true,
+                'RSTATUSER' => true,
+                'BUBLUSER' => true,
+                'FAVUSER' => true,
+                'CTRLUSER' => false,
+                'CFGEDUSER' => true,
+                'ASTRELUSER' => false,
+                'ASTSTRUSER' => false,
+                'ASTSTPUSER' => false,
+                'FSTRESUSER' => false,
+                'RBTUSER' => false,
+                'UPDUSER' => true,
+                'HWTOUSER' => true,
+                'WIKIUSER' => true,
+                'CSTATUSER' => true,
+                'ASTATUSER' => true,
+                'EXNUSER' => true,
+                'NINFUSER' => true,
+                'ACTNUSER' => true,
+                'ALLNUSER' => true,
+                'DBTUSER' => true,
+                'GPIOUSER' => false,
+                'LLOGUSER' => true,
+                'ASTLUSER' => true,
+                'CLOGUSER' => true,
+                'IRLPLOGUSER' => true,
+                'WLOGUSER' => true,
+                'WERRUSER' => true,
+                'BANUSER' => false,
+                'SYSINFUSER' => true,
+                'SUSBUSER' => false
+            ];
+            
+            return $defaultPermissions[$permission] ?? false;
+        }
 
-        // Check if user has the specific permission
-        if (in_array($permission, $defaultPermissions)) {
+        // For authenticated users, check against authusers.inc
+        $authFile = 'user_files/authusers.inc';
+        
+        if (!file_exists($authFile)) {
+            // If no auth file exists, grant all permissions
             return true;
         }
 
-        // Additional permission checks can be added here
+        // Include the auth file to get permission arrays
+        include $authFile;
+        
+        // Check if the permission array exists and user is in it
+        if (isset($$permission) && is_array($$permission)) {
+            return in_array($user, $$permission, true);
+        }
+        
         return false;
     }
 

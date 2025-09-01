@@ -13,7 +13,7 @@ app.use(router)
 
 console.log('🚀 Supermon-ng Vue 3 App Started')
 console.log('Environment:', import.meta.env.MODE)
-console.log('API Base:', import.meta.env.VITE_API_BASE || '/api')
+console.log('API Base: /api')
 
 app.mount('#app')
 
