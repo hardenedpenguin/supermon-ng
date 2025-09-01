@@ -1479,12 +1479,12 @@ class NodeController
         try {
             // Get user configuration
             $config = $this->loadNodeConfig($currentUser, $localnode);
-            if (!isset($config[$localnode])) {
+            if (!$config) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Node configuration not found.']));
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            $amiConfig = $config[$localnode];
+            $amiConfig = $config;
             if (!isset($amiConfig['host']) || !isset($amiConfig['user']) || !isset($amiConfig['passwd'])) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid AMI configuration for node.']));
                 return $response->withHeader('Content-Type', 'application/json');
