@@ -1795,6 +1795,9 @@ class NodeController
 
     private function getBanAllowList(array $amiConfig, string $listType, string $localnode): array
     {
+        // Include AMI functions
+        require_once __DIR__ . '/../../../includes/amifunctions.inc';
+        
         $fp = \SimpleAmiClient::connect($amiConfig['host']);
         if ($fp === false) {
             return ['error' => 'Could not connect to Asterisk Manager'];
@@ -1841,6 +1844,9 @@ class NodeController
 
     private function executeBanAllowAction(array $amiConfig, string $localnode, string $node, string $listtype, string $deleteadd, string $comment): array
     {
+        // Include AMI functions
+        require_once __DIR__ . '/../../../includes/amifunctions.inc';
+        
         $fp = \SimpleAmiClient::connect($amiConfig['host']);
         if ($fp === false) {
             return [
