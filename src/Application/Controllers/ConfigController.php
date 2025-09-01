@@ -1014,47 +1014,67 @@ class ConfigController
      */
     private function hasUserPermission(string $user, string $permission): bool
     {
-        // Default permissions for unauthenticated users (same as AuthController)
-        $defaultPermissions = [
-            'CONNECTUSER' => true,
-            'DISCUSER' => true,
-            'MONUSER' => true,
-            'LMONUSER' => true,
-            'DTMFUSER' => false,
-            'ASTLKUSER' => true, // Allow lookup for unauthenticated users
-            'RSTATUSER' => true,
-            'BUBLUSER' => true,
-            'FAVUSER' => true,
-            'CTRLUSER' => true,
-            'CFGEDUSER' => true, // Allow config editor for unauthenticated users
-            'ASTRELUSER' => false,
-            'ASTSTRUSER' => false,
-            'ASTSTPUSER' => false,
-            'FSTRESUSER' => false,
-            'RBTUSER' => false,
-            'UPDUSER' => true,
-            'HWTOUSER' => true,
-            'WIKIUSER' => true,
-            'CSTATUSER' => true,
-            'ASTATUSER' => true,
-            'EXNUSER' => true,
-            'NINFUSER' => true,
-            'ACTNUSER' => true,
-            'ALLNUSER' => true,
-            'DBTUSER' => true,
-            'GPIOUSER' => false,
-            'LLOGUSER' => true,
-            'ASTLUSER' => true,
-            'IRLPUSER' => false,
-            'WLOGUSER' => true,
-            'WERRUSER' => true,
-            'BANUSER' => false,
-            'SYSINFUSER' => true
-        ];
+        // If no user is provided, use default permissions for unauthenticated users
+        if (!$user) {
+            $defaultPermissions = [
+                'CONNECTUSER' => true,
+                'DISCUSER' => true,
+                'MONUSER' => true,
+                'LMONUSER' => true,
+                'DTMFUSER' => false,
+                'ASTLKUSER' => true,
+                'RSTATUSER' => true,
+                'BUBLUSER' => true,
+                'FAVUSER' => true,
+                'CTRLUSER' => false,
+                'CFGEDUSER' => true,
+                'ASTRELUSER' => false,
+                'ASTSTRUSER' => false,
+                'ASTSTPUSER' => false,
+                'FSTRESUSER' => false,
+                'RBTUSER' => false,
+                'UPDUSER' => true,
+                'HWTOUSER' => true,
+                'WIKIUSER' => true,
+                'CSTATUSER' => true,
+                'ASTATUSER' => true,
+                'EXNUSER' => true,
+                'NINFUSER' => true,
+                'ACTNUSER' => true,
+                'ALLNUSER' => true,
+                'DBTUSER' => true,
+                'GPIOUSER' => false,
+                'LLOGUSER' => true,
+                'ASTLUSER' => true,
+                'CLOGUSER' => true,
+                'IRLPLOGUSER' => true,
+                'WLOGUSER' => true,
+                'WERRUSER' => true,
+                'BANUSER' => false,
+                'SYSINFUSER' => true,
+                'SUSBUSER' => false
+            ];
+            
+            return $defaultPermissions[$permission] ?? false;
+        }
+
+        // For authenticated users, check against authusers.inc
+        $authFile = 'user_files/authusers.inc';
         
-        // For now, use default permissions for all users
-        // In a real implementation, you would check against the user's actual permissions
-        return $defaultPermissions[$permission] ?? false;
+        if (!file_exists($authFile)) {
+            // If no auth file exists, grant all permissions
+            return true;
+        }
+
+        // Include the auth file to get permission arrays
+        include $authFile;
+        
+        // Check if the permission array exists and user is in it
+        if (isset($$permission) && is_array($$permission)) {
+            return in_array($user, $$permission, true);
+        }
+        
+        return false;
     }
 
     /**
