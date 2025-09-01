@@ -8,9 +8,17 @@ use Dotenv\Dotenv;
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Load environment variables
-$dotenv = Dotenv::createImmutable(__DIR__ . '/..');
-$dotenv->load();
+// Load environment variables (optional)
+try {
+    $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
+    $dotenv->load();
+} catch (Exception $e) {
+    // .env file not found, use default values
+    $_ENV['APP_ENV'] = $_ENV['APP_ENV'] ?? 'production';
+    $_ENV['APP_DEBUG'] = $_ENV['APP_DEBUG'] ?? 'false';
+    $_ENV['JWT_SECRET'] = $_ENV['JWT_SECRET'] ?? 'your-secret-key';
+    $_ENV['USER_FILES_PATH'] = $_ENV['USER_FILES_PATH'] ?? '/var/www/html/supermon-ng/user_files/';
+}
 
 // Set error reporting based on environment
 if ($_ENV['APP_ENV'] === 'production') {
