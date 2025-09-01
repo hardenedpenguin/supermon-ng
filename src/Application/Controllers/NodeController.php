@@ -1672,16 +1672,38 @@ class NodeController
         try {
             // Get user configuration
             $config = $this->getUserConfig($currentUser);
+            $this->logger->info('Ban/Allow config loaded', [
+                'user' => $currentUser,
+                'localnode' => $localnode,
+                'configKeys' => array_keys($config)
+            ]);
+            
             if (!isset($config[$localnode])) {
+                $this->logger->error('Node not found in config', [
+                    'user' => $currentUser,
+                    'localnode' => $localnode,
+                    'availableNodes' => array_keys($config)
+                ]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Node configuration not found.']));
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
             $amiConfig = $config[$localnode];
             if (!isset($amiConfig['host']) || !isset($amiConfig['user']) || !isset($amiConfig['passwd'])) {
+                $this->logger->error('Invalid AMI config', [
+                    'user' => $currentUser,
+                    'localnode' => $localnode,
+                    'amiConfig' => $amiConfig
+                ]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid AMI configuration for node.']));
                 return $response->withHeader('Content-Type', 'application/json');
             }
+
+            $this->logger->info('Getting Ban/Allow lists', [
+                'user' => $currentUser,
+                'localnode' => $localnode,
+                'host' => $amiConfig['host']
+            ]);
 
             // Get allowlist and denylist data
             $allowlistData = $this->getBanAllowList($amiConfig, 'allowlist', $localnode);
@@ -1795,18 +1817,35 @@ class NodeController
 
     private function getBanAllowList(array $amiConfig, string $listType, string $localnode): array
     {
-        // Include AMI functions
-        require_once __DIR__ . '/../../../includes/amifunctions.inc';
-        
-        $fp = \SimpleAmiClient::connect($amiConfig['host']);
-        if ($fp === false) {
-            return ['error' => 'Could not connect to Asterisk Manager'];
-        }
+        try {
+            // Include AMI functions
+            require_once __DIR__ . '/../../../includes/amifunctions.inc';
+            
+            $this->logger->info('Connecting to AMI for Ban/Allow', [
+                'host' => $amiConfig['host'],
+                'user' => $amiConfig['user'],
+                'listType' => $listType,
+                'localnode' => $localnode
+            ]);
+            
+            $fp = \SimpleAmiClient::connect($amiConfig['host']);
+            if ($fp === false) {
+                $this->logger->error('AMI connection failed', [
+                    'host' => $amiConfig['host'],
+                    'listType' => $listType
+                ]);
+                return ['error' => 'Could not connect to Asterisk Manager'];
+            }
 
-        if (\SimpleAmiClient::login($fp, $amiConfig['user'], $amiConfig['passwd']) === false) {
-            \SimpleAmiClient::logoff($fp);
-            return ['error' => 'Could not authenticate with Asterisk Manager'];
-        }
+            if (\SimpleAmiClient::login($fp, $amiConfig['user'], $amiConfig['passwd']) === false) {
+                \SimpleAmiClient::logoff($fp);
+                $this->logger->error('AMI authentication failed', [
+                    'host' => $amiConfig['host'],
+                    'user' => $amiConfig['user'],
+                    'listType' => $listType
+                ]);
+                return ['error' => 'Could not authenticate with Asterisk Manager'];
+            }
 
         $dbFamily = $listType . "/" . $localnode;
         $rawData = \SimpleAmiClient::command($fp, "database show " . $dbFamily);
@@ -1840,6 +1879,14 @@ class NodeController
         }
 
         return ['entries' => $entries];
+        } catch (\Exception $e) {
+            $this->logger->error('Ban/Allow list error', [
+                'error' => $e->getMessage(),
+                'listType' => $listType,
+                'localnode' => $localnode
+            ]);
+            return ['error' => 'Failed to retrieve ' . $listType . ': ' . $e->getMessage()];
+        }
     }
 
     private function executeBanAllowAction(array $amiConfig, string $localnode, string $node, string $listtype, string $deleteadd, string $comment): array
