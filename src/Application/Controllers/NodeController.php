@@ -1281,6 +1281,8 @@ class NodeController
      */
     public function database(Request $request, Response $response, array $args): Response
     {
+        require_once __DIR__ . '/../../../includes/amifunctions.inc';
+        
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'DBTUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to access database contents.']));
