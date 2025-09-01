@@ -1624,14 +1624,7 @@ class NodeController
             exec($command . " 2>&1", $output, $returnCode);
             $outputString = implode("\n", $output);
             
-            // Debug: Log the command and output for troubleshooting
-            $this->logger->info('Linux Log Command Debug', [
-                'command' => $command,
-                'output' => $outputString,
-                'output_array' => $output,
-                'output_length' => strlen($outputString),
-                'return_code' => $returnCode
-            ]);
+
 
             if (empty($outputString)) {
                 $response->getBody()->write(json_encode([

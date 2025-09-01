@@ -53,7 +53,10 @@ api.interceptors.response.use(
       }
     } else if (error.request) {
       // Request was made but no response received
-      console.error('Network error - no response received')
+      // Suppress timeout errors for real-time data fetching
+      if (error.code !== 'ECONNABORTED') {
+        console.error('Network error - no response received')
+      }
     } else {
       // Something else happened
       console.error('Request error:', error.message)

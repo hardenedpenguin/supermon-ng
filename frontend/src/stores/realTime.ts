@@ -215,9 +215,12 @@ export const useRealTimeStore = defineStore('realTime', () => {
       
       error.value = null
     } catch (err) {
-      console.error('Error fetching node data:', err)
-      error.value = 'Failed to fetch node data'
-      isConnected.value = false
+      // Suppress timeout errors for real-time data fetching
+      if (err.code !== 'ECONNABORTED') {
+        console.error('Error fetching node data:', err)
+        error.value = 'Failed to fetch node data'
+        isConnected.value = false
+      }
     }
   }
 

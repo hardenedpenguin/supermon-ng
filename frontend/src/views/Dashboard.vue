@@ -366,7 +366,7 @@ const availableNodes = computed(() => {
 const displayedNodes = computed(() => {
   // If no node is selected, show all available nodes as fallback
   if (!selectedNode.value) {
-    console.log('🔍 No node selected, showing all available nodes:', availableNodes.value.length)
+    
     return availableNodes.value
   }
   
@@ -375,15 +375,12 @@ const displayedNodes = computed(() => {
   // Handle comma-separated node IDs (for groups)
   if (selectedNodeStr.includes(',')) {
     const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
-    console.log('🔍 Group mode - looking for nodes:', nodeIds)
-    console.log('🔍 Available nodes:', availableNodes.value.map(n => n.id))
 
     const filteredNodes = availableNodes.value.filter(node => 
       nodeIds.includes(node.id.toString()) || 
       nodeIds.includes((node.node_number || node.id).toString())
     )
     
-    console.log('🔍 Filtered nodes found:', filteredNodes.map(n => n.id))
     return filteredNodes
   }
   
@@ -460,7 +457,6 @@ const connect = async () => {
     })
     
     if (response.data.success) {
-      console.log('Connect success:', response.data.message)
       // Refresh node data after successful connection
       await realTimeStore.fetchNodeData()
     } else {
@@ -482,7 +478,6 @@ const disconnect = async () => {
     })
     
     if (response.data.success) {
-      console.log('Disconnect success:', response.data.message)
       // Refresh node data after successful disconnection
       await realTimeStore.fetchNodeData()
     } else {
@@ -503,7 +498,7 @@ const monitor = async () => {
     })
     
     if (response.data.success) {
-      console.log('Monitor success:', response.data.message)
+
       // Refresh node data after successful monitoring
       await realTimeStore.fetchNodeData()
     } else {
@@ -525,7 +520,7 @@ const permconnect = async () => {
     })
     
     if (response.data.success) {
-      console.log('Permanent connect success:', response.data.message)
+
       // Refresh node data after successful connection
       await realTimeStore.fetchNodeData()
     } else {
@@ -546,7 +541,7 @@ const localmonitor = async () => {
     })
     
     if (response.data.success) {
-      console.log('Local monitor success:', response.data.message)
+
       // Refresh node data after successful local monitoring
       await realTimeStore.fetchNodeData()
     } else {
@@ -582,7 +577,6 @@ const dtmf = async () => {
   // Always prompt user for DTMF command first
   const dtmfCommand = prompt('Enter DTMF command:')
   if (!dtmfCommand || dtmfCommand.trim() === '') {
-    console.log('DTMF command cancelled or empty')
     return
   }
   
@@ -600,9 +594,9 @@ const dtmf = async () => {
     })
     
     if (response.data.success) {
-      console.log('DTMF success:', response.data.message)
+
       // Show success message to user
-      console.log('DTMF command executed successfully:', response.data.message)
+      
       // Refresh node data after successful DTMF command
       await realTimeStore.fetchNodeData()
     } else {
@@ -618,7 +612,6 @@ const dtmf = async () => {
 
 const astlookup = async () => {
   try {
-    console.log('Opening AST lookup modal')
     showAstLookupModal.value = true
   } catch (error) {
     console.error('AST lookup error:', error)
@@ -627,7 +620,6 @@ const astlookup = async () => {
 
 const rptstats = async () => {
   try {
-    console.log('Opening RPT Stats modal')
     showRptStatsModal.value = true
   } catch (error) {
     console.error('RPT stats error:', error)
@@ -638,7 +630,6 @@ const rptstats = async () => {
 
 const bubble = async () => {
   try {
-    console.log('Opening Bubble Chart modal')
     showBubbleChartModal.value = true
   } catch (error) {
     console.error('Bubble error:', error)
@@ -647,7 +638,6 @@ const bubble = async () => {
 
 const extnodes = async () => {
   try {
-    console.log('Opening ExtNodes modal')
     showExtNodesModal.value = true
   } catch (error) {
     console.error('ExtNodes error:', error)
@@ -660,9 +650,7 @@ const extnodes = async () => {
 
 const controlpanel = async () => {
   try {
-    console.log('Opening Control Panel modal')
-    console.log('selectedNode.value:', selectedNode.value)
-    console.log('selectedLocalNode.value:', selectedLocalNode.value)
+
     
     // Use selectedLocalNode if available, otherwise use selectedNode
     if (selectedLocalNode.value) {
@@ -675,7 +663,7 @@ const controlpanel = async () => {
       return
     }
     
-    console.log('targetNode.value set to:', targetNode.value)
+
     showControlPanelModal.value = true
   } catch (error) {
     console.error('Control Panel error:', error)
@@ -685,7 +673,7 @@ const controlpanel = async () => {
 const favorites = async () => {
   try {
     // Implement favorites functionality
-    console.log('Opening favorites panel')
+
   } catch (error) {
     console.error('Favorites error:', error)
   }
@@ -702,7 +690,7 @@ const digitaldashboard = async () => {
     if (systemInfo.value?.dvmUrl) {
       window.open(systemInfo.value.dvmUrl, 'DigitalDashboard', 'status=no,location=no,toolbar=no,width=960,height=850,left=100,top=100')
     } else {
-      console.log('Digital Dashboard URL not configured')
+  
     }
   } catch (error) {
     console.error('Digital dashboard error:', error)
@@ -722,7 +710,7 @@ const configeditor = async () => {
 
 const astreload = async () => {
   try {
-    console.log('AST RELOAD command')
+
     
     if (!selectedNode.value) {
       alert('Please select a node first')
@@ -746,7 +734,7 @@ const astreload = async () => {
 
 const astaron = async () => {
   try {
-    console.log('AST START command')
+
     
     if (!confirm('Are you sure you want to START the AllStar service? This will bring the service online.')) {
       return
@@ -769,7 +757,7 @@ const astaron = async () => {
 
 const astaroff = async () => {
   try {
-    console.log('AST STOP command')
+
     
     if (!confirm('Are you sure you want to STOP the AllStar service? This will bring the service offline.')) {
       return
@@ -792,7 +780,7 @@ const astaroff = async () => {
 
   const fastrestart = async () => {
     try {
-      console.log('Opening FastRestart modal')
+  
       
       // Use selectedLocalNode if available, otherwise use selectedNode
       if (selectedLocalNode.value) {
@@ -813,7 +801,7 @@ const astaroff = async () => {
 
   const irlplog = async () => {
     try {
-      console.log('Opening IRLP Log modal')
+  
       showIrlpLogModal.value = true
     } catch (error) {
       console.error('IRLP Log error:', error)
@@ -824,7 +812,7 @@ const astaroff = async () => {
 
 const reboot = async () => {
   try {
-    console.log('Opening Server Reboot modal')
+
     showRebootModal.value = true
   } catch (error) {
     console.error('Server Reboot error:', error)
@@ -835,7 +823,7 @@ const reboot = async () => {
 
 const smlog = async () => {
   try {
-    console.log('Opening SMLog modal')
+
     showSMLogModal.value = true
   } catch (error) {
     console.error('SMLog error:', error)
@@ -862,7 +850,7 @@ const openWiki = async () => {
 
 const cpustats = async () => {
   try {
-    console.log('Opening CPU Stats modal')
+
     showCpuStatsModal.value = true
   } catch (error) {
     console.error('CPU Status error:', error)
@@ -871,7 +859,7 @@ const cpustats = async () => {
 
 const aststats = async () => {
   try {
-    console.log('Opening AllStar Statistics modal')
+
     if (!targetNode.value) {
       alert('Please select a node first')
       return
@@ -886,7 +874,7 @@ const aststats = async () => {
 
 const astnodes = async () => {
   try {
-    console.log('Node Info')
+
   } catch (error) {
     console.error('Node Info error:', error)
   }
@@ -920,7 +908,7 @@ const database = async () => {
 
 const openpigpio = async () => {
   try {
-    console.log('Opening Pi GPIO modal')
+
     showPiGPIOModal.value = true
   } catch (error) {
     console.error('Pi GPIO error:', error)
@@ -931,7 +919,7 @@ const openpigpio = async () => {
 
 const linuxlog = async () => {
   try {
-    console.log('Opening Linux Log modal')
+
     showLinuxLogModal.value = true
   } catch (error) {
     console.error('Linux Log error:', error)
@@ -942,7 +930,7 @@ const linuxlog = async () => {
 
 const astlog = async () => {
   try {
-    console.log('AST Log')
+
     showAstLogModal.value = true
   } catch (error) {
     console.error('AST Log error:', error)
@@ -951,7 +939,7 @@ const astlog = async () => {
 
 const webacclog = async () => {
   try {
-    console.log('Opening Web Access Log modal')
+
     showWebAccLogModal.value = true
   } catch (error) {
     console.error('Web Access Log error:', error)
@@ -962,7 +950,7 @@ const webacclog = async () => {
 
 const weberrlog = async () => {
   try {
-    console.log('Opening Web Error Log modal')
+
     showWebErrLogModal.value = true
   } catch (error) {
     console.error('Web Error Log error:', error)
@@ -973,7 +961,7 @@ const weberrlog = async () => {
 
 const openbanallow = async () => {
   try {
-    console.log('Opening Ban/Allow modal')
+
     showBanAllowModal.value = true
   } catch (error) {
     console.error('Ban/Allow error:', error)
@@ -1001,7 +989,7 @@ const handleLoginSuccess = async () => {
       const nodesData = await nodesResponse.json()
       if (nodesData.data?.default_node) {
         const defaultNode = nodesData.data.default_node
-        console.log('🔍 Loading default node after login:', defaultNode)
+    
         
         // Set the default node as selected
         selectedNode.value = defaultNode
@@ -1034,7 +1022,7 @@ const handleLogout = async () => {
       const nodesData = await nodesResponse.json()
       if (nodesData.data?.default_node) {
         const defaultNode = nodesData.data.default_node
-        console.log('🔍 Loading default node after logout:', defaultNode)
+    
         
         // Set the default node as selected
         selectedNode.value = defaultNode
@@ -1058,17 +1046,12 @@ const handleLogout = async () => {
 }
 
 const openDonatePopup = () => {
-  console.log('Donate button clicked!')
   showDonateModal.value = true
-  console.log('showDonateModal.value set to:', showDonateModal.value)
 }
 
   // Handle menu node selection
   const handleNodeSelection = (nodeId: string) => {
-    console.log('🔍 handleNodeSelection called with nodeId:', nodeId)
-    console.log('🔍 Previous selectedNode value:', selectedNode.value)
-    selectedNode.value = nodeId
-    console.log('🔍 New selectedNode value:', selectedNode.value)
+      selectedNode.value = nodeId
     onNodeChange()
   }
 
@@ -1080,7 +1063,7 @@ const openDonatePopup = () => {
     // Update the local node selection to the table owner
     selectedLocalNode.value = localNodeId
     
-    console.log('🔍 Node clicked - Target node:', nodeId, 'Local node:', localNodeId)
+
     
     // Scroll to the control panel
     const controlPanel = document.getElementById('connect_form')
@@ -1098,19 +1081,19 @@ const openDonatePopup = () => {
   // Handle favorite added
   const handleFavoriteAdded = (result: any) => {
     // Could show a notification or refresh the page
-    console.log('Favorite added:', result)
+    
   }
 
   // Handle favorite deleted
   const handleFavoriteDeleted = (result: any) => {
     // Could show a notification or refresh the page
-    console.log('Favorite deleted:', result)
+    
   }
 
   // Handle command executed
   const handleCommandExecuted = (result: any) => {
     // Could show a notification or refresh the page
-    console.log('Command executed:', result)
+    
   }
 
 // Lifecycle
@@ -1144,7 +1127,7 @@ onMounted(async () => {
       const nodesData = await nodesResponse.json()
       if (nodesData.data?.default_node) {
         const defaultNode = nodesData.data.default_node
-        console.log('🔍 Loading default node:', defaultNode)
+    
         
         // Set the default node as selected
         selectedNode.value = defaultNode
@@ -1168,11 +1151,11 @@ onMounted(async () => {
         await new Promise(resolve => setTimeout(resolve, 100))
       } else {
         // No default node from backend, use first available node as fallback
-        console.log('🔍 No default node from backend, checking available nodes')
+    
         if (realTimeStore.nodes.length > 0) {
           const firstNode = realTimeStore.nodes[0]
           selectedNode.value = String(firstNode.id)
-          console.log('🔍 Using first available node as fallback:', firstNode.id)
+      
           await realTimeStore.startMonitoring(String(firstNode.id))
         }
       }
@@ -1220,8 +1203,7 @@ watch(() => realTimeStore.nodes, (newNodes) => {
 // TEMPORARILY DISABLED TO DEBUG GROUP MODE ISSUE
 /*
 watch(displayedNodes, (newDisplayedNodes) => {
-  console.log('🔍 displayedNodes watcher triggered - newDisplayedNodes length:', newDisplayedNodes.length)
-  console.log('🔍 displayedNodes watcher - current selectedNode:', selectedNode.value)
+  
   
   // Only set default node if we don't have any selection AND we have multiple nodes
   // This prevents overriding group selections
@@ -1230,7 +1212,7 @@ watch(displayedNodes, (newDisplayedNodes) => {
       // Create a group selection from all displayed nodes
       const nodeIds = newDisplayedNodes.map(node => node.id).join(',')
       selectedNode.value = nodeIds
-      console.log('🔍 Created group selection from displayed nodes:', nodeIds)
+  
       // Trigger onNodeChange to update target node and start monitoring
       onNodeChange()
     })
@@ -1241,9 +1223,9 @@ watch(displayedNodes, (newDisplayedNodes) => {
       // If current selection is not a group, but we have multiple displayed nodes,
       // this might be a case where we need to create a group selection
       // But we should be careful not to override existing group selections
-      console.log('🔍 Multiple displayed nodes but single node selection - keeping current selection')
+  
     } else {
-      console.log('🔍 Multiple displayed nodes with group selection - keeping group selection')
+      
     }
   }
   

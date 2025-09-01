@@ -99,11 +99,11 @@ const hideZelleInfo = () => {
 
 const handlePayPalSubmit = () => {
   // PayPal form will submit automatically
-  console.log('PayPal donation initiated')
+  
 }
 
 const handleCashAppClick = () => {
-  console.log('CashApp donation link opened')
+  
 }
 </script>
 
