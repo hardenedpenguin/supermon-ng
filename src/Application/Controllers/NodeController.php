@@ -2057,24 +2057,19 @@ class NodeController
         }
 
         try {
-            // Execute reboot command
-            $result = $this->executeReboot();
-
-            if ($result['success']) {
-                $response->getBody()->write(json_encode([
-                    'success' => true,
-                    'data' => [
-                        'message' => $result['message'],
-                        'timestamp' => date('c')
-                    ],
-                    'message' => 'Server reboot initiated successfully'
-                ]));
-            } else {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => $result['message']
-                ]));
-            }
+            // Send success response immediately
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => [
+                    'message' => 'Server reboot command initiated. The system will reboot shortly.',
+                    'timestamp' => date('c')
+                ],
+                'message' => 'Server reboot initiated successfully'
+            ]));
+            
+            // Execute reboot command in background after response is sent
+            $this->executeRebootInBackground();
+            
             return $response->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
@@ -2084,27 +2079,14 @@ class NodeController
         }
     }
 
-    private function executeReboot(): array
+    private function executeRebootInBackground(): void
     {
-        $command = "sudo /usr/sbin/reboot";
-        $escapedCommand = escapeshellcmd($command);
+        // Execute reboot command in background to avoid blocking the response
+        $command = "sudo /usr/sbin/reboot > /dev/null 2>&1 &";
+        exec($command);
         
-        // Execute the reboot command
-        $output = [];
-        $returnVar = 0;
-        exec($escapedCommand . " 2>/dev/null", $output, $returnVar);
-
-        if ($returnVar === 0) {
-            return [
-                'success' => true,
-                'message' => 'Server reboot command executed successfully. The system is now rebooting.'
-            ];
-        } else {
-            return [
-                'success' => false,
-                'message' => 'Failed to execute reboot command. Check if you have proper sudo privileges.'
-            ];
-        }
+        // Log the reboot attempt
+        $this->logger->info('Server reboot command executed in background');
     }
 
     public function smlog(Request $request, Response $response, array $args): Response
