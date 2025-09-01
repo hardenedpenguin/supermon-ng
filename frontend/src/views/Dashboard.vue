@@ -846,7 +846,7 @@ const smlog = async () => {
 
 const openHelp = async () => {
   try {
-    window.open('https://allstarlink.org/howto.html', 'AllStarHelp', 'status=no,location=no,toolbar=yes,width=800,height=600,left=100,top=100')
+    window.open('https://allstarlink.github.io/adv-topics/', 'AllStarHelp', 'status=no,location=no,toolbar=yes,width=800,height=600,left=100,top=100')
   } catch (error) {
     console.error('Open help error:', error)
   }

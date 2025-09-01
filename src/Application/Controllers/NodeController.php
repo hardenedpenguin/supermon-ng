@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace SupermonNg\Application\Controllers;
 
+// Include common.inc for global variables
+require_once __DIR__ . '/../../../includes/common.inc';
+
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
@@ -1607,21 +1610,33 @@ class NodeController
         }
 
         try {
-            // Get command paths from configuration or use defaults
-            $sudo = $this->config['sudo'] ?? 'export TERM=vt100 && /usr/bin/sudo';
-            $journalctl = $this->config['journalctl'] ?? '/usr/bin/journalctl';
-            $sed = $this->config['sed'] ?? '/usr/bin/sed';
+            // Hardcode the values from common.inc since global variables aren't working
+            $SUDO = "export TERM=vt100 && /usr/bin/sudo";
+            $JOURNALCTL = "/usr/bin/journalctl";
+            $SED = "/usr/bin/sed";
+            
+            // Use sudo as required for journalctl access with sed filtering to remove sudo lines
+            $command = "$SUDO $JOURNALCTL --no-pager --since \"1 day ago\" | $SED -e \"/sudo/ d\"";
 
-            // Build the command with proper filtering
-            $command = "$sudo $journalctl --no-pager --since \"1 day ago\" | $sed -e \"/sudo/ d\"";
+            // Execute the command using exec for better error handling
+            $output = [];
+            $returnCode = 0;
+            exec($command . " 2>&1", $output, $returnCode);
+            $outputString = implode("\n", $output);
+            
+            // Debug: Log the command and output for troubleshooting
+            $this->logger->info('Linux Log Command Debug', [
+                'command' => $command,
+                'output' => $outputString,
+                'output_array' => $output,
+                'output_length' => strlen($outputString),
+                'return_code' => $returnCode
+            ]);
 
-            // Execute the command
-            $output = shell_exec($command . " 2>&1");
-
-            if ($output === null) {
+            if (empty($outputString)) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
-                    'message' => 'Failed to execute Linux log command'
+                    'message' => 'Failed to execute Linux log command - no output (return code: ' . $returnCode . ')'
                 ]));
                 return $response->withHeader('Content-Type', 'application/json');
             }
@@ -1630,9 +1645,9 @@ class NodeController
                 'success' => true,
                 'data' => [
                     'command' => $command,
-                    'content' => $output,
+                    'content' => $outputString,
                     'timestamp' => date('c'),
-                    'description' => 'System Log (journalctl, last 24 hours, sudo lines filtered)'
+                    'description' => 'System Log (journalctl, last 24 hours)'
                 ],
                 'message' => 'Linux system log retrieved successfully'
             ]));

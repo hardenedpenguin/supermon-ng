@@ -83,7 +83,7 @@ const loadLinuxLog = async () => {
   logData.value = null
 
   try {
-    const response = await api.post('/nodes/linuxlog')
+    const response = await api.post('/nodes/linuxlog', {}, { timeout: 30000 })
 
     if (response.data.success) {
       logData.value = response.data.data
