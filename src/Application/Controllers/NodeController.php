@@ -2425,7 +2425,10 @@ class NodeController
         require_once __DIR__ . '/../../../includes/common.inc';
         
         // Get the log file path from common.inc
+        global $WEB_ACCESS_LOG;
         $log_file_path = $WEB_ACCESS_LOG ?? '/var/log/apache2/access.log';
+        
+
         
         // Validate file path for security
         if (!$this->isSafeWebLogPath($log_file_path)) {
@@ -2469,6 +2472,8 @@ class NodeController
     {
         $logLines = false;
 
+
+
         // Try to read the file directly first
         if (is_readable($file)) {
             $logContent = file_get_contents($file);
@@ -2477,8 +2482,12 @@ class NodeController
                 $logLines = array_slice($logLines, -100); // Show last 100 lines
                 $logLines = array_reverse($logLines); // Most recent first
                 $logLines = array_filter($logLines); // Remove empty lines
+                $logLines = array_values($logLines); // Reindex array to 0, 1, 2, etc.
+                
+
             } else {
                 $logLines = [];
+
             }
         } else {
             // Fallback to sudo if direct read fails
@@ -2487,8 +2496,12 @@ class NodeController
                 $logLines = explode("\n", $logContent);
                 $logLines = array_reverse($logLines); // Most recent first
                 $logLines = array_filter($logLines); // Remove empty lines
+                $logLines = array_values($logLines); // Reindex array to 0, 1, 2, etc.
+                
+
             } else {
                 $logLines = [];
+
             }
         }
 
