@@ -1661,23 +1661,6 @@ class NodeController
         $data = $request->getParsedBody();
         error_log("BANALLOW: Request data: " . json_encode($data));
         
-        // Simple test response to see if the endpoint works at all
-        $testResponse = [
-            'success' => true,
-            'data' => [
-                'localnode' => $data['localnode'] ?? 'test',
-                'allowlist' => ['entries' => []],
-                'denylist' => ['entries' => []],
-                'timestamp' => date('c')
-            ],
-            'message' => 'Ban/Allow endpoint reached successfully'
-        ];
-        
-        error_log("BANALLOW: Sending response: " . json_encode($testResponse));
-        
-        $response->getBody()->write(json_encode($testResponse));
-        return $response->withHeader('Content-Type', 'application/json');
-        
         try {
             // Include required dependencies for the original ban/allow system
             require_once __DIR__ . '/../../../includes/session.inc';
