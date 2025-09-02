@@ -207,12 +207,26 @@ const formData = ref({
 // Watch for modal visibility changes
 watch(() => props.isVisible, (newVal) => {
   if (newVal) {
+    console.log('BanAllow: Modal opened, defaultNode:', props.defaultNode, 'availableNodes:', props.availableNodes)
+    console.log('BanAllow: availableNodes type:', typeof props.availableNodes, 'length:', props.availableNodes?.length)
+    console.log('BanAllow: availableNodes content:', props.availableNodes)
+    
     resetState()
     // Set the default node if provided
     if (props.defaultNode && props.availableNodes.includes(props.defaultNode)) {
+      console.log('BanAllow: Setting selectedLocalNode to:', props.defaultNode)
       selectedLocalNode.value = props.defaultNode
       // Load the lists for the selected node
       loadLists()
+    } else {
+      console.log('BanAllow: No valid default node found. defaultNode:', props.defaultNode, 'availableNodes:', props.availableNodes)
+      // Try to set the first available node if no default is provided
+      if (props.availableNodes && props.availableNodes.length > 0) {
+        const firstNode = props.availableNodes[0]
+        console.log('BanAllow: Setting to first available node:', firstNode)
+        selectedLocalNode.value = firstNode
+        loadLists()
+      }
     }
   }
 })
@@ -245,7 +259,9 @@ const resetState = () => {
 }
 
 const loadLists = async () => {
+  console.log('BanAllow: loadLists called, hasValidNode:', hasValidNode.value, 'selectedLocalNode:', selectedLocalNode.value)
   if (!hasValidNode.value) {
+    console.log('BanAllow: No valid node, returning early')
     return
   }
 
@@ -255,6 +271,7 @@ const loadLists = async () => {
   successMessage.value = ''
 
   try {
+    console.log('BanAllow: Making API call with localnode:', selectedLocalNode.value)
     const response = await api.post('/nodes/banallow', { localnode: selectedLocalNode.value })
 
     if (response.data.success) {
@@ -272,8 +289,10 @@ const loadLists = async () => {
 }
 
 const executeAction = async () => {
+  console.log('BanAllow: executeAction called, hasValidNode:', hasValidNode.value, 'selectedLocalNode:', selectedLocalNode.value)
   if (!hasValidNode.value) {
     error.value = 'Please select a valid local node'
+    console.log('BanAllow: No valid node for action')
     return
   }
 
