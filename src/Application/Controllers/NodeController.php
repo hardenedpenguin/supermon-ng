@@ -1658,8 +1658,11 @@ class NodeController
         // Basic test log to see if we're even reaching this method
         error_log("BANALLOW: Method called at " . date('Y-m-d H:i:s'));
         
+        $data = $request->getParsedBody();
+        error_log("BANALLOW: Request data: " . json_encode($data));
+        
         // Simple test response to see if the endpoint works at all
-        $response->getBody()->write(json_encode([
+        $testResponse = [
             'success' => true,
             'data' => [
                 'localnode' => $data['localnode'] ?? 'test',
@@ -1668,7 +1671,11 @@ class NodeController
                 'timestamp' => date('c')
             ],
             'message' => 'Ban/Allow endpoint reached successfully'
-        ]));
+        ];
+        
+        error_log("BANALLOW: Sending response: " . json_encode($testResponse));
+        
+        $response->getBody()->write(json_encode($testResponse));
         return $response->withHeader('Content-Type', 'application/json');
         
         try {
