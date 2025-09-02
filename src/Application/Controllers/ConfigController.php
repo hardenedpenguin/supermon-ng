@@ -462,6 +462,9 @@ class ConfigController
         $coreDumps = $this->getCoreDumps();
         $cpuInfo = $this->getCPUInfo();
         
+        // Load global configuration
+        $globalConfig = $this->loadGlobalConfig();
+        
         $systemInfo = [
             'username' => $currentUser,
             'iniFile' => $currentIni,
@@ -476,10 +479,42 @@ class ConfigController
             'loadAverage' => $loadAverage,
             'coreDumps' => $coreDumps,
             'cpuTemp' => $cpuInfo['temp'] ?? 'N/A',
-            'cpuTime' => $cpuInfo['time'] ?? 'N/A'
+            'cpuTime' => $cpuInfo['time'] ?? 'N/A',
+            'dvmUrl' => $globalConfig['DVM_URL'] ?? null,
+            'maintainer' => $globalConfig['NAME'] ?? 'W5GLE, Alvin, Texas'
         ];
         
         return $systemInfo;
+    }
+    
+    /**
+     * Load global configuration from global.inc
+     */
+    private function loadGlobalConfig(): array
+    {
+        $globalConfig = [];
+        $globalIncFile = 'user_files/global.inc';
+        
+        if (file_exists($globalIncFile)) {
+            // Include the global.inc file to get the variables
+            include $globalIncFile;
+            
+            // Extract the configuration variables we need
+            $globalConfig = [
+                'DVM_URL' => $DVM_URL ?? null,
+                'NAME' => $NAME ?? null,
+                'CALL' => $CALL ?? null,
+                'LOCATION' => $LOCATION ?? null,
+                'TITLE2' => $TITLE2 ?? null,
+                'TITLE3' => $TITLE3 ?? null,
+                'SMSERVERNAME' => $SMSERVERNAME ?? null,
+                'BACKGROUND' => $BACKGROUND ?? null,
+                'BACKGROUND_COLOR' => $BACKGROUND_COLOR ?? null,
+                'DISPLAY_BACKGROUND' => $DISPLAY_BACKGROUND ?? null
+            ];
+        }
+        
+        return $globalConfig;
     }
     
 
