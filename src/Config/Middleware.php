@@ -16,6 +16,16 @@ global $app;
 // Add method override middleware
 $app->add(MethodOverrideMiddleware::class);
 
+// Add session middleware to ensure session is started for all requests
+$app->add(function (Request $request, RequestHandlerInterface $handler): Response {
+    // Start session if not already started
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    return $handler->handle($request);
+});
+
 // Add CORS middleware
 $app->add(function (Request $request, RequestHandlerInterface $handler): Response {
     $response = $handler->handle($request);
