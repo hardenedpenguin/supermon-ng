@@ -1706,10 +1706,12 @@ class NodeController
             
             // Debug session and authentication
             $this->logger->info('Session debug', [
-                'sm61loggedin' => $_SESSION['sm61loggedin'] ?? 'not set',
-                'session_user' => $_SESSION['user'] ?? 'not set',
                 'currentUser' => $currentUser,
-                'banuser_auth' => get_user_auth("BANUSER")
+                'session_user' => $_SESSION['user'] ?? 'not set',
+                'session_sm61loggedin' => $_SESSION['sm61loggedin'] ?? 'not set',
+                'php_auth_user' => $_SERVER['PHP_AUTH_USER'] ?? 'not set',
+                'remote_user' => $_SERVER['REMOTE_USER'] ?? 'not set',
+                'permission' => 'BANUSER'
             ]);
             
             // Check authentication using modern system
