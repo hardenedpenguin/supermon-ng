@@ -1655,75 +1655,46 @@ class NodeController
 
     public function banallow(Request $request, Response $response, array $args): Response
     {
-        $currentUser = $this->getCurrentUser();
-        if (!$this->hasUserPermission($currentUser, 'BANUSER')) {
-            $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to manage node access control lists.']));
-            return $response->withHeader('Content-Type', 'application/json');
-        }
-
-        $data = $request->getParsedBody();
-        $localnode = $data['localnode'] ?? null;
-
-        if (empty($localnode) || !preg_match('/^\d+$/', $localnode)) {
-            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Valid local node parameter is required.']));
-            return $response->withHeader('Content-Type', 'application/json');
-        }
-
         try {
-            // Get user configuration
-            $config = $this->getUserConfig($currentUser);
-            $this->logger->info('Ban/Allow config loaded', [
-                'user' => $currentUser,
-                'localnode' => $localnode,
-                'configKeys' => array_keys($config)
-            ]);
+            $currentUser = $this->getCurrentUser();
+            $this->logger->info('Ban/Allow request started', ['user' => $currentUser]);
             
-            if (!isset($config[$localnode])) {
-                $this->logger->error('Node not found in config', [
-                    'user' => $currentUser,
-                    'localnode' => $localnode,
-                    'availableNodes' => array_keys($config)
-                ]);
-                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Node configuration not found.']));
+            if (!$this->hasUserPermission($currentUser, 'BANUSER')) {
+                $this->logger->info('Ban/Allow permission denied', ['user' => $currentUser]);
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to manage node access control lists.']));
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            $amiConfig = $config[$localnode];
-            if (!isset($amiConfig['host']) || !isset($amiConfig['user']) || !isset($amiConfig['passwd'])) {
-                $this->logger->error('Invalid AMI config', [
-                    'user' => $currentUser,
-                    'localnode' => $localnode,
-                    'amiConfig' => $amiConfig
-                ]);
-                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid AMI configuration for node.']));
+            $data = $request->getParsedBody();
+            $localnode = $data['localnode'] ?? null;
+            $this->logger->info('Ban/Allow request data', ['localnode' => $localnode, 'data' => $data]);
+
+            if (empty($localnode) || !preg_match('/^\d+$/', $localnode)) {
+                $this->logger->error('Invalid localnode parameter', ['localnode' => $localnode]);
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Valid local node parameter is required.']));
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            $this->logger->info('Getting Ban/Allow lists', [
-                'user' => $currentUser,
-                'localnode' => $localnode,
-                'host' => $amiConfig['host']
-            ]);
-
-            // Get allowlist and denylist data
-            $allowlistData = $this->getBanAllowList($amiConfig, 'allowlist', $localnode);
-            $denylistData = $this->getBanAllowList($amiConfig, 'denylist', $localnode);
-
+            // For now, return a simple test response to see if the endpoint works
+            $this->logger->info('Ban/Allow returning test response');
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'data' => [
                     'localnode' => $localnode,
-                    'allowlist' => $allowlistData,
-                    'denylist' => $denylistData,
+                    'allowlist' => ['entries' => []],
+                    'denylist' => ['entries' => []],
                     'timestamp' => date('c')
                 ],
-                'message' => 'Node access control lists retrieved successfully'
+                'message' => 'Test response - Ban/Allow endpoint working'
             ]));
             return $response->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
-            $this->logger->error('Failed to retrieve node access control lists', ['error' => $e->getMessage()]);
-            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve node access control lists: ' . $e->getMessage()]));
+            $this->logger->error('Ban/Allow exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Ban/Allow error: ' . $e->getMessage()]));
             return $response->withHeader('Content-Type', 'application/json');
         }
     }
