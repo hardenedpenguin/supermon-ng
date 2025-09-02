@@ -1658,6 +1658,14 @@ class NodeController
         // Basic test log to see if we're even reaching this method
         error_log("BANALLOW: Method called at " . date('Y-m-d H:i:s'));
         
+        // Simple test response to see if the endpoint works at all
+        $response->getBody()->write(json_encode([
+            'success' => true,
+            'message' => 'Ban/Allow endpoint reached successfully',
+            'timestamp' => date('c')
+        ]));
+        return $response->withHeader('Content-Type', 'application/json');
+        
         try {
             // Include required dependencies for the original ban/allow system
             require_once __DIR__ . '/../../../includes/session.inc';
