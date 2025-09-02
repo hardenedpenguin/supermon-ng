@@ -213,10 +213,6 @@ const formData = ref({
 // Watch for modal visibility changes
 watch(() => props.isVisible, (newVal) => {
   if (newVal) {
-    console.log('BanAllow: Modal opened, defaultNode:', props.defaultNode, 'availableNodes:', props.availableNodes)
-    console.log('BanAllow: availableNodes type:', typeof props.availableNodes, 'length:', props.availableNodes?.length)
-    console.log('BanAllow: availableNodes content:', props.availableNodes)
-    
     resetState()
     // Set the default node if provided
     let targetNode = props.defaultNode
@@ -224,20 +220,16 @@ watch(() => props.isVisible, (newVal) => {
     // Handle group mode - if defaultNode is comma-separated, use the first node
     if (props.defaultNode && props.defaultNode.includes(',')) {
       targetNode = props.defaultNode.split(',')[0].trim()
-      console.log('BanAllow: Group mode detected, using first node:', targetNode)
     }
     
     if (targetNode && props.displayedNodes.some(node => node.id.toString() === targetNode)) {
-      console.log('BanAllow: Setting selectedLocalNode to:', targetNode)
       selectedLocalNode.value = targetNode
       // Load the lists for the selected node
       loadLists()
     } else {
-      console.log('BanAllow: No valid default node found. targetNode:', targetNode, 'displayedNodes:', props.displayedNodes)
       // Try to set the first available node if no default is provided
       if (props.displayedNodes && props.displayedNodes.length > 0) {
         const firstNode = props.displayedNodes[0]
-        console.log('BanAllow: Setting to first available node:', firstNode.id)
         selectedLocalNode.value = firstNode.id
         loadLists()
       }
@@ -247,10 +239,7 @@ watch(() => props.isVisible, (newVal) => {
 
 // Computed properties
 const hasValidNode = computed(() => {
-  console.log('BanAllow: hasValidNode check - selectedLocalNode:', selectedLocalNode.value, 'displayedNodes:', props.displayedNodes)
-  const isValid = selectedLocalNode.value && props.displayedNodes.some(node => node.id.toString() === selectedLocalNode.value)
-  console.log('BanAllow: hasValidNode result:', isValid)
-  return isValid
+  return selectedLocalNode.value && props.displayedNodes.some(node => node.id.toString() === selectedLocalNode.value)
 })
 
 // Methods
@@ -276,9 +265,7 @@ const resetState = () => {
 }
 
 const loadLists = async () => {
-  console.log('BanAllow: loadLists called, hasValidNode:', hasValidNode.value, 'selectedLocalNode:', selectedLocalNode.value)
   if (!hasValidNode.value) {
-    console.log('BanAllow: No valid node, returning early')
     return
   }
 
@@ -288,7 +275,6 @@ const loadLists = async () => {
   successMessage.value = ''
 
   try {
-    console.log('BanAllow: Making API call with localnode:', selectedLocalNode.value)
     const response = await api.post('/nodes/banallow', { localnode: selectedLocalNode.value })
 
     if (response.data.success) {
@@ -306,10 +292,8 @@ const loadLists = async () => {
 }
 
 const executeAction = async () => {
-  console.log('BanAllow: executeAction called, hasValidNode:', hasValidNode.value, 'selectedLocalNode:', selectedLocalNode.value)
   if (!hasValidNode.value) {
     error.value = 'Please select a valid local node'
-    console.log('BanAllow: No valid node for action')
     return
   }
 

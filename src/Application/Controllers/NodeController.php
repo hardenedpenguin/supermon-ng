@@ -1655,11 +1655,7 @@ class NodeController
 
     public function banallow(Request $request, Response $response, array $args): Response
     {
-        // Basic test log to see if we're even reaching this method
-        error_log("BANALLOW: Method called at " . date('Y-m-d H:i:s'));
-        
         $data = $request->getParsedBody();
-        error_log("BANALLOW: Request data: " . json_encode($data));
         
         try {
             // Include required dependencies for the original ban/allow system
@@ -1702,31 +1698,15 @@ class NodeController
             }
 
             $currentUser = $this->getCurrentUser();
-            $this->logger->info('Ban/Allow request started', ['user' => $currentUser]);
-            
-            // Debug session and authentication
-            $this->logger->info('Session debug', [
-                'currentUser' => $currentUser,
-                'session_user' => $_SESSION['user'] ?? 'not set',
-                'session_sm61loggedin' => $_SESSION['sm61loggedin'] ?? 'not set',
-                'php_auth_user' => $_SERVER['PHP_AUTH_USER'] ?? 'not set',
-                'remote_user' => $_SERVER['REMOTE_USER'] ?? 'not set',
-                'permission' => 'BANUSER'
-            ]);
             
             // Check authentication using modern system
             if (!$this->hasUserPermission($currentUser, 'BANUSER')) {
-                $this->logger->info('Ban/Allow permission denied', [
-                    'user' => $currentUser,
-                    'permission' => 'BANUSER'
-                ]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to manage node access control lists.']));
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
             $data = $request->getParsedBody();
             $localnode = $data['localnode'] ?? null;
-            $this->logger->info('Ban/Allow request data', ['localnode' => $localnode, 'data' => $data]);
 
             if (empty($localnode) || !preg_match('/^\d+$/', $localnode)) {
                 $this->logger->error('Invalid localnode parameter', ['localnode' => $localnode]);
