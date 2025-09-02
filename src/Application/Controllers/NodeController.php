@@ -1661,8 +1661,13 @@ class NodeController
         // Simple test response to see if the endpoint works at all
         $response->getBody()->write(json_encode([
             'success' => true,
-            'message' => 'Ban/Allow endpoint reached successfully',
-            'timestamp' => date('c')
+            'data' => [
+                'localnode' => $data['localnode'] ?? 'test',
+                'allowlist' => ['entries' => []],
+                'denylist' => ['entries' => []],
+                'timestamp' => date('c')
+            ],
+            'message' => 'Ban/Allow endpoint reached successfully'
         ]));
         return $response->withHeader('Content-Type', 'application/json');
         
