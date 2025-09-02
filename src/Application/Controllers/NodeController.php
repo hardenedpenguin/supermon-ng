@@ -1656,12 +1656,23 @@ class NodeController
     public function banallow(Request $request, Response $response, array $args): Response
     {
         try {
+            // Include required dependencies for the original ban/allow system
+            require_once __DIR__ . '/../../../includes/session.inc';
+            require_once __DIR__ . '/../../../includes/amifunctions.inc';
+            require_once __DIR__ . '/../../../includes/common.inc';
+            require_once __DIR__ . '/../../../authusers.php';
+            require_once __DIR__ . '/../../../authini.php';
+            require_once __DIR__ . '/../../../includes/csrf.inc';
+            require_once __DIR__ . '/../../../includes/node-ban-allow/ban-ami.inc';
+            require_once __DIR__ . '/../../../includes/node-ban-allow/ban-display.inc';
+
             $currentUser = $this->getCurrentUser();
             $this->logger->info('Ban/Allow request started', ['user' => $currentUser]);
             
-            if (!$this->hasUserPermission($currentUser, 'BANUSER')) {
+            // Check authentication using original system
+            if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("BANUSER"))) {
                 $this->logger->info('Ban/Allow permission denied', ['user' => $currentUser]);
-                $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to manage node access control lists.']));
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'You must login to use the Restrict function!']));
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
@@ -1675,17 +1686,52 @@ class NodeController
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            // For now, return a simple test response to see if the endpoint works
-            $this->logger->info('Ban/Allow returning test response');
+            // Load configuration using original system
+            $SUPINI = get_ini_name($_SESSION['user']);
+            if (!file_exists($SUPINI)) {
+                $this->logger->error('INI file not found', ['file' => $SUPINI]);
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Could not load configuration file.']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $config = parse_ini_file($SUPINI, true);
+            if (!isset($config[$localnode])) {
+                $this->logger->error('Node not found in config', ['localnode' => $localnode, 'file' => $SUPINI]);
+                $response->getBody()->write(json_encode(['success' => false, 'message' => "Node $localnode is not in configuration file."]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            // Establish AMI connection using original system
+            $fp = \SimpleAmiClient::connect($config[$localnode]['host']);
+            if ($fp === false) {
+                $this->logger->error('AMI connection failed', ['host' => $config[$localnode]['host']]);
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Could not connect to Asterisk Manager.']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            if (\SimpleAmiClient::login($fp, $config[$localnode]['user'], $config[$localnode]['passwd']) === false) {
+                \SimpleAmiClient::logoff($fp);
+                $this->logger->error('AMI authentication failed', ['host' => $config[$localnode]['host']]);
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Could not authenticate with Asterisk Manager.']));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            // Get allowlist and denylist data using original functions
+            $allowlistData = $this->getBanAllowListData($fp, 'allowlist', $localnode);
+            $denylistData = $this->getBanAllowListData($fp, 'denylist', $localnode);
+
+            // Cleanup AMI connection
+            \SimpleAmiClient::logoff($fp);
+
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'data' => [
                     'localnode' => $localnode,
-                    'allowlist' => ['entries' => []],
-                    'denylist' => ['entries' => []],
+                    'allowlist' => $allowlistData,
+                    'denylist' => $denylistData,
                     'timestamp' => date('c')
                 ],
-                'message' => 'Test response - Ban/Allow endpoint working'
+                'message' => 'Node access control lists retrieved successfully'
             ]));
             return $response->withHeader('Content-Type', 'application/json');
 
@@ -1697,6 +1743,41 @@ class NodeController
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Ban/Allow error: ' . $e->getMessage()]));
             return $response->withHeader('Content-Type', 'application/json');
         }
+    }
+
+    private function getBanAllowListData($fp, string $listType, string $localnode): array
+    {
+        $dbFamily = $listType . "/" . $localnode;
+        $rawData = \SimpleAmiClient::command($fp, "database show " . $dbFamily);
+        
+        if ($rawData === false || trim($rawData) === "") {
+            return ['entries' => []];
+        }
+
+        $lines = explode("\n", $rawData);
+        $entries = [];
+
+        foreach ($lines as $line) {
+            $processedLine = trim($line);
+            if (strpos($processedLine, "Output: ") === 0) {
+                $processedLine = substr($processedLine, strlen("Output: "));
+                $processedLine = trim($processedLine);
+            }
+            
+            if (preg_match('/^\d+\s+results found\.?$/i', $processedLine)) {
+                continue;
+            }
+
+            if (trim($processedLine) !== "") {
+                $parts = explode(' ', $processedLine, 2);
+                $entries[] = [
+                    'node' => $parts[0] ?? '',
+                    'comment' => $parts[1] ?? ''
+                ];
+            }
+        }
+
+        return ['entries' => $entries];
     }
 
     public function banallowAction(Request $request, Response $response, array $args): Response
