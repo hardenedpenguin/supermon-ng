@@ -177,6 +177,10 @@ const props = defineProps({
   availableNodes: {
     type: Array,
     default: () => []
+  },
+  defaultNode: {
+    type: String,
+    default: ''
   }
 })
 
@@ -204,6 +208,12 @@ const formData = ref({
 watch(() => props.isVisible, (newVal) => {
   if (newVal) {
     resetState()
+    // Set the default node if provided
+    if (props.defaultNode && props.availableNodes.includes(props.defaultNode)) {
+      selectedLocalNode.value = props.defaultNode
+      // Load the lists for the selected node
+      loadLists()
+    }
   }
 })
 
@@ -223,7 +233,7 @@ const resetState = () => {
   executing.value = false
   error.value = ''
   successMessage.value = ''
-  selectedLocalNode.value = ''
+  // Don't reset selectedLocalNode here - let the watch handle it
   allowlist.value = { entries: [] }
   denylist.value = { entries: [] }
   formData.value = {
