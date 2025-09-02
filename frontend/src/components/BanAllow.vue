@@ -219,13 +219,21 @@ watch(() => props.isVisible, (newVal) => {
     
     resetState()
     // Set the default node if provided
-    if (props.defaultNode && props.displayedNodes.some(node => node.id.toString() === props.defaultNode)) {
-      console.log('BanAllow: Setting selectedLocalNode to:', props.defaultNode)
-      selectedLocalNode.value = props.defaultNode
+    let targetNode = props.defaultNode
+    
+    // Handle group mode - if defaultNode is comma-separated, use the first node
+    if (props.defaultNode && props.defaultNode.includes(',')) {
+      targetNode = props.defaultNode.split(',')[0].trim()
+      console.log('BanAllow: Group mode detected, using first node:', targetNode)
+    }
+    
+    if (targetNode && props.displayedNodes.some(node => node.id.toString() === targetNode)) {
+      console.log('BanAllow: Setting selectedLocalNode to:', targetNode)
+      selectedLocalNode.value = targetNode
       // Load the lists for the selected node
       loadLists()
     } else {
-      console.log('BanAllow: No valid default node found. defaultNode:', props.defaultNode, 'displayedNodes:', props.displayedNodes)
+      console.log('BanAllow: No valid default node found. targetNode:', targetNode, 'displayedNodes:', props.displayedNodes)
       // Try to set the first available node if no default is provided
       if (props.displayedNodes && props.displayedNodes.length > 0) {
         const firstNode = props.displayedNodes[0]
@@ -239,7 +247,10 @@ watch(() => props.isVisible, (newVal) => {
 
 // Computed properties
 const hasValidNode = computed(() => {
-  return selectedLocalNode.value && props.displayedNodes.some(node => node.id.toString() === selectedLocalNode.value)
+  console.log('BanAllow: hasValidNode check - selectedLocalNode:', selectedLocalNode.value, 'displayedNodes:', props.displayedNodes)
+  const isValid = selectedLocalNode.value && props.displayedNodes.some(node => node.id.toString() === selectedLocalNode.value)
+  console.log('BanAllow: hasValidNode result:', isValid)
+  return isValid
 })
 
 // Methods
