@@ -1655,6 +1655,9 @@ class NodeController
 
     public function banallow(Request $request, Response $response, array $args): Response
     {
+        // Basic test log to see if we're even reaching this method
+        error_log("BANALLOW: Method called at " . date('Y-m-d H:i:s'));
+        
         try {
             // Include required dependencies for the original ban/allow system
             require_once __DIR__ . '/../../../includes/session.inc';
