@@ -1698,9 +1698,21 @@ class NodeController
             $currentUser = $this->getCurrentUser();
             $this->logger->info('Ban/Allow request started', ['user' => $currentUser]);
             
+            // Debug session and authentication
+            $this->logger->info('Session debug', [
+                'sm61loggedin' => $_SESSION['sm61loggedin'] ?? 'not set',
+                'session_user' => $_SESSION['user'] ?? 'not set',
+                'currentUser' => $currentUser,
+                'banuser_auth' => get_user_auth("BANUSER")
+            ]);
+            
             // Check authentication using original system
             if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("BANUSER"))) {
-                $this->logger->info('Ban/Allow permission denied', ['user' => $currentUser]);
+                $this->logger->info('Ban/Allow permission denied', [
+                    'user' => $currentUser,
+                    'sm61loggedin' => $_SESSION['sm61loggedin'] ?? 'not set',
+                    'banuser_auth' => get_user_auth("BANUSER")
+                ]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'You must login to use the Restrict function!']));
                 return $response->withHeader('Content-Type', 'application/json');
             }
