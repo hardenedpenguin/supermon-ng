@@ -236,6 +236,7 @@
             v-model:isVisible="showBanAllowModal" 
             :available-nodes="availableNodes"
             :default-node="selectedNode"
+            :displayed-nodes="displayedNodes"
           />
           
           <!-- Pi GPIO Modal -->

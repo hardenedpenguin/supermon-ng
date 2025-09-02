@@ -12,7 +12,9 @@
           <label for="localnode">Local Node:</label>
           <select id="localnode" v-model="selectedLocalNode" @change="loadLists" :disabled="loading">
             <option value="">Select a node...</option>
-            <option v-for="node in availableNodes" :key="node" :value="node">{{ node }}</option>
+            <option v-for="node in displayedNodes" :key="node.id" :value="node.id">
+              {{ node.id }} => {{ node.info || 'Node not in database' }}
+            </option>
           </select>
         </div>
 
@@ -181,6 +183,10 @@ const props = defineProps({
   defaultNode: {
     type: String,
     default: ''
+  },
+  displayedNodes: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -213,18 +219,18 @@ watch(() => props.isVisible, (newVal) => {
     
     resetState()
     // Set the default node if provided
-    if (props.defaultNode && props.availableNodes.includes(props.defaultNode)) {
+    if (props.defaultNode && props.displayedNodes.some(node => node.id.toString() === props.defaultNode)) {
       console.log('BanAllow: Setting selectedLocalNode to:', props.defaultNode)
       selectedLocalNode.value = props.defaultNode
       // Load the lists for the selected node
       loadLists()
     } else {
-      console.log('BanAllow: No valid default node found. defaultNode:', props.defaultNode, 'availableNodes:', props.availableNodes)
+      console.log('BanAllow: No valid default node found. defaultNode:', props.defaultNode, 'displayedNodes:', props.displayedNodes)
       // Try to set the first available node if no default is provided
-      if (props.availableNodes && props.availableNodes.length > 0) {
-        const firstNode = props.availableNodes[0]
-        console.log('BanAllow: Setting to first available node:', firstNode)
-        selectedLocalNode.value = firstNode
+      if (props.displayedNodes && props.displayedNodes.length > 0) {
+        const firstNode = props.displayedNodes[0]
+        console.log('BanAllow: Setting to first available node:', firstNode.id)
+        selectedLocalNode.value = firstNode.id
         loadLists()
       }
     }
@@ -233,7 +239,7 @@ watch(() => props.isVisible, (newVal) => {
 
 // Computed properties
 const hasValidNode = computed(() => {
-  return selectedLocalNode.value && props.availableNodes.includes(selectedLocalNode.value)
+  return selectedLocalNode.value && props.displayedNodes.some(node => node.id.toString() === selectedLocalNode.value)
 })
 
 // Methods
