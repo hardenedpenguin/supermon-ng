@@ -1712,14 +1712,13 @@ class NodeController
                 'banuser_auth' => get_user_auth("BANUSER")
             ]);
             
-            // Check authentication using original system
-            if (($_SESSION['sm61loggedin'] !== true) || (!get_user_auth("BANUSER"))) {
+            // Check authentication using modern system
+            if (!$this->hasUserPermission($currentUser, 'BANUSER')) {
                 $this->logger->info('Ban/Allow permission denied', [
                     'user' => $currentUser,
-                    'sm61loggedin' => $_SESSION['sm61loggedin'] ?? 'not set',
-                    'banuser_auth' => get_user_auth("BANUSER")
+                    'permission' => 'BANUSER'
                 ]);
-                $response->getBody()->write(json_encode(['success' => false, 'message' => 'You must login to use the Restrict function!']));
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to manage node access control lists.']));
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
@@ -1733,32 +1732,25 @@ class NodeController
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            // Load configuration using original system
-            $SUPINI = get_ini_name($_SESSION['user']);
-            if (!file_exists($SUPINI)) {
-                $this->logger->error('INI file not found', ['file' => $SUPINI]);
-                $response->getBody()->write(json_encode(['success' => false, 'message' => 'Could not load configuration file.']));
+            // Load configuration using modern system
+            $config = $this->loadNodeConfig($currentUser, $localnode);
+            if (!$config) {
+                $this->logger->error('Node configuration not found', ['localnode' => $localnode, 'user' => $currentUser]);
+                $response->getBody()->write(json_encode(['success' => false, 'message' => "Node configuration not found for node $localnode."]));
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            $config = parse_ini_file($SUPINI, true);
-            if (!isset($config[$localnode])) {
-                $this->logger->error('Node not found in config', ['localnode' => $localnode, 'file' => $SUPINI]);
-                $response->getBody()->write(json_encode(['success' => false, 'message' => "Node $localnode is not in configuration file."]));
-                return $response->withHeader('Content-Type', 'application/json');
-            }
-
-            // Establish AMI connection using original system
-            $fp = \SimpleAmiClient::connect($config[$localnode]['host']);
+            // Establish AMI connection using modern config
+            $fp = \SimpleAmiClient::connect($config['host']);
             if ($fp === false) {
-                $this->logger->error('AMI connection failed', ['host' => $config[$localnode]['host']]);
+                $this->logger->error('AMI connection failed', ['host' => $config['host']]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Could not connect to Asterisk Manager.']));
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            if (\SimpleAmiClient::login($fp, $config[$localnode]['user'], $config[$localnode]['passwd']) === false) {
+            if (\SimpleAmiClient::login($fp, $config['user'], $config['passwd']) === false) {
                 \SimpleAmiClient::logoff($fp);
-                $this->logger->error('AMI authentication failed', ['host' => $config[$localnode]['host']]);
+                $this->logger->error('AMI authentication failed', ['host' => $config['host']]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Could not authenticate with Asterisk Manager.']));
                 return $response->withHeader('Content-Type', 'application/json');
             }
