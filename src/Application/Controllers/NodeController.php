@@ -1660,11 +1660,40 @@ class NodeController
             require_once __DIR__ . '/../../../includes/session.inc';
             require_once __DIR__ . '/../../../includes/amifunctions.inc';
             require_once __DIR__ . '/../../../includes/common.inc';
-            require_once __DIR__ . '/../../../authusers.php';
-            require_once __DIR__ . '/../../../authini.php';
+            require_once __DIR__ . '/../../../user_files/authusers.inc';
+            require_once __DIR__ . '/../../../user_files/authini.inc';
             require_once __DIR__ . '/../../../includes/csrf.inc';
             require_once __DIR__ . '/../../../includes/node-ban-allow/ban-ami.inc';
             require_once __DIR__ . '/../../../includes/node-ban-allow/ban-display.inc';
+
+            // Define get_user_auth function if it doesn't exist
+            if (!function_exists('get_user_auth')) {
+                function get_user_auth($permission) {
+                    global $BANUSER, $CONNECTUSER, $DISCUSER, $MONUSER, $LMONUSER, $DTMFUSER, 
+                           $ASTLKUSER, $RSTATUSER, $BUBLUSER, $FAVUSER, $CTRLUSER, $CFGEDUSER,
+                           $ASTRELUSER, $ASTSTRUSER, $ASTSTPUSER, $FSTRESUSER, $RBTUSER,
+                           $UPDUSER, $HWTOUSER, $WIKIUSER, $CSTATUSER, $ASTATUSER, $EXNUSER,
+                           $NINFUSER, $ACTNUSER, $ALLNUSER, $DBTUSER, $GPIOUSER, $LLOGUSER,
+                           $ASTLUSER, $CLOGUSER, $IRLPLOGUSER, $WLOGUSER, $WERRUSER, $SYSINFUSER, $SUSBUSER;
+                    
+                    $permissionVar = $permission;
+                    if (isset($$permissionVar) && is_array($$permissionVar)) {
+                        return in_array($_SESSION['user'] ?? '', $$permissionVar, true);
+                    }
+                    return false;
+                }
+            }
+
+            // Define get_ini_name function if it doesn't exist
+            if (!function_exists('get_ini_name')) {
+                function get_ini_name($user) {
+                    global $ININAME;
+                    if (isset($ININAME[$user])) {
+                        return __DIR__ . '/../../../user_files/' . $ININAME[$user];
+                    }
+                    return __DIR__ . '/../../../user_files/allmon.ini';
+                }
+            }
 
             $currentUser = $this->getCurrentUser();
             $this->logger->info('Ban/Allow request started', ['user' => $currentUser]);
