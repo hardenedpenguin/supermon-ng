@@ -70,6 +70,33 @@ class SystemController
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    public function getClientIP(Request $request, Response $response): Response
+    {
+        $this->logger->info('Client IP request');
+        
+        // Get client IP from various sources
+        $clientIP = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? 
+                   $_SERVER['HTTP_X_REAL_IP'] ?? 
+                   $_SERVER['REMOTE_ADDR'] ?? 
+                   '127.0.0.1';
+        
+        // Handle multiple IPs in X-Forwarded-For header
+        if (strpos($clientIP, ',') !== false) {
+            $clientIP = trim(explode(',', $clientIP)[0]);
+        }
+        
+        $response->getBody()->write(json_encode([
+            'success' => true,
+            'data' => [
+                'ip' => $clientIP,
+                'timestamp' => date('c')
+            ],
+            'message' => 'Client IP retrieved successfully'
+        ]));
+
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
     public function reload(Request $request, Response $response): Response
     {
         $this->logger->info('System reload request');

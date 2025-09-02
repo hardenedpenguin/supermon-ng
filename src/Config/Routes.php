@@ -64,6 +64,7 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) {
         $group->get('/info', [SystemController::class, 'info']);
         $group->get('/stats', [SystemController::class, 'stats']);
         $group->get('/logs', [SystemController::class, 'getLogs']);
+        $group->get('/client-ip', [SystemController::class, 'getClientIP']);
     });
 
     // Database routes

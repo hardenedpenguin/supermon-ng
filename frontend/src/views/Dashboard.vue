@@ -121,6 +121,7 @@
     <p class="button-container">
       <input type="button" class="submit" value="Display Configuration" @click="showDisplayConfigModal = true">
       <input v-if="systemInfo?.dvmUrl" type="button" class="submit" value="Digital Dashboard" @click="digitaldashboard">
+      <input v-if="systemInfo?.hamclockEnabled" type="button" class="submit" value="HamClock" @click="openHamClock">
       <input v-if="appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="System Info" @click="systeminfo">
     </p>
 
@@ -697,6 +698,63 @@ const digitaldashboard = async () => {
   } catch (error) {
     console.error('Digital dashboard error:', error)
   }
+}
+
+const openHamClock = async () => {
+  try {
+    if (systemInfo.value?.hamclockEnabled) {
+      // Determine which URL to use based on client IP
+      const clientIP = await getClientIP()
+      const isInternal = isInternalIP(clientIP)
+      
+      let hamclockUrl = systemInfo.value.hamclockUrlInternal
+      if (!isInternal) {
+        hamclockUrl = systemInfo.value.hamclockUrlExternal
+      }
+      
+      if (hamclockUrl) {
+        window.open(hamclockUrl, 'HamClock', 'status=no,location=no,toolbar=no,width=1024,height=768,left=100,top=100')
+      } else {
+        alert('HamClock URL not configured')
+      }
+    } else {
+      alert('HamClock is not enabled')
+    }
+  } catch (error) {
+    console.error('HamClock error:', error)
+    alert('Error opening HamClock: ' + (error.message || 'Unknown error'))
+  }
+}
+
+// Helper function to get client IP
+const getClientIP = async (): Promise<string> => {
+  try {
+    const response = await fetch('/api/system/client-ip')
+    if (response.ok) {
+      const data = await response.json()
+      return data.ip || '127.0.0.1'
+    }
+  } catch (error) {
+    console.error('Error getting client IP:', error)
+  }
+  return '127.0.0.1'
+}
+
+// Helper function to check if IP is internal
+const isInternalIP = (ip: string): boolean => {
+  // Check for private IP ranges
+  const privateRanges = [
+    /^10\./,           // 10.0.0.0/8
+    /^172\.(1[6-9]|2[0-9]|3[0-1])\./, // 172.16.0.0/12
+    /^192\.168\./,     // 192.168.0.0/16
+    /^127\./,          // 127.0.0.0/8 (localhost)
+    /^169\.254\./,     // 169.254.0.0/16 (link-local)
+    /^::1$/,           // IPv6 localhost
+    /^fc00::/,         // IPv6 unique local
+    /^fe80::/          // IPv6 link-local
+  ]
+  
+  return privateRanges.some(range => range.test(ip))
 }
 
 // Additional button methods to match original Supermon-ng

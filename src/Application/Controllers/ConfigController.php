@@ -481,7 +481,10 @@ class ConfigController
             'cpuTemp' => $cpuInfo['temp'] ?? 'N/A',
             'cpuTime' => $cpuInfo['time'] ?? 'N/A',
             'dvmUrl' => $globalConfig['DVM_URL'] ?? null,
-            'maintainer' => $globalConfig['NAME'] ?? 'W5GLE, Alvin, Texas'
+            'maintainer' => $globalConfig['NAME'] ?? 'W5GLE, Alvin, Texas',
+            'hamclockEnabled' => filter_var($globalConfig['HAMCLOCK_ENABLED'] ?? 'False', FILTER_VALIDATE_BOOLEAN),
+            'hamclockUrlInternal' => $globalConfig['HAMCLOCK_URL_INTERNAL'] ?? null,
+            'hamclockUrlExternal' => $globalConfig['HAMCLOCK_URL_EXTERNAL'] ?? null
         ];
         
         return $systemInfo;
@@ -510,7 +513,10 @@ class ConfigController
                 'SMSERVERNAME' => $SMSERVERNAME ?? null,
                 'BACKGROUND' => $BACKGROUND ?? null,
                 'BACKGROUND_COLOR' => $BACKGROUND_COLOR ?? null,
-                'DISPLAY_BACKGROUND' => $DISPLAY_BACKGROUND ?? null
+                'DISPLAY_BACKGROUND' => $DISPLAY_BACKGROUND ?? null,
+                'HAMCLOCK_ENABLED' => $HAMCLOCK_ENABLED ?? 'False',
+                'HAMCLOCK_URL_INTERNAL' => $HAMCLOCK_URL_INTERNAL ?? null,
+                'HAMCLOCK_URL_EXTERNAL' => $HAMCLOCK_URL_EXTERNAL ?? null
             ];
         }
         
