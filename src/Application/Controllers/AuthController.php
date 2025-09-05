@@ -388,7 +388,6 @@ class AuthController
                 'CSTATUSER' => true,
                 'ASTATUSER' => true,
                 'EXNUSER' => true,
-                'NINFUSER' => true,
                 'ACTNUSER' => true,
                 'ALLNUSER' => true,
                 'DBTUSER' => true,
@@ -414,7 +413,7 @@ class AuthController
             'ASTLKUSER', 'RSTATUSER', 'BUBLUSER', 'FAVUSER', 'CTRLUSER',
             'CFGEDUSER', 'ASTRELUSER', 'ASTSTRUSER', 'ASTSTPUSER', 'FSTRESUSER',
             'RBTUSER', 'UPDUSER', 'HWTOUSER', 'WIKIUSER', 'CSTATUSER',
-            'ASTATUSER', 'EXNUSER', 'NINFUSER', 'ACTNUSER', 'ALLNUSER',
+            'ASTATUSER', 'EXNUSER', 'ACTNUSER', 'ALLNUSER',
             'DBTUSER', 'GPIOUSER', 'LLOGUSER', 'ASTLUSER', 'CLOGUSER', 'IRLPLOGUSER',
             'WLOGUSER', 'WERRUSER', 'BANUSER', 'SYSINFUSER', 'SUSBUSER'
         ];
@@ -506,7 +505,6 @@ class AuthController
             'CSTATUSER' => true,
             'ASTATUSER' => true,
             'EXNUSER' => true,
-            'NINFUSER' => true,
             'ACTNUSER' => true,
             'ALLNUSER' => true,
             'DBTUSER' => true,
@@ -550,7 +548,6 @@ class AuthController
             'CSTATUSER' => false,
             'ASTATUSER' => false,
             'EXNUSER' => false,
-            'NINFUSER' => false,
             'ACTNUSER' => false,
             'ALLNUSER' => false,
             'DBTUSER' => false,

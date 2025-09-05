@@ -1080,7 +1080,6 @@ class ConfigController
                 'CSTATUSER' => true,
                 'ASTATUSER' => true,
                 'EXNUSER' => true,
-                'NINFUSER' => true,
                 'ACTNUSER' => true,
                 'ALLNUSER' => true,
                 'DBTUSER' => true,

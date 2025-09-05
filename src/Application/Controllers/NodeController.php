@@ -1015,7 +1015,6 @@ class NodeController
                 'CSTATUSER' => true,
                 'ASTATUSER' => true,
                 'EXNUSER' => true,
-                'NINFUSER' => true,
                 'ACTNUSER' => true,
                 'ALLNUSER' => true,
                 'DBTUSER' => true,
@@ -1675,7 +1674,7 @@ class NodeController
                            $ASTLKUSER, $RSTATUSER, $BUBLUSER, $FAVUSER, $CTRLUSER, $CFGEDUSER,
                            $ASTRELUSER, $ASTSTRUSER, $ASTSTPUSER, $FSTRESUSER, $RBTUSER,
                            $UPDUSER, $HWTOUSER, $WIKIUSER, $CSTATUSER, $ASTATUSER, $EXNUSER,
-                           $NINFUSER, $ACTNUSER, $ALLNUSER, $DBTUSER, $GPIOUSER, $LLOGUSER,
+                           $ACTNUSER, $ALLNUSER, $DBTUSER, $GPIOUSER, $LLOGUSER,
                            $ASTLUSER, $CLOGUSER, $IRLPLOGUSER, $WLOGUSER, $WERRUSER, $SYSINFUSER, $SUSBUSER;
                     
                     $permissionVar = $permission;

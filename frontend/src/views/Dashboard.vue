@@ -94,7 +94,6 @@
       <input v-if="appStore.hasPermission('WIKIUSER')" type="button" class="submit" value="AllStar Wiki" @click="openWiki">
       <input v-if="appStore.hasPermission('CSTATUSER')" type="button" class="submit" value="CPU Status" @click="cpustats">
       <input v-if="appStore.hasPermission('ASTATUSER')" type="button" class="submit" value="AllStar Status" @click="aststats">
-      <input v-if="appStore.hasPermission('NINFUSER')" type="button" class="submit" value="Node Info" @click="astnodes">
       <input v-if="appStore.hasPermission('ACTNUSER')" type="button" class="submit" value="Active Nodes" @click="openActiveNodes">
       <input v-if="appStore.hasPermission('ALLNUSER')" type="button" class="submit" value="All Nodes" @click="openAllNodes">
       
@@ -120,7 +119,7 @@
     <!-- Bottom Utility Buttons (matches original exactly) -->
     <p class="button-container">
       <input type="button" class="submit" value="Display Configuration" @click="showDisplayConfigModal = true">
-      <input v-if="systemInfo?.dvmUrl" type="button" class="submit" value="Digital Dashboard" @click="digitaldashboard">
+      <input v-if="systemInfo?.dvmUrl" type="button" class="submit" value="Digital Dashboard" @click="openDigitalDashboard">
       <input v-if="systemInfo?.hamclockEnabled" type="button" class="submit" value="HamClock" @click="openHamClock">
       <input v-if="appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="System Info" @click="systeminfo">
     </p>
@@ -266,6 +265,12 @@
     
     <!-- SystemInfo Modal -->
     <SystemInfo v-model:open="showSystemInfoModal" />
+
+    <!-- Digital Dashboard Modal -->
+    <DigitalDashboard
+      v-model:isVisible="showDigitalDashboardModal"
+      :url="systemInfo?.dvmUrl || ''"
+    />
     
   </div>
 </template>
@@ -304,6 +309,7 @@ import WebErrLog from '@/components/WebErrLog.vue'
 import Voter from '@/components/Voter.vue'
 import ConfigEditor from '@/components/ConfigEditor.vue'
 import SystemInfo from '@/components/SystemInfo.vue'
+import DigitalDashboard from '@/components/DigitalDashboard.vue'
 
 
 const appStore = useAppStore()
@@ -345,6 +351,7 @@ const showSystemInfoModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
+const showDigitalDashboardModal = ref(false)
 const databaseStatus = ref<any>(null)
 
 // Computed properties
@@ -688,12 +695,10 @@ const favorites = async () => {
 
 
 
-const digitaldashboard = async () => {
+const openDigitalDashboard = async () => {
   try {
     if (systemInfo.value?.dvmUrl) {
-      window.open(systemInfo.value.dvmUrl, 'DigitalDashboard', 'status=no,location=no,toolbar=no,width=960,height=850,left=100,top=100')
-    } else {
-  
+      showDigitalDashboardModal.value = true
     }
   } catch (error) {
     console.error('Digital dashboard error:', error)
@@ -932,13 +937,6 @@ const aststats = async () => {
   }
 }
 
-const astnodes = async () => {
-  try {
-
-  } catch (error) {
-    console.error('Node Info error:', error)
-  }
-}
 
 const openActiveNodes = async () => {
   try {
@@ -1311,6 +1309,8 @@ watch(displayedNodes, (newDisplayedNodes) => {
   padding: 20px;
   background-color: var(--background-color);
   color: var(--text-color);
+  /* Allow menu dropdowns to extend beyond dashboard boundaries */
+  overflow: visible;
 }
 
 /* Original Supermon-ng table container styling */

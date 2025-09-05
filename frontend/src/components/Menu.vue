@@ -144,6 +144,11 @@ watch(() => appStore.isAuthenticated, () => {
   justify-content: center;
   align-items: center;
   border: 1px solid #333333;
+  /* Ensure dropdown overlays subsequent content */
+  position: relative;
+  z-index: 100;
+  /* Allow dropdown to extend beyond menu boundaries */
+  overflow: visible;
 }
 
 #menu ul {
@@ -185,6 +190,7 @@ watch(() => appStore.isAuthenticated, () => {
 #menu li.dropdown {
   position: relative;
   display: block;
+  overflow: visible;
 }
 
 #menu .dropdown-content {
@@ -193,7 +199,8 @@ watch(() => appStore.isAuthenticated, () => {
   background-color: #000000;
   min-width: 160px;
   box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-  z-index: 1;
+  /* Lift dropdown above buttons/content below */
+  z-index: 999;
   border-radius: 5px;
   top: 100%;
   left: 0;
