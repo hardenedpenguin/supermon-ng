@@ -275,7 +275,8 @@ CUSTOM_LINK = https://alerts.weather.gov/cap/wwaatmget.php?x=TXC039&y=1
 - Set `WX_CODE` to your local weather station code
 - Update `WX_LOCATION` with your location
 - Set `TEMP_UNIT` to `F` (Fahrenheit) or `C` (Celsius)
-- Configure AutoSky paths if using weather alerts
+- **AutoSky Integration**: Configure AutoSky paths if using weather alerts
+- **Alternative**: If AutoSky isn't available, use `CUSTOM_LINK` to set a clickable weather/alert link instead (e.g., weather.gov, local emergency management, etc.)
 
 **Dashboard Configuration:**
 Users with `SYSINFUSER` permissions can configure node status settings directly through the web dashboard using the "Node Status" button.
