@@ -161,10 +161,14 @@ else
     exit 1
 fi
 
-# Install Node.js dependencies and build frontend
-echo "📦 Installing Node.js dependencies..."
+# Handle frontend installation (development vs production)
+echo "📦 Setting up frontend..."
 cd "$APP_DIR/frontend"
+
 if [ -f "package.json" ]; then
+    # Development installation - build from source
+    echo "🔨 Development mode: Building frontend from source..."
+    
     # Check Node.js version before building
     NODE_VERSION=$(node --version | sed 's/v//')
     REQUIRED_VERSION="20.19"
@@ -194,9 +198,39 @@ if [ -f "package.json" ]; then
     echo "🔨 Building frontend..."
     npm run build
     
-    echo "✅ Frontend built successfully"
+    # Copy built files to public directory
+    echo "📁 Copying built frontend to public directory..."
+    cp -r dist/* "$APP_DIR/public/"
+    
+    echo "✅ Frontend built and copied to public directory"
+    
+elif [ -d "dist" ] && [ -f "dist/index.html" ]; then
+    # Production installation - pre-built frontend in dist/
+    echo "📦 Production mode: Using pre-built frontend from dist/..."
+    echo "📁 Copying frontend files to public directory..."
+    
+    # Copy frontend files to public directory where they should be served from
+    cp -r dist/* "$APP_DIR/public/"
+    
+    echo "✅ Pre-built frontend copied to public directory"
+    
+elif [ -f "index.html" ] && [ -d "assets" ]; then
+    # Production installation - pre-built frontend in root (release tarball)
+    echo "📦 Production mode: Using pre-built frontend (release package)..."
+    echo "📁 Copying frontend files to public directory..."
+    
+    # Copy frontend files to public directory where they should be served from
+    cp -r * "$APP_DIR/public/"
+    
+    echo "✅ Pre-built frontend copied to public directory"
+    
 else
-    echo "❌ Error: frontend/package.json not found. Make sure all files were extracted properly."
+    echo "❌ Error: No valid frontend installation found."
+    echo "   This indicates the installation files may be incomplete."
+    echo "   Expected one of:"
+    echo "   - Development: frontend/package.json (for building from source)"
+    echo "   - Production: frontend/dist/index.html (pre-built in dist/)"
+    echo "   - Release: frontend/index.html + frontend/assets/ (release package)"
     exit 1
 fi
 
@@ -303,7 +337,7 @@ else
 
 <VirtualHost *:80>
     ServerName localhost
-    DocumentRoot $APP_DIR/frontend/dist
+    DocumentRoot $APP_DIR/public
     
     # Proxy configurations (must come before Directory blocks)
     ProxyPreserveHost On
@@ -321,8 +355,8 @@ else
     # ProxyPass /live-ws ws://10.0.0.41:8082/live-ws
     # ProxyPassReverse /live-ws ws://10.0.0.41:8082/live-ws
     
-    # Serve static files from frontend/dist
-    <Directory "$APP_DIR/frontend/dist">
+    # Serve static files from public directory
+    <Directory "$APP_DIR/public">
         AllowOverride All
         Require all granted
         
