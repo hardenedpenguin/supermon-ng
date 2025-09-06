@@ -91,8 +91,8 @@ INSTALLER_DIR="$(pwd)"
 # Copy all files to the target directory (if not already there)
 if [ "$(pwd)" != "$APP_DIR" ]; then
     echo "📁 Copying files to $APP_DIR..."
-    # Copy everything except sudoers.d directory and supermon_unified_file_editor.sh
-    find . -maxdepth 1 ! -name . ! -name sudoers.d ! -name scripts -exec cp -r {} "$APP_DIR/" \;
+    # Copy everything except installer files, documentation, sudoers.d directory and supermon_unified_file_editor.sh
+    find . -maxdepth 1 ! -name . ! -name "*.md" ! -name "install.sh" ! -name sudoers.d ! -name scripts -exec cp -r {} "$APP_DIR/" \;
     # Copy scripts directory but exclude supermon_unified_file_editor.sh
     if [ -d "scripts" ]; then
         mkdir -p "$APP_DIR/scripts"
