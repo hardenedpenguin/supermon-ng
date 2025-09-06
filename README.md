@@ -384,15 +384,6 @@ sudo journalctl -u supermon-ng-node-status.service -f
 - **Node Status**: `/var/log/supermon-ng-node-status.log`
 - **Asterisk**: `/var/log/asterisk/messages`
 
-### Configuration File Editor
-
-Use the secure configuration editor:
-
-```bash
-# Edit configuration files safely
-sudo /usr/local/sbin/supermon_unified_file_editor.sh
-```
-
 ## 🐛 Troubleshooting
 
 ### Installation Issues
