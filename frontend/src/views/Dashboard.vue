@@ -121,6 +121,7 @@
       <input type="button" class="submit" value="Display Configuration" @click="showDisplayConfigModal = true">
       <input v-if="systemInfo?.dvmUrl" type="button" class="submit" value="Digital Dashboard" @click="openDigitalDashboard">
       <input v-if="systemInfo?.hamclockEnabled" type="button" class="submit" value="HamClock" @click="openHamClock">
+      <input v-if="appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="Node Status" @click="openNodeStatus">
       <input v-if="appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="System Info" @click="systeminfo">
     </p>
 
@@ -278,6 +279,12 @@
       :url="hamclockUrl"
       @close="showHamClockModal = false"
     />
+
+    <!-- Node Status Modal -->
+    <NodeStatus
+      v-model:isVisible="showNodeStatusModal"
+      @close="showNodeStatusModal = false"
+    />
     
   </div>
 </template>
@@ -318,6 +325,7 @@ import ConfigEditor from '@/components/ConfigEditor.vue'
 import SystemInfo from '@/components/SystemInfo.vue'
 import DigitalDashboard from '@/components/DigitalDashboard.vue'
 import HamClock from '@/components/HamClock.vue'
+import NodeStatus from '@/components/NodeStatus.vue'
 
 
 const appStore = useAppStore()
@@ -361,6 +369,7 @@ const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
 const showDigitalDashboardModal = ref(false)
 const showHamClockModal = ref(false)
+const showNodeStatusModal = ref(false)
 const databaseStatus = ref<any>(null)
 
 // Computed properties
@@ -732,6 +741,15 @@ const openHamClock = async () => {
   } catch (error) {
     console.error('HamClock error:', error)
     alert('Error opening HamClock: ' + (error.message || 'Unknown error'))
+  }
+}
+
+const openNodeStatus = async () => {
+  try {
+    showNodeStatusModal.value = true
+  } catch (error) {
+    console.error('Node Status error:', error)
+    alert('Error opening Node Status: ' + (error.message || 'Unknown error'))
   }
 }
 

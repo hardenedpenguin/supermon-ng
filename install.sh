@@ -56,6 +56,58 @@ if [ "$(pwd)" != "$APP_DIR" ]; then
     cd "$APP_DIR"
 fi
 
+# Install unified file editor script
+echo "📝 Installing unified file editor script..."
+EDITOR_SCRIPT="/usr/local/sbin/supermon_unified_file_editor.sh"
+if [ -f "$EDITOR_SCRIPT" ]; then
+    echo "⚠️  Unified file editor already exists. Backing up existing file..."
+    cp "$EDITOR_SCRIPT" "$EDITOR_SCRIPT.backup.$(date +%Y%m%d_%H%M%S)"
+fi
+
+# Copy and set proper permissions for editor script
+cp "$APP_DIR/scripts/supermon_unified_file_editor.sh" "$EDITOR_SCRIPT"
+chown root:root "$EDITOR_SCRIPT"
+chmod 755 "$EDITOR_SCRIPT"
+
+# Test the script syntax
+if bash -n "$EDITOR_SCRIPT"; then
+    echo "✅ Unified file editor installed and validated"
+else
+    echo "❌ Error: Invalid script syntax. Removing file..."
+    rm "$EDITOR_SCRIPT"
+    if [ -f "$EDITOR_SCRIPT.backup.$(date +%Y%m%d_%H%M%S)" ]; then
+        echo "   Restoring backup..."
+        mv "$EDITOR_SCRIPT.backup.$(date +%Y%m%d_%H%M%S)" "$EDITOR_SCRIPT"
+    fi
+    exit 1
+fi
+
+# Install sudoers configuration
+echo "🔐 Installing sudoers configuration..."
+SUDOERS_FILE="/etc/sudoers.d/011_www-nopasswd"
+if [ -f "$SUDOERS_FILE" ]; then
+    echo "⚠️  Sudoers file already exists. Backing up existing file..."
+    cp "$SUDOERS_FILE" "$SUDOERS_FILE.backup.$(date +%Y%m%d_%H%M%S)"
+fi
+
+# Copy and set proper permissions for sudoers file
+cp "$APP_DIR/sudoers.d/011_www-nopasswd" "$SUDOERS_FILE"
+chown root:root "$SUDOERS_FILE"
+chmod 440 "$SUDOERS_FILE"
+
+# Validate sudoers syntax
+if visudo -c -f "$SUDOERS_FILE"; then
+    echo "✅ Sudoers configuration installed and validated"
+else
+    echo "❌ Error: Invalid sudoers syntax. Removing file..."
+    rm "$SUDOERS_FILE"
+    if [ -f "$SUDOERS_FILE.backup.$(date +%Y%m%d_%H%M%S)" ]; then
+        echo "   Restoring backup..."
+        mv "$SUDOERS_FILE.backup.$(date +%Y%m%d_%H%M%S)" "$SUDOERS_FILE"
+    fi
+    exit 1
+fi
+
 # Set proper permissions
 chown -R www-data:www-data "$APP_DIR"
 chmod -R 755 "$APP_DIR"
@@ -389,8 +441,13 @@ echo "   4. Access the web interface to complete setup"
 echo ""
 echo "📋 Installation Summary:"
 echo "   ✅ System dependencies installed"
+echo "   ✅ Unified file editor installed and validated"
+echo "   ✅ Sudoers configuration installed and validated"
 echo "   ✅ PHP dependencies installed"
 echo "   ✅ Node.js dependencies installed"
 echo "   ✅ Frontend built"
 echo "   ✅ Backend service created and started"
+if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
+    echo "   ✅ Node status service enabled and started"
+fi
 echo "   ⚠️  Apache configuration needs manual completion"

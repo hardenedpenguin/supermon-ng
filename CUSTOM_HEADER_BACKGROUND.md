@@ -1,4 +1,4 @@
-# Custom Header Background
+clean i# Custom Header Background
 
 You can customize the header background image in Supermon-ng by placing your own image file in the `user_files` directory.
 

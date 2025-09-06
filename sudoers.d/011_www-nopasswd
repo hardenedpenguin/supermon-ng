@@ -1,0 +1,58 @@
+# Used for buttons
+www-data ALL=(root) NOPASSWD: /bin/journalctl, /usr/bin/astup.sh, /usr/bin/astdn.sh, /usr/sbin/reboot
+www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/ssinfo
+www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/din
+www-data ALL=(root) NOPASSWD: /usr/bin/python3 /var/www/html/supermon-ng/user_files/sbin/ast_node_status_update.py
+www-data ALL=(root) NOPASSWD: /usr/sbin/asterisk
+
+# Supermon-ng files
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/allmon.ini
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/authini.ini
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/authuser.ini
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/cntrlini.inc
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/cntrlnolog.ini
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/controlpanel.ini
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/favini.inc
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/favnolog.ini
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/favorites.ini
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/nolog.ini
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/privatenodes.txt
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/global.inc
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/supermon-ng.css
+
+# Asterisk files
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/extensions.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/sip.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/iax.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/users.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/rpt.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/dnsmgr.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/http.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/voter.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/manager.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/asterisk.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/modules.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/logger
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/usbradio.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/simpleusb.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/irlp.conf
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /etc/asterisk/echolink.conf
+
+# DvSwitch files
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /opt/Analog_Bridge/Analog_Bridge.ini
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /opt/MMDVM_Bridge/MMDVM_Bridge.ini
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /opt/MMDVM_Bridge/DVSwitch.ini
+
+# Misc files
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /usr/local/etc/allstar.env
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /usr/local/bin/AUTOSKY/AutoSky.ini
+
+# IRLP files
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /home/irlp/scripts/irlp.crons
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /home/irlp/noupdate/scripts/irlp.crons
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /home/irlp/custom/environment
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /home/irlp/custom/custom_decode
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /home/irlp/custom/custom.crons
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /home/irlp/custom/timeoutvalue
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /home/irlp/custom/lockout_list
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /home/irlp/custom/timing
