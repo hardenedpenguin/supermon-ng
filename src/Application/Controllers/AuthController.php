@@ -515,7 +515,7 @@ class AuthController
             'WLOGUSER' => true,
             'WERRUSER' => true,
             'BANUSER' => false,
-            'SYSINFUSER' => true
+            'SYSINFUSER' => false
         ];
     }
 

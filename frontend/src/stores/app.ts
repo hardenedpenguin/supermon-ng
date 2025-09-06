@@ -27,8 +27,15 @@ export const useAppStore = defineStore('app', () => {
   // Computed
   const hasPermission = computed(() => {
     return (permission: string): boolean => {
-      if (!user.value || !user.value.permissions) return false
-      return user.value.permissions[permission] === true
+      console.log(`hasPermission(${permission}): user.value =`, user.value)
+      console.log(`hasPermission(${permission}): user.value?.permissions =`, user.value?.permissions)
+      if (!user.value || !user.value.permissions) {
+        console.log(`hasPermission(${permission}): returning false (no user or permissions)`)
+        return false
+      }
+      const result = user.value.permissions[permission] === true
+      console.log(`hasPermission(${permission}): returning`, result)
+      return result
     }
   })
 
