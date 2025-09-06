@@ -668,11 +668,19 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Reporting Issues
 
 When reporting issues, please include:
-- Operating system and version
-- PHP and Apache versions
-- Complete error messages from logs
-- Steps to reproduce the problem
-- Screenshots if applicable
+- **PHP Version**: Output of `php --version`
+- **Apache Error Log Messages**: Recent entries from `/var/log/apache2/supermon-ng_error.log`
+- **Steps to Reproduce**: Detailed step-by-step instructions to recreate the issue
+- **Screenshots**: If applicable, especially for UI/display issues
+
+**To gather error log information:**
+```bash
+# View recent Apache error log entries
+sudo tail -50 /var/log/apache2/supermon-ng_error.log
+
+# View backend service logs
+sudo journalctl -u supermon-ng-backend --since "1 hour ago"
+```
 
 ### Feature Requests
 
