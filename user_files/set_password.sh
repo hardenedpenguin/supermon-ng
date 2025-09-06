@@ -1,12 +1,13 @@
 #!/bin/bash
 
 # Simple Password Management Script for Supermon-ng
-# This script provides a user-friendly way to manage .htpasswd passwords
+# This script provides a user-friendly way to manage .htpasswd passwords and .htaccess authentication
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HTPASSWD_FILE="$SCRIPT_DIR/.htpasswd"
+HTACCESS_FILE="$SCRIPT_DIR/.htaccess"
 MANAGE_USERS_SCRIPT="$SCRIPT_DIR/../scripts/manage_users.php"
 
 # Colors for output
@@ -44,7 +45,8 @@ log_header() {
 show_usage() {
     log_header "Supermon-ng Password Manager"
     echo
-    echo "This script helps you manage user passwords for Supermon-ng."
+    echo "This script helps you manage user passwords and authentication for Supermon-ng."
+    echo "It automatically creates and maintains the .htaccess file for HTTP Basic Authentication."
     echo
     echo "Usage:"
     echo "  $0 [command] [options]"
@@ -99,6 +101,29 @@ check_manage_users_script() {
         log_error "manage_users.php script not found at: $MANAGE_USERS_SCRIPT"
         log_error "Please ensure the script is installed correctly"
         exit 1
+    fi
+}
+
+# Function to create or update .htaccess file
+create_htaccess() {
+    local htaccess_content='AuthType Basic
+AuthName "Supermon-ng Access"
+AuthUserFile '"$HTPASSWD_FILE"'
+Require valid-user'
+
+    if [[ ! -f "$HTACCESS_FILE" ]]; then
+        log_info "Creating .htaccess file at: $HTACCESS_FILE"
+        echo "$htaccess_content" > "$HTACCESS_FILE"
+        chmod 644 "$HTACCESS_FILE"
+        log_success ".htaccess file created successfully"
+    else
+        # Check if .htaccess needs updating (different AuthUserFile path)
+        if ! grep -q "AuthUserFile $HTPASSWD_FILE" "$HTACCESS_FILE" 2>/dev/null; then
+            log_info "Updating .htaccess file with correct AuthUserFile path"
+            echo "$htaccess_content" > "$HTACCESS_FILE"
+            chmod 644 "$HTACCESS_FILE"
+            log_success ".htaccess file updated successfully"
+        fi
     fi
 }
 
@@ -248,6 +273,9 @@ interactive_mode() {
 main() {
     # Check if manage_users.php exists
     check_manage_users_script
+    
+    # Ensure .htaccess file exists and is properly configured
+    create_htaccess
     
     # Parse command line arguments
     case "${1:-interactive}" in
