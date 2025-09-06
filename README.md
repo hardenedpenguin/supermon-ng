@@ -190,19 +190,18 @@ Edit `/var/www/html/supermon-ng/user_files/allmon.ini`:
 ```ini
 # Example node configuration
 [node_12345]
-host=localhost
-port=5038
+host=localhost:5038
 username=admin
 password=your_secure_password
-context=radio-secure
-label=My Repeater
-location=City, State
+menu=yes
+system=Nodes
+hiddenNodeURL=no
 
 # Set the default node (shown on initial load)
 default_node=12345
 ```
 
-### 2. AMI (Asterisk Manager Interface) Setup
+### 3. AMI (Asterisk Manager Interface) Setup
 
 Configure Asterisk Manager Interface in `/etc/asterisk/manager.conf`:
 
@@ -223,7 +222,7 @@ Restart Asterisk after changes:
 sudo systemctl restart asterisk
 ```
 
-### 3. Optional: HamClock Integration
+### 4. Optional: HamClock Integration
 
 To enable HamClock integration, edit `/var/www/html/supermon-ng/user_files/global.inc`:
 
@@ -235,7 +234,7 @@ $HAMCLOCK_URL = "http://your-hamclock-server:8082";
 ?>
 ```
 
-### 4. Optional: Custom Header Background
+### 5. Optional: Custom Header Background
 
 Place custom background images in `/var/www/html/supermon-ng/user_files/`:
 - `custom_background.jpg`
@@ -245,7 +244,7 @@ Place custom background images in `/var/www/html/supermon-ng/user_files/`:
 
 The system will automatically detect and use custom backgrounds.
 
-### 5. Node Status Updates (Optional)
+### 6. Node Status Updates (Optional)
 
 Configure automatic node status updates by creating `/var/www/html/supermon-ng/user_files/node_info.ini`:
 
