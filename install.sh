@@ -22,7 +22,7 @@ fi
 # Install dependencies
 echo "📦 Installing system dependencies..."
 apt-get update
-apt-get install -y php php-sqlite3 php-curl php-mbstring git curl acl
+apt-get install -y php php-sqlite3 php-curl php-mbstring php-xml git curl acl
 
 # Install Node.js 20.x (required for Vite)
 echo "📦 Installing Node.js 20.x..."
