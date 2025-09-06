@@ -436,67 +436,8 @@ fi
 echo "📝 Note: Apache configuration must be completed manually as shown above."
 echo "   The backend service will start, but the web interface won't work until Apache is configured."
 
-# Create management scripts
-echo "📝 Creating management scripts..."
-
-# Start script
-START_SCRIPT="$APP_DIR/start.sh"
-if [ -f "$START_SCRIPT" ]; then
-    echo "⚠️  Start script already exists. Skipping creation."
-else
-    echo "📝 Creating start script..."
-    cat > "$START_SCRIPT" << 'EOF'
-#!/bin/bash
-systemctl start supermon-ng-backend
-echo "✅ Supermon-NG backend started"
-echo "🌐 Access: http://$(hostname -I | awk '{print $1}')"
-echo "📝 Note: Make sure Apache is configured and running for web access"
-EOF
-    echo "✅ Start script created"
-fi
-
-# Stop script
-STOP_SCRIPT="$APP_DIR/stop.sh"
-if [ -f "$STOP_SCRIPT" ]; then
-    echo "⚠️  Stop script already exists. Skipping creation."
-else
-    echo "📝 Creating stop script..."
-    cat > "$STOP_SCRIPT" << 'EOF'
-#!/bin/bash
-systemctl stop supermon-ng-backend
-echo "🛑 Supermon-NG stopped"
-EOF
-    echo "✅ Stop script created"
-fi
-
-# Status script
-STATUS_SCRIPT="$APP_DIR/status.sh"
-if [ -f "$STATUS_SCRIPT" ]; then
-    echo "⚠️  Status script already exists. Skipping creation."
-else
-    echo "📝 Creating status script..."
-    cat > "$STATUS_SCRIPT" << 'EOF'
-#!/bin/bash
-echo "📊 Supermon-NG Status:"
-echo "Backend: $(systemctl is-active supermon-ng-backend)"
-echo "Apache: $(systemctl is-active apache2)"
-echo ""
-echo "🌐 Access URL:"
-echo "http://$(hostname -I | awk '{print $1}')"
-EOF
-    echo "✅ Status script created"
-fi
-
-# Make scripts executable (only if they exist)
-echo "🔧 Setting script permissions..."
-for script in "$APP_DIR"/*.sh; do
-    if [ -f "$script" ]; then
-        chmod +x "$script"
-        echo "✅ Made executable: $(basename "$script")"
-    fi
-done
-
 # Make user management scripts executable
+echo "🔧 Setting script permissions..."
 if [ -f "$APP_DIR/user_files/set_password.sh" ]; then
     chmod +x "$APP_DIR/user_files/set_password.sh"
     echo "✅ Made executable: user_files/set_password.sh"
@@ -519,10 +460,10 @@ echo "   http://$(hostname -I | awk '{print $1}')"
 echo ""
 echo "⚠️  IMPORTANT: Complete Apache configuration manually as shown above!"
 echo ""
-echo "🔧 Management commands:"
-echo "   Start:  $APP_DIR/start.sh"
-echo "   Stop:   $APP_DIR/stop.sh"
-echo "   Status: $APP_DIR/status.sh"
+echo "🔧 Service Management:"
+echo "   Start:  sudo systemctl start supermon-ng-backend"
+echo "   Stop:   sudo systemctl stop supermon-ng-backend"
+echo "   Status: sudo systemctl status supermon-ng-backend"
 echo ""
 echo "📝 Next steps:"
 echo "   1. Complete Apache configuration (see instructions above)"
