@@ -122,9 +122,35 @@ class NodeStatusController
                 throw new \RuntimeException('Node status configuration not found');
             }
 
-            // Execute the Python script as root using sudo (required for Asterisk AMI access)
-            $command = "cd " . escapeshellarg(dirname($scriptPath)) . " && sudo /usr/bin/python3 " . escapeshellarg($scriptPath) . " 2>&1";
-            $output = shell_exec($command);
+            // Try to execute via systemd service first (preferred method)
+            $systemdOutput = shell_exec("systemctl --no-pager status supermon-ng-node-status.service 2>/dev/null");
+            if (strpos($systemdOutput, 'supermon-ng-node-status.service') !== false) {
+                // Service exists, trigger it via systemctl
+                $command = "/usr/bin/sudo -n /bin/systemctl start supermon-ng-node-status.service 2>&1";
+                $output = shell_exec($command);
+                
+                // Wait a moment for service to complete
+                sleep(2);
+                
+                // Get the actual script output from log file
+                $logFile = __DIR__ . '/../../../logs/node-status-update.log';
+                if (file_exists($logFile)) {
+                    $logContent = shell_exec("tail -20 " . escapeshellarg($logFile) . " 2>/dev/null");
+                    if ($logContent) {
+                        $output = "Node Status Update Results:\n" . trim($logContent);
+                    }
+                }
+                
+                // Also get systemd service status
+                $serviceStatus = shell_exec("/usr/bin/sudo -n /bin/systemctl is-active supermon-ng-node-status.service 2>/dev/null");
+                if ($serviceStatus) {
+                    $output .= "\n\nService Status: " . trim($serviceStatus);
+                }
+            } else {
+                // Fallback to direct script execution
+                $command = "cd " . escapeshellarg(dirname($scriptPath)) . " && /usr/bin/sudo -n /usr/bin/python3 " . escapeshellarg($scriptPath) . " 2>&1";
+                $output = shell_exec($command);
+            }
             
             $this->logger->info('Node status update triggered', ['output' => $output]);
 
