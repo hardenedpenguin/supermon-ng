@@ -201,28 +201,7 @@ hiddenNodeURL=no
 default_node=12345
 ```
 
-### 3. AMI (Asterisk Manager Interface) Setup
-
-Configure Asterisk Manager Interface in `/etc/asterisk/manager.conf`:
-
-```ini
-[general]
-enabled = yes
-port = 5038
-bindaddr = 127.0.0.1
-
-[admin]
-secret = your_secure_password
-read = system,call,log,verbose,agent,user,config,dtmf,reporting,cdr,dialplan
-write = system,call,agent,user,config,command,reporting,originate
-```
-
-Restart Asterisk after changes:
-```bash
-sudo systemctl restart asterisk
-```
-
-### 4. Optional: HamClock Integration
+### 3. Optional: HamClock Integration
 
 To enable HamClock integration, edit `/var/www/html/supermon-ng/user_files/global.inc`:
 
@@ -234,7 +213,7 @@ $HAMCLOCK_URL = "http://your-hamclock-server:8082";
 ?>
 ```
 
-### 5. Optional: Custom Header Background
+### 4. Optional: Custom Header Background
 
 Place custom background images in `/var/www/html/supermon-ng/user_files/`:
 - `custom_background.jpg`
@@ -244,7 +223,7 @@ Place custom background images in `/var/www/html/supermon-ng/user_files/`:
 
 The system will automatically detect and use custom backgrounds.
 
-### 6. Node Status Updates (Optional)
+### 5. Node Status Updates (Optional)
 
 Configure automatic node status updates by creating `/var/www/html/supermon-ng/user_files/node_info.ini`:
 
@@ -426,12 +405,11 @@ sudo systemctl reload apache2
 
 **AMI connection failures**
 ```bash
-# Test AMI connection
-telnet localhost 5038
-
 # Check Asterisk status
 sudo systemctl status asterisk
 sudo asterisk -rx "manager show connected"
+
+# Note: AMI configuration is covered in the AllStar documentation
 ```
 
 **Node Status button not visible**
@@ -561,9 +539,6 @@ sudo journalctl -u supermon-ng-node-status.service -f
 ```bash
 # Node configuration
 /var/www/html/supermon-ng/user_files/allmon.ini
-
-# AMI configuration  
-/etc/asterisk/manager.conf
 
 # Apache configuration
 /etc/apache2/sites-available/supermon-ng.conf
