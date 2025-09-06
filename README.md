@@ -108,10 +108,10 @@ The generated configuration includes:
     ProxyPassReverse /api http://localhost:8000/api
     
     # HamClock proxy (uncomment and modify if using HamClock)
-    # ProxyPass /hamclock/ http://YOUR_HAMCLOCK_IP:8082/
-    # ProxyPassReverse /hamclock/ http://YOUR_HAMCLOCK_IP:8082/
-    # ProxyPass /live-ws ws://YOUR_HAMCLOCK_IP:8082/live-ws
-    # ProxyPassReverse /live-ws ws://YOUR_HAMCLOCK_IP:8082/live-ws
+    # ProxyPass /hamclock/ http://192.168.1.100:8082/
+    # ProxyPassReverse /hamclock/ http://192.168.1.100:8082/
+    # ProxyPass /live-ws ws://192.168.1.100:8082/live-ws
+    # ProxyPassReverse /live-ws ws://192.168.1.100:8082/live-ws
     
     # Serve static files and handle Vue.js routing
     <Directory "/var/www/html/supermon-ng/public">
@@ -206,12 +206,28 @@ default_node=12345
 To enable HamClock integration, edit `/var/www/html/supermon-ng/user_files/global.inc`:
 
 ```php
-<?php
-// HamClock Configuration
-$HAMCLOCK_ENABLED = true;
-$HAMCLOCK_URL = "http://your-hamclock-server:8082";
-?>
+// ========================================
+// HAMCLOCK INTEGRATION
+// ========================================
+
+// Enable or disable HamClock integration
+// NOTE: HamClock MUST be configured with a reverse proxy to work properly
+// Direct access to HamClock without reverse proxy will not work
+$HAMCLOCK_ENABLED = "True";
+
+// HamClock URL for local network access (e.g., 192.168.x.x)
+$HAMCLOCK_URL_INTERNAL = "http://192.168.1.100/hamclock/live.html";
+
+// HamClock URL for external internet access
+$HAMCLOCK_URL_EXTERNAL = "https://your-domain.com/hamclock/live.html";
 ```
+
+**Important Notes:**
+- HamClock requires reverse proxy configuration in Apache (see Apache configuration section)
+- Replace `192.168.1.100` with your HamClock server's local IP address  
+- Replace `your-domain.com` with your external domain name
+- The `/hamclock/live.html` path should remain as shown
+- You must also uncomment and configure the HamClock proxy lines in your Apache configuration
 
 ### 4. Optional: Custom Header Background
 
