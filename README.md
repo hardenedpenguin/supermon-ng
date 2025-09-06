@@ -248,7 +248,7 @@ sudo chmod 644 /var/www/html/supermon-ng/user_files/header-background.jpg
 ```
 
 **Notes:**
-- Recommended size: 1200x164 pixels (or similar aspect ratio)
+- Recommended size: 900x164 pixels (matches current header dimensions)
 - System automatically detects the first `header-background.*` file found
 - Images are cached for better performance
 
