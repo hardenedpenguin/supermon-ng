@@ -421,6 +421,7 @@ main() {
     # Essential scripts only (exclude development scripts)
     mkdir -p "$release_dir/scripts"
     cp scripts/supermon_unified_file_editor.sh "$release_dir/scripts/"
+    cp scripts/manage_users.php "$release_dir/scripts/"
     
     # Static assets
     cp *.jpg "$release_dir/" 2>/dev/null || true

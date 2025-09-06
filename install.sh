@@ -486,6 +486,17 @@ for script in "$APP_DIR"/*.sh; do
     fi
 done
 
+# Make user management scripts executable
+if [ -f "$APP_DIR/user_files/set_password.sh" ]; then
+    chmod +x "$APP_DIR/user_files/set_password.sh"
+    echo "✅ Made executable: user_files/set_password.sh"
+fi
+
+if [ -f "$APP_DIR/scripts/manage_users.php" ]; then
+    chmod +x "$APP_DIR/scripts/manage_users.php"
+    echo "✅ Made executable: scripts/manage_users.php"
+fi
+
 echo ""
 echo "🎉 Supermon-NG Installation Complete!"
 echo ""
