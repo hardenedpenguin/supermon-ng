@@ -271,6 +271,13 @@
       v-model:isVisible="showDigitalDashboardModal"
       :url="systemInfo?.dvmUrl || ''"
     />
+
+    <!-- HamClock Modal -->
+    <HamClock
+      v-model:isVisible="showHamClockModal"
+      :url="hamclockUrl"
+      @close="showHamClockModal = false"
+    />
     
   </div>
 </template>
@@ -310,6 +317,7 @@ import Voter from '@/components/Voter.vue'
 import ConfigEditor from '@/components/ConfigEditor.vue'
 import SystemInfo from '@/components/SystemInfo.vue'
 import DigitalDashboard from '@/components/DigitalDashboard.vue'
+import HamClock from '@/components/HamClock.vue'
 
 
 const appStore = useAppStore()
@@ -352,6 +360,7 @@ const showSystemInfoModal = ref(false)
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
 const showDigitalDashboardModal = ref(false)
+const showHamClockModal = ref(false)
 const databaseStatus = ref<any>(null)
 
 // Computed properties
@@ -708,20 +717,7 @@ const openDigitalDashboard = async () => {
 const openHamClock = async () => {
   try {
     if (systemInfo.value?.hamclockEnabled) {
-      // Determine which URL to use based on client IP
-      const clientIP = await getClientIP()
-      const isInternal = isInternalIP(clientIP)
-      
-      let hamclockUrl = systemInfo.value.hamclockUrlInternal
-      if (!isInternal) {
-        hamclockUrl = systemInfo.value.hamclockUrlExternal
-      }
-      
-      if (hamclockUrl) {
-        window.open(hamclockUrl, 'HamClock', 'status=no,location=no,toolbar=no,width=1024,height=768,left=100,top=100')
-      } else {
-        alert('HamClock URL not configured')
-      }
+      showHamClockModal.value = true
     } else {
       alert('HamClock is not enabled')
     }
@@ -731,35 +727,25 @@ const openHamClock = async () => {
   }
 }
 
-// Helper function to get client IP
-const getClientIP = async (): Promise<string> => {
-  try {
-    const response = await fetch('/api/system/client-ip')
-    if (response.ok) {
-      const data = await response.json()
-      return data.ip || '127.0.0.1'
-    }
-  } catch (error) {
-    console.error('Error getting client IP:', error)
-  }
-  return '127.0.0.1'
-}
 
-// Helper function to check if IP is internal
-const isInternalIP = (ip: string): boolean => {
-  // Check for private IP ranges
-  const privateRanges = [
-    /^10\./,           // 10.0.0.0/8
+// Helper function to check if user is accessing site internally
+const isInternalAccess = (): boolean => {
+  const hostname = window.location.hostname
+  
+  // Check if accessing via localhost, IP address, or internal domain patterns
+  const internalPatterns = [
+    /^localhost$/i,
+    /^127\./,                    // 127.0.0.0/8 (localhost)
+    /^10\./,                     // 10.0.0.0/8
     /^172\.(1[6-9]|2[0-9]|3[0-1])\./, // 172.16.0.0/12
-    /^192\.168\./,     // 192.168.0.0/16
-    /^127\./,          // 127.0.0.0/8 (localhost)
-    /^169\.254\./,     // 169.254.0.0/16 (link-local)
-    /^::1$/,           // IPv6 localhost
-    /^fc00::/,         // IPv6 unique local
-    /^fe80::/          // IPv6 link-local
+    /^192\.168\./,               // 192.168.0.0/16
+    /^169\.254\./,               // 169.254.0.0/16 (link-local)
+    /\.local$/i,                 // .local domains
+    /\.lan$/i,                   // .lan domains
+    /\.internal$/i               // .internal domains
   ]
   
-  return privateRanges.some(range => range.test(ip))
+  return internalPatterns.some(pattern => pattern.test(hostname))
 }
 
 // Additional button methods to match original Supermon-ng
@@ -924,11 +910,20 @@ const cpustats = async () => {
 
 const aststats = async () => {
   try {
-
-    if (!targetNode.value) {
-      alert('Please select a node first')
+    // Prompt user for node number (like the original implementation)
+    const nodeNumber = prompt('Enter node number for AllStar Status:')
+    if (!nodeNumber || nodeNumber.trim() === '') {
       return
     }
+    
+    // Validate node number is numeric
+    if (!/^\d+$/.test(nodeNumber.trim())) {
+      alert('Please enter a valid numeric node number')
+      return
+    }
+    
+    // Set the target node and show the stats modal
+    targetNode.value = nodeNumber.trim()
     showStatsModal.value = true
   } catch (error) {
     console.error('AllStar Statistics error:', error)

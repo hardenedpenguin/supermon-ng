@@ -41,12 +41,13 @@
             <div v-else-if="statsData.all_nodes.nodes" class="nodes-section">
               <div v-for="node in statsData.all_nodes.nodes" :key="node.node_number" class="node-info">
                 <div class="node-header">
-                  Node <span class="node-number">{{ node.node_number }}</span>
+                  Node <span class="node-number">{{ node.node_number }}</span> connections => <span class="highlight">{{ node.connections_count || '<NONE>' }}</span>
                 </div>
                 
-                <!-- XNode Info -->
-                <div v-if="node.xnode_info" class="xnode-info">
-                  <pre class="stats-pre">{{ node.xnode_info }}</pre>
+                <!-- Connected Nodes Section -->
+                <div class="connected-nodes-section">
+                  <div class="section-title">************************* CONNECTED NODES *************************</div>
+                  <pre class="stats-pre">{{ node.connected_nodes_formatted || '<NONE>' }}</pre>
                 </div>
                 
                 <!-- LStats Info -->
@@ -207,6 +208,7 @@ const refreshStats = async () => {
     refreshing.value = false
   }
 }
+
 </script>
 
 <style scoped>
@@ -348,6 +350,15 @@ const refreshStats = async () => {
 
 .node-number {
   color: #00ff00;
+  font-weight: bold;
+}
+
+.connected-nodes-section {
+  margin: 1rem 0;
+}
+
+.connected-nodes-section .stats-pre {
+  color: #00ffff;
   font-weight: bold;
 }
 

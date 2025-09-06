@@ -2309,16 +2309,16 @@ class NodeController
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            // Get user configuration
-            $config = $this->getUserConfig($currentUser);
+            // Get node configuration
+            $config = $this->loadNodeConfig($currentUser, $localnode);
             
-            if (!isset($config[$localnode])) {
-                $response->getBody()->write(json_encode(['success' => false, 'message' => "Node $localnode is not in your configuration file."]));
+            if (!$config) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => "Node $localnode configuration not found."]));
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
             // Retrieve statistics data
-            $statsData = $this->getAllStarStats($config[$localnode]);
+            $statsData = $this->getAllStarStats($config);
 
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -2336,6 +2336,9 @@ class NodeController
 
     private function getAllStarStats(array $nodeConfig): array
     {
+        // Include AMI functions if not already loaded
+        require_once __DIR__ . '/../../../includes/amifunctions.inc';
+        
         // Connect to AMI
         $fp = \SimpleAmiClient::connect($nodeConfig['host']);
         if ($fp === false) {
@@ -2366,8 +2369,13 @@ class NodeController
 
     private function getStatsHeader(): array
     {
-        $host = trim(shell_exec('hostname | awk -F. \'{printf ("%s", $1);}\' 2>/dev/null') ?: 'Unknown');
-        $date = trim(shell_exec('date 2>/dev/null') ?: 'Unknown');
+        try {
+            $host = trim(shell_exec('hostname | awk -F. \'{printf ("%s", $1);}\' 2>/dev/null') ?: 'Unknown');
+            $date = trim(shell_exec('date 2>/dev/null') ?: 'Unknown');
+        } catch (\Exception $e) {
+            $host = 'Unknown';
+            $date = 'Unknown';
+        }
         
         return [
             'host' => $host,
@@ -2406,8 +2414,13 @@ class NodeController
             $xnode_info = \SimpleAmiClient::command($fp, "rpt xnode $node_num");
             $lstats_info = \SimpleAmiClient::command($fp, "rpt lstats $node_num");
 
+            // Format connected nodes like the original
+            $connectedNodesData = $this->formatConnectedNodes($xnode_info);
+            
             $nodes[] = [
                 'node_number' => $node_num,
+                'connections_count' => $connectedNodesData['count'],
+                'connected_nodes_formatted' => $connectedNodesData['formatted'],
                 'xnode_info' => $this->cleanAmiOutput($xnode_info),
                 'lstats_info' => $this->cleanAmiOutput($lstats_info)
             ];
@@ -2464,7 +2477,7 @@ class NodeController
     private function cleanAmiOutput($raw_output): string
     {
         if ($raw_output === null || trim($raw_output) === '') {
-            return $raw_output;
+            return $raw_output ?: '';
         }
         
         $lines = explode("\n", $raw_output);
@@ -3117,5 +3130,72 @@ class NodeController
         }
 
         return $statusInfo;
+    }
+
+    /**
+     * Format connected nodes data like the original legacy implementation
+     */
+    private function formatConnectedNodes($xnode_info): array
+    {
+        if (!$xnode_info) {
+            return ['count' => '<NONE>', 'formatted' => '<NONE>'];
+        }
+
+        // Extract connection count from RPT_ALINKS (like original)
+        $connectionCount = '<NONE>';
+        $lines = explode("\n", $xnode_info);
+        foreach ($lines as $line) {
+            if (strpos($line, 'RPT_ALINKS') !== false) {
+                // Extract and clean the connection info
+                $parts = explode('RPT_ALINKS', $line);
+                if (isset($parts[1])) {
+                    $connectionCount = preg_replace('/[a-zA-Z=_]/', '', $parts[1]);
+                    $connectionCount = str_replace(',', ': ', $connectionCount);
+                    $connectionCount = trim($connectionCount);
+                }
+                break;
+            }
+        }
+
+        // Extract connected nodes list (like original - line 3 of xnode output)
+        $connectedNodes = '<NONE>';
+        $cleanedLines = [];
+        foreach ($lines as $line) {
+            $prefix = "Output: ";
+            if (strpos($line, $prefix) === 0) {
+                $cleanedLines[] = substr($line, strlen($prefix));
+            } else {
+                $cleanedLines[] = $line;
+            }
+        }
+
+        // Get the third line (index 2) which contains connected nodes
+        if (isset($cleanedLines[2])) {
+            $nodesList = trim($cleanedLines[2]);
+            if (!empty($nodesList) && $nodesList !== '<NONE>') {
+                $nodes = explode(', ', $nodesList);
+                $nodeCount = count($nodes);
+                $formattedNodes = sprintf(" %3s node(s) total:\n     ", $nodeCount);
+                
+                $k = 0;
+                for ($j = 0; $j < $nodeCount; $j++) {
+                    $formattedNodes .= sprintf("%8s", trim($nodes[$j]));
+                    if ($j < $nodeCount - 1) {
+                        $formattedNodes .= ", ";
+                    }
+                    $k++;
+                    if ($k >= 10 && $j < $nodeCount - 1) {
+                        $k = 0;
+                        $formattedNodes .= "\n     ";
+                    }
+                }
+                $connectedNodes = $formattedNodes;
+            }
+        }
+
+        return [
+            'count' => $connectionCount,
+            'formatted' => $connectedNodes
+        ];
     }
 }

@@ -164,24 +164,35 @@ else
     ServerName localhost
     DocumentRoot $APP_DIR/frontend/dist
     
+    # Proxy configurations (must come before Directory blocks)
+    ProxyPreserveHost On
+    
+    # Proxy API requests to backend
+    ProxyPass /api http://localhost:8000/api
+    ProxyPassReverse /api http://localhost:8000/api
+    
+    # Proxy HamClock requests (adjust IP and port as needed)
+    # Uncomment and modify the following lines if you have HamClock running:
+    # ProxyPass /hamclock/ http://10.0.0.41:8082/
+    # ProxyPassReverse /hamclock/ http://10.0.0.41:8082/
+    # 
+    # Proxy HamClock WebSocket connections for live updates
+    # ProxyPass /live-ws ws://10.0.0.41:8082/live-ws
+    # ProxyPassReverse /live-ws ws://10.0.0.41:8082/live-ws
+    
     # Serve static files from frontend/dist
     <Directory "$APP_DIR/frontend/dist">
         AllowOverride All
         Require all granted
-    </Directory>
-    
-    # Proxy API requests to backend
-    ProxyPreserveHost On
-    ProxyPass /api http://localhost:8000/api
-    ProxyPassReverse /api http://localhost:8000/api
-    
-    # Handle Vue router (SPA)
-    <Directory "$APP_DIR/frontend/dist">
+        
+        # Handle Vue router (SPA) with exclusions for proxy paths
         RewriteEngine On
         RewriteBase /
         RewriteRule ^index\.html$ - [L]
         RewriteCond %{REQUEST_FILENAME} !-f
         RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteCond %{REQUEST_URI} !^/api/
+        RewriteCond %{REQUEST_URI} !^/hamclock/
         RewriteRule . /index.html [L]
     </Directory>
     
@@ -203,6 +214,7 @@ echo ""
 echo "1. Enable required Apache modules:"
 echo "   sudo a2enmod proxy"
 echo "   sudo a2enmod proxy_http"
+echo "   sudo a2enmod proxy_wstunnel"
 echo "   sudo a2enmod rewrite"
 echo ""
 echo "2. Copy the configuration template to Apache:"
@@ -213,7 +225,11 @@ echo "   sudo a2ensite supermon-ng"
 echo "   sudo a2dissite 000-default  # Optional: disable default site"
 echo "   sudo systemctl restart apache2"
 echo ""
-echo "4. Verify the configuration:"
+echo "4. If you have HamClock, edit the configuration to enable the proxy:"
+echo "   sudo nano /etc/apache2/sites-available/supermon-ng.conf"
+echo "   # Uncomment and modify the HamClock proxy lines with your server IP/port"
+echo ""
+echo "5. Verify the configuration:"
 echo "   sudo apache2ctl configtest"
 echo ""
 
