@@ -20,14 +20,11 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 - **Operating System**: Debian 11+ or Ubuntu 20.04+ (ASL3+ compatible)
 - **PHP**: 8.0+ with extensions: `sqlite3`, `curl`, `mbstring`, `json`
 - **Apache**: 2.4+ with modules: `rewrite`, `proxy`, `proxy_http`, `proxy_wstunnel`, `headers`, `expires`
-- **Node.js**: 20.x+ and npm (for development builds only)
 - **RAM**: 512MB minimum, 1GB recommended
 - **Storage**: 200MB free space
 - **AllStar Link**: ASL3+ installation with Asterisk
 
-## 🚀 Installation Methods
-
-### Method 1: Production Release (Recommended)
+## 🚀 Installation
 
 Download and extract the latest release tarball:
 
@@ -44,26 +41,12 @@ cd /tmp/supermon-ng
 sudo ./install.sh
 ```
 
-### Method 2: Development Installation
-
-Clone the repository for development or latest features:
-
-```bash
-# Clone repository
-cd /var/www/html
-sudo git clone https://github.com/your-repo/supermon-ng.git
-cd supermon-ng
-
-# Run installation (will build frontend from source)
-sudo ./install.sh
-```
-
 ## 🔧 Installation Script Features
 
 The `install.sh` script automatically handles:
 
 - **Dependency Installation**: PHP, Apache modules, ACL tools
-- **Frontend Building**: Compiles Vue.js application (if building from source)
+- **Frontend Setup**: Deploys pre-built Vue.js application
 - **Apache Configuration**: Creates optimized virtual host with proxy support
 - **Security Setup**: Configures sudoers, file permissions, and ACLs
 - **Systemd Services**: Sets up node status update service and timer
@@ -376,15 +359,6 @@ sudo apt update && sudo apt upgrade
 sudo ./install.sh
 ```
 
-**Error: Frontend build fails**
-```bash
-# Check Node.js version
-node --version  # Should be 20.x+
-
-# Clear npm cache
-cd frontend && npm cache clean --force
-npm install
-```
 
 ### Apache Configuration Issues
 
@@ -524,8 +498,6 @@ htop
 
 ## 🔄 Updates and Upgrades
 
-### Updating from Release
-
 1. **Backup current installation**:
    ```bash
    sudo tar -czf /tmp/supermon-ng-backup-$(date +%Y%m%d).tar.gz /var/www/html/supermon-ng/user_files/
@@ -544,13 +516,6 @@ htop
    sudo ./install.sh
    ```
 
-### Updating from Git
-
-```bash
-cd /var/www/html/supermon-ng
-sudo git pull origin main
-sudo ./install.sh
-```
 
 ## 📋 Quick Reference
 
@@ -616,29 +581,6 @@ sudo journalctl -u supermon-ng-node-status.service -f
 ```
 
 ## 🤝 Contributing
-
-### Development Setup
-
-1. **Clone repository**:
-   ```bash
-   git clone https://github.com/your-repo/supermon-ng.git
-   cd supermon-ng
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   composer install
-   cd frontend && npm install
-   ```
-
-3. **Start development servers**:
-   ```bash
-   # Backend (PHP development server)
-   cd public && php -S localhost:8000
-
-   # Frontend (Vite development server)
-   cd frontend && npm run dev
-   ```
 
 ### Code Standards
 
