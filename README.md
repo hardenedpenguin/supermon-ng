@@ -72,7 +72,138 @@ The `install.sh` script automatically handles:
 
 ## ⚙️ Configuration
 
-### 1. Node Configuration
+### 1. Apache Web Server Configuration
+
+After running `install.sh`, you **must** complete the Apache configuration manually. The installation script creates a template but cannot automatically configure Apache for security reasons.
+
+#### Step-by-Step Apache Setup
+
+**1. Enable Required Apache Modules**
+```bash
+sudo a2enmod proxy
+sudo a2enmod proxy_http
+sudo a2enmod proxy_wstunnel
+sudo a2enmod rewrite
+sudo a2enmod headers
+sudo a2enmod expires
+```
+
+**2. Copy the Configuration Template**
+
+The installer creates a template at `/var/www/html/supermon-ng/apache-config-template.conf`. Copy it to Apache's sites-available directory:
+
+```bash
+sudo cp /var/www/html/supermon-ng/apache-config-template.conf /etc/apache2/sites-available/supermon-ng.conf
+```
+
+**3. Enable the Site**
+```bash
+# Enable the new site
+sudo a2ensite supermon-ng
+
+# Optionally disable the default Apache site
+sudo a2dissite 000-default
+
+# Test the configuration
+sudo apache2ctl configtest
+
+# Restart Apache
+sudo systemctl restart apache2
+```
+
+#### Apache Configuration Template Explained
+
+The generated configuration includes:
+
+```apache
+<VirtualHost *:80>
+    ServerName localhost
+    DocumentRoot /var/www/html/supermon-ng/public
+    
+    # Proxy configurations (must come before Directory blocks)
+    ProxyPreserveHost On
+    
+    # Proxy API requests to backend PHP service
+    ProxyPass /api http://localhost:8000/api
+    ProxyPassReverse /api http://localhost:8000/api
+    
+    # HamClock proxy (uncomment and modify if using HamClock)
+    # ProxyPass /hamclock/ http://YOUR_HAMCLOCK_IP:8082/
+    # ProxyPassReverse /hamclock/ http://YOUR_HAMCLOCK_IP:8082/
+    # ProxyPass /live-ws ws://YOUR_HAMCLOCK_IP:8082/live-ws
+    # ProxyPassReverse /live-ws ws://YOUR_HAMCLOCK_IP:8082/live-ws
+    
+    # Serve static files and handle Vue.js routing
+    <Directory "/var/www/html/supermon-ng/public">
+        AllowOverride All
+        Require all granted
+        
+        # Vue.js SPA routing with API/HamClock exclusions
+        RewriteEngine On
+        RewriteBase /
+        RewriteRule ^index\.html$ - [L]
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteCond %{REQUEST_URI} !^/api/
+        RewriteCond %{REQUEST_URI} !^/hamclock/
+        RewriteRule . /index.html [L]
+    </Directory>
+    
+    ErrorLog ${APACHE_LOG_DIR}/supermon-ng_error.log
+    CustomLog ${APACHE_LOG_DIR}/supermon-ng_access.log combined
+</VirtualHost>
+```
+
+#### Customizing for Your Domain
+
+To use a custom domain instead of `localhost`, edit the configuration:
+
+```bash
+sudo nano /etc/apache2/sites-available/supermon-ng.conf
+```
+
+Change:
+```apache
+ServerName localhost
+```
+
+To:
+```apache
+ServerName your-domain.com
+ServerAlias www.your-domain.com
+```
+
+#### SSL/HTTPS Configuration (Optional)
+
+For SSL support, create an additional configuration:
+
+```bash
+sudo nano /etc/apache2/sites-available/supermon-ng-ssl.conf
+```
+
+```apache
+<VirtualHost *:443>
+    ServerName your-domain.com
+    DocumentRoot /var/www/html/supermon-ng/public
+    
+    # SSL Configuration
+    SSLEngine on
+    SSLCertificateFile /path/to/your/certificate.crt
+    SSLCertificateKeyFile /path/to/your/private.key
+    
+    # Same proxy and directory configuration as HTTP version
+    # ... (copy from the HTTP configuration)
+</VirtualHost>
+```
+
+Then enable SSL and the new site:
+```bash
+sudo a2enmod ssl
+sudo a2ensite supermon-ng-ssl
+sudo systemctl restart apache2
+```
+
+### 2. Node Configuration
 
 Edit `/var/www/html/supermon-ng/user_files/allmon.ini`:
 
@@ -255,6 +386,58 @@ cd frontend && npm cache clean --force
 npm install
 ```
 
+### Apache Configuration Issues
+
+**Apache configuration test fails**
+```bash
+# Check configuration syntax
+sudo apache2ctl configtest
+
+# Common issues and fixes:
+
+# 1. Missing modules
+sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers expires
+
+# 2. Invalid DocumentRoot path
+# Edit /etc/apache2/sites-available/supermon-ng.conf
+# Ensure DocumentRoot points to: /var/www/html/supermon-ng/public
+
+# 3. Permission issues
+sudo chown -R www-data:www-data /var/www/html/supermon-ng/
+sudo chmod -R 755 /var/www/html/supermon-ng/
+```
+
+**Site not accessible after Apache configuration**
+```bash
+# Check if site is enabled
+sudo a2ensite supermon-ng
+
+# Check Apache status
+sudo systemctl status apache2
+
+# View Apache error logs
+sudo tail -f /var/log/apache2/supermon-ng_error.log
+
+# Check if backend service is running
+sudo systemctl status supermon-ng-backend
+
+# Test backend directly
+curl http://localhost:8000/api/system/info
+```
+
+**Proxy errors (502 Bad Gateway)**
+```bash
+# Backend service not running
+sudo systemctl start supermon-ng-backend
+sudo systemctl enable supermon-ng-backend
+
+# Check backend logs
+sudo journalctl -u supermon-ng-backend -f
+
+# Verify proxy configuration in Apache
+grep -A5 -B5 "ProxyPass" /etc/apache2/sites-available/supermon-ng.conf
+```
+
 ### Runtime Issues
 
 **Dashboard shows 404 errors**
@@ -265,6 +448,10 @@ sudo systemctl restart apache2
 
 # Verify files are in place
 ls -la /var/www/html/supermon-ng/public/
+
+# Check Apache site configuration
+sudo a2ensite supermon-ng
+sudo systemctl reload apache2
 ```
 
 **AMI connection failures**
@@ -363,6 +550,69 @@ htop
 cd /var/www/html/supermon-ng
 sudo git pull origin main
 sudo ./install.sh
+```
+
+## 📋 Quick Reference
+
+### Apache Configuration Commands
+```bash
+# Complete Apache setup after installation
+sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers expires
+sudo cp /var/www/html/supermon-ng/apache-config-template.conf /etc/apache2/sites-available/supermon-ng.conf
+sudo a2ensite supermon-ng
+sudo a2dissite 000-default  # Optional
+sudo apache2ctl configtest
+sudo systemctl restart apache2
+```
+
+### Service Management Commands
+```bash
+# Backend service
+sudo systemctl status supermon-ng-backend
+sudo systemctl start supermon-ng-backend
+sudo systemctl stop supermon-ng-backend
+sudo systemctl restart supermon-ng-backend
+
+# Node status service (if configured)
+sudo systemctl status supermon-ng-node-status.service
+sudo systemctl status supermon-ng-node-status.timer
+
+# Apache
+sudo systemctl status apache2
+sudo systemctl restart apache2
+sudo apache2ctl configtest
+```
+
+### Log File Locations
+```bash
+# Apache logs
+tail -f /var/log/apache2/supermon-ng_error.log
+tail -f /var/log/apache2/supermon-ng_access.log
+
+# Backend service logs
+sudo journalctl -u supermon-ng-backend -f
+
+# Node status logs
+tail -f /var/log/supermon-ng-node-status.log
+sudo journalctl -u supermon-ng-node-status.service -f
+```
+
+### Configuration File Locations
+```bash
+# Node configuration
+/var/www/html/supermon-ng/user_files/allmon.ini
+
+# AMI configuration  
+/etc/asterisk/manager.conf
+
+# Apache configuration
+/etc/apache2/sites-available/supermon-ng.conf
+
+# Node status configuration
+/var/www/html/supermon-ng/user_files/node_info.ini
+
+# Global settings
+/var/www/html/supermon-ng/user_files/global.inc
 ```
 
 ## 🤝 Contributing
