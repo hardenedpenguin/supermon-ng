@@ -314,6 +314,34 @@ sudo php /var/www/html/supermon-ng/scripts/manage_users.php --help
 **Important Note:**
 The authentication system only manages the `.htaccess` file for user credentials. It does not modify any other system files, Apache configuration, or application settings.
 
+### Role-Based Access Control
+
+After creating user accounts, configure role-based permissions by editing `/var/www/html/supermon-ng/user_files/authusers.inc`:
+
+**Single User Setup:**
+If you're the only user, replace "anarchy" with your username throughout the file:
+
+```bash
+# Replace all instances of "anarchy" with your username
+sudo sed -i 's/"anarchy"/"yourusername"/g' /var/www/html/supermon-ng/user_files/authusers.inc
+```
+
+**Multiple User Setup:**
+For multiple users, edit the file manually or use sed commands:
+
+```bash
+# Add a second user to all permissions
+sudo sed -i 's/array("anarchy")/array("anarchy", "newuser")/g' /var/www/html/supermon-ng/user_files/authusers.inc
+```
+
+**Permission Categories:**
+- **Basic Access**: Connect, Disconnect, Monitor buttons (`$CONNECTUSER`, `$DISCUSER`, `$MONUSER`)
+- **Advanced Features**: DTMF, RPT Stats, Favorites (`$DTMFUSER`, `$RSTATUSER`, `$FAVUSER`)
+- **Administrative**: Control Panel, Config Editor, System Control (`$CTRLUSER`, `$CFGEDUSER`, `$SYSINFUSER`)
+
+**Security Note:**
+Administrative permissions marked with (*) are security-sensitive. Only grant these to trusted users.
+
 ## 🔒 Security Features
 
 ### File Permissions
