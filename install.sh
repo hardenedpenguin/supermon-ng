@@ -165,7 +165,8 @@ chmod -R 777 "$APP_DIR/user_files"
 echo "📦 Installing PHP dependencies..."
 cd "$APP_DIR"
 if [ -f "composer.json" ]; then
-    composer install --no-dev --optimize-autoloader
+    # Run composer as www-data user to avoid security warnings
+    sudo -u www-data composer install --no-dev --optimize-autoloader
 else
     echo "❌ Error: composer.json not found. Make sure all files were extracted properly."
     exit 1
