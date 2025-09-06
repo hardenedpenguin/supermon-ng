@@ -363,6 +363,32 @@ Administrative permissions marked with (*) are security-sensitive. Only grant th
 
 ### Service Management
 
+**Supermon-NG Backend Service:**
+
+The backend service provides the API endpoints for the web interface:
+
+```bash
+# Check backend service status
+sudo systemctl status supermon-ng-backend
+
+# Start/stop/restart backend service
+sudo systemctl start supermon-ng-backend
+sudo systemctl stop supermon-ng-backend
+sudo systemctl restart supermon-ng-backend
+
+# Enable/disable automatic startup
+sudo systemctl enable supermon-ng-backend
+sudo systemctl disable supermon-ng-backend
+
+# View backend service logs
+sudo journalctl -u supermon-ng-backend -f
+
+# Test backend API directly
+curl http://localhost:8000/api/system/info
+```
+
+**Other Services:**
+
 ```bash
 # Check Apache status
 sudo systemctl status apache2
@@ -370,10 +396,10 @@ sudo systemctl status apache2
 # Restart Apache (after configuration changes)
 sudo systemctl restart apache2
 
-# Check node status service
+# Check node status service (if configured)
 sudo systemctl status supermon-ng-node-status.service
 
-# View service logs
+# View node status logs
 sudo journalctl -u supermon-ng-node-status.service -f
 ```
 
