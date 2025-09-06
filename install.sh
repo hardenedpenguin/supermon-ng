@@ -352,6 +352,9 @@ else
         AllowOverride All
         Require all granted
         
+        # Ensure index.html is served by default (Vue.js frontend)
+        DirectoryIndex index.html index.php
+        
         # Handle Vue router (SPA) with exclusions for proxy paths
         RewriteEngine On
         RewriteBase /
