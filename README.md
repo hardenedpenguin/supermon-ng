@@ -231,13 +231,26 @@ $HAMCLOCK_URL_EXTERNAL = "https://your-domain.com/hamclock/live.html";
 
 ### 4. Optional: Custom Header Background
 
-Place custom background images in `/var/www/html/supermon-ng/user_files/`:
-- `custom_background.jpg`
-- `custom_background.png`
-- `custom_background.gif`
-- `custom_background.webp`
+You can customize the header background by placing an image file in `/var/www/html/supermon-ng/user_files/`:
 
-The system will automatically detect and use custom backgrounds.
+**Filename Requirements:**
+- Must be named `header-background` with appropriate extension
+- Supported formats: `header-background.jpg`, `header-background.jpeg`, `header-background.png`, `header-background.gif`, `header-background.webp`
+
+**Installation:**
+```bash
+# Copy your image to the user_files directory
+sudo cp /path/to/your/image.jpg /var/www/html/supermon-ng/user_files/header-background.jpg
+
+# Set proper permissions
+sudo chown www-data:www-data /var/www/html/supermon-ng/user_files/header-background.jpg
+sudo chmod 644 /var/www/html/supermon-ng/user_files/header-background.jpg
+```
+
+**Notes:**
+- Recommended size: 1200x164 pixels (or similar aspect ratio)
+- System automatically detects the first `header-background.*` file found
+- Images are cached for better performance
 
 ### 5. Node Status Updates (Optional)
 
