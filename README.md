@@ -254,23 +254,31 @@ sudo chmod 644 /var/www/html/supermon-ng/user_files/header-background.jpg
 
 ### 5. Node Status Updates (Optional)
 
-Configure automatic node status updates by creating `/var/www/html/supermon-ng/user_files/node_info.ini`:
+Configure automatic node status updates by creating `/var/www/html/supermon-ng/user_files/sbin/node_info.ini`:
 
 ```ini
-[nodes]
-546051 = "Repeater Site 1"
-546055 = "Remote Base"
-546056 = "Portable Node"
+[general]
+NODE = 546051 546055 546056
+WX_CODE = 77511
+WX_LOCATION = Alvin, Texas
+TEMP_UNIT = F
 
-[weather]
-enabled = true
-api_key = your_weather_api_key
-location = "City, State"
-
-[alerts]
-enabled = true
-check_interval = 300
+[autosky]
+MASTER_ENABLE = yes
+ALERT_INI = /usr/local/bin/AUTOSKY/AutoSky.ini
+WARNINGS_FILE = /var/www/html/AUTOSKY/warnings.txt
+CUSTOM_LINK = https://alerts.weather.gov/cap/wwaatmget.php?x=TXC039&y=1
 ```
+
+**Configuration Options:**
+- Replace node numbers in `NODE =` with your actual node numbers (space-separated)
+- Set `WX_CODE` to your local weather station code
+- Update `WX_LOCATION` with your location
+- Set `TEMP_UNIT` to `F` (Fahrenheit) or `C` (Celsius)
+- Configure AutoSky paths if using weather alerts
+
+**Dashboard Configuration:**
+Users with `SYSINFUSER` permissions can configure node status settings directly through the web dashboard using the "Node Status" button.
 
 This enables the systemd service that updates Asterisk variables every 3 minutes.
 
@@ -573,7 +581,7 @@ sudo journalctl -u supermon-ng-node-status.service -f
 /etc/apache2/sites-available/supermon-ng.conf
 
 # Node status configuration
-/var/www/html/supermon-ng/user_files/node_info.ini
+/var/www/html/supermon-ng/user_files/sbin/node_info.ini
 
 # Global settings
 /var/www/html/supermon-ng/user_files/global.inc
