@@ -197,7 +197,7 @@ export default {
     const loadConfig = async () => {
       loading.value = true
       try {
-        const response = await api.get('/api/node-status/config')
+        const response = await api.get('/node-status/config')
         if (response.data.success && response.data.config) {
           const cfg = response.data.config
           config.value = {
@@ -221,7 +221,7 @@ export default {
 
     const loadServiceStatus = async () => {
       try {
-        const response = await api.get('/api/node-status/service-status')
+        const response = await api.get('/node-status/service-status')
         if (response.data.success) {
           serviceStatus.value = response.data
         }
@@ -238,7 +238,7 @@ export default {
           nodes: nodeNumbers.value.split(' ').filter(n => n.trim())
         }
         
-        const response = await api.put('/api/node-status/config', configData)
+        const response = await api.put('/node-status/config', configData)
         if (response.data.success) {
           alert('Configuration saved successfully!')
         } else {
@@ -256,7 +256,7 @@ export default {
       updating.value = true
       updateOutput.value = ''
       try {
-        const response = await api.post('/api/node-status/trigger-update')
+        const response = await api.post('/node-status/trigger-update')
         if (response.data.success) {
           updateOutput.value = response.data.output || 'Update completed successfully'
           await loadServiceStatus() // Refresh service status

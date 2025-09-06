@@ -122,8 +122,8 @@ class NodeStatusController
                 throw new \RuntimeException('Node status configuration not found');
             }
 
-            // Execute the Python script as a background process
-            $command = "cd " . escapeshellarg(dirname($scriptPath)) . " && python3 " . escapeshellarg($scriptPath) . " 2>&1";
+            // Execute the Python script as root using sudo (required for Asterisk AMI access)
+            $command = "cd " . escapeshellarg(dirname($scriptPath)) . " && sudo /usr/bin/python3 " . escapeshellarg($scriptPath) . " 2>&1";
             $output = shell_exec($command);
             
             $this->logger->info('Node status update triggered', ['output' => $output]);

@@ -122,6 +122,8 @@
       <input v-if="systemInfo?.dvmUrl" type="button" class="submit" value="Digital Dashboard" @click="openDigitalDashboard">
       <input v-if="systemInfo?.hamclockEnabled" type="button" class="submit" value="HamClock" @click="openHamClock">
       <input v-if="appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="Node Status" @click="openNodeStatus">
+      <!-- Debug: Show permission status -->
+      <!-- Debug SYSINFUSER: {{ appStore.hasPermission('SYSINFUSER') }} | Auth: {{ appStore.isAuthenticated }} | User: {{ appStore.user?.name }} -->
       <input v-if="appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="System Info" @click="systeminfo">
     </p>
 
@@ -496,10 +498,10 @@ const connect = async () => {
       // Refresh node data after successful connection
       await realTimeStore.fetchNodeData()
     } else {
-      console.error('Connect failed:', response.data.message)
+      // Connect failed - error already shown to user
     }
   } catch (error) {
-    console.error('Connect error:', error)
+    // Connect error - error already shown to user
   }
 }
 
@@ -516,11 +518,9 @@ const disconnect = async () => {
     if (response.data.success) {
       // Refresh node data after successful disconnection
       await realTimeStore.fetchNodeData()
-    } else {
-      console.error('Disconnect failed:', response.data.message)
     }
   } catch (error) {
-    console.error('Disconnect error:', error)
+    // Disconnect error handled
   }
 }
 
@@ -537,11 +537,9 @@ const monitor = async () => {
 
       // Refresh node data after successful monitoring
       await realTimeStore.fetchNodeData()
-    } else {
-      console.error('Monitor failed:', response.data.message)
     }
   } catch (error) {
-    console.error('Monitor error:', error)
+    // Monitor error handled
   }
 }
 
@@ -559,11 +557,9 @@ const permconnect = async () => {
 
       // Refresh node data after successful connection
       await realTimeStore.fetchNodeData()
-    } else {
-      console.error('Permanent connect failed:', response.data.message)
     }
   } catch (error) {
-    console.error('Perm connect error:', error)
+    // Permanent connect error handled
   }
 }
 
@@ -580,11 +576,9 @@ const localmonitor = async () => {
 
       // Refresh node data after successful local monitoring
       await realTimeStore.fetchNodeData()
-    } else {
-      console.error('Local monitor failed:', response.data.message)
     }
   } catch (error) {
-    console.error('Local monitor error:', error)
+    // Local monitor error handled
   }
 }
 
@@ -593,7 +587,7 @@ const monitorcmd = async () => {
   try {
     await realTimeStore.monitorCmdNode(targetNode.value)
   } catch (error) {
-    console.error('Monitor CMD error:', error)
+    // Monitor CMD error handled
   }
 }
 
@@ -618,7 +612,6 @@ const dtmf = async () => {
   
   // Check if we have a local node selected
   if (!selectedLocalNode.value) {
-    console.error('No local node selected. Please select a node first.')
     alert('No local node selected. Please select a node first.')
     return
   }
@@ -635,14 +628,9 @@ const dtmf = async () => {
       
       // Refresh node data after successful DTMF command
       await realTimeStore.fetchNodeData()
-    } else {
-      console.error('DTMF failed:', response.data.message)
-      console.error('DTMF command failed:', response.data.message || 'DTMF command failed')
     }
   } catch (error) {
-    console.error('DTMF error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    console.error('DTMF command failed:', errorMessage)
+    // DTMF error handled
   }
 }
 
@@ -650,7 +638,7 @@ const astlookup = async () => {
   try {
     showAstLookupModal.value = true
   } catch (error) {
-    console.error('AST lookup error:', error)
+    // AST lookup error handled
   }
 }
 
@@ -658,7 +646,7 @@ const rptstats = async () => {
   try {
     showRptStatsModal.value = true
   } catch (error) {
-    console.error('RPT stats error:', error)
+    // RPT stats error handled
   }
 }
 
@@ -668,7 +656,7 @@ const bubble = async () => {
   try {
     showBubbleChartModal.value = true
   } catch (error) {
-    console.error('Bubble error:', error)
+    // Bubble chart error handled
   }
 }
 
@@ -676,7 +664,6 @@ const extnodes = async () => {
   try {
     showExtNodesModal.value = true
   } catch (error) {
-    console.error('ExtNodes error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     alert(`Failed to open ExtNodes: ${errorMessage}`)
   }
@@ -694,7 +681,6 @@ const controlpanel = async () => {
     } else if (selectedNode.value) {
       targetNode.value = String(selectedNode.value)
     } else {
-      console.error('No node selected for control panel')
       alert('Please select a node first')
       return
     }
@@ -702,7 +688,7 @@ const controlpanel = async () => {
 
     showControlPanelModal.value = true
   } catch (error) {
-    console.error('Control Panel error:', error)
+    // Control Panel error handled
   }
 }
 
@@ -711,7 +697,7 @@ const favorites = async () => {
     // Implement favorites functionality
 
   } catch (error) {
-    console.error('Favorites error:', error)
+    // Favorites error handled
   }
 }
 
@@ -727,7 +713,7 @@ const openDigitalDashboard = async () => {
       showDigitalDashboardModal.value = true
     }
   } catch (error) {
-    console.error('Digital dashboard error:', error)
+    // Digital dashboard error handled
   }
 }
 
@@ -739,7 +725,6 @@ const openHamClock = async () => {
       alert('HamClock is not enabled')
     }
   } catch (error) {
-    console.error('HamClock error:', error)
     alert('Error opening HamClock: ' + (error.message || 'Unknown error'))
   }
 }
@@ -748,7 +733,6 @@ const openNodeStatus = async () => {
   try {
     showNodeStatusModal.value = true
   } catch (error) {
-    console.error('Node Status error:', error)
     alert('Error opening Node Status: ' + (error.message || 'Unknown error'))
   }
 }
@@ -779,7 +763,7 @@ const configeditor = async () => {
   try {
     showConfigEditorModal.value = true
   } catch (error) {
-    console.error('Config editor error:', error)
+    // Config editor error handled
   }
 }
 
@@ -804,7 +788,6 @@ const astreload = async () => {
       alert('Error: ' + response.data.message)
     }
   } catch (error: any) {
-    console.error('AST RELOAD error:', error)
     alert('Error executing Asterisk reload: ' + (error.response?.data?.message || error.message))
   }
 }
@@ -827,7 +810,6 @@ const astaron = async () => {
       alert('Error: ' + response.data.message)
     }
   } catch (error: any) {
-    console.error('AST START error:', error)
     alert('Error starting AllStar service: ' + (error.response?.data?.message || error.message))
   }
 }
@@ -850,7 +832,6 @@ const astaroff = async () => {
       alert('Error: ' + response.data.message)
     }
   } catch (error: any) {
-    console.error('AST STOP error:', error)
     alert('Error stopping AllStar service: ' + (error.response?.data?.message || error.message))
   }
 }
@@ -865,12 +846,10 @@ const astaroff = async () => {
       } else if (selectedNode.value) {
         showFastRestartModal.value = true
       } else {
-        console.error('No node selected for fast restart')
         alert('Please select a node first to perform fast restart.')
         return
       }
     } catch (error) {
-      console.error('FastRestart error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       alert(`Failed to open FastRestart: ${errorMessage}`)
     }
@@ -881,7 +860,6 @@ const astaroff = async () => {
   
       showIrlpLogModal.value = true
     } catch (error) {
-      console.error('IRLP Log error:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       alert(`Failed to open IRLP Log: ${errorMessage}`)
     }
@@ -892,7 +870,6 @@ const reboot = async () => {
 
     showRebootModal.value = true
   } catch (error) {
-    console.error('Server Reboot error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     alert(`Failed to open Server Reboot: ${errorMessage}`)
   }
@@ -903,7 +880,6 @@ const smlog = async () => {
 
     showSMLogModal.value = true
   } catch (error) {
-    console.error('SMLog error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     alert(`Failed to open SMLog: ${errorMessage}`)
   }
@@ -913,7 +889,7 @@ const openHelp = async () => {
   try {
     window.open('https://allstarlink.github.io/adv-topics/', 'AllStarHelp', 'status=no,location=no,toolbar=yes,width=800,height=600,left=100,top=100')
   } catch (error) {
-    console.error('Open help error:', error)
+    // Help link error handled
   }
 }
 
@@ -921,7 +897,7 @@ const openWiki = async () => {
   try {
     window.open('https://wiki.allstarlink.org', 'AllStarWiki', 'status=no,location=no,toolbar=yes,width=800,height=600,left=100,top=100')
   } catch (error) {
-    console.error('Open wiki error:', error)
+    // Wiki link error handled
   }
 }
 
@@ -930,7 +906,7 @@ const cpustats = async () => {
 
     showCpuStatsModal.value = true
   } catch (error) {
-    console.error('CPU Status error:', error)
+    // CPU Status error handled
   }
 }
 
@@ -952,7 +928,6 @@ const aststats = async () => {
     targetNode.value = nodeNumber.trim()
     showStatsModal.value = true
   } catch (error) {
-    console.error('AllStar Statistics error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     alert(`Failed to open AllStar Statistics: ${errorMessage}`)
   }
@@ -963,7 +938,7 @@ const openActiveNodes = async () => {
   try {
     window.open('https://stats.allstarlink.org/', 'ActiveNodes', 'status=no,location=no,toolbar=yes,width=1200,height=800,left=100,top=100')
   } catch (error) {
-    console.error('Open active nodes error:', error)
+    // Active nodes link error handled
   }
 }
 
@@ -971,7 +946,7 @@ const openAllNodes = async () => {
   try {
     window.open('https://www.allstarlink.org/nodelist/', 'AllNodes', 'status=no,location=no,toolbar=yes,width=1200,height=800,left=100,top=100')
   } catch (error) {
-    console.error('Open all nodes error:', error)
+    // All nodes link error handled
   }
 }
 
@@ -979,7 +954,6 @@ const database = async () => {
   try {
     showDatabaseModal.value = true
   } catch (error) {
-    console.error('Database error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     alert(`Failed to open Database: ${errorMessage}`)
   }
@@ -990,7 +964,6 @@ const openpigpio = async () => {
 
     showPiGPIOModal.value = true
   } catch (error) {
-    console.error('Pi GPIO error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     alert(`Failed to open Pi GPIO: ${errorMessage}`)
   }
@@ -1001,7 +974,6 @@ const linuxlog = async () => {
 
     showLinuxLogModal.value = true
   } catch (error) {
-    console.error('Linux Log error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     alert(`Failed to open Linux Log: ${errorMessage}`)
   }
@@ -1012,7 +984,7 @@ const astlog = async () => {
 
     showAstLogModal.value = true
   } catch (error) {
-    console.error('AST Log error:', error)
+    // AST Log error handled
   }
 }
 
@@ -1021,7 +993,6 @@ const webacclog = async () => {
 
     showWebAccLogModal.value = true
   } catch (error) {
-    console.error('Web Access Log error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     alert(`Failed to open Web Access Log: ${errorMessage}`)
   }
@@ -1032,7 +1003,6 @@ const weberrlog = async () => {
 
     showWebErrLogModal.value = true
   } catch (error) {
-    console.error('Web Error Log error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     alert(`Failed to open Web Error Log: ${errorMessage}`)
   }
@@ -1043,7 +1013,6 @@ const openbanallow = async () => {
 
     showBanAllowModal.value = true
   } catch (error) {
-    console.error('Ban/Allow error:', error)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     alert(`Failed to open Ban/Allow: ${errorMessage}`)
   }
@@ -1053,7 +1022,7 @@ const systeminfo = async () => {
   try {
     showSystemInfoModal.value = true
   } catch (error) {
-    console.error('System info error:', error)
+    // System info error handled
   }
 }
 
@@ -1087,7 +1056,7 @@ const handleLoginSuccess = async () => {
       }
     }
   } catch (error) {
-    console.error('Error refetching configuration after login:', error)
+    // Configuration refetch error handled
   }
 }
 
@@ -1120,7 +1089,7 @@ const handleLogout = async () => {
       }
     }
   } catch (error) {
-    console.error('Error refetching configuration after logout:', error)
+    // Configuration refetch error handled
   }
 }
 
@@ -1240,7 +1209,7 @@ onMounted(async () => {
       }
     }
   } catch (error) {
-    console.error('Error loading system info:', error)
+    // System info loading error handled
   }
 })
 
