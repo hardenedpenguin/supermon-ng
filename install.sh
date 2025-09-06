@@ -91,8 +91,8 @@ INSTALLER_DIR="$(pwd)"
 # Copy all files to the target directory (if not already there)
 if [ "$(pwd)" != "$APP_DIR" ]; then
     echo "📁 Copying files to $APP_DIR..."
-    # Copy everything except installer files, documentation, sudoers.d directory and supermon_unified_file_editor.sh
-    find . -maxdepth 1 ! -name . ! -name "*.md" ! -name "install.sh" ! -name sudoers.d ! -name scripts -exec cp -r {} "$APP_DIR/" \;
+    # Copy everything except installer files, documentation, sudoers.d directory, systemd directory and supermon_unified_file_editor.sh
+    find . -maxdepth 1 ! -name . ! -name "*.md" ! -name "install.sh" ! -name sudoers.d ! -name systemd ! -name scripts -exec cp -r {} "$APP_DIR/" \;
     # Copy scripts directory but exclude supermon_unified_file_editor.sh
     if [ -d "scripts" ]; then
         mkdir -p "$APP_DIR/scripts"
@@ -279,48 +279,29 @@ NODE_STATUS_SERVICE_FILE="/etc/systemd/system/supermon-ng-node-status.service"
 NODE_STATUS_TIMER_FILE="/etc/systemd/system/supermon-ng-node-status.timer"
 
 if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
-    echo "📝 Creating node status service files..."
+    echo "📝 Installing node status service files..."
     
     if [ -f "$NODE_STATUS_SERVICE_FILE" ]; then
-        echo "⚠️  Node status service file already exists. Skipping creation."
+        echo "⚠️  Node status service file already exists. Skipping installation."
     else
-        cat > "$NODE_STATUS_SERVICE_FILE" << EOF
-[Unit]
-Description=Supermon-NG Node Status Update Service
-After=network.target asterisk.service
-Wants=asterisk.service
-
-[Service]
-Type=oneshot
-User=root
-WorkingDirectory=$APP_DIR/user_files/sbin
-ExecStart=/usr/bin/python3 $APP_DIR/user_files/sbin/ast_node_status_update.py
-StandardOutput=append:$APP_DIR/logs/node-status-update.log
-StandardError=append:$APP_DIR/logs/node-status-update.log
-
-[Install]
-WantedBy=multi-user.target
-EOF
-        echo "✅ Node status service file created"
+        if [ -f "$INSTALLER_DIR/systemd/supermon-ng-node-status.service" ]; then
+            # Update the service file with correct paths and copy it
+            sed "s|WorkingDirectory=.*|WorkingDirectory=$APP_DIR/user_files/sbin|g; s|ExecStart=.*|ExecStart=/usr/bin/python3 $APP_DIR/user_files/sbin/ast_node_status_update.py|g; s|StandardOutput=.*|StandardOutput=append:$APP_DIR/logs/node-status-update.log|g; s|StandardError=.*|StandardError=append:$APP_DIR/logs/node-status-update.log|g" "$INSTALLER_DIR/systemd/supermon-ng-node-status.service" > "$NODE_STATUS_SERVICE_FILE"
+            echo "✅ Node status service file installed"
+        else
+            echo "❌ Node status service template not found in systemd directory"
+        fi
     fi
     
     if [ -f "$NODE_STATUS_TIMER_FILE" ]; then
-        echo "⚠️  Node status timer file already exists. Skipping creation."
+        echo "⚠️  Node status timer file already exists. Skipping installation."
     else
-        cat > "$NODE_STATUS_TIMER_FILE" << EOF
-[Unit]
-Description=Run Supermon-NG Node Status Update every 3 minutes
-Requires=supermon-ng-node-status.service
-
-[Timer]
-OnBootSec=2min
-OnUnitActiveSec=3min
-AccuracySec=30s
-
-[Install]
-WantedBy=timers.target
-EOF
-        echo "✅ Node status timer file created"
+        if [ -f "$INSTALLER_DIR/systemd/supermon-ng-node-status.timer" ]; then
+            cp "$INSTALLER_DIR/systemd/supermon-ng-node-status.timer" "$NODE_STATUS_TIMER_FILE"
+            echo "✅ Node status timer file installed"
+        else
+            echo "❌ Node status timer template not found in systemd directory"
+        fi
     fi
 else
     echo "ℹ️  Node status configuration not found. Skipping node status service setup."
