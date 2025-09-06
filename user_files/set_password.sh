@@ -72,9 +72,16 @@ read_password() {
     local prompt="$1"
     local password
     
-    echo -n "$prompt"
-    read -s password
-    echo
+    # Check if we're in an interactive terminal
+    if [[ -t 0 ]]; then
+        echo -n "$prompt" >&2
+        read -s password
+        echo >&2
+    else
+        # Non-interactive mode, read normally
+        read password
+    fi
+    
     echo "$password"
 }
 
