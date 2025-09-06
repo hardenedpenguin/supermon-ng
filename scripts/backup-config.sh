@@ -3,10 +3,10 @@
 # Configuration Backup Script for Supermon-ng
 # 
 # Creates backups of user configuration files and settings.
-# Useful before making changes or updates.
+# Backs up only essential configuration files used in V4.0.0+
 #
 # Author: Supermon-ng Team
-# Version: 2.0.3
+# Version: 4.0.0
 #
 
 set -e
@@ -113,37 +113,27 @@ CONFIG_FILES=(
     
     # Node configuration
     "user_files/allmon.ini"
-    "user_files/nolog.ini"
     
     # Authentication configuration
-    "user_files/authini.inc"
     "user_files/authusers.inc"
+    "user_files/.htpasswd"
+    "user_files/.htaccess"
     
-    # Control panel configuration
-    "user_files/controlpanel.ini"
-    "user_files/admin-controlpanel.ini"
-    
-    # Favorites configuration
-    "user_files/favorites.ini"
-    "user_files/admin-favorites.ini"
-    
-    # User-specific configurations (if they exist)
-    "user_files/*-allmon.ini"
-    "user_files/*-favorites.ini"
-    "user_files/*-controlpanel.ini"
-    
-    # Custom files
-    "user_files/privatenodes.txt"
-    "user_files/background.jpg"
-    
-    # System binary files
+    # Node status configuration
     "user_files/sbin/node_info.ini"
+    
+    # Custom header background (if exists)
+    "user_files/header-background.jpg"
+    "user_files/header-background.jpeg"
+    "user_files/header-background.png"
+    "user_files/header-background.gif"
+    "user_files/header-background.webp"
 )
 
 # Directories to backup
 CONFIG_DIRS=(
-    "user_files/sbin"
-    "css"
+    # Only backup user_files/sbin if it contains custom scripts
+    # CSS directory is not user configuration
 )
 
 # Files backed up counter
