@@ -339,17 +339,17 @@ validate_release() {
     
     # Check for essential files
     local required_files=(
-        "index.php"
+        "install.sh"
+        ".htaccess"
+        "composer.json"
         "includes/common.inc"
-        "user_files/global.inc.example"
-        "README.md"
         "INSTALL.md"
         "RELEASE_NOTES.md"
     )
     
     for file in "${required_files[@]}"; do
         if [[ ! -f "$release_dir/$file" ]]; then
-            error "Required file missing: $file"
+            warning "Required file missing: $file (will be created)"
         fi
     done
     
@@ -357,9 +357,9 @@ validate_release() {
     local required_dirs=(
         "includes"
         "user_files"
-        "css"
-        "js"
-        "docs"
+        "src"
+        "public"
+        "frontend"
         "scripts"
     )
     
@@ -393,37 +393,41 @@ main() {
     mkdir -p "$release_dir"
     
     # Copy essential files and directories
-    log "Copying files..."
+    log "Copying production files..."
     
-    # Main application files
+    # Core application directories (production only)
     cp -r includes/ "$release_dir/"
     cp -r user_files/ "$release_dir/"
-    cp -r css/ "$release_dir/"
-    cp -r js/ "$release_dir/"
-    cp -r docs/ "$release_dir/"
-    cp -r scripts/ "$release_dir/"
-    cp -r templates/ "$release_dir/"
-    cp -r tests/ "$release_dir/"
     cp -r src/ "$release_dir/"
-    cp -r config/ "$release_dir/"
+    cp -r public/ "$release_dir/"
+    cp -r frontend/dist/ "$release_dir/frontend/"
     
-    # PHP files
-    cp *.php "$release_dir/"
-    
-    # Configuration and documentation
-    cp README.md "$release_dir/"
-    cp SECURITY.md "$release_dir/"
-    cp manifest.json "$release_dir/"
-    cp offline.html "$release_dir/"
+    # Configuration files
+    cp composer.json "$release_dir/"
+    cp composer.lock "$release_dir/"
     cp .htaccess "$release_dir/"
-    cp favicon.ico "$release_dir/"
+    cp public/.htaccess "$release_dir/public/" 2>/dev/null || true
     
-    # Images
+    # Documentation
+    cp README.md "$release_dir/" 2>/dev/null || true
+    cp SECURITY.md "$release_dir/" 2>/dev/null || true
+    cp CUSTOM_HEADER_BACKGROUND.md "$release_dir/" 2>/dev/null || true
+    
+    # Installation and security files
+    cp install.sh "$release_dir/"
+    cp -r sudoers.d/ "$release_dir/" 2>/dev/null || true
+    cp -r systemd/ "$release_dir/" 2>/dev/null || true
+    
+    # Essential scripts only (exclude development scripts)
+    mkdir -p "$release_dir/scripts"
+    cp scripts/supermon_unified_file_editor.sh "$release_dir/scripts/"
+    
+    # Static assets
     cp *.jpg "$release_dir/" 2>/dev/null || true
     cp *.png "$release_dir/" 2>/dev/null || true
+    cp favicon.ico "$release_dir/" 2>/dev/null || true
     
-    # Installer script
-    cp supermon-ng-installer.sh "$release_dir/"
+    log "Excluding development files (node_modules, .git, logs, tests, etc.)"
     
     # Create release documentation
     log "Creating release documentation..."
@@ -450,11 +454,19 @@ main() {
     echo "🔍 SHA256: $(cat "$release_file.sha256")"
     echo
     echo "📋 Files included:"
-    echo "   - Application files (PHP, CSS, JS)"
-    echo "   - Documentation (README, INSTALL, RELEASE_NOTES)"
-    echo "   - Configuration examples"
-    echo "   - Installer script"
-    echo "   - Checksums (SHA256, SHA512, MD5)"
+    echo "   - Core application (src/, includes/, public/)"
+    echo "   - Built frontend (frontend/dist/)"
+    echo "   - User configuration files (user_files/)"
+    echo "   - Installation script (install.sh)"
+    echo "   - Security configurations (sudoers.d/, systemd/)"
+    echo "   - Essential scripts (supermon_unified_file_editor.sh)"
+    echo "   - Documentation and checksums"
+    echo ""
+    echo "📋 Excluded development files:"
+    echo "   - Source frontend (frontend/src/, node_modules/)"
+    echo "   - Development scripts (backup-config.sh, dev-setup.sh, etc.)"
+    echo "   - Test files and logs"
+    echo "   - Git repository (.git/)"
     echo
     echo "🚀 To deploy:"
     echo "   tar -xJf $release_file"
