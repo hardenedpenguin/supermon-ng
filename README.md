@@ -84,9 +84,6 @@ sudo cp /var/www/html/supermon-ng/apache-config-template.conf /etc/apache2/sites
 # Enable the new site
 sudo a2ensite supermon-ng
 
-# Optionally disable the default Apache site
-sudo a2dissite 000-default
-
 # Test the configuration
 sudo apache2ctl configtest
 
@@ -525,7 +522,6 @@ htop
 sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers expires
 sudo cp /var/www/html/supermon-ng/apache-config-template.conf /etc/apache2/sites-available/supermon-ng.conf
 sudo a2ensite supermon-ng
-sudo a2dissite 000-default  # Optional
 sudo apache2ctl configtest
 sudo systemctl restart apache2
 ```
