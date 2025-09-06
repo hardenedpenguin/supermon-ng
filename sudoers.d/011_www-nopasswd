@@ -1,15 +1,6 @@
 # Used for buttons
 www-data ALL=(root) NOPASSWD: /bin/journalctl, /usr/bin/astup.sh, /usr/bin/astdn.sh, /usr/sbin/reboot
 www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/ssinfo
-www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/din
-www-data ALL=(root) NOPASSWD: /usr/bin/python3 /var/www/html/supermon-ng/user_files/sbin/ast_node_status_update.py
-www-data ALL=(root) NOPASSWD: /usr/sbin/asterisk
-
-# Node Status service management
-www-data ALL=(root) NOPASSWD: /bin/systemctl start supermon-ng-node-status.service
-www-data ALL=(root) NOPASSWD: /bin/systemctl stop supermon-ng-node-status.service
-www-data ALL=(root) NOPASSWD: /bin/systemctl status supermon-ng-node-status.service
-www-data ALL=(root) NOPASSWD: /bin/journalctl -u supermon-ng-node-status.service *
 
 # Supermon-ng files
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/allmon.ini
