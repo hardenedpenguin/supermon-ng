@@ -5,6 +5,12 @@
 
 set -e
 
+# System configuration
+WWW_GROUP="www-data"
+WWW_USER="www-data"
+ASTERISK_LOG_DIR="/var/log/asterisk"
+APACHE_LOG_DIR="/var/log/apache2"
+
 echo "🚀 Installing Supermon-NG on ASL3+ Server..."
 
 # Check if we're running as root
@@ -16,7 +22,7 @@ fi
 # Install dependencies
 echo "📦 Installing system dependencies..."
 apt-get update
-apt-get install -y php php-sqlite3 php-curl php-mbstring git curl
+apt-get install -y php php-sqlite3 php-curl php-mbstring git curl acl
 
 # Install Node.js 20.x (required for Vite)
 echo "📦 Installing Node.js 20.x..."
@@ -27,11 +33,41 @@ apt-get install -y nodejs
 NODE_VERSION=$(node --version)
 echo "✅ Node.js version: $NODE_VERSION"
 
+# Function to configure log access using ACLs
+configure_logs() {
+    echo "🔐 Configuring log access with ACLs..."
+    
+    # Configure ACLs for Apache logs
+    if [ -d "$APACHE_LOG_DIR" ] && command -v setfacl >/dev/null 2>&1; then
+        echo "   📋 Configuring Apache log access..."
+        setfacl -R -m "g:${WWW_GROUP}:rX" "$APACHE_LOG_DIR" 2>/dev/null || echo "   ⚠️  Warning: Failed to set Apache log ACLs"
+        # Set default ACLs for future files
+        setfacl -R -d -m "g:${WWW_GROUP}:rX" "$APACHE_LOG_DIR" 2>/dev/null || echo "   ⚠️  Warning: Failed to set Apache log default ACLs"
+    else
+        echo "   ⚠️  Warning: Apache log directory not found or setfacl not available"
+    fi
+    
+    # Configure ACLs for Asterisk logs
+    if [ -d "$ASTERISK_LOG_DIR" ] && command -v setfacl >/dev/null 2>&1; then
+        echo "   📋 Configuring Asterisk log access..."
+        setfacl -R -m "g:${WWW_GROUP}:rX" "$ASTERISK_LOG_DIR" 2>/dev/null || echo "   ⚠️  Warning: Failed to set Asterisk log ACLs"
+        # Set default ACLs for future files
+        setfacl -R -d -m "g:${WWW_GROUP}:rX" "$ASTERISK_LOG_DIR" 2>/dev/null || echo "   ⚠️  Warning: Failed to set Asterisk log default ACLs"
+    else
+        echo "   ⚠️  Warning: Asterisk log directory not found or setfacl not available"
+    fi
+    
+    echo "✅ Log access configuration completed"
+}
+
 # Install Composer via package manager
 if ! command -v composer &> /dev/null; then
     echo "📦 Installing Composer..."
     apt-get install -y composer
 fi
+
+# Configure log access with ACLs
+configure_logs
 
 # Set up the application directory
 APP_DIR="/var/www/html/supermon-ng"
@@ -440,7 +476,8 @@ echo "   3. Set up your node configurations"
 echo "   4. Access the web interface to complete setup"
 echo ""
 echo "📋 Installation Summary:"
-echo "   ✅ System dependencies installed"
+echo "   ✅ System dependencies installed (including ACL support)"
+echo "   ✅ Log access configured with ACLs"
 echo "   ✅ Unified file editor installed and validated"
 echo "   ✅ Sudoers configuration installed and validated"
 echo "   ✅ PHP dependencies installed"
