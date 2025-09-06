@@ -20,7 +20,7 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 - **Operating System**: Debian 11+ or Ubuntu 20.04+ (ASL3+ compatible)
 - **PHP**: 8.0+ with extensions: `sqlite3`, `curl`, `mbstring`, `json`
 - **Apache**: 2.4+ with modules: `rewrite`, `proxy`, `proxy_http`, `proxy_wstunnel`, `headers`, `expires`
-- **Node.js**: 16+ and npm (for development builds only)
+- **Node.js**: 20.x+ and npm (for development builds only)
 - **RAM**: 512MB minimum, 1GB recommended
 - **Storage**: 200MB free space
 - **AllStar Link**: ASL3+ installation with Asterisk
@@ -379,7 +379,7 @@ sudo ./install.sh
 **Error: Frontend build fails**
 ```bash
 # Check Node.js version
-node --version  # Should be 16+
+node --version  # Should be 20.x+
 
 # Clear npm cache
 cd frontend && npm cache clean --force
