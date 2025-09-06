@@ -7,6 +7,7 @@ use SupermonNg\Application\Controllers\AuthController;
 use SupermonNg\Application\Controllers\SystemController;
 use SupermonNg\Application\Controllers\DatabaseController;
 use SupermonNg\Application\Controllers\ConfigController;
+use SupermonNg\Application\Controllers\NodeStatusController;
 use SupermonNg\Application\Controllers\AdminController;
 use SupermonNg\Application\Middleware\ApiAuthMiddleware;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
@@ -172,6 +173,7 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->put('/user/preferences', [ConfigController::class, 'updateUserPreferences']);
         $group->get('/system-info', [ConfigController::class, 'getSystemInfo']);
         $group->get('/menu', [ConfigController::class, 'getMenu']);
+        $group->get('/header-background.{filename}', [ConfigController::class, 'getHeaderBackground']);
         $group->get('/display', [ConfigController::class, 'getDisplayConfig']);
         $group->put('/display', [ConfigController::class, 'updateDisplayConfig']);
         $group->get('/node-info', [ConfigController::class, 'getNodeInfo']);
@@ -200,6 +202,14 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->post('/force-update', [DatabaseController::class, 'forceUpdate']);
         $group->get('/search', [DatabaseController::class, 'search']);
         $group->get('/{id}', [DatabaseController::class, 'get']);
+    });
+
+    // Node Status routes
+    $group->group('/node-status', function (RouteCollectorProxy $group) {
+        $group->get('/config', [NodeStatusController::class, 'getConfig']);
+        $group->put('/config', [NodeStatusController::class, 'updateConfig']);
+        $group->post('/trigger-update', [NodeStatusController::class, 'triggerUpdate']);
+        $group->get('/service-status', [NodeStatusController::class, 'getServiceStatus']);
     });
 
     // System routes

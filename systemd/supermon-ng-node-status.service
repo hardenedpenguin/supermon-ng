@@ -1,0 +1,15 @@
+[Unit]
+Description=Supermon-NG Node Status Update Service
+After=network.target asterisk.service
+Wants=asterisk.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/var/www/html/supermon-ng/user_files/sbin
+ExecStart=/usr/bin/python3 /var/www/html/supermon-ng/user_files/sbin/ast_node_status_update.py
+StandardOutput=append:/var/www/html/supermon-ng/logs/node-status-update.log
+StandardError=append:/var/www/html/supermon-ng/logs/node-status-update.log
+
+[Install]
+WantedBy=multi-user.target

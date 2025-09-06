@@ -1,0 +1,11 @@
+[Unit]
+Description=Run Supermon-NG Node Status Update every 3 minutes
+Requires=supermon-ng-node-status.service
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=3min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target

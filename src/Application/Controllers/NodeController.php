@@ -1250,21 +1250,18 @@ class NodeController
     }
 
     /**
-     * Execute CPU statistics commands
-     * 
-     * Note: When moving to server, replace with:
-     * - '/usr/bin/uname -a' -> 'export TERM=vt100 && sudo /usr/bin/ssinfo - '
-     * - '/usr/bin/free -h' -> '/usr/bin/din'
-     * - '/usr/bin/uptime' -> (remove or keep)
+     * Execute CPU statistics commands using custom scripts from user_files/sbin
      */
     private function executeCpuStatsCommands(): string
     {
+        $userFilesDir = __DIR__ . '/../../../user_files';
+        
         $commands = [
             '/usr/bin/date',
-            '/usr/bin/uname -a',  // Server: 'export TERM=vt100 && sudo /usr/bin/ssinfo - '
+            file_exists("$userFilesDir/sbin/ssinfo") ? "export TERM=vt100 && $userFilesDir/sbin/ssinfo -" : '/usr/bin/uname -a',
             '/usr/bin/ip a',
             '/usr/bin/df -hT',
-            '/usr/bin/free -h',   // Server: '/usr/bin/din'
+            file_exists("$userFilesDir/sbin/din") ? "$userFilesDir/sbin/din" : '/usr/bin/free -h',
             '/usr/bin/uptime',
             '/usr/bin/top -b -n1'
         ];

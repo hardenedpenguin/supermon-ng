@@ -142,6 +142,59 @@ EOF
     echo "✅ Backend service file created"
 fi
 
+# Node Status service (optional)
+NODE_STATUS_SERVICE_FILE="/etc/systemd/system/supermon-ng-node-status.service"
+NODE_STATUS_TIMER_FILE="/etc/systemd/system/supermon-ng-node-status.timer"
+
+if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
+    echo "📝 Creating node status service files..."
+    
+    if [ -f "$NODE_STATUS_SERVICE_FILE" ]; then
+        echo "⚠️  Node status service file already exists. Skipping creation."
+    else
+        cat > "$NODE_STATUS_SERVICE_FILE" << EOF
+[Unit]
+Description=Supermon-NG Node Status Update Service
+After=network.target asterisk.service
+Wants=asterisk.service
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=$APP_DIR/user_files/sbin
+ExecStart=/usr/bin/python3 $APP_DIR/user_files/sbin/ast_node_status_update.py
+StandardOutput=append:$APP_DIR/logs/node-status-update.log
+StandardError=append:$APP_DIR/logs/node-status-update.log
+
+[Install]
+WantedBy=multi-user.target
+EOF
+        echo "✅ Node status service file created"
+    fi
+    
+    if [ -f "$NODE_STATUS_TIMER_FILE" ]; then
+        echo "⚠️  Node status timer file already exists. Skipping creation."
+    else
+        cat > "$NODE_STATUS_TIMER_FILE" << EOF
+[Unit]
+Description=Run Supermon-NG Node Status Update every 3 minutes
+Requires=supermon-ng-node-status.service
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=3min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target
+EOF
+        echo "✅ Node status timer file created"
+    fi
+else
+    echo "ℹ️  Node status configuration not found. Skipping node status service setup."
+    echo "   To enable node status updates, configure $APP_DIR/user_files/sbin/node_info.ini"
+fi
+
 # Install Apache if not present
 if ! command -v apache2 &> /dev/null; then
     echo "📦 Installing Apache..."
@@ -238,6 +291,14 @@ echo "🚀 Starting services..."
 systemctl daemon-reload
 systemctl enable supermon-ng-backend
 systemctl start supermon-ng-backend
+
+# Enable node status service if configured
+if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
+    echo "🚀 Starting node status service..."
+    systemctl enable supermon-ng-node-status.timer
+    systemctl start supermon-ng-node-status.timer
+    echo "✅ Node status service enabled and started"
+fi
 
 # Note: Apache configuration must be done manually
 echo "📝 Note: Apache configuration must be completed manually as shown above."

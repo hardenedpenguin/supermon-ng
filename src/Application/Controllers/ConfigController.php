@@ -423,6 +423,38 @@ class ConfigController
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Serve custom header background image
+     */
+    public function getHeaderBackground(Request $request, Response $response, array $args): Response
+    {
+        $filename = $args['filename'] ?? 'header-background.jpg';
+        $userFilesDir = 'user_files';
+        $imagePath = "$userFilesDir/$filename";
+        
+        if (!file_exists($imagePath)) {
+            return $response->withStatus(404);
+        }
+        
+        // Get file extension and set appropriate content type
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $contentType = match($extension) {
+            'jpg', 'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            default => 'application/octet-stream'
+        };
+        
+        // Read and serve the image
+        $imageData = file_get_contents($imagePath);
+        $response->getBody()->write($imageData);
+        
+        return $response
+            ->withHeader('Content-Type', $contentType)
+            ->withHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    }
+    
     private function loadSystemInfo(): array
     {
         // Start session if not already started
@@ -484,7 +516,8 @@ class ConfigController
             'maintainer' => $globalConfig['NAME'] ?? 'W5GLE, Alvin, Texas',
             'hamclockEnabled' => filter_var($globalConfig['HAMCLOCK_ENABLED'] ?? 'False', FILTER_VALIDATE_BOOLEAN),
             'hamclockUrlInternal' => $globalConfig['HAMCLOCK_URL_INTERNAL'] ?? null,
-            'hamclockUrlExternal' => $globalConfig['HAMCLOCK_URL_EXTERNAL'] ?? null
+            'hamclockUrlExternal' => $globalConfig['HAMCLOCK_URL_EXTERNAL'] ?? null,
+            'customHeaderBackground' => $this->getCustomHeaderBackground()
         ];
         
         return $systemInfo;
@@ -523,6 +556,24 @@ class ConfigController
         return $globalConfig;
     }
     
+    /**
+     * Check if custom header background exists and return the API URL
+     */
+    private function getCustomHeaderBackground(): ?string
+    {
+        $userFilesDir = 'user_files';
+        
+        // Check for common image formats
+        $formats = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        foreach ($formats as $format) {
+            $customBackgroundPath = "$userFilesDir/header-background.$format";
+            if (file_exists($customBackgroundPath)) {
+                return "/api/config/header-background.$format";
+            }
+        }
+        
+        return null;
+    }
 
     
     private function getCurrentFavoritesIni(): string

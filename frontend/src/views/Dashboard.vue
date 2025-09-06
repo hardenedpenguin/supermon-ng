@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard">
     <!-- Header Section (mimics header.inc structure) -->
-    <div class="header">
+    <div class="header" :style="{ backgroundImage: headerBackgroundUrl }">
       <!-- Main Title -->
       <div class="header-title">
         <a href="#"><i>Supermon-ng V4.0.0 AllStar Monitor</i></a>
@@ -410,6 +410,14 @@ const displayedNodes = computed(() => {
   )
 
   return filteredNodes
+})
+
+const headerBackgroundUrl = computed(() => {
+  // Use custom background if available, otherwise use default
+  if (systemInfo.value?.customHeaderBackground) {
+    return `url('${systemInfo.value.customHeaderBackground}')`
+  }
+  return "url('/background.jpg')"
 })
 
 // Watcher to update selectedLocalNode when selectedNode changes
@@ -1350,7 +1358,6 @@ watch(displayedNodes, (newDisplayedNodes) => {
   position: relative;
   width: 100%;
   height: 164px;
-  background-image: url('/background.jpg');
   background-size: cover;
   background-position: center;
   border-radius: 8px;

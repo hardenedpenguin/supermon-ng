@@ -37,7 +37,7 @@ else
 fi
 
 HSTNAME=`uname -n`
-HSTID=`ifconfig -a | grep HWaddr | /usr/bin/awk '{if ($1 !~ "virbr") print $5}' | tr -d ':' | sort | head -1`
+HSTID=`ip link show | grep -E "link/ether" | /usr/bin/awk '{if ($1 !~ "virbr") print $2}' | tr -d ':' | sort | head -1`
 if [ "$HSTID" = "" ]; then
   HSTID=`hostid`
 fi
@@ -226,7 +226,7 @@ if [ "$FlagTest" -ge 4 ]; then
   FLAGS=`expr "$FLAGS" + 256`
   TxtFLAGS="$TxtFLAGS DST-OK"
 fi
-NetDevs=`ifconfig -a | awk 'BEGIN{DEV=""} {if (DEV == "") DEV=$1; if ($1 == "UP") print DEV; if ($1 == "") DEV=""}'`
+NetDevs=`ip link show | awk '/^[0-9]+:/ {gsub(/:/, "", $2); dev=$2} /state UP/ {print dev}'`
 DHCP=0
 for NETDEV in $NetDevs; do
   if [ -f "/etc/sysconfig/network-scripts/ifcfg-$NETDEV" ]; then
