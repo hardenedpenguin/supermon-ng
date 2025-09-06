@@ -121,10 +121,9 @@
       <input type="button" class="submit" value="Display Configuration" @click="showDisplayConfigModal = true">
       <input v-if="systemInfo?.dvmUrl" type="button" class="submit" value="Digital Dashboard" @click="openDigitalDashboard">
       <input v-if="systemInfo?.hamclockEnabled" type="button" class="submit" value="HamClock" @click="openHamClock">
-      <input v-if="appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="Node Status" @click="openNodeStatus">
+      <input v-if="appStore.isAuthenticated && appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="Node Status" @click="openNodeStatus">
       <!-- Debug: Show permission status -->
-      <!-- Debug SYSINFUSER: {{ appStore.hasPermission('SYSINFUSER') }} | Auth: {{ appStore.isAuthenticated }} | User: {{ appStore.user?.name }} -->
-      <input v-if="appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="System Info" @click="systeminfo">
+      <input v-if="appStore.isAuthenticated && appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="System Info" @click="systeminfo">
     </p>
 
     <!-- Node Tables (mimics link.php structure) -->
