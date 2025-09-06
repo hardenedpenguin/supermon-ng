@@ -85,10 +85,20 @@ mkdir -p "$APP_DIR/logs"
 mkdir -p "$APP_DIR/database"
 mkdir -p "$APP_DIR/user_files"
 
+# Store the original directory for accessing installer files
+INSTALLER_DIR="$(pwd)"
+
 # Copy all files to the target directory (if not already there)
 if [ "$(pwd)" != "$APP_DIR" ]; then
     echo "📁 Copying files to $APP_DIR..."
-    cp -r . "$APP_DIR/"
+    # Copy everything except sudoers.d directory and supermon_unified_file_editor.sh
+    find . -maxdepth 1 ! -name . ! -name sudoers.d ! -name scripts -exec cp -r {} "$APP_DIR/" \;
+    # Copy scripts directory but exclude supermon_unified_file_editor.sh
+    if [ -d "scripts" ]; then
+        mkdir -p "$APP_DIR/scripts"
+        find scripts -name "*.php" -exec cp {} "$APP_DIR/scripts/" \;
+        find scripts -name "*.sh" ! -name "supermon_unified_file_editor.sh" -exec cp {} "$APP_DIR/scripts/" \;
+    fi
     cd "$APP_DIR"
 fi
 
@@ -101,7 +111,7 @@ if [ -f "$EDITOR_SCRIPT" ]; then
 fi
 
 # Copy and set proper permissions for editor script
-cp "$APP_DIR/scripts/supermon_unified_file_editor.sh" "$EDITOR_SCRIPT"
+cp "$INSTALLER_DIR/scripts/supermon_unified_file_editor.sh" "$EDITOR_SCRIPT"
 chown root:root "$EDITOR_SCRIPT"
 chmod 755 "$EDITOR_SCRIPT"
 
@@ -127,7 +137,7 @@ if [ -f "$SUDOERS_FILE" ]; then
 fi
 
 # Copy and set proper permissions for sudoers file
-cp "$APP_DIR/sudoers.d/011_www-nopasswd" "$SUDOERS_FILE"
+cp "$INSTALLER_DIR/sudoers.d/011_www-nopasswd" "$SUDOERS_FILE"
 chown root:root "$SUDOERS_FILE"
 chmod 440 "$SUDOERS_FILE"
 
