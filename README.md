@@ -311,6 +311,9 @@ sudo /var/www/html/supermon-ng/user_files/set_password.sh
 sudo php /var/www/html/supermon-ng/scripts/manage_users.php --help
 ```
 
+**Important Note:**
+The authentication system only manages the `.htaccess` file for user credentials. It does not modify any other system files, Apache configuration, or application settings.
+
 ## 🔒 Security Features
 
 ### File Permissions
