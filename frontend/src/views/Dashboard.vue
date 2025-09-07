@@ -1414,12 +1414,14 @@ watch(displayedNodes, (newDisplayedNodes) => {
 /* Header styling (mimics header.inc layout) */
 .header {
   position: relative;
-  width: 100%;
+  width: calc(100% + 40px); /* Extend beyond dashboard padding */
   height: 164px;
   background-size: cover;
   background-position: center;
   border-radius: 8px;
   margin-bottom: 0;
+  margin-left: -20px; /* Offset the dashboard padding */
+  margin-right: -20px; /* Offset the dashboard padding */
   overflow: hidden;
 }
 
@@ -1427,7 +1429,7 @@ watch(displayedNodes, (newDisplayedNodes) => {
 .header-title {
   position: absolute;
   top: 3px;
-  left: 5px;
+  left: 25px; /* Adjusted for header extension */
   margin: 0;
   font-weight: bold;
   font-size: 1.1em;
@@ -1449,7 +1451,7 @@ watch(displayedNodes, (newDisplayedNodes) => {
 .header-title2 {
   position: absolute;
   top: 5px;
-  left: 550px;
+  left: 570px; /* Adjusted for header extension */
   margin: 0;
   font-weight: bold;
   font-size: 1.1em;
@@ -1464,7 +1466,7 @@ watch(displayedNodes, (newDisplayedNodes) => {
 .header-tag {
   position: absolute;
   bottom: 2%;
-  left: 10px;
+  left: 30px; /* Adjusted for header extension */
   text-align: left;
   margin: 0;
   color: white;
@@ -1480,7 +1482,7 @@ watch(displayedNodes, (newDisplayedNodes) => {
 .header2-tag {
   position: absolute;
   top: 145px;
-  left: 10px;
+  left: 30px; /* Adjusted for header extension */
   margin: 0;
   font-size: 0.9em;
   color: white;
