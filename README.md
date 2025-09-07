@@ -31,10 +31,10 @@ Download and extract the latest release tarball:
 ```bash
 # Download the release
 cd /tmp
-wget https://github.com/your-repo/supermon-ng/releases/download/v4.0.0/supermon-ng-V4.0.0.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.1/supermon-ng-V4.0.1.tar.xz
 
 # Extract to temporary directory
-tar -xJf supermon-ng-V4.0.0.tar.xz
+tar -xJf supermon-ng-V4.0.1.tar.xz
 
 # Run installation script
 cd /tmp/supermon-ng
