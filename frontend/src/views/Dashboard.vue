@@ -4,7 +4,7 @@
     <div class="header" :style="{ backgroundImage: headerBackgroundUrl }">
       <!-- Main Title -->
       <div class="header-title">
-        <a href="#"><i>{{ systemInfo?.smServerName || 'Supermon-ng' }} V4.0.0 AllStar Monitor</i></a>
+        <a href="#"><i>{{ systemInfo?.smServerName || 'Supermon-ng' }} V4.0.1 AllStar Monitor</i></a>
       </div>
       
       <!-- Call Sign -->
