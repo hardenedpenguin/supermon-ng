@@ -4,12 +4,15 @@
     <div class="header" :style="{ backgroundImage: headerBackgroundUrl }">
       <!-- Main Title -->
       <div class="header-title">
-        <a href="#"><i>Supermon-ng V4.0.0 AllStar Monitor</i></a>
+        <a href="#"><i>{{ systemInfo?.smServerName || 'Supermon-ng' }} V4.0.0 AllStar Monitor</i></a>
       </div>
       
       <!-- Call Sign -->
       <div class="header-title2">
-        <i>{{ systemInfo?.callsign || 'CALLSIGN' }}</i>
+        <a v-if="systemInfo?.myUrl" :href="getCleanUrl(systemInfo.myUrl)" :target="shouldOpenInNewTab(systemInfo.myUrl) ? '_blank' : '_self'">
+          <i>{{ systemInfo?.callsign || 'CALLSIGN' }}</i>
+        </a>
+        <i v-else>{{ systemInfo?.callsign || 'CALLSIGN' }}</i>
       </div>
       
       <!-- Location and Title -->
@@ -29,9 +32,17 @@
         </div>
       </div>
       
-      <!-- AllStar Logo -->
-      <div class="header-img">
-        <a href="https://www.allstarlink.org" target="_blank">
+      <!-- Custom Logo (if configured) -->
+      <div v-if="systemInfo?.logoName" class="custom-logo" :style="customLogoStyle">
+        <a v-if="systemInfo?.logoUrl" :href="getCleanUrl(systemInfo.logoUrl)" :target="shouldOpenInNewTab(systemInfo.logoUrl) ? '_blank' : '_self'">
+          <img :src="`/user_files/${systemInfo.logoName}`" :style="{ width: systemInfo?.logoSize || '15%', border: '0px' }" alt="Custom Logo">
+        </a>
+        <img v-else :src="`/user_files/${systemInfo.logoName}`" :style="{ width: systemInfo?.logoSize || '15%', border: '0px' }" alt="Custom Logo">
+      </div>
+
+      <!-- AllStar Logo (default or if no custom logo) -->
+      <div v-if="!systemInfo?.logoName" class="header-img">
+        <a :href="systemInfo?.logoUrl ? getCleanUrl(systemInfo.logoUrl) : 'https://www.allstarlink.org'" :target="systemInfo?.logoUrl ? (shouldOpenInNewTab(systemInfo.logoUrl) ? '_blank' : '_self') : '_blank'">
           <img src="/allstarlink.jpg" width="70%" style="border: 0px;" alt="Allstar Logo">
         </a>
       </div>
@@ -39,6 +50,9 @@
 
     <!-- Menu Component -->
     <Menu @node-selection="handleNodeSelection" />
+
+    <!-- Welcome Message -->
+    <div v-if="welcomeMessage" class="welcome-message" v-html="welcomeMessage"></div>
 
     <!-- Control Panel (matches original link.php structure exactly) -->
     <div v-if="hasControlPermissions" id="connect_form" style="text-align: center;">
@@ -434,6 +448,47 @@ const formatHeaderTag = () => {
   const title2 = systemInfo.value?.title2 || 'AllStar Management Dashboard'
   return `${location}<br>${title2}`
 }
+
+// Helper methods for URL handling (matching legacy header.inc behavior)
+const getCleanUrl = (url: string): string => {
+  // Remove trailing ">" if present (legacy format for target="_blank")
+  return url.endsWith('>') ? url.slice(0, -1) : url
+}
+
+const shouldOpenInNewTab = (url: string): boolean => {
+  // Check if URL ends with ">" (legacy format for target="_blank")
+  return url.endsWith('>')
+}
+
+// Computed property for custom logo positioning
+const customLogoStyle = computed(() => {
+  if (!systemInfo.value?.logoName) return {}
+  
+  const styles: Record<string, string> = {
+    position: 'absolute',
+    border: '0px'
+  }
+  
+  if (systemInfo.value.logoPositionTop) {
+    styles.top = systemInfo.value.logoPositionTop
+  }
+  
+  if (systemInfo.value.logoPositionRight) {
+    styles.right = systemInfo.value.logoPositionRight
+  }
+  
+  return styles
+})
+
+// Computed property for welcome message (depends on authentication status)
+const welcomeMessage = computed(() => {
+  if (appStore.isAuthenticated && systemInfo.value?.welcomeMsgLogged) {
+    return systemInfo.value.welcomeMsgLogged
+  } else if (!appStore.isAuthenticated && systemInfo.value?.welcomeMsg) {
+    return systemInfo.value.welcomeMsg
+  }
+  return null
+})
 
 // Watcher to update selectedLocalNode when selectedNode changes
 watch(selectedNode, (newValue) => {
@@ -1485,6 +1540,20 @@ watch(displayedNodes, (newDisplayedNodes) => {
   position: absolute;
   top: 2px;
   right: 12px;
+}
+
+.custom-logo {
+  /* Default positioning - will be overridden by inline styles from global.inc */
+  position: absolute;
+  top: 20%;
+  right: 12%;
+}
+
+.welcome-message {
+  margin: 20px auto;
+  max-width: 880px;
+  padding: 10px;
+  text-align: center;
 }
 
 /* Configuration buttons */
