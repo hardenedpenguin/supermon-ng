@@ -8,11 +8,11 @@
       </div>
       
       <!-- Call Sign -->
-      <div class="header-title2">
+      <div v-if="systemInfo?.callsign" class="header-title2">
         <a v-if="systemInfo?.myUrl" :href="getCleanUrl(systemInfo.myUrl)" :target="shouldOpenInNewTab(systemInfo.myUrl) ? '_blank' : '_self'">
-          <i>{{ systemInfo?.callsign || 'CALLSIGN' }}</i>
+          <i>{{ systemInfo.callsign }}</i>
         </a>
-        <i v-else>{{ systemInfo?.callsign || 'CALLSIGN' }}</i>
+        <i v-else>{{ systemInfo.callsign }}</i>
       </div>
       
       <!-- Location and Title -->
@@ -161,8 +161,8 @@
     <!-- Footer Info -->
     <div class="clearer"></div>
     
-    <div id="footer">
-      <b>System maintained by: <i>{{ systemInfo?.maintainer || 'System Administrator' }}</i></b>
+    <div v-if="systemInfo?.maintainer" id="footer">
+      <b>System maintained by: <i>{{ systemInfo.maintainer }}</i></b>
     </div>
 
     <!-- Donate Button Section -->
@@ -444,10 +444,21 @@ const headerBackgroundUrl = computed(() => {
 })
 
 const formatHeaderTag = () => {
-  const location = systemInfo.value?.location || 'Your Location'
-  const title2 = systemInfo.value?.title2 || 'ASL3+ Management Dashboard'
-  const title3 = systemInfo.value?.title3 || 'AllStarLink/IRLP/EchoLink/Digital - Bridging Control Center'
-  return `${location}<br>${title2}<br>${title3}`
+  const parts = []
+  
+  if (systemInfo.value?.location) {
+    parts.push(systemInfo.value.location)
+  }
+  
+  if (systemInfo.value?.title2) {
+    parts.push(systemInfo.value.title2)
+  }
+  
+  if (systemInfo.value?.title3) {
+    parts.push(systemInfo.value.title3)
+  }
+  
+  return parts.join('<br>')
 }
 
 // Helper methods for URL handling (matching legacy header.inc behavior)
