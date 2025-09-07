@@ -428,12 +428,23 @@ class ConfigController
      */
     public function getHeaderBackground(Request $request, Response $response, array $args): Response
     {
-        $extension = $args['extension'] ?? 'jpg';
-        $filename = "header-background.$extension";
         $userFilesDir = 'user_files';
-        $imagePath = "$userFilesDir/$filename";
         
-        if (!file_exists($imagePath)) {
+        // Auto-detect which header background file exists
+        $formats = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $imagePath = null;
+        $filename = null;
+        
+        foreach ($formats as $format) {
+            $testPath = "$userFilesDir/header-background.$format";
+            if (file_exists($testPath)) {
+                $imagePath = $testPath;
+                $filename = "header-background.$format";
+                break;
+            }
+        }
+        
+        if (!$imagePath || !file_exists($imagePath)) {
             return $response->withStatus(404);
         }
         
@@ -592,7 +603,7 @@ class ConfigController
         foreach ($formats as $format) {
             $customBackgroundPath = "$userFilesDir/header-background.$format";
             if (file_exists($customBackgroundPath)) {
-                return "/api/config/header-background.$format";
+                return "/api/config/header-background";
             }
         }
         

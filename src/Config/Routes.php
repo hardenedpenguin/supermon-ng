@@ -173,7 +173,7 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->put('/user/preferences', [ConfigController::class, 'updateUserPreferences']);
         $group->get('/system-info', [ConfigController::class, 'getSystemInfo']);
         $group->get('/menu', [ConfigController::class, 'getMenu']);
-        $group->get('/header-background.{extension}', [ConfigController::class, 'getHeaderBackground']);
+        $group->get('/header-background', [ConfigController::class, 'getHeaderBackground']);
         $group->get('/display', [ConfigController::class, 'getDisplayConfig']);
         $group->put('/display', [ConfigController::class, 'updateDisplayConfig']);
         $group->get('/node-info', [ConfigController::class, 'getNodeInfo']);
