@@ -565,9 +565,7 @@ class ConfigController
                 'DISPLAY_BACKGROUND' => $DISPLAY_BACKGROUND ?? null,
                 'HAMCLOCK_ENABLED' => $HAMCLOCK_ENABLED ?? 'False',
                 'HAMCLOCK_URL_INTERNAL' => $HAMCLOCK_URL_INTERNAL ?? null,
-                'HAMCLOCK_URL_EXTERNAL' => $HAMCLOCK_URL_EXTERNAL ?? null,
-                'HEADER_BACKGROUND' => $HEADER_BACKGROUND ?? null,
-                'HEADER_BACKGROUND_URL' => $HEADER_BACKGROUND_URL ?? null
+                'HAMCLOCK_URL_EXTERNAL' => $HAMCLOCK_URL_EXTERNAL ?? null
             ];
         }
         
@@ -579,25 +577,7 @@ class ConfigController
      */
     private function getCustomHeaderBackground(): ?string
     {
-        // First, check if header background is configured in global.inc
-        $globalConfig = $this->loadGlobalConfig();
-        
-        // If HEADER_BACKGROUND_URL is set in global.inc, use it directly
-        if (!empty($globalConfig['HEADER_BACKGROUND_URL'])) {
-            return $globalConfig['HEADER_BACKGROUND_URL'];
-        }
-        
-        // If HEADER_BACKGROUND file is specified in global.inc, check if it exists
-        if (!empty($globalConfig['HEADER_BACKGROUND'])) {
-            $configuredPath = $globalConfig['HEADER_BACKGROUND'];
-            if (file_exists($configuredPath)) {
-                // Extract filename from path for API endpoint
-                $filename = basename($configuredPath);
-                return "/api/config/$filename";
-            }
-        }
-        
-        // Fall back to automatic detection of header-background.* files
+        // Auto-detect header-background.* files
         $userFilesDir = 'user_files';
         $formats = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         foreach ($formats as $format) {

@@ -78,18 +78,6 @@ $BACKGROUND_HEIGHT = "164px";
 $DISPLAY_BACKGROUND = "black";
 
 // ========================================
-// HEADER BACKGROUND CONFIGURATION
-// ========================================
-
-// Header background image file (relative to application root)
-// Leave empty ("") to use automatic detection of header-background.* files
-// $HEADER_BACKGROUND = "user_files/header-background.jpg";
-
-// Header background URL (for external images or direct API URLs)
-// This takes precedence over HEADER_BACKGROUND file setting
-// $HEADER_BACKGROUND_URL = "/api/config/header-background.jpg";
-
-// ========================================
 // LOGO CONFIGURATION
 // ========================================
 
