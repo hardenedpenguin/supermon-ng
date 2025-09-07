@@ -9,12 +9,12 @@
       
       <!-- Call Sign -->
       <div class="header-title2">
-        <i>W5GLE</i>
+        <i>{{ systemInfo?.callsign || 'W5GLE' }}</i>
       </div>
       
       <!-- Location and Title -->
       <div class="header-tag">
-        <i>Alvin, Texas<br>ASL3+ Management Dashboard</i>
+        <i v-html="formatHeaderTag()"></i>
       </div>
       
 
@@ -428,6 +428,12 @@ const headerBackgroundUrl = computed(() => {
   }
   return "url('/background.jpg')"
 })
+
+const formatHeaderTag = () => {
+  const location = systemInfo.value?.location || 'Alvin, Texas'
+  const title2 = systemInfo.value?.title2 || 'ASL3+ Management Dashboard'
+  return `${location}<br>${title2}`
+}
 
 // Watcher to update selectedLocalNode when selectedNode changes
 watch(selectedNode, (newValue) => {
