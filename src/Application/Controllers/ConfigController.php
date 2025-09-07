@@ -2921,7 +2921,8 @@ class ConfigController
             ];
         }
 
-        $config = parse_ini_file($favoritesIniPath, true);
+        // Custom parser to handle repeated keys (like multiple 'label' and 'cmd' entries)
+        $config = $this->parseIniWithRepeatedKeys($favoritesIniPath);
         if ($config === false) {
             throw new \Exception("Failed to parse favorites INI file: $favoritesIniPath");
         }
@@ -2969,6 +2970,75 @@ class ConfigController
             'favorites' => $favorites,
             'fileName' => basename($favoritesIniPath)
         ];
+    }
+
+    /**
+     * Parse INI file with support for repeated keys (handles format like multiple 'label' entries)
+     */
+    private function parseIniWithRepeatedKeys(string $filePath): array
+    {
+        $content = file_get_contents($filePath);
+        if ($content === false) {
+            return false;
+        }
+        
+        $lines = explode("\n", $content);
+        $config = [];
+        $currentSection = '';
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            
+            // Skip empty lines and comments
+            if (empty($line) || $line[0] === ';' || $line[0] === '#') {
+                continue;
+            }
+            
+            // Handle sections [section_name]
+            if (preg_match('/^\[([^\]]+)\]$/', $line, $matches)) {
+                $currentSection = $matches[1];
+                if (!isset($config[$currentSection])) {
+                    $config[$currentSection] = [];
+                }
+                continue;
+            }
+            
+            // Handle key = value pairs
+            if (preg_match('/^([^=]+)=(.*)$/', $line, $matches)) {
+                $key = trim($matches[1]);
+                $value = trim($matches[2], ' "\'');  // Remove quotes
+                
+                if (empty($currentSection)) {
+                    continue; // Skip keys outside of sections
+                }
+                
+                // If key already exists, convert to array or append to existing array
+                if (isset($config[$currentSection][$key])) {
+                    if (!is_array($config[$currentSection][$key])) {
+                        // Convert existing single value to array
+                        $config[$currentSection][$key] = [$config[$currentSection][$key]];
+                    }
+                    // Append new value to array
+                    $config[$currentSection][$key][] = $value;
+                } else {
+                    // First occurrence of this key
+                    $config[$currentSection][$key] = $value;
+                }
+            }
+        }
+        
+        // Convert single values to arrays for consistency with repeated keys
+        foreach ($config as $section => &$sectionData) {
+            foreach ($sectionData as $key => &$value) {
+                if ($key === 'label' || $key === 'cmd') {
+                    if (!is_array($value)) {
+                        $value = [$value];
+                    }
+                }
+            }
+        }
+        
+        return $config;
     }
 
     /**
