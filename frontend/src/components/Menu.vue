@@ -61,6 +61,7 @@ interface MenuItems {
 
 const appStore = useAppStore()
 const menuItems = ref<MenuItems>({})
+const isLoading = ref(false)
 
 // URL Modal state
 const showUrlModal = ref(false)
@@ -69,12 +70,18 @@ const currentUrlTitle = ref('')
 
 const loadMenu = async () => {
   try {
+    isLoading.value = true
     const response = await api.get('/config/menu')
-          if (response.data.success) {
+    if (response.data.success) {
+      // Only update menu items if we got valid data
+      if (response.data.data && Object.keys(response.data.data).length > 0) {
         menuItems.value = response.data.data
+      }
     }
   } catch (error) {
     console.error('Failed to load menu:', error)
+  } finally {
+    isLoading.value = false
   }
 }
 
@@ -128,9 +135,12 @@ onMounted(() => {
   loadMenu()
 })
 
-// Watch for authentication changes and reload menu
+// Watch for authentication changes and reload menu with a small delay
 watch(() => appStore.isAuthenticated, () => {
-  loadMenu()
+  // Add a small delay to prevent menu flash when authentication state changes
+  setTimeout(() => {
+    loadMenu()
+  }, 100)
 })
 </script>
 
@@ -143,7 +153,6 @@ watch(() => appStore.isAuthenticated, () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 1px solid #333333;
   /* Ensure dropdown overlays subsequent content */
   position: relative;
   z-index: 100;
