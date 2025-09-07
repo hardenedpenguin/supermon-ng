@@ -9,7 +9,7 @@
       
       <!-- Call Sign -->
       <div class="header-title2">
-        <i>{{ systemInfo?.callsign || 'W5GLE' }}</i>
+        <i>{{ systemInfo?.callsign || 'CALLSIGN' }}</i>
       </div>
       
       <!-- Location and Title -->
@@ -148,7 +148,7 @@
     <div class="clearer"></div>
     
     <div id="footer">
-      <b>System maintained by: <i>{{ systemInfo?.maintainer || 'W5GLE, Alvin, Texas' }}</i></b>
+      <b>System maintained by: <i>{{ systemInfo?.maintainer || 'System Administrator' }}</i></b>
     </div>
 
     <!-- Donate Button Section -->
@@ -430,8 +430,8 @@ const headerBackgroundUrl = computed(() => {
 })
 
 const formatHeaderTag = () => {
-  const location = systemInfo.value?.location || 'Alvin, Texas'
-  const title2 = systemInfo.value?.title2 || 'ASL3+ Management Dashboard'
+  const location = systemInfo.value?.location || 'Your Location'
+  const title2 = systemInfo.value?.title2 || 'AllStar Management Dashboard'
   return `${location}<br>${title2}`
 }
 

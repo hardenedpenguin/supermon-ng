@@ -24,13 +24,13 @@
 // ========================================
 
 // Your callsign (displayed in header and titles)
-$CALL = "W5GLE";
+$CALL = "YOURCALL";
 
 // Your name (displayed in various locations)
-$NAME = "Jory A. Pratt";
+$NAME = "Your Name";
 
 // Your location (supports HTML formatting)
-$LOCATION = "<span style=\"color: #ffffff\">Alvin, Texas</span>";
+$LOCATION = "<span style=\"color: #ffffff\">Your Location</span>";
 
 // ========================================
 // PAGE TITLES & HEADERS
