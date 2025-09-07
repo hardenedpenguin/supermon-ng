@@ -445,8 +445,9 @@ const headerBackgroundUrl = computed(() => {
 
 const formatHeaderTag = () => {
   const location = systemInfo.value?.location || 'Your Location'
-  const title2 = systemInfo.value?.title2 || 'AllStar Management Dashboard'
-  return `${location}<br>${title2}`
+  const title2 = systemInfo.value?.title2 || 'ASL3+ Management Dashboard'
+  const title3 = systemInfo.value?.title3 || 'AllStarLink/IRLP/EchoLink/Digital - Bridging Control Center'
+  return `${location}<br>${title2}<br>${title3}`
 }
 
 // Helper methods for URL handling (matching legacy header.inc behavior)
