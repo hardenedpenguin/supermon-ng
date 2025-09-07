@@ -65,7 +65,7 @@ onMounted(async () => {
   /* COS/PTT Status colors - fallbacks for dark theme */
   --status-idle: #2a2a2a;
   --status-ptt: #4a90e2;
-  --status-cos: #f39c12;
+  --status-cos: #17a2b8;
   --status-full-duplex: #e74c3c;
   --status-receiving: #9b59b6;
 
