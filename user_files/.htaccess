@@ -1,0 +1,4 @@
+AuthType Basic
+AuthName "Supermon-ng Access"
+AuthUserFile /var/www/html/supermon-ng/user_files/.htpasswd
+Require valid-user
