@@ -146,8 +146,10 @@ watch(() => appStore.isAuthenticated, () => {
 
 <style scoped>
 #menu {
-  width: 100%;
-  background-color: #000000;
+  width: calc(100% + 40px); /* Match header width - extend beyond dashboard padding */
+  margin-left: -20px; /* Offset the dashboard padding */
+  margin-right: -20px; /* Offset the dashboard padding */
+  background-color: var(--menu-background, #2a2a2a);
   border-radius: 5px;
   margin-bottom: 20px;
   display: flex;
@@ -158,6 +160,7 @@ watch(() => appStore.isAuthenticated, () => {
   z-index: 100;
   /* Allow dropdown to extend beyond menu boundaries */
   overflow: visible;
+  box-sizing: border-box;
 }
 
 #menu ul {
@@ -183,7 +186,7 @@ watch(() => appStore.isAuthenticated, () => {
 #menu li a:link,
 #menu li a:visited {
   display: inline-block;
-  color: #ecf0f1;
+  color: var(--text-color, #e0e0e0);
   text-align: center;
   padding: 8px 12px;
   text-decoration: none;
@@ -193,7 +196,8 @@ watch(() => appStore.isAuthenticated, () => {
 }
 
 #menu li a:hover {
-  background-color: rgba(224, 224, 224, 0.1);
+  background-color: var(--border-color, rgba(64, 64, 64, 0.5));
+  color: var(--primary-color, #e0e0e0);
 }
 
 #menu li.dropdown {
@@ -205,9 +209,10 @@ watch(() => appStore.isAuthenticated, () => {
 #menu .dropdown-content {
   display: none;
   position: absolute;
-  background-color: #000000;
+  background-color: var(--container-bg, #2a2a2a);
   min-width: 160px;
-  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.3));
+  border: 1px solid var(--border-color, #404040);
   /* Lift dropdown above buttons/content below */
   z-index: 999;
   border-radius: 5px;
@@ -216,14 +221,15 @@ watch(() => appStore.isAuthenticated, () => {
 }
 
 #menu .dropdown-content a {
-  color: #ecf0f1;
+  color: var(--text-color, #e0e0e0);
   padding: 12px 16px;
   text-decoration: none;
   display: block;
 }
 
 #menu .dropdown-content a:hover {
-  background-color: rgba(224, 224, 224, 0.1);
+  background-color: var(--border-color, rgba(64, 64, 64, 0.5));
+  color: var(--primary-color, #e0e0e0);
 }
 
 #menu .dropdown:hover .dropdown-content {
@@ -232,6 +238,12 @@ watch(() => appStore.isAuthenticated, () => {
 
 /* Responsive Menu Styles */
 @media (max-width: 768px) {
+  #menu {
+    width: calc(100% + 20px); /* Adjust for mobile padding (10px each side) */
+    margin-left: -10px; /* Offset mobile padding */
+    margin-right: -10px; /* Offset mobile padding */
+  }
+  
   #menu ul {
     flex-direction: column;
   }
@@ -243,6 +255,25 @@ watch(() => appStore.isAuthenticated, () => {
   
   #menu .dropdown:hover .dropdown-content {
     display: block;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  #menu {
+    width: calc(100% + 10px); /* Adjust for extra small padding */
+    margin-left: -5px;
+    margin-right: -5px;
+  }
+  
+  #menu li a {
+    padding: 6px 10px; /* Reduce padding on small screens */
+    font-size: 0.9em;
+  }
+  
+  #menu .dropdown-content a {
+    padding: 10px 14px;
+    font-size: 0.9em;
   }
 }
 
