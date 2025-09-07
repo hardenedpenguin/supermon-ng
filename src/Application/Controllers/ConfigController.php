@@ -428,7 +428,8 @@ class ConfigController
      */
     public function getHeaderBackground(Request $request, Response $response, array $args): Response
     {
-        $filename = $args['filename'] ?? 'header-background.jpg';
+        $extension = $args['extension'] ?? 'jpg';
+        $filename = "header-background.$extension";
         $userFilesDir = 'user_files';
         $imagePath = "$userFilesDir/$filename";
         
