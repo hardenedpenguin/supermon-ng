@@ -96,6 +96,9 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
   transition: background-color var(--transition-normal), color var(--transition-normal);
+  /* Prevent horizontal scrolling on mobile */
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 #app {

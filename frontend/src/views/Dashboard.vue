@@ -1372,6 +1372,8 @@ watch(displayedNodes, (newDisplayedNodes) => {
   color: var(--text-color);
   /* Allow menu dropdowns to extend beyond dashboard boundaries */
   overflow: visible;
+  /* Prevent horizontal scrolling on mobile */
+  box-sizing: border-box;
 }
 
 /* Original Supermon-ng table container styling */
@@ -1764,10 +1766,26 @@ watch(displayedNodes, (newDisplayedNodes) => {
   
   .header {
     height: 150px;
+    width: calc(100% + 20px); /* Adjust for mobile padding (10px each side) */
+    margin-left: -10px; /* Offset mobile padding */
+    margin-right: -10px; /* Offset mobile padding */
   }
   
   .header-title {
     font-size: 20px;
+    left: 15px; /* Adjust for mobile header extension */
+  }
+  
+  .header-title2 {
+    left: 280px; /* Adjust callsign position for mobile */
+  }
+  
+  .header-tag {
+    left: 20px; /* Adjust for mobile header extension */
+  }
+  
+  .header2-tag {
+    left: 20px; /* Adjust for mobile header extension */
   }
   
   .nav-tabs {
@@ -1781,6 +1799,40 @@ watch(displayedNodes, (newDisplayedNodes) => {
   .node-selection {
     flex-direction: column;
     align-items: stretch;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .dashboard {
+    padding: 5px;
+  }
+  
+  .header {
+    width: calc(100% + 10px); /* Adjust for extra small padding */
+    margin-left: -5px;
+    margin-right: -5px;
+    height: 120px; /* Reduce height for small screens */
+  }
+  
+  .header-title {
+    font-size: 16px;
+    left: 10px;
+  }
+  
+  .header-title2 {
+    left: 200px; /* Further adjust for small screens */
+    font-size: 0.9em;
+  }
+  
+  .header-tag {
+    left: 10px;
+    font-size: 0.9em;
+  }
+  
+  .header2-tag {
+    left: 10px;
+    font-size: 0.8em;
   }
   
   .node-dropdown,
