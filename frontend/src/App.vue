@@ -62,6 +62,13 @@ onMounted(async () => {
   --local-node-header: #404040;
   --local-node-header-text: #e0e0e0;
 
+  /* COS/PTT Status colors - fallbacks for dark theme */
+  --status-idle: #2a2a2a;
+  --status-ptt: #4a90e2;
+  --status-cos: #f39c12;
+  --status-full-duplex: #e74c3c;
+  --status-receiving: #9b59b6;
+
   /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;

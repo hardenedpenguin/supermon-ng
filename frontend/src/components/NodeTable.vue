@@ -609,33 +609,33 @@ defineExpose({
   text-align: center !important;
 }
 
-/* Status colors for local node - theme-based shades */
+/* Status colors for local node - dedicated COS/PTT theme colors */
 .gridtable tr.gColor td {
-  background-color: var(--local-node-bg) !important;
+  background-color: var(--status-idle) !important;
   font-weight: bold;
   color: var(--local-node-text) !important;
 }
 
 .gridtable tr.tColor td {
-  background-color: var(--primary-color-light) !important;
+  background-color: var(--status-ptt) !important;
   font-weight: bold;
   color: var(--background-color) !important;
 }
 
 .gridtable tr.bColor td {
-  background-color: var(--primary-color-dark) !important;
+  background-color: var(--status-full-duplex) !important;
   font-weight: bold;
   color: var(--background-color) !important;
 }
 
 .gridtable tr.lColor td {
-  background-color: var(--primary-color-lighter) !important;
+  background-color: var(--status-cos) !important;
   font-weight: bold;
   color: var(--background-color) !important;
 }
 
 .gridtable tr.rxkColor td {
-  background-color: var(--primary-color-darker) !important;
+  background-color: var(--status-receiving) !important;
   font-weight: bold;
   color: var(--background-color) !important;
 }

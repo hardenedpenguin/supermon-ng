@@ -24,6 +24,12 @@ export interface Theme {
     localNodeBorder: string
     localNodeHeader: string
     localNodeHeaderText: string
+    // COS/PTT Status Colors for better visual distinction
+    statusIdle: string
+    statusPtt: string
+    statusCos: string
+    statusFullDuplex: string
+    statusReceiving: string
   }
   isCustom?: boolean
 }
@@ -52,7 +58,13 @@ export const themes: Theme[] = [
       localNodeText: '#e0e0e0',
       localNodeBorder: '#404040',
       localNodeHeader: '#404040',
-      localNodeHeaderText: '#e0e0e0'
+      localNodeHeaderText: '#e0e0e0',
+      // COS/PTT Status Colors - distinct shades for dark theme
+      statusIdle: '#2a2a2a',        // Idle - same as local node bg
+      statusPtt: '#4a90e2',         // PTT-Keyed - bright blue
+      statusCos: '#f39c12',         // COS-Detected - orange
+      statusFullDuplex: '#e74c3c',  // Full-Duplex - red
+      statusReceiving: '#9b59b6'    // Receiving - purple
     }
   },
   {
@@ -77,7 +89,13 @@ export const themes: Theme[] = [
       localNodeText: '#333333',
       localNodeBorder: '#dddddd',
       localNodeHeader: '#e0e0e0',
-      localNodeHeaderText: '#333333'
+      localNodeHeaderText: '#333333',
+      // COS/PTT Status Colors - distinct shades for light theme
+      statusIdle: '#f5f5f5',        // Idle - same as local node bg
+      statusPtt: '#3498db',         // PTT-Keyed - blue
+      statusCos: '#e67e22',         // COS-Detected - darker orange
+      statusFullDuplex: '#c0392b',  // Full-Duplex - darker red
+      statusReceiving: '#8e44ad'    // Receiving - darker purple
     }
   },
   {
@@ -102,7 +120,13 @@ export const themes: Theme[] = [
       localNodeText: '#ffffff',
       localNodeBorder: '#3b82f6',
       localNodeHeader: '#3b82f6',
-      localNodeHeaderText: '#ffffff'
+      localNodeHeaderText: '#ffffff',
+      // COS/PTT Status Colors - distinct shades for blue theme
+      statusIdle: '#1e40af',        // Idle - same as local node bg
+      statusPtt: '#60a5fa',         // PTT-Keyed - lighter blue
+      statusCos: '#f59e0b',         // COS-Detected - yellow/orange
+      statusFullDuplex: '#ef4444',  // Full-Duplex - red
+      statusReceiving: '#a855f7'    // Receiving - purple
     }
   },
   {
@@ -127,7 +151,13 @@ export const themes: Theme[] = [
       localNodeText: '#ffffff',
       localNodeBorder: '#059669',
       localNodeHeader: '#059669',
-      localNodeHeaderText: '#ffffff'
+      localNodeHeaderText: '#ffffff',
+      // COS/PTT Status Colors - distinct shades for green theme
+      statusIdle: '#065f46',        // Idle - same as local node bg
+      statusPtt: '#34d399',         // PTT-Keyed - lighter green
+      statusCos: '#f59e0b',         // COS-Detected - yellow/orange
+      statusFullDuplex: '#ef4444',  // Full-Duplex - red
+      statusReceiving: '#a855f7'    // Receiving - purple
     }
   },
   {
@@ -152,7 +182,13 @@ export const themes: Theme[] = [
       localNodeText: '#2d5a4a',
       localNodeBorder: '#7fb3a3',
       localNodeHeader: '#7fb3a3',
-      localNodeHeaderText: '#ffffff'
+      localNodeHeaderText: '#ffffff',
+      // COS/PTT Status Colors - distinct shades for seafoam theme
+      statusIdle: '#e8f4f0',        // Idle - same as local node bg
+      statusPtt: '#4a90a4',         // PTT-Keyed - darker teal
+      statusCos: '#d68910',         // COS-Detected - golden orange
+      statusFullDuplex: '#a93226',  // Full-Duplex - dark red
+      statusReceiving: '#7d3c98'    // Receiving - dark purple
     }
   },
   {
@@ -177,7 +213,13 @@ export const themes: Theme[] = [
       localNodeText: '#e0b0ff',
       localNodeBorder: '#8a2be2',
       localNodeHeader: '#8a2be2',
-      localNodeHeaderText: '#ffffff'
+      localNodeHeaderText: '#ffffff',
+      // COS/PTT Status Colors - distinct neon shades for purple theme
+      statusIdle: '#1a0a2e',        // Idle - same as local node bg
+      statusPtt: '#00ffff',         // PTT-Keyed - bright cyan
+      statusCos: '#ffaa00',         // COS-Detected - bright orange
+      statusFullDuplex: '#ff0066',  // Full-Duplex - bright magenta
+      statusReceiving: '#00ff88'    // Receiving - bright green
     }
   }
 ]
@@ -256,6 +298,13 @@ export function useTheme() {
     root.style.setProperty('--local-node-border', theme.colors.localNodeBorder)
     root.style.setProperty('--local-node-header', theme.colors.localNodeHeader)
     root.style.setProperty('--local-node-header-text', theme.colors.localNodeHeaderText)
+    
+    // Apply COS/PTT status colors
+    root.style.setProperty('--status-idle', theme.colors.statusIdle)
+    root.style.setProperty('--status-ptt', theme.colors.statusPtt)
+    root.style.setProperty('--status-cos', theme.colors.statusCos)
+    root.style.setProperty('--status-full-duplex', theme.colors.statusFullDuplex)
+    root.style.setProperty('--status-receiving', theme.colors.statusReceiving)
     
     // Generate and apply primary color shades for status indicators
     const shades = generateShades(theme.colors.primary)
