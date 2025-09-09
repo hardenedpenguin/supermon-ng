@@ -2,86 +2,256 @@
 /**
  * Supermon-ng Common Configuration
  * 
- * Provides essential configuration constants for Supermon-ng.
- * Contains only actively used variables - all legacy unused variables removed.
+ * Provides centralized configuration and constants for Supermon-ng.
+ * Contains file paths, system settings, version information, and
+ * global variables used throughout the application.
  * 
  * Features:
- * - Essential file path configuration
- * - Log file path definitions for web access/error logs
- * - IRLP node lookup utilities (used by nodeinfo.inc)
- * - System utilities for log processing
+ * - Centralized file path configuration
+ * - System version and date information
+ * - Log file path definitions
+ * - Database and configuration file locations
+ * - Asterisk version detection and caching
+ * - System type identification (AllStar/HamVOIP)
+ * - User interface text and titles
  * 
- * Modernization:
- * - Removed 82% of unused legacy variables (~200 lines)
- * - Kept only variables actively used by modern API
- * - Eliminated complex Asterisk version detection (unused)
- * - Removed legacy UI title variables (Vue.js frontend)
+ * Configuration:
+ * - User files directory: user_files/
+ * - Log files: Various system and application logs
+ * - Database files: Asterisk, Echolink, IRLP data
+ * - Version information: Asterisk and system versions
+ * - UI text: Titles and display strings
+ * 
+ * File Paths:
+ * - Log files: Apache, Asterisk, IRLP logs
+ * - Database files: ASTDB, Echolink, Private nodes
+ * - Configuration: User files and system configs
+ * - Temporary files: Version caches and data
  * 
  * Dependencies: None (core configuration)
  * 
  * @author Supermon-ng Team
- * @version 4.0.2
+ * @version 3.0.1
  * @since 1.0.0
  */
 
 /**
  * @var string Location of all user configurable files.
- * Used by: ConfigController for user file paths
  */
-$USERFILES = "user_files";
+$USERFILES="user_files";
+
+/**
+ * @var string Path/name of Supermon2 login/out log.
+ */
+$SMLOGNAME = "/tmp/SMLOG.txt";
 
 /**
  * @var string Title in header when logged in.
- * Used by: Frontend header display for authenticated users
  */
 $TITLE_LOGGED = "Supermon-ng V4.0.2 AllStar Manager";
 
 /**
- * @var string Title in header when not logged in.
- * Used by: Frontend header display for non-authenticated users
- */
-$TITLE_NOT_LOGGED = "Supermon-ng V4.0.2 AllStar Monitor";
-
-/**
  * @var string Version date of the Supermon-ng software.
- * Used by: Frontend version information display
  */
 $VERSION_DATE = "September 9, 2025";
 
 /**
+ * @var string Title in header when not logged in.
+ */
+$TITLE_NOT_LOGGED = "Supermon-ng V4.0.2 AllStar Monitor";
+
+/**
  * @var string Path to the webserver access log.
- * Used by: NodeController for web access log functionality
  */
 $WEB_ACCESS_LOG = "/var/log/apache2/access.log";
 
 /**
  * @var string Path to the webserver error log.
- * Used by: NodeController for web error log functionality
  */
 $WEB_ERROR_LOG = "/var/log/apache2/error.log";
 
 /**
  * @var string Path to the Asterisk message log.
- * Used by: ConfigController for Asterisk log path
  */
 $ASTERISK_LOG = "/var/log/asterisk/messages.log";
 
 /**
+ * @var string Path to the AllStar allmon database text file.
+ */
+$ASTDB_TXT = "/var/www/html/supermon-ng/astdb.txt";
+
+/**
+ * @var string Path to the AllStar rpt_extnodes file (not present in DNS mode).
+ */
+$EXTNODES = "/tmp/rpt_extnodes";
+
+/**
+ * @var string Path to the AllStar Echolink database dump (gzipped).
+ */
+$ECHO_DB = "/tmp/echolink.db.gz";
+
+/**
+ * @var string Path to the Private AllStar nodelist.
+ */
+$PRIVATENODES = "/var/www/html/supermon-ng/privatenodes.txt";
+
+/**
  * @var string Path to the IRLP calls data file (gzipped).
- * Used by: nodeinfo.inc for IRLP node lookups
  */
 $IRLP_CALLS = "/tmp/irlpdata.txt.gz";
 
 /**
- * @var string Path to the awk utility.
- * Used by: nodeinfo.inc for text processing
+ * @var string Path to the IRLP log file.
  */
-$AWK = "/usr/bin/awk";
+$IRLP_LOG = "/home/irlp/log/messages";
+
+/**
+ * @var string Stores the path to the most recently updated Asterisk version file.
+ * Determined by checking modification times of potential version files.
+ */
+$file = `find /tmp/asterisk_version /run/asterisk.pid /etc/allstar_version -printf "%T@  %p\n" 2>/dev/null | sort -nr | awk '{if (NR == 1) printf ("%s", $2)}'`;
+
+/**
+ * @var string Stores the Asterisk version string.
+ * Reads from /tmp/asterisk_version if it exists, otherwise queries Asterisk directly.
+ */
+if ($file == "/tmp/asterisk_version")
+        $version= `cat /tmp/asterisk_version`;
+else
+        $version = `export TERM=vt100; sudo asterisk -rx "core show version" |awk '{print $2}' | tee /tmp/asterisk_version`;
+
+/**
+ * @var string Prepends "Asterisk " to the obtained version string.
+ */
+$version="Asterisk $version";
+
+/**
+ * @var string Regex pattern to detect HamVOIP release candidate versions (e.g., "X.XrcX").
+ */
+$pattern="/ [0-9].[0-9]rc[0-9]/";
+
+/**
+ * @var string Stores the identified system type. Defaults to "allstarlink".
+ * If the version matches the HamVOIP RC pattern, it's set to "allstarlink".
+ */
+if (preg_match($pattern, $version, $match)) {
+        $system_type = "allstarlink";
+} else {
+        $system_type = "allstarlink";
+}
+
+/**
+ * @var string Path to the Asterisk executable.
+ */
+$ASTERISK =	"/usr/sbin/asterisk";
+
+/**
+ * @var string Path to the awk utility.
+ */
+$AWK =		"/usr/bin/awk";
+
+/**
+ * @var string Path to the cat utility.
+ */
+$CAT =		"/usr/bin/cat";
+
+/**
+ * @var string Path to the cut utility.
+ */
+$CUT =		"/usr/bin/cut";
+
+/**
+ * @var string Path to the date utility.
+ */
+$DATE =		"/usr/bin/date";
+
+/**
+ * @var string Path to the egrep utility.
+ */
+$EGREP =	"/usr/bin/egrep";
+
+/**
+ * @var string Path to the grep utility.
+ */
+$GREP =		"/usr/bin/grep";
+
+/**
+ * @var string Path to the head utility.
+ */
+$HEAD =		"/usr/bin/head";
+
+/**
+ * @var string Path to the hostname utility.
+ */
+$HOSTNAME =	"/usr/bin/hostname";
+
+/**
+ * @var string Path to the ifconfig utility.
+ */
+$IFCONFIG =	"/usr/bin/ip a";
+
+/**
+ * @var string Path to the journalctl utility.
+ */
+$JOURNALCTL =	"/usr/bin/journalctl";
+
+/**
+ * @var string Path to the mbuffer utility.
+ */
+$MBUFFER =	"/usr/bin/mbuffer";
+
+/**
+ * @var string Path to the sed utility.
+ */
+$SED =		"/usr/bin/sed";
+
+/**
+ * @var string Command to execute sudo with a specific TERM environment variable.
+ */
+$SUDO =		"export TERM=vt100 && /usr/bin/sudo";
+
+/**
+ * @var string Path to the tail utility.
+ */
+$TAIL =		"/usr/bin/tail";
+
+/**
+ * @var string Path to the uptime utility.
+ */
+$UPTIME =	"/usr/bin/uptime";
+
+/**
+ * @var string Path to the wget utility.
+ */
+$WGET =		"/usr/bin/wget";
 
 /**
  * @var string Path to the zcat utility.
- * Used by: nodeinfo.inc for decompressing IRLP data
  */
-$ZCAT = "/usr/bin/zcat";
+$ZCAT =		"/usr/bin/zcat";
+
+/**
+ * @var bool True if the IRLP log file exists, false otherwise.
+ */
+if (file_exists($IRLP_LOG))
+	$IRLPLOG = true;
+else
+	$IRLPLOG = false;
+
+/**
+ * @var bool True if the IRLP calls data file exists, false otherwise.
+ */
+if (file_exists($IRLP_CALLS))
+	$IRLP = true;
+else
+	$IRLP = false;
+
+/**
+ * @var bool True if the AllStar rpt_extnodes file exists, false otherwise.
+ */
+if (file_exists($EXTNODES))
+	$EXTN = true;
+else
+	$EXTN = false;
 
 ?>

@@ -707,7 +707,9 @@ class NodeController
         // Helpers functionality now available as modern services
         
         // Load ASTDB
-        $astdbFile = __DIR__ . '/../../../astdb.txt';
+        require_once __DIR__ . '/../../../includes/common.inc';
+        global $ASTDB_TXT;
+        $astdbFile = $ASTDB_TXT ?? __DIR__ . '/../../../astdb.txt';
         $astdb = [];
         if (file_exists($astdbFile)) {
             $astdb = $this->loadAstDb($astdbFile);
@@ -1542,8 +1544,10 @@ class NodeController
         }
 
         try {
-            // Get the external nodes file path from configuration
-            $extnodesPath = $this->config['extnodes'] ?? '/etc/asterisk/rpt_extnodes';
+            // Get the external nodes file path from common.inc
+            require_once __DIR__ . '/../../../includes/common.inc';
+            global $EXTNODES;
+            $extnodesPath = $EXTNODES ?? '/tmp/rpt_extnodes';
             
             if (!file_exists($extnodesPath)) {
                 $response->getBody()->write(json_encode([
@@ -1704,8 +1708,10 @@ class NodeController
         }
 
         try {
-            // Get IRLP log file path from configuration
-            $irlpLogPath = $this->config['irlp_log'] ?? '/home/irlp/log/messages';
+            // Get IRLP log file path from common.inc
+            require_once __DIR__ . '/../../../includes/common.inc';
+            global $IRLP_LOG;
+            $irlpLogPath = $IRLP_LOG ?? '/home/irlp/log/messages';
 
             if (!file_exists($irlpLogPath)) {
                 $response->getBody()->write(json_encode([
@@ -1752,13 +1758,17 @@ class NodeController
         }
 
         try {
-            // Hardcode the values from common.inc since global variables aren't working
-            $SUDO = "export TERM=vt100 && /usr/bin/sudo";
-            $JOURNALCTL = "/usr/bin/journalctl";
-            $SED = "/usr/bin/sed";
+            // Load system utilities from common.inc
+            require_once __DIR__ . '/../../../includes/common.inc';
+            global $SUDO, $JOURNALCTL, $SED;
+            
+            // Use variables from common.inc with fallbacks
+            $sudoCmd = $SUDO ?? "export TERM=vt100 && /usr/bin/sudo";
+            $journalctlCmd = $JOURNALCTL ?? "/usr/bin/journalctl";
+            $sedCmd = $SED ?? "/usr/bin/sed";
             
             // Use sudo as required for journalctl access with sed filtering to remove sudo lines
-            $command = "$SUDO $JOURNALCTL --no-pager --since \"1 day ago\" | $SED -e \"/sudo/ d\"";
+            $command = "$sudoCmd $journalctlCmd --no-pager --since \"1 day ago\" | $sedCmd -e \"/sudo/ d\"";
 
             // Execute the command using exec for better error handling
             $output = [];

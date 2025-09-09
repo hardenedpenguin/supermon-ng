@@ -1676,20 +1676,8 @@ class ConfigController
     {
         $results = [];
         
-        // Try multiple possible paths for the database
-        $dbPaths = [
-            __DIR__ . '/../../../user_files/astdb.txt',
-            '/var/www/html/supermon-ng/astdb.txt',
-            '/var/www/html/supermon-ng/user_files/astdb.txt'
-        ];
-        
-        $dbPath = null;
-        foreach ($dbPaths as $path) {
-            if (file_exists($path)) {
-                $dbPath = $path;
-                break;
-            }
-        }
+        // Use centralized astdb path resolution
+        $dbPath = $this->getAstdbPath();
         
         if (!$dbPath) {
             return $results;
@@ -1730,20 +1718,8 @@ class ConfigController
     {
         $results = [];
         
-        // Try multiple possible paths for the database
-        $dbPaths = [
-            __DIR__ . '/../../../user_files/astdb.txt',
-            '/var/www/html/supermon-ng/astdb.txt',
-            '/var/www/html/supermon-ng/user_files/astdb.txt'
-        ];
-        
-        $dbPath = null;
-        foreach ($dbPaths as $path) {
-            if (file_exists($path)) {
-                $dbPath = $path;
-                break;
-            }
-        }
+        // Use centralized astdb path resolution
+        $dbPath = $this->getAstdbPath();
         
         if (!$dbPath) {
             return $results;
@@ -3422,11 +3398,19 @@ class ConfigController
      */
     private function getAstdbPath(): ?string
     {
+        // Load ASTDB_TXT from common.inc
+        include_once __DIR__ . '/../../../includes/common.inc';
+        global $ASTDB_TXT;
+        
+        if (isset($ASTDB_TXT)) {
+            return $ASTDB_TXT;
+        }
+        
         if (isset($GLOBALS['ASTDB_TXT'])) {
             return $GLOBALS['ASTDB_TXT'];
         }
 
-        // Try common paths
+        // Try common paths as fallback
         $commonPaths = [
             __DIR__ . '/../../../astdb.txt',
             __DIR__ . '/../../../user_files/astdb.txt',
