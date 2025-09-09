@@ -385,6 +385,7 @@ const showDigitalDashboardModal = ref(false)
 const showHamClockModal = ref(false)
 const showNodeStatusModal = ref(false)
 const databaseStatus = ref<any>(null)
+const isLoadingDefaultNodes = ref(true)
 
 // Computed properties
 const hasControlPermissions = computed(() => {
@@ -406,10 +407,11 @@ const availableNodes = computed(() => {
 
 
 const displayedNodes = computed(() => {
-  // If no node is selected, show all available nodes as fallback
+  // If no node is selected, show empty array until default is loaded
+  // This prevents showing all available nodes on initial page load
   if (!selectedNode.value) {
     
-    return availableNodes.value
+    return []
   }
   
   const selectedNodeStr = String(selectedNode.value)
@@ -1269,7 +1271,8 @@ onMounted(async () => {
         // Small delay to ensure the default node is properly set
         await new Promise(resolve => setTimeout(resolve, 100))
       } else {
-        // No default node from backend, use first available node as fallback
+        // No default node from backend, wait for user to select a node
+        // This prevents showing all nodes initially
     
         if (realTimeStore.nodes.length > 0) {
           const firstNode = realTimeStore.nodes[0]
@@ -1278,9 +1281,13 @@ onMounted(async () => {
           await realTimeStore.startMonitoring(String(firstNode.id))
         }
       }
+      
+      // Mark default nodes as loaded
+      isLoadingDefaultNodes.value = false
     }
   } catch (error) {
     // System info loading error handled
+    isLoadingDefaultNodes.value = false
   }
 })
 
