@@ -25,9 +25,9 @@ This directory contains modularized components for `link.php`, organized for bet
 - `renderHamClock()` - IP-based HamClock iframe embedding
 - `renderUserInfo()` - User and IP information footer
 
-### `link-javascript.inc`
-**Purpose:** JavaScript and Server-Sent Events
-- `renderMonitoringJavaScript()` - Complete SSE/EventSource logic for real-time updates
+### ~~`link-javascript.inc`~~ (Removed)
+**Purpose:** ~~JavaScript and Server-Sent Events~~ **→ Replaced by Vue.js SSE**
+- ~~`renderMonitoringJavaScript()`~~ - **Real-time updates now handled by Vue.js frontend**
 
 ### `link-tables.inc`
 **Purpose:** Node table rendering
@@ -51,7 +51,7 @@ All modules are automatically included in `link.php`:
 include("includes/link/link-functions.inc");
 include("includes/link/link-config.inc");
 include("includes/link/link-ui.inc");
-include("includes/link/link-javascript.inc");
+// include("includes/link/link-javascript.inc"); // Removed - Vue.js handles SSE
 include("includes/link/link-tables.inc");
 ```
 

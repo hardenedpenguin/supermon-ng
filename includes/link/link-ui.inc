@@ -114,7 +114,7 @@ function renderControlPanel($nodes, $astdb, $displaySettings) {
         }
         
         function OpenAddFavorite() {
-            const nodeInput = $('#node').val();
+            const nodeInput = document.getElementById('node')?.value || '';
             if (!nodeInput || nodeInput.trim() === '') {
                 alert('Please enter a node number in the input box first.');
                 return;

@@ -297,7 +297,7 @@ New development should use the helper classes and modern patterns while maintain
 - `session`: For session management
 
 ### External Dependencies
-- jQuery (included in `js/` directory)
+- ~~jQuery (included in `js/` directory)~~ **→ Replaced by Vue.js**
 - AllStar Link node database (`astdb.txt`)
 - Asterisk Manager Interface (AMI)
 

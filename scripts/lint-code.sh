@@ -225,20 +225,17 @@ if [ -n "$CSS_FILES" ]; then
     done <<< "$CSS_FILES"
 fi
 
-# Check JavaScript files for basic syntax
-print_status "Checking JavaScript files..."
-JS_FILES=$(find "$PROJECT_ROOT/js" -name "*.js" 2>/dev/null | grep -v "\.min\.js" || true)
+# Check JavaScript files for basic syntax (legacy JS removed - Vue.js handles frontend)
+print_status "Checking for legacy JavaScript files..."
+LEGACY_JS_FILES=$(find "$PROJECT_ROOT" -name "*.js" -not -path "*/node_modules/*" -not -path "*/vendor/*" -not -path "*/frontend/*" -not -path "*/public/assets/*" 2>/dev/null || true)
 JS_ISSUES=0
 
-if [ -n "$JS_FILES" ] && command -v node >/dev/null 2>&1; then
-    while IFS= read -r js_file; do
-        if ! node -c "$js_file" >/dev/null 2>&1; then
-            print_warning "JavaScript syntax issues in $(basename "$js_file")"
-            JS_ISSUES=$((JS_ISSUES + 1))
-        fi
-    done <<< "$JS_FILES"
-elif [ -n "$JS_FILES" ]; then
-    print_warning "Node.js not available - skipping JavaScript syntax check"
+if [ -n "$LEGACY_JS_FILES" ]; then
+    print_warning "Found legacy JavaScript files that should be removed:"
+    echo "$LEGACY_JS_FILES"
+    JS_ISSUES=$((JS_ISSUES + 1))
+else
+    print_success "No legacy JavaScript files found - Vue.js frontend is properly handling all JS"
 fi
 
 # Configuration file checks
