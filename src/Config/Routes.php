@@ -25,17 +25,6 @@ $app->get('/health', function ($request, $response) {
     return $response->withHeader('Content-Type', 'application/json');
 });
 
-// Static file routes
-$app->get('/configeditor.html', function ($request, $response) {
-    $filePath = __DIR__ . '/../../public/configeditor.html';
-    if (file_exists($filePath)) {
-        $content = file_get_contents($filePath);
-        $response->getBody()->write($content);
-        return $response->withHeader('Content-Type', 'text/html');
-    } else {
-        return $response->withStatus(404)->withHeader('Content-Type', 'text/plain')->getBody()->write('File not found');
-    }
-});
 
 // API v1 routes
 $app->group('/api/v1', function (RouteCollectorProxy $group) {
