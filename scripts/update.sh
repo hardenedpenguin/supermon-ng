@@ -421,10 +421,7 @@ update_apache_config() {
         fi
         
         # Update Apache site configuration
-        if [ -f "$APACHE_SITE_FILE" ]; then
-            cp "$APACHE_SITE_FILE" "$APACHE_SITE_FILE.backup.$(date +%Y%m%d_%H%M%S)"
-        fi
-        
+        # Note: No backup of system files - Apache config is managed by installation
         cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
         
         # Test and restart Apache
