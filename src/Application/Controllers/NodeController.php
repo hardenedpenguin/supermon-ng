@@ -1654,15 +1654,13 @@ class NodeController
         $data = $request->getParsedBody();
         
         try {
-            // Include required dependencies for the original ban/allow system
+            // Include required dependencies for the ban/allow system
             require_once __DIR__ . '/../../../includes/session.inc';
             require_once __DIR__ . '/../../../includes/amifunctions.inc';
             require_once __DIR__ . '/../../../includes/common.inc';
             require_once __DIR__ . '/../../../user_files/authusers.inc';
             require_once __DIR__ . '/../../../user_files/authini.inc';
             require_once __DIR__ . '/../../../includes/csrf.inc';
-            require_once __DIR__ . '/../../../includes/node-ban-allow/ban-ami.inc';
-            require_once __DIR__ . '/../../../includes/node-ban-allow/ban-display.inc';
 
             // Define get_user_auth function if it doesn't exist
             if (!function_exists('get_user_auth')) {
