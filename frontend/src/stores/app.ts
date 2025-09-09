@@ -1,20 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/utils/api'
-
-export interface User {
-  id?: string
-  name: string
-  permissions: Record<string, boolean>
-  preferences?: UserPreferences
-}
-
-export interface UserPreferences {
-  showDetail: boolean
-  displayedNodes: number
-  showCount: boolean
-  showAll: boolean
-}
+import type { User, UserPreferences, LoginResponse, AuthState } from '@/types'
 
 export const useAppStore = defineStore('app', () => {
   // State

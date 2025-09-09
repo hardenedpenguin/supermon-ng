@@ -1,57 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/utils/api'
-
-export interface Node {
-  id: string
-  node_number?: number
-  callsign?: string
-  description?: string
-  location?: string
-  status?: string
-  last_heard?: string
-  connected_nodes?: any
-  cos_keyed?: number
-  tx_keyed?: number
-  cpu_temp?: string
-  alert?: string
-  wx?: string
-  disk?: string
-  is_online?: boolean
-  is_keyed?: boolean
-  created_at?: string
-  updated_at?: string
-  // Legacy field for compatibility
-  info?: string
-  remote_nodes?: ConnectedNode[]
-}
-
-export interface ConnectedNode {
-  node: string
-  info: string
-  ip?: string
-  last_keyed: string
-  link: string
-  direction: string
-  elapsed: string
-  mode: string
-  keyed: string
-}
-
-export interface NodeConfig {
-  [nodeId: string]: {
-    host?: string
-    hideNodeURL?: number
-    lsnodes?: string
-    listenlive?: string
-    archive?: string
-    [key: string]: any
-  }
-}
-
-export interface AstDbEntry {
-  [nodeId: string]: string[]
-}
+import type { Node, ConnectedNode, NodeConfig, AstDbEntry, NodeActionType } from '@/types'
 
 export const useRealTimeStore = defineStore('realTime', () => {
   // State

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import type { ApiResponse, ApiError } from '@/types'
 
 // Create axios instance
 const api = axios.create({

@@ -1,18 +1,11 @@
 import { ref } from 'vue'
-
-export interface Notification {
-  id: string
-  type: 'success' | 'error' | 'warning' | 'info'
-  message: string
-  duration?: number
-  timestamp: number
-}
+import type { Notification, NotificationType } from '@/types'
 
 const notifications = ref<Notification[]>([])
 
 export function useNotification() {
   const showNotification = (
-    type: Notification['type'],
+    type: NotificationType,
     message: string,
     duration: number = 5000
   ) => {
@@ -21,9 +14,10 @@ export function useNotification() {
     const notification: Notification = {
       id,
       type,
+      title: '',
       message,
       duration,
-      timestamp: Date.now()
+      timestamp: new Date()
     }
     
     notifications.value.push(notification)

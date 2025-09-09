@@ -1,7 +1,8 @@
 import { ref, watch, readonly } from 'vue'
+import type { Theme } from '@/types'
 
-// Theme interface
-export interface Theme {
+// Legacy theme interface for backward compatibility
+interface LegacyTheme {
   name: string
   label: string
   colors: {
@@ -35,7 +36,7 @@ export interface Theme {
 }
 
 // Define available themes
-export const themes: Theme[] = [
+export const themes: LegacyTheme[] = [
   {
     name: 'dark',
     label: 'Dark Theme',
@@ -226,7 +227,7 @@ export const themes: Theme[] = [
 
 const currentTheme = ref<string>('dark')
 const isLoaded = ref(false)
-const customThemes = ref<Theme[]>([])
+const customThemes = ref<LegacyTheme[]>([])
 
 export function useTheme() {
   // Load theme from localStorage or use default
@@ -325,8 +326,8 @@ export function useTheme() {
   }
 
   // Create custom theme
-  const createCustomTheme = (themeData: Omit<Theme, 'name' | 'isCustom'>) => {
-    const customTheme: Theme = {
+  const createCustomTheme = (themeData: Omit<LegacyTheme, 'name' | 'isCustom'>) => {
+    const customTheme: LegacyTheme = {
       ...themeData,
       name: `custom-${Date.now()}`,
       isCustom: true
@@ -339,7 +340,7 @@ export function useTheme() {
   }
 
   // Update custom theme
-  const updateCustomTheme = (themeName: string, themeData: Partial<Theme>) => {
+  const updateCustomTheme = (themeName: string, themeData: Partial<LegacyTheme>) => {
     const themeIndex = customThemes.value.findIndex(t => t.name === themeName)
     if (themeIndex === -1) return false
     
