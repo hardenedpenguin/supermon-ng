@@ -17,7 +17,6 @@ WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/favorites.ini"]="root:ww
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/nolog.ini"]="root:www-data:664:"
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/privatenodes.txt"]="root:www-data:664:"
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/global.inc"]="root:www-data:664:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/supermon-ng.css"]="root:root:664:"
 
 # Asterisk files
 WHITELISTED_FILES["/etc/asterisk/extensions.conf"]="asterisk:asterisk:640:asterisk -rx 'dialplan reload'"

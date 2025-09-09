@@ -2605,8 +2605,7 @@ class ConfigController
                 ['path' => '/var/www/html/supermon-ng/user_files/favorites.ini', 'name' => 'Favorites List', 'description' => 'User favorites list'],
                 ['path' => '/var/www/html/supermon-ng/user_files/nolog.ini', 'name' => 'No Log Configuration', 'description' => 'No logging settings'],
                 ['path' => '/var/www/html/supermon-ng/user_files/privatenodes.txt', 'name' => 'Private Nodes', 'description' => 'Private nodes list'],
-                ['path' => '/var/www/html/supermon-ng/user_files/global.inc', 'name' => 'Global Configuration', 'description' => 'Global settings'],
-                ['path' => '/var/www/html/supermon-ng/supermon-ng.css', 'name' => 'CSS Styles', 'description' => 'Custom CSS styles']
+                ['path' => '/var/www/html/supermon-ng/user_files/global.inc', 'name' => 'Global Configuration', 'description' => 'Global settings']
             ],
             'Asterisk' => [
                 ['path' => '/etc/asterisk/extensions.conf', 'name' => 'Extensions Configuration', 'description' => 'Dialplan extensions'],
