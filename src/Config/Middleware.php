@@ -78,8 +78,22 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
             $parsedBody = $request->getParsedBody();
             $token = $parsedBody['csrf_token'] ?? $request->getHeaderLine('X-CSRF-Token') ?? '';
             
+            // Debug logging for CSRF issues
+            error_log("CSRF Debug - URI: $uri");
+            error_log("CSRF Debug - Token from request: " . ($token ? 'present' : 'missing'));
+            error_log("CSRF Debug - Session token: " . (isset($_SESSION['csrf_token']) ? 'present' : 'missing'));
+            
             if (empty($token) || !isset($_SESSION['csrf_token']) || 
                 !hash_equals($_SESSION['csrf_token'], $token)) {
+                
+                // Additional debug info for failures
+                error_log("CSRF Debug - Validation failed:");
+                error_log("  - Token empty: " . (empty($token) ? 'yes' : 'no'));
+                error_log("  - Session token missing: " . (!isset($_SESSION['csrf_token']) ? 'yes' : 'no'));
+                if (!empty($token) && isset($_SESSION['csrf_token'])) {
+                    error_log("  - Hash comparison failed: yes");
+                }
+                
                 $response = new \Slim\Psr7\Response();
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -88,6 +102,8 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
                 return $response
                     ->withStatus(403)
                     ->withHeader('Content-Type', 'application/json');
+            } else {
+                error_log("CSRF Debug - Validation successful for $uri");
             }
         }
     }
