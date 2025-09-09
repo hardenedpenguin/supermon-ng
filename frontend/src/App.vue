@@ -68,6 +68,7 @@ onMounted(async () => {
   --status-cos: #17a2b8;
   --status-full-duplex: #e74c3c;
   --status-receiving: #9b59b6;
+  --status-first-node: #6c757d;
 
   /* Spacing */
   --spacing-xs: 0.25rem;

@@ -1046,10 +1046,18 @@ class NodeController
 
                 $curNodes[$n]['node'] = $n;
                 $curNodes[$n]['info'] = \getAstInfo($fp, $n);
-                $curNodes[$n]['ip'] = $ip;
-                $curNodes[$n]['direction'] = $direction;
-                $curNodes[$n]['elapsed'] = $elapsed;
-                $curNodes[$n]['link'] = $status;
+                $curNodes[$n]['ip'] = $isEcholink ? "" : $ip;
+                $curNodes[$n]['direction'] = $isEcholink ? ($connData[2] ?? '') : $direction;
+                $curNodes[$n]['elapsed'] = $isEcholink ? ($connData[3] ?? '') : $elapsed;
+                $curNodes[$n]['link'] = $isEcholink ? ($connData[4] ?? 'UNKNOWN') : $status;
+                
+                // Handle Echolink connection status based on mode
+                if ($isEcholink) {
+                    if (isset($modes[$n]['mode'])) {
+                        $curNodes[$n]['link'] = ($modes[$n]['mode'] == 'C') ? "CONNECTING" : "ESTABLISHED";
+                    }
+                }
+                
                 $curNodes[$n]['keyed'] = 'n/a';
                 $curNodes[$n]['last_keyed'] = '-1';
                 

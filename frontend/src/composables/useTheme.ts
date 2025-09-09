@@ -31,6 +31,7 @@ interface LegacyTheme {
     statusCos: string
     statusFullDuplex: string
     statusReceiving: string
+    statusFirstNode: string
   }
   isCustom?: boolean
 }
@@ -65,7 +66,8 @@ export const themes: LegacyTheme[] = [
       statusPtt: '#4a90e2',         // PTT-Keyed - bright blue
       statusCos: '#17a2b8',         // COS-Detected - teal (harmonious with dark theme)
       statusFullDuplex: '#e74c3c',  // Full-Duplex - red
-      statusReceiving: '#9b59b6'    // Receiving - purple
+      statusReceiving: '#9b59b6',   // Receiving - purple
+      statusFirstNode: '#6c757d'    // First connected node - neutral gray
     }
   },
   {
@@ -96,7 +98,8 @@ export const themes: LegacyTheme[] = [
       statusPtt: '#3498db',         // PTT-Keyed - blue
       statusCos: '#138496',         // COS-Detected - darker teal (harmonious with light theme)
       statusFullDuplex: '#c0392b',  // Full-Duplex - darker red
-      statusReceiving: '#8e44ad'    // Receiving - darker purple
+      statusReceiving: '#8e44ad',   // Receiving - darker purple
+      statusFirstNode: '#6c757d'    // First connected node - neutral gray
     }
   },
   {
@@ -127,7 +130,8 @@ export const themes: LegacyTheme[] = [
       statusPtt: '#60a5fa',         // PTT-Keyed - lighter blue
       statusCos: '#06b6d4',         // COS-Detected - cyan (harmonious with blue theme)
       statusFullDuplex: '#ef4444',  // Full-Duplex - red
-      statusReceiving: '#a855f7'    // Receiving - purple
+      statusReceiving: '#a855f7',   // Receiving - purple
+      statusFirstNode: '#6c757d'    // First connected node - neutral gray
     }
   },
   {
@@ -158,7 +162,8 @@ export const themes: LegacyTheme[] = [
       statusPtt: '#34d399',         // PTT-Keyed - lighter green
       statusCos: '#0891b2',         // COS-Detected - teal-cyan (harmonious with green theme)
       statusFullDuplex: '#ef4444',  // Full-Duplex - red
-      statusReceiving: '#a855f7'    // Receiving - purple
+      statusReceiving: '#a855f7',   // Receiving - purple
+      statusFirstNode: '#6c757d'    // First connected node - neutral gray
     }
   },
   {
@@ -189,7 +194,8 @@ export const themes: LegacyTheme[] = [
       statusPtt: '#4a90a4',         // PTT-Keyed - darker teal
       statusCos: '#0d9488',         // COS-Detected - seafoam teal (perfectly harmonious)
       statusFullDuplex: '#a93226',  // Full-Duplex - dark red
-      statusReceiving: '#7d3c98'    // Receiving - dark purple
+      statusReceiving: '#7d3c98',   // Receiving - dark purple
+      statusFirstNode: '#6c757d'    // First connected node - neutral gray
     }
   },
   {
@@ -220,7 +226,8 @@ export const themes: LegacyTheme[] = [
       statusPtt: '#00ffff',         // PTT-Keyed - bright cyan
       statusCos: '#00d4aa',         // COS-Detected - bright teal (harmonious with neon purple)
       statusFullDuplex: '#ff0066',  // Full-Duplex - bright magenta
-      statusReceiving: '#00ff88'    // Receiving - bright green
+      statusReceiving: '#00ff88',   // Receiving - bright green
+      statusFirstNode: '#6c757d'    // First connected node - neutral gray
     }
   }
 ]
@@ -306,6 +313,7 @@ export function useTheme() {
     root.style.setProperty('--status-cos', theme.colors.statusCos)
     root.style.setProperty('--status-full-duplex', theme.colors.statusFullDuplex)
     root.style.setProperty('--status-receiving', theme.colors.statusReceiving)
+    root.style.setProperty('--status-first-node', theme.colors.statusFirstNode)
     
     // Generate and apply primary color shades for status indicators
     const shades = generateShades(theme.colors.primary)

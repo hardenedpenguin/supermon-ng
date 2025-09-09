@@ -327,7 +327,7 @@ const getConnectedNodeClass = (node: any, index: number): string => {
     } else if (node.mode === 'R') {
       className = 'rxColor'
     } else {
-      className = 'lColor' // Lighter color for first connected node when idle (different from gColor)
+      className = 'firstNodeColor' // Lighter color for first connected node when idle (different from gColor)
     }
   } else {
     // Subsequent nodes get darker gColor (idle state)
@@ -571,12 +571,12 @@ defineExpose({
 }
 
 /* Connected nodes table styling with custom theme support */
-.gridtable tr:not(.rColor):not(.cColor):not(.gColor):not(.tColor):not(.bColor):not(.lColor):not(.rxkColor) {
+.gridtable tr:not(.rColor):not(.cColor):not(.gColor):not(.tColor):not(.bColor):not(.lColor):not(.rxkColor):not(.firstNodeColor) {
   background-color: var(--table-bg) !important;
   color: var(--text-color) !important;
 }
 
-.gridtable tr:not(.rColor):not(.cColor):not(.gColor):not(.tColor):not(.bColor):not(.lColor):not(.rxkColor) td {
+.gridtable tr:not(.rColor):not(.cColor):not(.gColor):not(.tColor):not(.bColor):not(.lColor):not(.rxkColor):not(.firstNodeColor) td {
   background-color: var(--table-bg) !important;
   color: var(--text-color) !important;
   border-color: transparent !important;
@@ -636,6 +636,12 @@ defineExpose({
 
 .gridtable tr.rxkColor td {
   background-color: var(--status-receiving) !important;
+  font-weight: bold;
+  color: var(--background-color) !important;
+}
+
+.gridtable tr.firstNodeColor td {
+  background-color: var(--status-first-node) !important;
   font-weight: bold;
   color: var(--background-color) !important;
 }
