@@ -30,7 +30,7 @@
  * Dependencies: None (core configuration)
  * 
  * @author Supermon-ng Team
- * @version 4.0.2
+ * @version 4.0.3
  * @since 1.0.0
  */
 

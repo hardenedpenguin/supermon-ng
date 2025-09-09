@@ -80,17 +80,11 @@ class AllStarConfigService
     {
         $iniFile = $this->getIniFileName($username);
         
-        // Simple debugging
-        error_log("DEBUG: getAvailableNodes called with username: " . ($username ?? 'null'));
-        error_log("DEBUG: INI file path: " . $iniFile);
-        
         if (!file_exists($iniFile)) {
-            error_log("DEBUG: File does not exist at: " . $iniFile);
             return [];
         }
         
         $config = $this->parseIniFile($iniFile);
-        error_log("DEBUG: Config count: " . count($config));
         
         $nodes = [];
         foreach ($config as $nodeId => $nodeConfig) {
@@ -104,11 +98,8 @@ class AllStarConfigService
                     'menu' => $nodeConfig['menu'] ?? 'yes',
                     'hideNodeURL' => $nodeConfig['hideNodeURL'] ?? 'no'
                 ];
-                error_log("DEBUG: Added node: " . $nodeId);
             }
         }
-
-        error_log("DEBUG: Final nodes count: " . count($nodes));
 
         $this->logger->info("Loaded available nodes", [
             'count' => count($nodes),

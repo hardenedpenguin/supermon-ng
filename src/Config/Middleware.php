@@ -16,9 +16,9 @@ global $app;
 // Add method override middleware
 $app->add(MethodOverrideMiddleware::class);
 
-// Add secure session middleware with timeout and CSRF protection
+// Add combined session and CSRF middleware
 $app->add(function (Request $request, RequestHandlerInterface $handler): Response {
-    // Configure secure session if not already started
+    // Only configure and start session if not already started
     if (session_status() === PHP_SESSION_NONE) {
         session_name('supermon61');
 
@@ -38,12 +38,14 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
             'domain' => '',
             'secure' => $isSecure,
             'httponly' => true,
-            'samesite' => 'Strict'
+            'samesite' => 'Lax'
         ]);
 
         session_start();
-        
-        // Handle session timeout (8 hours)
+    }
+    
+    // Handle session timeout (8 hours) - only if session is active
+    if (session_status() === PHP_SESSION_ACTIVE) {
         if (!isset($_SESSION['last_activity'])) {
             $_SESSION['last_activity'] = time();
         } elseif (time() - $_SESSION['last_activity'] > 28800) { // 8 hours
@@ -63,12 +65,7 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
         }
     }
     
-    return $handler->handle($request);
-});
-
-// Add CSRF validation middleware for POST requests
-$app->add(function (Request $request, RequestHandlerInterface $handler): Response {
-    // Only validate CSRF for POST requests to API endpoints that require it
+    // CSRF validation for POST requests
     if ($request->getMethod() === 'POST') {
         $uri = $request->getUri()->getPath();
         
@@ -78,21 +75,8 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
             $parsedBody = $request->getParsedBody();
             $token = $parsedBody['csrf_token'] ?? $request->getHeaderLine('X-CSRF-Token') ?? '';
             
-            // Debug logging for CSRF issues
-            error_log("CSRF Debug - URI: $uri");
-            error_log("CSRF Debug - Token from request: " . ($token ? 'present' : 'missing'));
-            error_log("CSRF Debug - Session token: " . (isset($_SESSION['csrf_token']) ? 'present' : 'missing'));
-            
             if (empty($token) || !isset($_SESSION['csrf_token']) || 
                 !hash_equals($_SESSION['csrf_token'], $token)) {
-                
-                // Additional debug info for failures
-                error_log("CSRF Debug - Validation failed:");
-                error_log("  - Token empty: " . (empty($token) ? 'yes' : 'no'));
-                error_log("  - Session token missing: " . (!isset($_SESSION['csrf_token']) ? 'yes' : 'no'));
-                if (!empty($token) && isset($_SESSION['csrf_token'])) {
-                    error_log("  - Hash comparison failed: yes");
-                }
                 
                 $response = new \Slim\Psr7\Response();
                 $response->getBody()->write(json_encode([
@@ -102,8 +86,6 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
                 return $response
                     ->withStatus(403)
                     ->withHeader('Content-Type', 'application/json');
-            } else {
-                error_log("CSRF Debug - Validation successful for $uri");
             }
         }
     }

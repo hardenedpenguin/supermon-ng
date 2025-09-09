@@ -620,7 +620,11 @@ class NodeController
             $queryParams = $request->getQueryParams();
             $nodeIds = $queryParams['nodes'] ?? '';
             
+            // Debug logging
+            file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - AMI Status requested for nodes: $nodeIds\n", FILE_APPEND | LOCK_EX);
+            
             if (empty($nodeIds)) {
+                file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - No nodes specified\n", FILE_APPEND | LOCK_EX);
                 $response->getBody()->write(json_encode([
                     'success' => false,
                     'error' => 'No nodes specified'
@@ -638,10 +642,14 @@ class NodeController
             $currentUser = $this->getCurrentUser();
             $availableNodes = $this->configService->getAvailableNodes($currentUser);
             
+            file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Available nodes: " . json_encode($availableNodes) . "\n", FILE_APPEND | LOCK_EX);
+            
             // Filter to only requested nodes that are available
             $requestedNodes = array_filter($availableNodes, function($node) use ($nodeIdArray) {
                 return in_array($node['id'], $nodeIdArray);
             });
+            
+            file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Requested nodes: " . json_encode($requestedNodes) . "\n", FILE_APPEND | LOCK_EX);
             
             $amiData = [];
             
@@ -649,8 +657,11 @@ class NodeController
                 $nodeId = (string)$node['id'];
                 $nodeConfig = $this->configService->getNodeConfig($nodeId);
                 
+                file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Node $nodeId config: " . json_encode($nodeConfig) . "\n", FILE_APPEND | LOCK_EX);
+                
                 if (!$nodeConfig || !isset($nodeConfig['host'])) {
                     // Node not configured, return basic info
+                    file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Node $nodeId not configured\n", FILE_APPEND | LOCK_EX);
                     $amiData[$nodeId] = [
                         'node' => $nodeId,
                         'info' => 'Node not configured',
@@ -668,9 +679,17 @@ class NodeController
                     continue;
                 }
                 
-                // Try to get AMI data for this node
-                $nodeAmiData = $this->getNodeAmiData($nodeConfig, $nodeId);
-                $amiData[$nodeId] = $nodeAmiData;
+        // Try to get AMI data for this node
+        file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Getting AMI data for node $nodeId\n", FILE_APPEND | LOCK_EX);
+        $nodeAmiData = $this->getNodeAmiData($nodeConfig, $nodeId);
+        file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - AMI data for node $nodeId: " . json_encode($nodeAmiData) . "\n", FILE_APPEND | LOCK_EX);
+        
+        // Add raw AMI response debugging
+        if (isset($nodeAmiData['raw_response'])) {
+            file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Raw AMI response for node $nodeId: " . $nodeAmiData['raw_response'] . "\n", FILE_APPEND | LOCK_EX);
+        }
+        
+        $amiData[$nodeId] = $nodeAmiData;
             }
             
             $response->getBody()->write(json_encode([
@@ -916,6 +935,9 @@ class NodeController
             error_log("getNodeViaAmi: XStat getResponse FAILED for node $node");
             $rptStatus = '';
         }
+        
+        // Debug: Log raw AMI response
+        file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Raw XStat response for node $node: " . $rptStatus . "\n", FILE_APPEND | LOCK_EX);
 
         // Execute SawStat command
         $actionID_sawstat = 'sawstat' . $actionRand;
@@ -933,6 +955,9 @@ class NodeController
             $sawStatus = '';
         }
         
+        // Debug: Log raw SawStat response
+        file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Raw SawStat response for node $node: " . $sawStatus . "\n", FILE_APPEND | LOCK_EX);
+        
         return $this->parseNodeAmiData($fp, $node, $rptStatus, $sawStatus);
     }
 
@@ -949,9 +974,13 @@ class NodeController
             $lines = explode("\n", $rptStatus);
             foreach ($lines as $line) {
                 $line = trim($line);
-                if (strpos($line, '=') !== false) {
-                    list($key, $value) = explode('=', $line, 2);
-                    $parsedVars[trim($key)] = trim($value);
+                // Parse Var: lines
+                if (strpos($line, 'Var: ') === 0) {
+                    $varLine = substr($line, 5); // Remove 'Var: ' prefix
+                    if (strpos($varLine, '=') !== false) {
+                        list($key, $value) = explode('=', $varLine, 2);
+                        $parsedVars[trim($key)] = trim($value);
+                    }
                 }
             }
         }
@@ -965,11 +994,13 @@ class NodeController
                 $line = trim($line);
                 if (empty($line)) continue;
                 
-                // Parse connection data
-                if (preg_match('/^(\d+)\s+(.*)/', $line, $matches)) {
-                    $nodeNum = $matches[1];
-                    $data = explode(' ', trim($matches[2]));
-                    $conns[] = array_merge([$nodeNum], $data);
+                // Parse connection data - format: "Conn: 546054 0 -1 -1"
+                if (strpos($line, 'Conn: ') === 0) {
+                    $connLine = substr($line, 6); // Remove 'Conn: ' prefix
+                    $data = explode(' ', $connLine);
+                    if (!empty($data[0])) {
+                        $conns[] = $data;
+                    }
                 }
             }
         }
@@ -1433,7 +1464,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'DBTUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to access database contents.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         $data = $request->getParsedBody();
@@ -1441,7 +1472,7 @@ class NodeController
 
         if (empty($localnode)) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Local node parameter is required.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
         try {
