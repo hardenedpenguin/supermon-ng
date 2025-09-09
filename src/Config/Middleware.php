@@ -16,11 +16,80 @@ global $app;
 // Add method override middleware
 $app->add(MethodOverrideMiddleware::class);
 
-// Add session middleware to ensure session is started for all requests
+// Add secure session middleware with timeout and CSRF protection
 $app->add(function (Request $request, RequestHandlerInterface $handler): Response {
-    // Start session if not already started
+    // Configure secure session if not already started
     if (session_status() === PHP_SESSION_NONE) {
+        session_name('supermon61');
+
+        // Detect HTTPS for secure cookies
+        $isSecure = false;
+        $serverParams = $request->getServerParams();
+        if (($serverParams['HTTPS'] ?? '') === 'on' ||
+            ($serverParams['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ||
+            ($serverParams['HTTP_X_FORWARDED_SSL'] ?? '') === 'on' ||
+            ($serverParams['SERVER_PORT'] ?? '') == '443') {
+            $isSecure = true;
+        }
+
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => '',
+            'secure' => $isSecure,
+            'httponly' => true,
+            'samesite' => 'Strict'
+        ]);
+
         session_start();
+        
+        // Handle session timeout (8 hours)
+        if (!isset($_SESSION['last_activity'])) {
+            $_SESSION['last_activity'] = time();
+        } elseif (time() - $_SESSION['last_activity'] > 28800) { // 8 hours
+            session_unset();
+            session_destroy();
+            session_start();
+            $_SESSION['last_activity'] = time();
+        }
+        $_SESSION['last_activity'] = time();
+        
+        // Initialize session variables
+        $_SESSION['sm61loggedin'] = $_SESSION['sm61loggedin'] ?? false;
+        
+        // Generate CSRF token if not exists
+        if (!isset($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+    }
+    
+    return $handler->handle($request);
+});
+
+// Add CSRF validation middleware for POST requests
+$app->add(function (Request $request, RequestHandlerInterface $handler): Response {
+    // Only validate CSRF for POST requests to API endpoints that require it
+    if ($request->getMethod() === 'POST') {
+        $uri = $request->getUri()->getPath();
+        
+        // Skip CSRF validation for auth endpoints (login, etc.)
+        $skipPaths = ['/api/auth/login', '/api/auth/logout', '/api/auth/me'];
+        if (!in_array($uri, $skipPaths)) {
+            $parsedBody = $request->getParsedBody();
+            $token = $parsedBody['csrf_token'] ?? $request->getHeaderLine('X-CSRF-Token') ?? '';
+            
+            if (empty($token) || !isset($_SESSION['csrf_token']) || 
+                !hash_equals($_SESSION['csrf_token'], $token)) {
+                $response = new \Slim\Psr7\Response();
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'CSRF token validation failed. Please refresh the page and try again.'
+                ]));
+                return $response
+                    ->withStatus(403)
+                    ->withHeader('Content-Type', 'application/json');
+            }
+        }
     }
     
     return $handler->handle($request);

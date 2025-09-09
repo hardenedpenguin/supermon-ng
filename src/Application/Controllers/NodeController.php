@@ -704,7 +704,7 @@ class NodeController
         // Include the legacy AMI functions
         require_once __DIR__ . '/../../../includes/amifunctions.inc';
         require_once __DIR__ . '/../../../includes/nodeinfo.inc';
-        require_once __DIR__ . '/../../../includes/helpers.inc';
+        // Helpers functionality now available as modern services
         
         // Load ASTDB
         $astdbFile = __DIR__ . '/../../../astdb.txt';
@@ -1801,12 +1801,11 @@ class NodeController
         
         try {
             // Include required dependencies for the ban/allow system
-            require_once __DIR__ . '/../../../includes/session.inc';
+            // Session and CSRF now handled by middleware
             require_once __DIR__ . '/../../../includes/amifunctions.inc';
             require_once __DIR__ . '/../../../includes/common.inc';
             require_once __DIR__ . '/../../../user_files/authusers.inc';
             require_once __DIR__ . '/../../../user_files/authini.inc';
-            require_once __DIR__ . '/../../../includes/csrf.inc';
 
             // Define get_user_auth function if it doesn't exist
             if (!function_exists('get_user_auth')) {
