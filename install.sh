@@ -19,6 +19,22 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# Check if this is an update or fresh installation
+APP_DIR="/var/www/html/supermon-ng"
+if [ -d "$APP_DIR" ] && [ -f "$APP_DIR/includes/common.inc" ]; then
+    echo "📋 Existing Supermon-NG installation detected."
+    echo "   For updates, please use: sudo ./scripts/update.sh"
+    echo "   This script is for fresh installations only."
+    echo ""
+    read -p "Do you want to continue with a fresh installation? (This will overwrite existing files) [y/N]: " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Installation cancelled. Use ./scripts/update.sh for updates."
+        exit 0
+    fi
+    echo "⚠️  Proceeding with fresh installation (existing files will be overwritten)"
+fi
+
 # Install dependencies
 echo "📦 Installing system dependencies..."
 apt-get update
@@ -315,6 +331,75 @@ if ! command -v apache2 &> /dev/null; then
     apt-get install -y apache2
 fi
 
+# Function to detect all IP addresses on the current machine
+detect_ip_addresses() {
+    echo "🔍 Detecting IP addresses on this machine..."
+    
+    # Get all IP addresses (excluding loopback and link-local)
+    IP_ADDRESSES=()
+    
+    # Method 1: Using ip command (preferred)
+    if command -v ip >/dev/null 2>&1; then
+        while IFS= read -r ip; do
+            # Skip loopback, link-local, and multicast addresses
+            if [[ ! "$ip" =~ ^127\. ]] && [[ ! "$ip" =~ ^169\.254\. ]] && [[ ! "$ip" =~ ^224\. ]] && [[ ! "$ip" =~ ^::1$ ]] && [[ ! "$ip" =~ ^fe80: ]]; then
+                IP_ADDRESSES+=("$ip")
+            fi
+        done < <(ip -o -4 addr show | awk '{print $4}' | cut -d'/' -f1)
+        
+        # Also get IPv6 addresses
+        while IFS= read -r ip; do
+            if [[ ! "$ip" =~ ^::1$ ]] && [[ ! "$ip" =~ ^fe80: ]]; then
+                IP_ADDRESSES+=("$ip")
+            fi
+        done < <(ip -o -6 addr show | awk '{print $4}' | cut -d'/' -f1)
+    fi
+    
+    # Method 2: Fallback to hostname command if ip command fails
+    if [ ${#IP_ADDRESSES[@]} -eq 0 ] && command -v hostname >/dev/null 2>&1; then
+        HOSTNAME_IPS=$(hostname -I 2>/dev/null || true)
+        if [ -n "$HOSTNAME_IPS" ]; then
+            while IFS= read -r ip; do
+                if [[ ! "$ip" =~ ^127\. ]] && [[ ! "$ip" =~ ^169\.254\. ]]; then
+                    IP_ADDRESSES+=("$ip")
+                fi
+            done <<< "$HOSTNAME_IPS"
+        fi
+    fi
+    
+    # Method 3: Fallback to ifconfig if available
+    if [ ${#IP_ADDRESSES[@]} -eq 0 ] && command -v ifconfig >/dev/null 2>&1; then
+        while IFS= read -r ip; do
+            if [[ ! "$ip" =~ ^127\. ]] && [[ ! "$ip" =~ ^169\.254\. ]]; then
+                IP_ADDRESSES+=("$ip")
+            fi
+        done < <(ifconfig 2>/dev/null | grep -oP 'inet \K[0-9.]+' || true)
+    fi
+    
+    # Remove duplicates and sort
+    if [ ${#IP_ADDRESSES[@]} -gt 0 ]; then
+        # Remove duplicates using associative array
+        declare -A unique_ips
+        for ip in "${IP_ADDRESSES[@]}"; do
+            unique_ips["$ip"]=1
+        done
+        IP_ADDRESSES=($(printf '%s\n' "${!unique_ips[@]}" | sort))
+    fi
+    
+    # Display detected IPs
+    if [ ${#IP_ADDRESSES[@]} -gt 0 ]; then
+        echo "✅ Detected IP addresses:"
+        for ip in "${IP_ADDRESSES[@]}"; do
+            echo "   - $ip"
+        done
+    else
+        echo "⚠️  No IP addresses detected, will use localhost only"
+        IP_ADDRESSES=("127.0.0.1")
+    fi
+    
+    echo ""
+}
+
 # Create Apache configuration template
 APACHE_TEMPLATE="$APP_DIR/apache-config-template.conf"
 if [ -f "$APACHE_TEMPLATE" ]; then
@@ -322,14 +407,27 @@ if [ -f "$APACHE_TEMPLATE" ]; then
     echo "   If you want to update the template, please remove it manually first:"
     echo "   sudo rm $APACHE_TEMPLATE"
 else
-    echo "📝 Creating Apache configuration template..."
+    # Detect IP addresses
+    detect_ip_addresses
+    
+    echo "📝 Creating Apache configuration template with detected IP addresses..."
+    
+    # Generate ServerAlias entries
+    SERVER_ALIASES=""
+    if [ ${#IP_ADDRESSES[@]} -gt 0 ]; then
+        for ip in "${IP_ADDRESSES[@]}"; do
+            SERVER_ALIASES="${SERVER_ALIASES}    ServerAlias $ip"$'\n'
+        done
+    fi
+    
     cat > "$APACHE_TEMPLATE" << EOF
 # Supermon-NG Apache Configuration Template
 # Copy this configuration to your Apache sites-available directory
+# Generated with detected IP addresses as ServerAlias entries
 
 <VirtualHost *:80>
     ServerName localhost
-    DocumentRoot $APP_DIR/public
+$SERVER_ALIASES    DocumentRoot $APP_DIR/public
     
     # Proxy configurations (must come before Directory blocks)
     ProxyPreserveHost On
@@ -373,35 +471,95 @@ EOF
     echo "✅ Apache configuration template created"
 fi
 
+# Automatically install and configure Apache site
+echo "🔧 Configuring Apache automatically..."
+APACHE_SITE_FILE="/etc/apache2/sites-available/supermon-ng.conf"
+
+# Enable required Apache modules
+echo "📦 Enabling required Apache modules..."
+a2enmod -q proxy proxy_http proxy_wstunnel rewrite headers 2>/dev/null || {
+    echo "⚠️  Warning: Some Apache modules may not be available"
+}
+
+# Install the Apache site configuration
+if [ -f "$APACHE_SITE_FILE" ]; then
+    echo "⚠️  Apache site configuration already exists. Backing up existing file..."
+    cp "$APACHE_SITE_FILE" "$APACHE_SITE_FILE.backup.$(date +%Y%m%d_%H%M%S)"
+fi
+
+echo "📝 Installing Apache site configuration..."
+cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
+
+# Enable the site
+echo "🔗 Enabling Apache site..."
+a2ensite -q supermon-ng 2>/dev/null || {
+    echo "⚠️  Warning: Failed to enable Apache site automatically"
+}
+
+# Test Apache configuration
+echo "🧪 Testing Apache configuration..."
+if apache2ctl configtest >/dev/null 2>&1; then
+    echo "✅ Apache configuration test passed"
+    
+    # Restart Apache
+    echo "🔄 Restarting Apache..."
+    systemctl restart apache2
+    
+    if systemctl is-active apache2 >/dev/null 2>&1; then
+        echo "✅ Apache restarted successfully"
+        APACHE_AUTO_CONFIGURED=true
+    else
+        echo "❌ Apache failed to restart"
+        APACHE_AUTO_CONFIGURED=false
+    fi
+else
+    echo "❌ Apache configuration test failed"
+    echo "   Please check the configuration manually:"
+    echo "   sudo apache2ctl configtest"
+    APACHE_AUTO_CONFIGURED=false
+fi
+
 echo ""
-echo "⚠️  MANUAL APACHE CONFIGURATION REQUIRED"
-echo "========================================"
-echo "The installation script has created a template configuration file at:"
-echo "   $APP_DIR/apache-config-template.conf"
-echo ""
-echo "To complete the setup, you need to:"
-echo ""
-echo "1. Enable required Apache modules:"
-echo "   sudo a2enmod proxy"
-echo "   sudo a2enmod proxy_http"
-echo "   sudo a2enmod proxy_wstunnel"
-echo "   sudo a2enmod rewrite"
-echo ""
-echo "2. Copy the configuration template to Apache:"
-echo "   sudo cp $APP_DIR/apache-config-template.conf /etc/apache2/sites-available/supermon-ng.conf"
-echo ""
-echo "3. Enable the site and restart Apache:"
-echo "   sudo a2ensite supermon-ng"
-echo "   sudo a2dissite 000-default  # Optional: disable default site"
-echo "   sudo systemctl restart apache2"
-echo ""
-echo "4. If you have HamClock, edit the configuration to enable the proxy:"
-echo "   sudo nano /etc/apache2/sites-available/supermon-ng.conf"
-echo "   # Uncomment and modify the HamClock proxy lines with your server IP/port"
-echo ""
-echo "5. Verify the configuration:"
-echo "   sudo apache2ctl configtest"
-echo ""
+if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
+    echo "✅ APACHE CONFIGURATION COMPLETED AUTOMATICALLY"
+    echo "=============================================="
+    echo "Apache has been configured and is running with the following access points:"
+    echo "   - http://localhost"
+    for ip in "${IP_ADDRESSES[@]}"; do
+        echo "   - http://$ip"
+    done
+    echo ""
+    echo "The site is now accessible via all detected IP addresses!"
+else
+    echo "⚠️  MANUAL APACHE CONFIGURATION REQUIRED"
+    echo "========================================"
+    echo "The installation script has created a template configuration file at:"
+    echo "   $APP_DIR/apache-config-template.conf"
+    echo ""
+    echo "To complete the setup, you need to:"
+    echo ""
+    echo "1. Enable required Apache modules:"
+    echo "   sudo a2enmod proxy"
+    echo "   sudo a2enmod proxy_http"
+    echo "   sudo a2enmod proxy_wstunnel"
+    echo "   sudo a2enmod rewrite"
+    echo ""
+    echo "2. Copy the configuration template to Apache:"
+    echo "   sudo cp $APP_DIR/apache-config-template.conf /etc/apache2/sites-available/supermon-ng.conf"
+    echo ""
+    echo "3. Enable the site and restart Apache:"
+    echo "   sudo a2ensite supermon-ng"
+    echo "   sudo a2dissite 000-default  # Optional: disable default site"
+    echo "   sudo systemctl restart apache2"
+    echo ""
+    echo "4. If you have HamClock, edit the configuration to enable the proxy:"
+    echo "   sudo nano /etc/apache2/sites-available/supermon-ng.conf"
+    echo "   # Uncomment and modify the HamClock proxy lines with your server IP/port"
+    echo ""
+    echo "5. Verify the configuration:"
+    echo "   sudo apache2ctl configtest"
+    echo ""
+fi
 
 # Enable and start services
 echo "🚀 Starting services..."
@@ -417,9 +575,13 @@ if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
     echo "✅ Node status service enabled and started"
 fi
 
-# Note: Apache configuration must be done manually
-echo "📝 Note: Apache configuration must be completed manually as shown above."
-echo "   The backend service will start, but the web interface won't work until Apache is configured."
+# Note about Apache configuration
+if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
+    echo "📝 Note: Apache has been automatically configured and is ready to use."
+else
+    echo "📝 Note: Apache configuration must be completed manually as shown above."
+    echo "   The backend service will start, but the web interface won't work until Apache is configured."
+fi
 
 # Make user management scripts executable
 echo "🔧 Setting script permissions..."
@@ -441,9 +603,18 @@ systemctl is-active supermon-ng-backend > /dev/null && echo "✅ Backend: Runnin
 systemctl is-active apache2 > /dev/null && echo "✅ Apache: Running" || echo "❌ Apache: Failed"
 echo ""
 echo "🌐 Access your Supermon-NG application at:"
-echo "   http://$(hostname -I | awk '{print $1}')"
-echo ""
-echo "⚠️  IMPORTANT: Complete Apache configuration manually as shown above!"
+if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
+    echo "   - http://localhost"
+    for ip in "${IP_ADDRESSES[@]}"; do
+        echo "   - http://$ip"
+    done
+    echo ""
+    echo "✅ Apache is automatically configured and ready to use!"
+else
+    echo "   http://$(hostname -I | awk '{print $1}')"
+    echo ""
+    echo "⚠️  IMPORTANT: Complete Apache configuration manually as shown above!"
+fi
 echo ""
 echo "🔧 Service Management:"
 echo "   Start:  sudo systemctl start supermon-ng-backend"
@@ -451,10 +622,28 @@ echo "   Stop:   sudo systemctl stop supermon-ng-backend"
 echo "   Status: sudo systemctl status supermon-ng-backend"
 echo ""
 echo "📝 Next steps:"
-echo "   1. Complete Apache configuration (see instructions above)"
-echo "   2. Configure your AMI settings in $APP_DIR/user_files/"
-echo "   3. Set up your node configurations"
-echo "   4. Access the web interface to complete setup"
+if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
+    echo "   1. Configure your AMI settings in $APP_DIR/user_files/"
+    echo "   2. Set up your node configurations"
+    echo "   3. Access the web interface to complete setup"
+else
+    echo "   1. Complete Apache configuration (see instructions above)"
+    echo "   2. Configure your AMI settings in $APP_DIR/user_files/"
+    echo "   3. Set up your node configurations"
+    echo "   4. Access the web interface to complete setup"
+fi
+
+echo ""
+echo "🔄 Future Updates:"
+echo "   To update Supermon-NG to a newer version:"
+echo "   1. Download the new version package"
+echo "   2. Extract it to a temporary directory"
+echo "   3. Run: sudo ./scripts/update.sh"
+echo "   The update script will:"
+echo "   - Preserve your user configurations when possible"
+echo "   - Only advise about user_files changes when configs actually change"
+echo "   - Create backups before making changes"
+echo "   - Handle configuration migrations automatically"
 echo ""
 echo "📋 Installation Summary:"
 echo "   ✅ System dependencies installed (including ACL support)"
@@ -468,4 +657,8 @@ echo "   ✅ Backend service created and started"
 if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
     echo "   ✅ Node status service enabled and started"
 fi
-echo "   ⚠️  Apache configuration needs manual completion"
+if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
+    echo "   ✅ Apache configuration completed automatically with IP aliases"
+else
+    echo "   ⚠️  Apache configuration needs manual completion"
+fi
