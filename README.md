@@ -558,26 +558,351 @@ htop
 
 ## 🔄 Updates and Upgrades
 
-1. **Backup current installation**:
-   ```bash
-   sudo tar -czf /tmp/supermon-ng-backup-$(date +%Y%m%d).tar.gz /var/www/html/supermon-ng/user_files/
-   ```
+Supermon-NG includes an intelligent update system that preserves your configurations and only advises about user_files changes when the configuration structure actually changes.
 
-2. **Download and extract new release**:
-   ```bash
-   cd /tmp
-   wget https://github.com/your-repo/supermon-ng/releases/download/v4.0.1/supermon-ng-V4.0.1.tar.xz
-   tar -xJf supermon-ng-V4.0.1.tar.xz
-   ```
+### 🚀 Quick Update Process
 
-3. **Run installation script**:
-   ```bash
-   cd /tmp/supermon-ng
-   sudo ./install.sh
-   ```
+**For most updates, simply run:**
+
+```bash
+# 1. Download the latest release
+cd /tmp
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.3/supermon-ng-V4.0.3.tar.xz
+
+# 2. Extract the new version
+tar -xJf supermon-ng-V4.0.3.tar.xz
+cd supermon-ng
+
+# 3. Run the update script
+sudo ./scripts/update.sh
+```
+
+**That's it!** The update script handles everything automatically.
+
+### 🔍 What the Update Script Does
+
+The `update.sh` script intelligently:
+
+- **Detects Version Changes**: Compares current vs. new version
+- **Analyzes Configuration Changes**: Only updates user_files when configs actually change
+- **Creates Automatic Backups**: Timestamped backups before any changes
+- **Preserves User Configurations**: Keeps your customizations when possible
+- **Updates System Services**: Handles systemd, Apache, and dependencies
+- **Validates Everything**: Tests configurations and restarts services
+
+### 📋 Detailed Update Instructions
+
+#### Step 1: Check Current Version
+
+Before updating, check your current version:
+
+```bash
+# Check current version and system status
+sudo /var/www/html/supermon-ng/scripts/version-check.sh
+```
+
+This shows:
+- Current version and date
+- Service status (backend, Apache, node status)
+- Configuration file status
+- Access URLs
+- Update instructions
+
+#### Step 2: Download New Version
+
+```bash
+# Create temporary directory
+mkdir -p /tmp/supermon-ng-update
+cd /tmp/supermon-ng-update
+
+# Download latest release (replace V4.0.3 with actual version)
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.3/supermon-ng-V4.0.3.tar.xz
+
+# Extract the package
+tar -xJf supermon-ng-V4.0.3.tar.xz
+cd supermon-ng
+```
+
+#### Step 3: Run Update Script
+
+```bash
+# Run the update script
+sudo ./scripts/update.sh
+```
+
+The script will:
+
+1. **Detect Current Version**: Shows what version you're currently running
+2. **Compare Versions**: Determines if update is needed
+3. **Analyze Configuration Changes**: Checks if user_files need updating
+4. **Create Backups**: Backs up current installation
+5. **Update Application**: Installs new files while preserving configurations
+6. **Update Services**: Updates systemd services and Apache configuration
+7. **Update Dependencies**: Updates PHP and Node.js dependencies
+8. **Update Frontend**: Deploys new frontend files
+9. **Validate Installation**: Tests configuration and restarts services
+10. **Display Summary**: Shows what was updated and next steps
+
+#### Step 4: Review Update Results
+
+After the update completes, you'll see a summary like:
+
+```
+🎉 Update Complete!
+==================
+
+📊 Update Summary:
+   ✅ Updated from V4.0.2 to V4.0.3
+   ✅ Application files updated
+   ✅ System services updated
+   ✅ Dependencies updated
+   ✅ Frontend updated
+   ✅ User configurations preserved (no changes detected)
+
+🌐 Access your updated Supermon-NG application at:
+   - http://localhost
+   - http://192.168.1.100
+   - http://10.0.0.50
+
+🔧 Service Status:
+   ✅ Backend: Running
+   ✅ Apache: Running
+```
+
+### 🔧 Configuration Change Handling
+
+#### When No Configuration Changes Are Detected
+
+If the update script detects no configuration changes:
+
+```
+✅ User configurations preserved (no changes detected)
+```
+
+**What this means:**
+- All your user_files are completely preserved
+- No manual configuration work needed
+- Your customizations remain intact
+- Update is complete and ready to use
+
+#### When Configuration Changes Are Detected
+
+If configuration changes are found:
+
+```
+⚠️ Configuration changes detected. User files may need attention.
+📁 User files backed up to: /tmp/supermon-ng-backup-20250101_120000/user_files
+
+⚠️ IMPORTANT: Configuration changes detected!
+   Please review your configuration files in /var/www/html/supermon-ng/user_files/
+   Compare with the backup in /tmp/supermon-ng-backup-20250101_120000/user_files
+   Update any new configuration options as needed.
+```
+
+**What this means:**
+- New configuration options may be available
+- Your original files are safely backed up
+- You should review the new configuration files
+- Compare with your backup to see what changed
+
+**Next steps:**
+1. Review the new configuration files in `/var/www/html/supermon-ng/user_files/`
+2. Compare with your backup to see what's new
+3. Update any new configuration options as needed
+4. Test the web interface to ensure everything works
+
+### 🛠️ Manual Update Process (Advanced)
+
+If you prefer manual control or need to troubleshoot:
+
+#### Step 1: Create Manual Backup
+
+```bash
+# Create comprehensive backup
+sudo tar -czf /tmp/supermon-ng-manual-backup-$(date +%Y%m%d_%H%M%S).tar.gz \
+    /var/www/html/supermon-ng/user_files/ \
+    /etc/apache2/sites-available/supermon-ng.conf \
+    /etc/systemd/system/supermon-ng-*.service \
+    /etc/systemd/system/supermon-ng-*.timer
+```
+
+#### Step 2: Stop Services
+
+```bash
+# Stop all Supermon-NG services
+sudo systemctl stop supermon-ng-backend
+sudo systemctl stop supermon-ng-node-status.timer
+```
+
+#### Step 3: Update Files
+
+```bash
+# Copy new application files (preserve user_files)
+sudo cp -r /tmp/supermon-ng-update/* /var/www/html/supermon-ng/
+sudo cp -r /tmp/supermon-ng-manual-backup-*/user_files/* /var/www/html/supermon-ng/user_files/
+```
+
+#### Step 4: Update Services
+
+```bash
+# Update systemd services
+sudo cp /tmp/supermon-ng-update/systemd/*.service /etc/systemd/system/
+sudo cp /tmp/supermon-ng-update/systemd/*.timer /etc/systemd/system/
+
+# Reload systemd and restart services
+sudo systemctl daemon-reload
+sudo systemctl enable supermon-ng-backend
+sudo systemctl start supermon-ng-backend
+```
+
+#### Step 5: Update Dependencies
+
+```bash
+# Update PHP dependencies
+cd /var/www/html/supermon-ng
+sudo -u www-data composer install --no-dev --optimize-autoloader
+
+# Update frontend
+cd frontend
+npm install
+npm run build
+cp -r dist/* /var/www/html/supermon-ng/public/
+```
+
+### 🔄 Rollback Process
+
+If you need to rollback to a previous version:
+
+#### Using Automatic Backup
+
+```bash
+# Stop services
+sudo systemctl stop supermon-ng-backend
+sudo systemctl stop supermon-ng-node-status.timer
+
+# Restore from backup
+sudo tar -xzf /tmp/supermon-ng-backup-YYYYMMDD_HHMMSS.tar.gz -C /
+
+# Restart services
+sudo systemctl start supermon-ng-backend
+sudo systemctl start supermon-ng-node-status.timer
+```
+
+#### Using Manual Backup
+
+```bash
+# Stop services
+sudo systemctl stop supermon-ng-backend
+
+# Restore application files
+sudo tar -xzf /tmp/supermon-ng-manual-backup-YYYYMMDD_HHMMSS.tar.gz -C /
+
+# Restart services
+sudo systemctl daemon-reload
+sudo systemctl start supermon-ng-backend
+```
+
+### 🚨 Troubleshooting Updates
+
+#### Update Script Fails
+
+If the update script fails:
+
+```bash
+# Check the update log
+sudo tail -f /var/www/html/supermon-ng/logs/migration.log
+
+# Check system status
+sudo /var/www/html/supermon-ng/scripts/version-check.sh
+
+# Manual rollback if needed
+sudo tar -xzf /tmp/supermon-ng-backup-*.tar.gz -C /
+```
+
+#### Services Won't Start
+
+```bash
+# Check service status
+sudo systemctl status supermon-ng-backend
+sudo systemctl status apache2
+
+# Check logs
+sudo journalctl -u supermon-ng-backend -f
+sudo tail -f /var/log/apache2/supermon-ng_error.log
+
+# Test configuration
+sudo apache2ctl configtest
+```
+
+#### Configuration Issues
+
+```bash
+# Compare with backup
+diff -r /var/www/html/supermon-ng/user_files/ /tmp/supermon-ng-backup-*/user_files/
+
+# Restore specific files
+sudo cp /tmp/supermon-ng-backup-*/user_files/global.inc /var/www/html/supermon-ng/user_files/
+```
+
+### 📊 Update Best Practices
+
+1. **Always Backup First**: The update script creates automatic backups, but manual backups are recommended for critical systems
+
+2. **Test in Non-Production**: Test updates on a development system first when possible
+
+3. **Review Release Notes**: Check the release notes for breaking changes or new requirements
+
+4. **Monitor After Update**: Check logs and functionality after updating
+
+5. **Keep Backups**: Don't delete backup files immediately - keep them for a few days
+
+### 🔍 Version Information
+
+Check your current version anytime:
+
+```bash
+# Quick version check
+sudo /var/www/html/supermon-ng/scripts/version-check.sh
+
+# Detailed system information
+sudo systemctl status supermon-ng-backend
+sudo systemctl status apache2
+```
+
+### 📝 Update Checklist
+
+Before updating:
+
+- [ ] Check current version with `version-check.sh`
+- [ ] Review release notes for breaking changes
+- [ ] Create manual backup (recommended)
+- [ ] Ensure you have root/sudo access
+- [ ] Plan for brief service downtime
+
+After updating:
+
+- [ ] Verify services are running
+- [ ] Test web interface functionality
+- [ ] Check configuration files if changes were detected
+- [ ] Monitor logs for any errors
+- [ ] Update any new configuration options as needed
 
 
 ## 📋 Quick Reference
+
+### Update Commands
+```bash
+# Check current version and system status
+sudo /var/www/html/supermon-ng/scripts/version-check.sh
+
+# Quick update (download, extract, run update script)
+cd /tmp && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.3/supermon-ng-V4.0.3.tar.xz
+tar -xJf supermon-ng-V4.0.3.tar.xz && cd supermon-ng
+sudo ./scripts/update.sh
+
+# Manual backup before update
+sudo tar -czf /tmp/supermon-ng-backup-$(date +%Y%m%d_%H%M%S).tar.gz /var/www/html/supermon-ng/user_files/
+```
 
 ### Apache Configuration Commands
 ```bash
