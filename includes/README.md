@@ -13,10 +13,10 @@ This directory contains the essential PHP library files that provide core functi
 - Command execution and response parsing
 - Error handling for AMI operations
 
-#### `sse/server-functions.inc`
-**Purpose**: Server-Sent Events functionality
-- Real-time data streaming to Vue.js frontend
-- Event handling and connection management
+#### ~~`sse/server-functions.inc`~~ (Removed)
+**Purpose**: ~~Server-Sent Events functionality~~ **→ Moved to NodeController**
+- Real-time data now handled by Vue.js polling with API endpoints
+- AMI functionality moved directly into NodeController methods
 
 ### Data & Configuration
 
@@ -54,13 +54,13 @@ This directory contains the essential PHP library files that provide core functi
 - `SecurityHelper`: Authentication and authorization utilities
 - `FileHelper`: Safe file operations with security checks
 
-### Specialized Modules
+### ~~Specialized Modules~~ (All Removed)
 
-#### `node-ban-allow/`
-**Purpose**: Node banning and allowing functionality
-- `ban-ami.inc`: AMI communication utilities
-- `ban-display.inc`: Data display and list rendering
-- Contains README.md with detailed documentation
+#### ~~`node-ban-allow/`~~ (Removed)
+**Purpose**: ~~Node banning and allowing functionality~~ **→ Available in Vue.js**
+- Functionality fully implemented in BanAllow.vue component
+- Accessible via "Access List" button in dashboard
+- Modern API endpoints handle all ban/allow operations
 
 ## Modern Architecture
 

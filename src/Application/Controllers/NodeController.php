@@ -812,7 +812,7 @@ class NodeController
         // Include the necessary files for the original parsing logic
         require_once __DIR__ . '/../../../includes/amifunctions.inc';
         require_once __DIR__ . '/../../../includes/nodeinfo.inc';
-        require_once __DIR__ . '/../../../includes/sse/server-functions.inc';
+        // server-functions.inc functionality moved directly into this controller
         
         // Define the ECHOLINK_NODE_THRESHOLD constant if not defined
         if (!defined('ECHOLINK_NODE_THRESHOLD')) {
@@ -825,8 +825,8 @@ class NodeController
         if (!isset($elnk_cache)) $elnk_cache = [];
         if (!isset($irlp_cache)) $irlp_cache = [];
         
-        // Use the original getNode function which uses XStat and SawStat
-        $nodeData = \getNode($socket, $nodeId);
+        // Use modernized AMI commands (replacing legacy getNode function)
+        $nodeData = $this->getNodeViaAmi($socket, $nodeId);
         
         if (empty($nodeData)) {
             return [
@@ -874,6 +874,152 @@ class NodeController
             'DISK' => $mainNodeData['DISK'] ?? null,
             'remote_nodes' => $remoteNodes
         ];
+    }
+
+    /**
+     * Get node data via AMI (modernized from legacy getNode function)
+     */
+    private function getNodeViaAmi($fp, string $node): array
+    {
+        // Check if socket is still valid
+        if (!is_resource($fp) || get_resource_type($fp) !== 'stream') {
+            error_log("getNodeViaAmi: Socket is not a valid resource for node $node");
+            return [];
+        }
+        
+        // Check socket status
+        $socketStatus = stream_get_meta_data($fp);
+        if ($socketStatus['eof'] || $socketStatus['timed_out']) {
+            error_log("getNodeViaAmi: Socket is EOF or timed out for node $node");
+            return [];
+        }
+        
+        $actionRand = mt_rand();
+        $rptStatus = '';
+        $sawStatus = '';
+        $eol = "\r\n";
+
+        // Execute XStat command
+        $actionID_xstat = 'xstat' . $actionRand;
+        $xstatCommand = "Action: RptStatus{$eol}COMMAND: XStat{$eol}NODE: {$node}{$eol}ActionID: {$actionID_xstat}{$eol}{$eol}";
+        
+        $xstatBytesWritten = @fwrite($fp, $xstatCommand);
+        if ($xstatBytesWritten === false || $xstatBytesWritten === 0) {
+            error_log("getNodeViaAmi: XStat fwrite FAILED for node $node");
+            return [];
+        }
+        
+        $rptStatus = \SimpleAmiClient::getResponse($fp, $actionID_xstat);
+        if ($rptStatus === false) {
+            error_log("getNodeViaAmi: XStat getResponse FAILED for node $node");
+            $rptStatus = '';
+        }
+
+        // Execute SawStat command
+        $actionID_sawstat = 'sawstat' . $actionRand;
+        $sawStatCommand = "Action: RptStatus{$eol}COMMAND: SawStat{$eol}NODE: {$node}{$eol}ActionID: {$actionID_sawstat}{$eol}{$eol}";
+        
+        $sawStatBytesWritten = @fwrite($fp, $sawStatCommand);
+        if ($sawStatBytesWritten === false || $sawStatBytesWritten === 0) {
+            error_log("getNodeViaAmi: SawStat fwrite FAILED for node $node");
+            return $this->parseNodeAmiData($fp, $node, $rptStatus, '');
+        }
+        
+        $sawStatus = \SimpleAmiClient::getResponse($fp, $actionID_sawstat);
+        if ($sawStatus === false) {
+            error_log("getNodeViaAmi: SawStat getResponse FAILED for node $node");
+            $sawStatus = '';
+        }
+        
+        return $this->parseNodeAmiData($fp, $node, $rptStatus, $sawStatus);
+    }
+
+    /**
+     * Parse node data from AMI responses (modernized from legacy parseNode function)
+     */
+    private function parseNodeAmiData($fp, string $queriedNode, string $rptStatus, string $sawStatus): array
+    {
+        $curNodes = [];
+        $parsedVars = [];
+        
+        // Parse XStat response
+        if (!empty($rptStatus)) {
+            $lines = explode("\n", $rptStatus);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (strpos($line, '=') !== false) {
+                    list($key, $value) = explode('=', $line, 2);
+                    $parsedVars[trim($key)] = trim($value);
+                }
+            }
+        }
+        
+        // Parse SawStat response for connected nodes
+        $conns = [];
+        
+        if (!empty($sawStatus)) {
+            $lines = explode("\n", $sawStatus);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+                
+                // Parse connection data
+                if (preg_match('/^(\d+)\s+(.*)/', $line, $matches)) {
+                    $nodeNum = $matches[1];
+                    $data = explode(' ', trim($matches[2]));
+                    $conns[] = array_merge([$nodeNum], $data);
+                }
+            }
+        }
+        
+        // Build node data structure
+        $mainNodeCosKeyed = ($parsedVars['RPT_RXKEYED'] ?? '0') === '1' ? 1 : 0;
+        $mainNodeTxKeyed = ($parsedVars['RPT_TXKEYED'] ?? '0') === '1' ? 1 : 0;
+        $mainNodeCpuTemp = $parsedVars['cpu_temp'] ?? null;
+        $mainNodeCpuUp = $parsedVars['cpu_up'] ?? null;
+        $mainNodeCpuLoad = $parsedVars['cpu_load'] ?? null;
+        $mainNodeALERT = $parsedVars['ALERT'] ?? null;
+        $mainNodeWX = $parsedVars['WX'] ?? null;
+        $mainNodeDISK = $parsedVars['DISK'] ?? null;
+
+        // Process connected nodes
+        if (count($conns) > 0) {
+            foreach ($conns as $connData) {
+                $n = $connData[0];
+                if (empty($n)) continue;
+
+                $isEcholink = (is_numeric($n) && $n > ECHOLINK_NODE_THRESHOLD && ($connData[1] ?? '') === "");
+
+                $curNodes[$n]['node'] = $n;
+                $curNodes[$n]['info'] = \getAstInfo($fp, $n);
+                $curNodes[$n]['ip'] = $isEcholink ? "" : ($connData[1] ?? null);
+                $curNodes[$n]['direction'] = $isEcholink ? ($connData[2] ?? null) : ($connData[3] ?? null);
+                $curNodes[$n]['elapsed'] = $isEcholink ? ($connData[3] ?? null) : ($connData[4] ?? null);
+                $curNodes[$n]['link'] = $isEcholink ? ($connData[4] ?? 'UNKNOWN') : ($connData[5] ?? null);
+                $curNodes[$n]['keyed'] = 'n/a';
+                $curNodes[$n]['last_keyed'] = '-1';
+                $curNodes[$n]['mode'] = $isEcholink ? 'Echolink' : 'Allstar';
+            }
+        }
+        
+        // Add local node stats
+        $localStatsKey = 1;
+        if (!isset($curNodes[$localStatsKey])) {
+            $curNodes[$localStatsKey] = [];
+        }
+        
+        $curNodes[$localStatsKey]['node'] = $curNodes[$localStatsKey]['node'] ?? $queriedNode;
+        $curNodes[$localStatsKey]['info'] = $curNodes[$localStatsKey]['info'] ?? \getAstInfo($fp, $queriedNode);
+        $curNodes[$localStatsKey]['cos_keyed'] = $mainNodeCosKeyed;
+        $curNodes[$localStatsKey]['tx_keyed'] = $mainNodeTxKeyed;
+        $curNodes[$localStatsKey]['cpu_temp'] = $mainNodeCpuTemp;
+        $curNodes[$localStatsKey]['cpu_up'] = $mainNodeCpuUp;
+        $curNodes[$localStatsKey]['cpu_load'] = $mainNodeCpuLoad;
+        $curNodes[$localStatsKey]['ALERT'] = $mainNodeALERT;
+        $curNodes[$localStatsKey]['WX'] = $mainNodeWX;
+        $curNodes[$localStatsKey]['DISK'] = $mainNodeDISK;
+        
+        return $curNodes;
     }
     
     /**
