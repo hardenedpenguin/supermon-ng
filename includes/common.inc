@@ -31,6 +31,24 @@
 $USERFILES = "user_files";
 
 /**
+ * @var string Title in header when logged in.
+ * Used by: Frontend header display for authenticated users
+ */
+$TITLE_LOGGED = "Supermon-ng V4.0.2 AllStar Manager";
+
+/**
+ * @var string Title in header when not logged in.
+ * Used by: Frontend header display for non-authenticated users
+ */
+$TITLE_NOT_LOGGED = "Supermon-ng V4.0.2 AllStar Monitor";
+
+/**
+ * @var string Version date of the Supermon-ng software.
+ * Used by: Frontend version information display
+ */
+$VERSION_DATE = "September 9, 2025";
+
+/**
  * @var string Path to the webserver access log.
  * Used by: NodeController for web access log functionality
  */

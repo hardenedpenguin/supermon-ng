@@ -509,6 +509,9 @@ class ConfigController
         // Load global configuration
         $globalConfig = $this->loadGlobalConfig();
         
+        // Load version information from common.inc
+        $versionInfo = $this->loadVersionInfo($isAuthenticated);
+        
         $systemInfo = [
             'username' => $currentUser,
             'iniFile' => $currentIni,
@@ -531,6 +534,9 @@ class ConfigController
             'title2' => $globalConfig['TITLE2'] ?? null,
             'title3' => $globalConfig['TITLE3'] ?? null,
             'smServerName' => $globalConfig['SMSERVERNAME'] ?? 'Supermon-ng',
+            'titleLogged' => $versionInfo['titleLogged'] ?? 'Supermon-ng V4.0.2 AllStar Manager',
+            'titleNotLogged' => $versionInfo['titleNotLogged'] ?? 'Supermon-ng V4.0.2 AllStar Monitor',
+            'versionDate' => $versionInfo['versionDate'] ?? 'September 9, 2025',
             'logoName' => $globalConfig['LOGO_NAME'] ?? null,
             'logoSize' => $globalConfig['LOGO_SIZE'] ?? null,
             'logoPositionRight' => $globalConfig['LOGO_POSITION_RIGHT'] ?? null,
@@ -549,6 +555,25 @@ class ConfigController
         ];
         
         return $systemInfo;
+    }
+    
+    /**
+     * Load version information from common.inc
+     */
+    private function loadVersionInfo(bool $isAuthenticated): array
+    {
+        $versionInfo = [];
+        
+        // Include common.inc to get version variables
+        include_once __DIR__ . '/../../../includes/common.inc';
+        
+        $versionInfo = [
+            'titleLogged' => $TITLE_LOGGED ?? 'Supermon-ng V4.0.2 AllStar Manager',
+            'titleNotLogged' => $TITLE_NOT_LOGGED ?? 'Supermon-ng V4.0.2 AllStar Monitor', 
+            'versionDate' => $VERSION_DATE ?? 'September 9, 2025'
+        ];
+        
+        return $versionInfo;
     }
     
     /**

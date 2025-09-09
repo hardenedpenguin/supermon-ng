@@ -4,7 +4,7 @@
     <div class="header" :style="{ backgroundImage: headerBackgroundUrl }">
       <!-- Main Title -->
       <div class="header-title">
-        <a href="#"><i>{{ systemInfo?.smServerName || 'Supermon-ng' }} V4.0.1 AllStar Monitor</i></a>
+        <a href="#"><i>{{ headerTitle }}</i></a>
       </div>
       
       <!-- Call Sign -->
@@ -502,6 +502,18 @@ const welcomeMessage = computed(() => {
     return systemInfo.value.welcomeMsg
   }
   return null
+})
+
+const headerTitle = computed(() => {
+  if (appStore.isAuthenticated && systemInfo.value?.titleLogged) {
+    return systemInfo.value.titleLogged
+  } else if (!appStore.isAuthenticated && systemInfo.value?.titleNotLogged) {
+    return systemInfo.value.titleNotLogged
+  }
+  // Fallback to default titles if API doesn't provide them
+  return appStore.isAuthenticated ? 
+    'Supermon-ng V4.0.2 AllStar Manager' : 
+    'Supermon-ng V4.0.2 AllStar Monitor'
 })
 
 // Watcher to update selectedLocalNode when selectedNode changes
