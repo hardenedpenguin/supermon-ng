@@ -588,7 +588,7 @@ htop
 
 ## 🔄 Updates and Upgrades
 
-Supermon-NG includes an intelligent update system that preserves your configurations and only advises about user_files changes when the configuration structure actually changes.
+Supermon-NG includes an intelligent, conservative update system that **NEVER** replaces critical user files and only advises about user_files changes when the configuration structure actually changes.
 
 ### 🚀 Quick Update Process
 
@@ -636,6 +636,33 @@ The `update.sh` script intelligently:
 - **Preserves User Configurations**: Keeps your customizations when possible
 - **Updates System Services**: Handles systemd, Apache, and dependencies
 - **Validates Everything**: Tests configurations and restarts services
+
+### 🔒 Critical File Protection
+
+The update system **NEVER** replaces these critical user files, regardless of template differences:
+
+**User Configuration Files (in `user_files/`):**
+- `allmon.ini` - Node configuration (NEVER replace)
+- `authusers.inc` - User authentication (NEVER replace)
+- `authini.inc` - Authentication settings (NEVER replace)
+- `favorites.ini` - User favorites (NEVER replace)
+- `privatenodes.txt` - Private nodes list (NEVER replace)
+- `controlpanel.ini` - Control panel settings (NEVER replace)
+
+**Root-Level Critical Files:**
+- `.htpasswd` - Apache authentication file (NEVER replace)
+- `astdb.txt` - Asterisk database (NEVER replace)
+
+**Directories Always Preserved:**
+- `sbin/` - User scripts and configurations
+- `preferences/` - User preference files
+
+**System Files (NOT backed up):**
+- `/etc/sudoers.d/` files
+- `/etc/systemd/system/` service files
+- `/etc/apache2/sites-available/` configuration files
+
+This ensures your critical node configurations, authentication data, and user customizations are never lost during updates.
 
 ### 📋 Detailed Update Instructions
 
@@ -718,45 +745,58 @@ After the update completes, you'll see a summary like:
 
 ### 🔧 Configuration Change Handling
 
+#### Conservative Update Approach
+
+The update system uses a **conservative approach** that prioritizes data preservation:
+
+**Critical Files (ALWAYS Preserved):**
+- Your `allmon.ini`, `authusers.inc`, `authini.inc`, `favorites.ini`, `privatenodes.txt`, `controlpanel.ini`, `.htpasswd`, and `astdb.txt` are **NEVER** replaced
+- These files contain your actual node configurations, user accounts, and system data
+- They are preserved regardless of whether they match the tarball templates
+
+**Configuration Change Detection:**
+- Only checks for new system variables in `common.inc` (core system changes)
+- Does NOT compare user-specific files against templates
+- Only flags changes when new configuration variables are added to the core system
+
 #### When No Configuration Changes Are Detected
 
 If the update script detects no configuration changes:
 
 ```
-✅ User configurations preserved (no changes detected)
+✅ No significant configuration changes detected.
+✅ All user configuration files will be preserved.
 ```
 
 **What this means:**
-- All your user_files are completely preserved
+- All your critical files are completely preserved
 - No manual configuration work needed
 - Your customizations remain intact
 - Update is complete and ready to use
 
 #### When Configuration Changes Are Detected
 
-If configuration changes are found:
+If new system variables are found in `common.inc`:
 
 ```
-⚠️ Configuration changes detected. User files may need attention.
-📁 User files backed up to: /tmp/supermon-ng-backup-20250101_120000/user_files
-
-⚠️ IMPORTANT: Configuration changes detected!
-   Please review your configuration files in /var/www/html/supermon-ng/user_files/
-   Compare with the backup in /tmp/supermon-ng-backup-20250101_120000/user_files
-   Update any new configuration options as needed.
+⚠️ Configuration changes detected in core system files.
+✅ Critical user files (allmon.ini, authusers.inc, etc.) will be preserved.
+⚠️ Configuration changes detected in global.inc
+📁 Your original global.inc has been backed up to: /tmp/supermon-ng-backup-20250101_120000/user_files
+🔄 Running configuration migration for global.inc...
 ```
 
 **What this means:**
-- New configuration options may be available
-- Your original files are safely backed up
-- You should review the new configuration files
-- Compare with your backup to see what changed
+- New system configuration options may be available
+- Your critical files (allmon.ini, auth files, etc.) are still preserved
+- Only `global.inc` may be updated with new system variables
+- The migration system intelligently merges new defaults with your existing values
 
 **Next steps:**
-1. Review the new configuration files in `/var/www/html/supermon-ng/user_files/`
-2. Compare with your backup to see what's new
-3. Update any new configuration options as needed
-4. Test the web interface to ensure everything works
+1. Your critical files are already preserved - no action needed
+2. Review `global.inc` to see if any new options were added
+3. Test the web interface to ensure everything works
+4. The migration system handles most changes automatically
 
 ### 🛠️ Manual Update Process (Advanced)
 
@@ -765,13 +805,14 @@ If you prefer manual control or need to troubleshoot:
 #### Step 1: Create Manual Backup
 
 ```bash
-# Create comprehensive backup
+# Create backup of user data only (system files are managed by installation)
 sudo tar -czf /tmp/supermon-ng-manual-backup-$(date +%Y%m%d_%H%M%S).tar.gz \
     /var/www/html/supermon-ng/user_files/ \
-    /etc/apache2/sites-available/supermon-ng.conf \
-    /etc/systemd/system/supermon-ng-*.service \
-    /etc/systemd/system/supermon-ng-*.timer
+    /var/www/html/supermon-ng/.htpasswd \
+    /var/www/html/supermon-ng/astdb.txt
 ```
+
+**Note:** System files (sudoers, systemd, Apache configs) are not backed up as they are managed by the installation process.
 
 #### Step 2: Stop Services
 
@@ -884,24 +925,28 @@ sudo apache2ctl configtest
 #### Configuration Issues
 
 ```bash
-# Compare with backup
+# Compare with backup (if migration was run)
 diff -r /var/www/html/supermon-ng/user_files/ /tmp/supermon-ng-backup-*/user_files/
 
-# Restore specific files
+# Restore specific files (critical files should never need this)
 sudo cp /tmp/supermon-ng-backup-*/user_files/global.inc /var/www/html/supermon-ng/user_files/
 ```
 
+**Note:** With the conservative update system, critical files like `allmon.ini`, `authusers.inc`, `.htpasswd`, and `astdb.txt` are never replaced, so configuration issues are rare.
+
 ### 📊 Update Best Practices
 
-1. **Always Backup First**: The update script creates automatic backups, but manual backups are recommended for critical systems
+1. **Trust the Conservative System**: The update system is designed to preserve your critical data - it will never replace your node configurations, user accounts, or authentication files
 
-2. **Test in Non-Production**: Test updates on a development system first when possible
+2. **Automatic Backups**: The update script creates automatic backups of user data (system files are not backed up as they're managed by installation)
 
-3. **Review Release Notes**: Check the release notes for breaking changes or new requirements
+3. **Test in Non-Production**: Test updates on a development system first when possible
 
-4. **Monitor After Update**: Check logs and functionality after updating
+4. **Review Release Notes**: Check the release notes for breaking changes or new requirements
 
-5. **Keep Backups**: Don't delete backup files immediately - keep them for a few days
+5. **Monitor After Update**: Check logs and functionality after updating
+
+6. **Keep Backups**: Don't delete backup files immediately - keep them for a few days
 
 ### 🔍 Version Information
 
