@@ -86,6 +86,9 @@ Supermon-ng $version is a modernized and extensible version of the original Supe
 - Responsive and mobile-friendly web UI
 - Enhanced security and codebase modernization
 - Simple installer script for quick deployment
+- Intelligent update system with configuration preservation
+- Automatic Apache configuration with IP detection
+- Advanced user options (--skip-apache flag)
 - Easily customizable and extendable
 - Compatible with Debian-based systems
 - PWA (Progressive Web App) support
@@ -108,8 +111,35 @@ sudo ./supermon-ng-installer.sh
 1. Extract the tarball to your web server directory
 2. Set proper permissions: \`chmod -R 755 /path/to/supermon-ng\`
 3. Configure your web server (Apache/Nginx)
-4. Copy and customize configuration files in \`user_files/\`
-5. Set up authentication in \`user_files/authusers.inc\`
+
+## Upgrades
+
+### Automatic Upgrade
+
+Supermon-ng includes an intelligent update system that preserves your configurations:
+
+\`\`\`bash
+# Download new version and extract
+cd /tmp
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.3/supermon-ng-V4.0.3.tar.xz
+tar -xJf supermon-ng-V4.0.3.tar.xz
+cd supermon-ng
+
+# Run the update script
+sudo ./scripts/update.sh
+\`\`\`
+
+### Advanced Options
+
+\`\`\`bash
+# Skip Apache configuration updates
+sudo ./scripts/update.sh --skip-apache
+
+# Check current version and system status
+sudo ./scripts/version-check.sh
+\`\`\`
+
+The update system intelligently detects configuration changes and only advises about user_files updates when the configuration structure actually changes.
 
 ## Configuration
 
@@ -422,6 +452,9 @@ main() {
     mkdir -p "$release_dir/scripts"
     cp scripts/supermon_unified_file_editor.sh "$release_dir/scripts/"
     cp scripts/manage_users.php "$release_dir/scripts/"
+    cp scripts/update.sh "$release_dir/scripts/"
+    cp scripts/migrate-config.php "$release_dir/scripts/"
+    cp scripts/version-check.sh "$release_dir/scripts/"
     
     # Static assets
     cp *.jpg "$release_dir/" 2>/dev/null || true
@@ -459,8 +492,9 @@ main() {
     echo "   - Built frontend (frontend/dist/)"
     echo "   - User configuration files (user_files/)"
     echo "   - Installation script (install.sh)"
+    echo "   - Update system (scripts/update.sh, scripts/migrate-config.php, scripts/version-check.sh)"
     echo "   - Security configurations (sudoers.d/, systemd/)"
-    echo "   - Essential scripts (supermon_unified_file_editor.sh)"
+    echo "   - Essential scripts (supermon_unified_file_editor.sh, manage_users.php)"
     echo "   - Documentation and checksums"
     echo ""
     echo "📋 Excluded development files:"
