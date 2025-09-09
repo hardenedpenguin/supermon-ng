@@ -174,6 +174,50 @@ class ConfigMigrator
     }
     
     /**
+     * Migrate .htpasswd file
+     */
+    public function migrateHtpasswd($backupFile, $newFile)
+    {
+        $this->log("Migrating .htpasswd file");
+        
+        if (!file_exists($backupFile)) {
+            $this->log("No existing .htpasswd found", 'WARNING');
+            return true;
+        }
+        
+        // For .htpasswd, we ALWAYS preserve the entire file
+        // as it contains user authentication data
+        if (file_exists($backupFile)) {
+            copy($backupFile, $this->appDir . '/.htpasswd');
+            $this->log(".htpasswd preserved from backup (critical authentication data)");
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Migrate astdb.txt file
+     */
+    public function migrateAstdb($backupFile, $newFile)
+    {
+        $this->log("Migrating astdb.txt file");
+        
+        if (!file_exists($backupFile)) {
+            $this->log("No existing astdb.txt found", 'WARNING');
+            return true;
+        }
+        
+        // For astdb.txt, we ALWAYS preserve the entire file
+        // as it contains the Asterisk database
+        if (file_exists($backupFile)) {
+            copy($backupFile, $this->appDir . '/astdb.txt');
+            $this->log("astdb.txt preserved from backup (critical Asterisk database)");
+        }
+        
+        return true;
+    }
+    
+    /**
      * Migrate favorites.ini configuration
      */
     public function migrateFavorites($backupFile, $newFile)
@@ -307,6 +351,12 @@ class ConfigMigrator
             'privatenodes.txt' => [$this, 'migratePrivateNodes']
         ];
         
+        // Root-level file migrations
+        $rootMigrations = [
+            '.htpasswd' => [$this, 'migrateHtpasswd'],
+            'astdb.txt' => [$this, 'migrateAstdb']
+        ];
+        
         $success = true;
         
         foreach ($migrations as $file => $migrationFunction) {
@@ -320,6 +370,22 @@ class ConfigMigrator
                 }
             } catch (Exception $e) {
                 $this->log("Exception during migration of $file: " . $e->getMessage(), 'ERROR');
+                $success = false;
+            }
+        }
+        
+        // Handle root-level file migrations
+        foreach ($rootMigrations as $file => $migrationFunction) {
+            $backupFile = $backupDir . '/' . $file;
+            $newFile = $this->appDir . '/' . $file;
+            
+            try {
+                if (!$migrationFunction($backupFile, $newFile)) {
+                    $this->log("Migration failed for root-level $file", 'ERROR');
+                    $success = false;
+                }
+            } catch (Exception $e) {
+                $this->log("Exception during migration of root-level $file: " . $e->getMessage(), 'ERROR');
                 $success = false;
             }
         }

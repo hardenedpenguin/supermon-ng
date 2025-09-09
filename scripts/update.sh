@@ -239,11 +239,25 @@ update_application() {
             "controlpanel.ini"     # Control panel settings - NEVER replace
         )
         
+        # List of critical root-level files that should ALWAYS be preserved
+        CRITICAL_ROOT_FILES=(
+            ".htpasswd"            # Apache authentication file - NEVER replace
+            "astdb.txt"            # Asterisk database - NEVER replace
+        )
+        
         # Always preserve these critical files from the existing installation
         for critical_file in "${CRITICAL_USER_FILES[@]}"; do
             if [ -f "$APP_DIR/user_files/$critical_file" ]; then
                 print_status "Preserving critical file: $critical_file"
                 cp "$APP_DIR/user_files/$critical_file" "$TEMP_DIR/user_files/"
+            fi
+        done
+        
+        # Always preserve critical root-level files from the existing installation
+        for critical_file in "${CRITICAL_ROOT_FILES[@]}"; do
+            if [ -f "$APP_DIR/$critical_file" ]; then
+                print_status "Preserving critical root file: $critical_file"
+                cp "$APP_DIR/$critical_file" "$TEMP_DIR/"
             fi
         done
         
