@@ -82,7 +82,7 @@ $EXTNODES = "/tmp/rpt_extnodes";
 /**
  * @var string Path to the Private AllStar nodelist.
  */
-$PRIVATENODES = "/var/www/html/supermon-ng/privatenodes.txt";
+$PRIVATENODES = "/var/www/html/supermon-ng/user_files/privatenodes.txt";
 
 /**
  * @var string Path to the IRLP calls data file (gzipped).

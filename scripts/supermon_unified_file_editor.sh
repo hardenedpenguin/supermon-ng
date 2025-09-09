@@ -15,7 +15,7 @@ WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/favini.inc"]="root:www-d
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/favnolog.ini"]="root:www-data:664:"
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/favorites.ini"]="root:www-data:664:"
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/nolog.ini"]="root:www-data:664:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/privatenodes.txt"]="root:www-data:664:"
+WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/privatenodes.txt"]="root:www-data:664:"
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/global.inc"]="root:www-data:664:"
 WHITELISTED_FILES["/var/www/html/supermon-ng/supermon-ng.css"]="root:root:664:"
 

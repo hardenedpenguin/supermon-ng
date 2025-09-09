@@ -13,7 +13,7 @@ www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /v
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/favnolog.ini
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/favorites.ini
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/nolog.ini
-www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/privatenodes.txt
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/privatenodes.txt
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/global.inc
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/supermon-ng.css
 
