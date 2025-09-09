@@ -31,15 +31,45 @@ Download and extract the latest release tarball:
 ```bash
 # Download the release
 cd /tmp
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.1/supermon-ng-V4.0.1.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.3/supermon-ng-V4.0.3.tar.xz
 
 # Extract to temporary directory
-tar -xJf supermon-ng-V4.0.1.tar.xz
+tar -xJf supermon-ng-V4.0.3.tar.xz
 
 # Run installation script
 cd /tmp/supermon-ng
 sudo ./install.sh
 ```
+
+### Installation Options
+
+The installation script supports several options:
+
+```bash
+# Normal installation with automatic Apache configuration
+sudo ./install.sh
+
+# Installation without Apache configuration (for advanced users)
+sudo ./install.sh --skip-apache
+
+# Show help and available options
+sudo ./install.sh --help
+```
+
+#### `--skip-apache` Option
+
+Use this option if you want to:
+- Manage your own web server configuration
+- Use Nginx or another web server instead of Apache
+- Deploy in a containerized environment
+- Have custom Apache configuration requirements
+
+When using `--skip-apache`:
+- ✅ Backend service is still installed and started
+- ✅ Apache configuration template is still created for reference
+- ✅ All other components are installed normally
+- ⚠️ You must manually configure your web server
+- ⚠️ The backend API will be available on `http://localhost:8000/api`
 
 ## 🔧 Installation Script Features
 
@@ -579,6 +609,23 @@ sudo ./scripts/update.sh
 
 **That's it!** The update script handles everything automatically.
 
+### Update Options
+
+The update script also supports the `--skip-apache` option:
+
+```bash
+# Normal update with Apache configuration
+sudo ./scripts/update.sh
+
+# Update without Apache configuration changes
+sudo ./scripts/update.sh --skip-apache
+
+# Show help and available options
+sudo ./scripts/update.sh --help
+```
+
+Use `--skip-apache` if you have custom web server configuration that you want to preserve.
+
 ### 🔍 What the Update Script Does
 
 The `update.sh` script intelligently:
@@ -890,6 +937,18 @@ After updating:
 
 ## 📋 Quick Reference
 
+### Installation Commands
+```bash
+# Normal installation
+sudo ./install.sh
+
+# Installation without Apache configuration
+sudo ./install.sh --skip-apache
+
+# Show installation help
+sudo ./install.sh --help
+```
+
 ### Update Commands
 ```bash
 # Check current version and system status
@@ -899,6 +958,12 @@ sudo /var/www/html/supermon-ng/scripts/version-check.sh
 cd /tmp && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.3/supermon-ng-V4.0.3.tar.xz
 tar -xJf supermon-ng-V4.0.3.tar.xz && cd supermon-ng
 sudo ./scripts/update.sh
+
+# Update without Apache configuration changes
+sudo ./scripts/update.sh --skip-apache
+
+# Show update help
+sudo ./scripts/update.sh --help
 
 # Manual backup before update
 sudo tar -czf /tmp/supermon-ng-backup-$(date +%Y%m%d_%H%M%S).tar.gz /var/www/html/supermon-ng/user_files/

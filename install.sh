@@ -35,6 +35,37 @@ if [ -d "$APP_DIR" ] && [ -f "$APP_DIR/includes/common.inc" ]; then
     echo "⚠️  Proceeding with fresh installation (existing files will be overwritten)"
 fi
 
+# Check for command line options
+SKIP_APACHE=false
+for arg in "$@"; do
+    case $arg in
+        --skip-apache)
+            SKIP_APACHE=true
+            echo "🔧 Apache configuration will be skipped (--skip-apache flag detected)"
+            ;;
+        --help|-h)
+            echo "Supermon-NG Installation Script"
+            echo ""
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --skip-apache    Skip automatic Apache configuration"
+            echo "  --help, -h       Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0                    # Normal installation with Apache setup"
+            echo "  $0 --skip-apache      # Install without Apache configuration"
+            echo ""
+            echo "When using --skip-apache:"
+            echo "  - You must manually configure your web server"
+            echo "  - The backend service will still be installed and started"
+            echo "  - Apache configuration template will still be created"
+            echo "  - You can configure Apache later using the template"
+            exit 0
+            ;;
+    esac
+done
+
 # Install dependencies
 echo "📦 Installing system dependencies..."
 apt-get update
@@ -325,10 +356,14 @@ else
     echo "   To enable node status updates, configure $APP_DIR/user_files/sbin/node_info.ini"
 fi
 
-# Install Apache if not present
-if ! command -v apache2 &> /dev/null; then
-    echo "📦 Installing Apache..."
-    apt-get install -y apache2
+# Install Apache if not present (unless skipping Apache configuration)
+if [ "$SKIP_APACHE" = false ]; then
+    if ! command -v apache2 &> /dev/null; then
+        echo "📦 Installing Apache..."
+        apt-get install -y apache2
+    fi
+else
+    echo "⏭️  Skipping Apache installation (--skip-apache flag)"
 fi
 
 # Function to detect all IP addresses on the current machine
@@ -471,51 +506,56 @@ EOF
     echo "✅ Apache configuration template created"
 fi
 
-# Automatically install and configure Apache site
-echo "🔧 Configuring Apache automatically..."
-APACHE_SITE_FILE="/etc/apache2/sites-available/supermon-ng.conf"
+# Automatically install and configure Apache site (unless skipping)
+if [ "$SKIP_APACHE" = false ]; then
+    echo "🔧 Configuring Apache automatically..."
+    APACHE_SITE_FILE="/etc/apache2/sites-available/supermon-ng.conf"
 
-# Enable required Apache modules
-echo "📦 Enabling required Apache modules..."
-a2enmod -q proxy proxy_http proxy_wstunnel rewrite headers 2>/dev/null || {
-    echo "⚠️  Warning: Some Apache modules may not be available"
-}
+    # Enable required Apache modules
+    echo "📦 Enabling required Apache modules..."
+    a2enmod -q proxy proxy_http proxy_wstunnel rewrite headers 2>/dev/null || {
+        echo "⚠️  Warning: Some Apache modules may not be available"
+    }
 
-# Install the Apache site configuration
-if [ -f "$APACHE_SITE_FILE" ]; then
-    echo "⚠️  Apache site configuration already exists. Backing up existing file..."
-    cp "$APACHE_SITE_FILE" "$APACHE_SITE_FILE.backup.$(date +%Y%m%d_%H%M%S)"
-fi
+    # Install the Apache site configuration
+    if [ -f "$APACHE_SITE_FILE" ]; then
+        echo "⚠️  Apache site configuration already exists. Backing up existing file..."
+        cp "$APACHE_SITE_FILE" "$APACHE_SITE_FILE.backup.$(date +%Y%m%d_%H%M%S)"
+    fi
 
-echo "📝 Installing Apache site configuration..."
-cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
+    echo "📝 Installing Apache site configuration..."
+    cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
 
-# Enable the site
-echo "🔗 Enabling Apache site..."
-a2ensite -q supermon-ng 2>/dev/null || {
-    echo "⚠️  Warning: Failed to enable Apache site automatically"
-}
+    # Enable the site
+    echo "🔗 Enabling Apache site..."
+    a2ensite -q supermon-ng 2>/dev/null || {
+        echo "⚠️  Warning: Failed to enable Apache site automatically"
+    }
 
-# Test Apache configuration
-echo "🧪 Testing Apache configuration..."
-if apache2ctl configtest >/dev/null 2>&1; then
-    echo "✅ Apache configuration test passed"
-    
-    # Restart Apache
-    echo "🔄 Restarting Apache..."
-    systemctl restart apache2
-    
-    if systemctl is-active apache2 >/dev/null 2>&1; then
-        echo "✅ Apache restarted successfully"
-        APACHE_AUTO_CONFIGURED=true
+    # Test Apache configuration
+    echo "🧪 Testing Apache configuration..."
+    if apache2ctl configtest >/dev/null 2>&1; then
+        echo "✅ Apache configuration test passed"
+        
+        # Restart Apache
+        echo "🔄 Restarting Apache..."
+        systemctl restart apache2
+        
+        if systemctl is-active apache2 >/dev/null 2>&1; then
+            echo "✅ Apache restarted successfully"
+            APACHE_AUTO_CONFIGURED=true
+        else
+            echo "❌ Apache failed to restart"
+            APACHE_AUTO_CONFIGURED=false
+        fi
     else
-        echo "❌ Apache failed to restart"
+        echo "❌ Apache configuration test failed"
+        echo "   Please check the configuration manually:"
+        echo "   sudo apache2ctl configtest"
         APACHE_AUTO_CONFIGURED=false
     fi
 else
-    echo "❌ Apache configuration test failed"
-    echo "   Please check the configuration manually:"
-    echo "   sudo apache2ctl configtest"
+    echo "⏭️  Skipping Apache configuration (--skip-apache flag)"
     APACHE_AUTO_CONFIGURED=false
 fi
 
@@ -530,6 +570,33 @@ if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
     done
     echo ""
     echo "The site is now accessible via all detected IP addresses!"
+elif [ "$SKIP_APACHE" = true ]; then
+    echo "⏭️  APACHE CONFIGURATION SKIPPED"
+    echo "==============================="
+    echo "Apache configuration was skipped as requested (--skip-apache flag)."
+    echo ""
+    echo "The installation script has created a template configuration file at:"
+    echo "   $APP_DIR/apache-config-template.conf"
+    echo ""
+    echo "To configure your web server later:"
+    echo ""
+    echo "1. For Apache users:"
+    echo "   sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers"
+    echo "   sudo cp $APP_DIR/apache-config-template.conf /etc/apache2/sites-available/supermon-ng.conf"
+    echo "   sudo a2ensite supermon-ng"
+    echo "   sudo systemctl restart apache2"
+    echo ""
+    echo "2. For Nginx users:"
+    echo "   # Use the Apache template as reference for proxy configuration"
+    echo "   # Configure proxy_pass to http://localhost:8000/api"
+    echo "   # Configure static file serving from $APP_DIR/public"
+    echo ""
+    echo "3. For other web servers:"
+    echo "   # Configure reverse proxy to http://localhost:8000/api"
+    echo "   # Serve static files from $APP_DIR/public"
+    echo "   # Handle Vue.js SPA routing (fallback to index.html)"
+    echo ""
+    echo "The backend service is running and ready to accept connections on port 8000."
 else
     echo "⚠️  MANUAL APACHE CONFIGURATION REQUIRED"
     echo "========================================"
@@ -610,6 +677,11 @@ if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
     done
     echo ""
     echo "✅ Apache is automatically configured and ready to use!"
+elif [ "$SKIP_APACHE" = true ]; then
+    echo "   Backend API: http://localhost:8000/api"
+    echo "   (Configure your web server to proxy to this backend)"
+    echo ""
+    echo "⏭️  Apache configuration was skipped. Configure your web server manually."
 else
     echo "   http://$(hostname -I | awk '{print $1}')"
     echo ""
@@ -659,6 +731,8 @@ if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
 fi
 if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
     echo "   ✅ Apache configuration completed automatically with IP aliases"
+elif [ "$SKIP_APACHE" = true ]; then
+    echo "   ⏭️  Apache configuration skipped (--skip-apache flag)"
 else
     echo "   ⚠️  Apache configuration needs manual completion"
 fi

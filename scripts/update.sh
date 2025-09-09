@@ -43,6 +43,36 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
+# Check for command line options
+SKIP_APACHE=false
+for arg in "$@"; do
+    case $arg in
+        --skip-apache)
+            SKIP_APACHE=true
+            print_status "Apache configuration will be skipped (--skip-apache flag detected)"
+            ;;
+        --help|-h)
+            echo "Supermon-NG Update Script"
+            echo ""
+            echo "Usage: $0 [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --skip-apache    Skip automatic Apache configuration updates"
+            echo "  --help, -h       Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0                    # Normal update with Apache configuration"
+            echo "  $0 --skip-apache      # Update without Apache configuration changes"
+            echo ""
+            echo "When using --skip-apache:"
+            echo "  - Apache configuration will not be modified"
+            echo "  - The backend service will still be updated and restarted"
+            echo "  - You must manually update your web server configuration if needed"
+            exit 0
+            ;;
+    esac
+done
+
 # Check if we're running as root
 if [ "$EUID" -ne 0 ]; then
     print_error "This script must be run as root (use sudo)"
@@ -321,6 +351,11 @@ update_frontend() {
 
 # Function to update Apache configuration
 update_apache_config() {
+    if [ "$SKIP_APACHE" = true ]; then
+        print_status "Skipping Apache configuration update (--skip-apache flag)"
+        return 0
+    fi
+    
     print_status "Updating Apache configuration..."
     
     # Check if Apache config needs updating
