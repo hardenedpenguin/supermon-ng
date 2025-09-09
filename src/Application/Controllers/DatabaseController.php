@@ -33,8 +33,12 @@ class DatabaseController
         $status = $this->databaseService->getDatabaseStatus();
         
         // Add ASTDB data for frontend compatibility
+        // Load ASTDB path from common.inc
+        include_once __DIR__ . '/../../../includes/common.inc';
+        global $ASTDB_TXT;
+        
         $astdb = [];
-        $astdbFile = $_ENV['ASTDB_FILE'] ?? 'astdb.txt';
+        $astdbFile = $_ENV['ASTDB_FILE'] ?? $ASTDB_TXT ?? 'astdb.txt';
         
         if (file_exists($astdbFile)) {
             $lines = @file($astdbFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);

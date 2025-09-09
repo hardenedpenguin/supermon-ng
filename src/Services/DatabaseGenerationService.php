@@ -36,8 +36,13 @@ class DatabaseGenerationService
     ) {
         $this->logger = $logger;
         $this->cache = $cache;
-        $this->astdbFile = $astdbFile ?? $_ENV['ASTDB_FILE'] ?? 'astdb.txt';
-        $this->privateNodesFile = $privateNodesFile ?? $_ENV['PRIVATE_NODES_FILE'] ?? 'user_files/privatenodes.txt';
+        
+        // Load paths from common.inc
+        include_once __DIR__ . '/../../includes/common.inc';
+        global $ASTDB_TXT, $PRIVATENODES;
+        
+        $this->astdbFile = $astdbFile ?? $_ENV['ASTDB_FILE'] ?? $ASTDB_TXT ?? 'astdb.txt';
+        $this->privateNodesFile = $privateNodesFile ?? $_ENV['PRIVATE_NODES_FILE'] ?? $PRIVATENODES ?? 'user_files/privatenodes.txt';
         $this->allstarDbUrl = $allstarDbUrl ?? $_ENV['ALLSTAR_DB_URL'] ?? 'http://allmondb.allstarlink.org/';
     }
     
