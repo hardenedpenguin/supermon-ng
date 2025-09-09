@@ -620,11 +620,7 @@ class NodeController
             $queryParams = $request->getQueryParams();
             $nodeIds = $queryParams['nodes'] ?? '';
             
-            // Debug logging
-            file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - AMI Status requested for nodes: $nodeIds\n", FILE_APPEND | LOCK_EX);
-            
             if (empty($nodeIds)) {
-                file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - No nodes specified\n", FILE_APPEND | LOCK_EX);
                 $response->getBody()->write(json_encode([
                     'success' => false,
                     'error' => 'No nodes specified'
@@ -642,14 +638,10 @@ class NodeController
             $currentUser = $this->getCurrentUser();
             $availableNodes = $this->configService->getAvailableNodes($currentUser);
             
-            file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Available nodes: " . json_encode($availableNodes) . "\n", FILE_APPEND | LOCK_EX);
-            
             // Filter to only requested nodes that are available
             $requestedNodes = array_filter($availableNodes, function($node) use ($nodeIdArray) {
                 return in_array($node['id'], $nodeIdArray);
             });
-            
-            file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Requested nodes: " . json_encode($requestedNodes) . "\n", FILE_APPEND | LOCK_EX);
             
             $amiData = [];
             
@@ -657,11 +649,8 @@ class NodeController
                 $nodeId = (string)$node['id'];
                 $nodeConfig = $this->configService->getNodeConfig($nodeId);
                 
-                file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Node $nodeId config: " . json_encode($nodeConfig) . "\n", FILE_APPEND | LOCK_EX);
-                
                 if (!$nodeConfig || !isset($nodeConfig['host'])) {
                     // Node not configured, return basic info
-                    file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Node $nodeId not configured\n", FILE_APPEND | LOCK_EX);
                     $amiData[$nodeId] = [
                         'node' => $nodeId,
                         'info' => 'Node not configured',
@@ -680,15 +669,7 @@ class NodeController
                 }
                 
         // Try to get AMI data for this node
-        file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Getting AMI data for node $nodeId\n", FILE_APPEND | LOCK_EX);
         $nodeAmiData = $this->getNodeAmiData($nodeConfig, $nodeId);
-        file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - AMI data for node $nodeId: " . json_encode($nodeAmiData) . "\n", FILE_APPEND | LOCK_EX);
-        
-        // Add raw AMI response debugging
-        if (isset($nodeAmiData['raw_response'])) {
-            file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Raw AMI response for node $nodeId: " . $nodeAmiData['raw_response'] . "\n", FILE_APPEND | LOCK_EX);
-        }
-        
         $amiData[$nodeId] = $nodeAmiData;
             }
             
@@ -936,8 +917,6 @@ class NodeController
             $rptStatus = '';
         }
         
-        // Debug: Log raw AMI response
-        file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Raw XStat response for node $node: " . $rptStatus . "\n", FILE_APPEND | LOCK_EX);
 
         // Execute SawStat command
         $actionID_sawstat = 'sawstat' . $actionRand;
@@ -955,8 +934,6 @@ class NodeController
             $sawStatus = '';
         }
         
-        // Debug: Log raw SawStat response
-        file_put_contents('/tmp/ami_debug.log', date('Y-m-d H:i:s') . " - Raw SawStat response for node $node: " . $sawStatus . "\n", FILE_APPEND | LOCK_EX);
         
         return $this->parseNodeAmiData($fp, $node, $rptStatus, $sawStatus);
     }
@@ -985,8 +962,28 @@ class NodeController
             }
         }
         
-        // Parse SawStat response for connected nodes
+        // Parse XStat response for connected nodes (where the actual connection data is)
         $conns = [];
+        
+        if (!empty($rptStatus)) {
+            $lines = explode("\n", $rptStatus);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+                
+                // Parse connection data - format: "Conn: 546054 73.6.70.88 6 OUT 31:49:24 ESTABLISHED"
+                if (strpos($line, 'Conn: ') === 0) {
+                    $connLine = substr($line, 6); // Remove 'Conn: ' prefix
+                    $data = preg_split('/\s+/', $connLine);
+                    if (!empty($data[0])) {
+                        $conns[] = $data;
+                    }
+                }
+            }
+        }
+        
+        // Parse SawStat response for keyed timing data
+        $keyups = [];
         
         if (!empty($sawStatus)) {
             $lines = explode("\n", $sawStatus);
@@ -994,13 +991,30 @@ class NodeController
                 $line = trim($line);
                 if (empty($line)) continue;
                 
-                // Parse connection data - format: "Conn: 546054 0 -1 -1"
+                // Parse keyed data - format: "Conn: 546054 0 -1 -1"
                 if (strpos($line, 'Conn: ') === 0) {
                     $connLine = substr($line, 6); // Remove 'Conn: ' prefix
-                    $data = explode(' ', $connLine);
-                    if (!empty($data[0])) {
-                        $conns[] = $data;
+                    $data = preg_split('/\s+/', $connLine);
+                    if (isset($data[0]) && isset($data[1]) && isset($data[2]) && isset($data[3])) {
+                        $keyups[$data[0]] = [
+                            'node' => $data[0],
+                            'isKeyed' => $data[1],
+                            'keyed' => $data[2],
+                            'unkeyed' => $data[3]
+                        ];
                     }
+                }
+            }
+        }
+        
+        // Parse modes from LinkedNodes in XStat response
+        $modes = [];
+        if (!empty($rptStatus) && preg_match("/LinkedNodes: (.*)/", $rptStatus, $matches)) {
+            $longRangeLinks = preg_split("/, /", trim($matches[1]));
+            foreach ($longRangeLinks as $line) {
+                if (!empty($line)) {
+                    $n_val = substr($line, 1);
+                    $modes[$n_val]['mode'] = substr($line, 0, 1);
                 }
             }
         }
@@ -1021,17 +1035,36 @@ class NodeController
                 $n = $connData[0];
                 if (empty($n)) continue;
 
-                $isEcholink = (is_numeric($n) && $n > ECHOLINK_NODE_THRESHOLD && ($connData[1] ?? '') === "");
+                // XStat format: [node, ip, port, direction, elapsed, status]
+                $ip = $connData[1] ?? '';
+                $port = $connData[2] ?? '';
+                $direction = $connData[3] ?? '';
+                $elapsed = $connData[4] ?? '';
+                $status = $connData[5] ?? '';
+
+                $isEcholink = (is_numeric($n) && $n > ECHOLINK_NODE_THRESHOLD && empty($ip));
 
                 $curNodes[$n]['node'] = $n;
                 $curNodes[$n]['info'] = \getAstInfo($fp, $n);
-                $curNodes[$n]['ip'] = $isEcholink ? "" : ($connData[1] ?? null);
-                $curNodes[$n]['direction'] = $isEcholink ? ($connData[2] ?? null) : ($connData[3] ?? null);
-                $curNodes[$n]['elapsed'] = $isEcholink ? ($connData[3] ?? null) : ($connData[4] ?? null);
-                $curNodes[$n]['link'] = $isEcholink ? ($connData[4] ?? 'UNKNOWN') : ($connData[5] ?? null);
+                $curNodes[$n]['ip'] = $ip;
+                $curNodes[$n]['direction'] = $direction;
+                $curNodes[$n]['elapsed'] = $elapsed;
+                $curNodes[$n]['link'] = $status;
                 $curNodes[$n]['keyed'] = 'n/a';
                 $curNodes[$n]['last_keyed'] = '-1';
-                $curNodes[$n]['mode'] = $isEcholink ? 'Echolink' : 'Allstar';
+                
+                // Use keyed timing data from SawStat if available
+                if (isset($keyups[$n])) {
+                    $curNodes[$n]['keyed'] = ($keyups[$n]['isKeyed'] == 1) ? 'yes' : 'no';
+                    $curNodes[$n]['last_keyed'] = $keyups[$n]['keyed'];
+                }
+                
+                // Set mode from LinkedNodes data if available, otherwise use default
+                if (isset($modes[$n])) {
+                    $curNodes[$n]['mode'] = $modes[$n]['mode'];
+                } else {
+                    $curNodes[$n]['mode'] = $isEcholink ? 'Echolink' : 'Allstar';
+                }
             }
         }
         
@@ -1799,7 +1832,8 @@ class NodeController
             $sedCmd = $SED ?? "/usr/bin/sed";
             
             // Use sudo as required for journalctl access with sed filtering to remove sudo lines
-            $command = "$sudoCmd $journalctlCmd --no-pager --since \"1 day ago\" | $sedCmd -e \"/sudo/ d\"";
+            // Limit to last 100 entries and last 2 hours to improve performance
+            $command = "$sudoCmd $journalctlCmd --no-pager --since \"2 hours ago\" -n 100 | $sedCmd -e \"/sudo/ d\"";
 
             // Execute the command using exec for better error handling
             $output = [];
@@ -1823,7 +1857,7 @@ class NodeController
                     'command' => $command,
                     'content' => $outputString,
                     'timestamp' => date('c'),
-                    'description' => 'System Log (journalctl, last 24 hours)'
+                    'description' => 'System Log (journalctl, last 2 hours, 100 entries)'
                 ],
                 'message' => 'Linux system log retrieved successfully'
             ]));

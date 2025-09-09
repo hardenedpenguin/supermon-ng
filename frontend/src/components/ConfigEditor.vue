@@ -103,7 +103,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import axios from 'axios'
+import { api, fetchCsrfToken } from '@/utils/api'
 
 const props = defineProps({
   open: Boolean
@@ -136,7 +136,10 @@ const loadFiles = async () => {
   error.value = ''
   
   try {
-    const response = await axios.get('/api/config/configeditor/files')
+    // Ensure CSRF token is available before making requests
+    await fetchCsrfToken()
+    
+    const response = await api.get('/config/configeditor/files')
     if (response.data.success) {
       fileCategories.value = response.data.files
     } else {
@@ -156,7 +159,10 @@ const selectFile = async (file) => {
   saveResult.value = null
   
   try {
-    const response = await axios.post('/api/config/configeditor/content', {
+    // Ensure CSRF token is available before making requests
+    await fetchCsrfToken()
+    
+    const response = await api.post('/config/configeditor/content', {
       filePath: file.path
     })
     
@@ -184,7 +190,10 @@ const saveFile = async () => {
   saveResult.value = null
   
   try {
-    const response = await axios.post('/api/config/configeditor/save', {
+    // Ensure CSRF token is available before making requests
+    await fetchCsrfToken()
+    
+    const response = await api.post('/config/configeditor/save', {
       filePath: selectedFile.value.path,
       content: fileContent.value
     })

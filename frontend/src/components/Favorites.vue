@@ -122,7 +122,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import axios from 'axios'
+import { api, fetchCsrfToken } from '@/utils/api'
 import AddFavorite from './AddFavorite.vue'
 
 interface Props {
@@ -178,9 +178,7 @@ const loadFavorites = async () => {
   result.value = null
   
   try {
-    const response = await axios.get('/api/config/favorites', { 
-      withCredentials: true 
-    })
+    const response = await api.get('/config/favorites')
     
     if (response.data.success) {
       favorites.value = response.data.data
@@ -220,11 +218,12 @@ const executeFavoriteCommand = async (favorite: Favorite, node: string) => {
   error.value = ''
   
   try {
-    const response = await axios.post('/api/config/favorites/execute', {
+    // Ensure CSRF token is available before making requests
+    await fetchCsrfToken()
+    
+    const response = await api.post('/config/favorites/execute', {
       node: node,
       command: favorite.command
-    }, { 
-      withCredentials: true 
     })
     
     result.value = {
