@@ -6,10 +6,19 @@
 set -e
 
 # Configuration
-PROJECT_ROOT="/var/www/html/supermon-ng"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 BACKEND_PORT=8000
 FRONTEND_PORT=5179
-LOG_DIR="$PROJECT_ROOT/logs"
+
+# Load log directory from common.inc or use default
+if [ -f "$PROJECT_ROOT/includes/common.inc" ]; then
+    # Extract USERFILES variable from common.inc
+    USERFILES=$(grep -o '\$USERFILES="[^"]*"' "$PROJECT_ROOT/includes/common.inc" | cut -d'"' -f2)
+    LOG_DIR="$PROJECT_ROOT/${USERFILES:-user_files}/logs"
+else
+    LOG_DIR="$PROJECT_ROOT/logs"
+fi
 
 # Create logs directory if it doesn't exist
 mkdir -p "$LOG_DIR"

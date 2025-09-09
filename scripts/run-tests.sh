@@ -93,21 +93,18 @@ test_file_structure() {
     # Required files and directories
     local required_items=(
         "includes"
-        "includes/session.inc"
         "includes/common.inc"
-        "includes/sse"
-        "includes/sse/server-functions.inc"
-        "includes/link"
-        "includes/link/link-config.inc"
-        "css"
-        "css/base.css"
-        "css/layout.css"
-        "js"
+        "includes/nodeinfo.inc"
+        "frontend"
+        "frontend/src"
+        "src"
+        "src/Application/Controllers"
+        "src/Services"
         "user_files"
         "user_files/global.inc"
-        "templates"
         "scripts"
         "docs"
+        "README.md"
     )
     
     for item in "${required_items[@]}"; do
@@ -205,27 +202,23 @@ try {
     include_once 'includes/common.inc';
     include_once 'user_files/global.inc';
     
-    // Test modular includes
-    if (file_exists('includes/sse/server-functions.inc')) {
-        include_once 'includes/sse/server-functions.inc';
+    // Test remaining includes
+    if (file_exists('includes/nodeinfo.inc')) {
+        include_once 'includes/nodeinfo.inc';
     }
     
-    if (file_exists('includes/link/link-config.inc')) {
-        include_once 'includes/link/link-config.inc';
+    // Test if core variables are available from common.inc
+    global $USERFILES, $ASTDB_TXT, $TITLE_LOGGED;
+    if (empty($USERFILES)) {
+        throw new Exception('USERFILES variable not found in common.inc');
     }
     
-    // Test if key functions are available
-    if (!function_exists('get_user_auth')) {
-        throw new Exception('get_user_auth function not found');
+    if (empty($ASTDB_TXT)) {
+        throw new Exception('ASTDB_TXT variable not found in common.inc');
     }
     
-    // Test modular functions if they exist
-    if (function_exists('initializeLinkPage')) {
-        // Link modularization is working
-    }
-    
-    if (function_exists('initializeServer')) {
-        // Server modularization is working  
+    if (empty($TITLE_LOGGED)) {
+        throw new Exception('TITLE_LOGGED variable not found in common.inc');
     }
     
     echo "SUCCESS";
@@ -269,42 +262,32 @@ try {
     include_once 'includes/common.inc';
     include_once 'user_files/global.inc';
     
-    // Test server module functions
-    if (file_exists('includes/sse/server-functions.inc')) {
-        include_once 'includes/sse/server-functions.inc';
+    // Test nodeinfo module functions if it exists
+    if (file_exists('includes/nodeinfo.inc')) {
+        include_once 'includes/nodeinfo.inc';
         
-        // Test basic functions exist
-        if (!function_exists('isConnectionHealthy')) {
-            throw new Exception('isConnectionHealthy function not found in server module');
-        }
-        
-        if (!function_exists('getNode')) {
-            throw new Exception('getNode function not found in server module');
+        // Test if nodeinfo functions are available
+        if (function_exists('getNodeInfo')) {
+            // Nodeinfo modularization is working
         }
     }
     
-    // Test link module functions  
-    if (file_exists('includes/link/link-functions.inc')) {
-        include_once 'includes/link/link-functions.inc';
-        
-        if (!function_exists('print_auth_button')) {
-            throw new Exception('print_auth_button function not found in link module');
-        }
-        
-        if (!function_exists('is_internal_ip')) {
-            throw new Exception('is_internal_ip function not found in link module');
-        }
-        
-        // Test is_internal_ip function
-        $result = is_internal_ip('127.0.0.1');
-        if ($result !== true) {
-            throw new Exception('is_internal_ip should return true for 127.0.0.1');
-        }
-        
-        $result = is_internal_ip('8.8.8.8');
-        if ($result !== false) {
-            throw new Exception('is_internal_ip should return false for 8.8.8.8');
-        }
+    // Test modern API structure
+    if (!file_exists('src/Application/Controllers/NodeController.php')) {
+        throw new Exception('NodeController.php not found - modern API structure missing');
+    }
+    
+    if (!file_exists('src/Application/Controllers/ConfigController.php')) {
+        throw new Exception('ConfigController.php not found - modern API structure missing');
+    }
+    
+    // Test frontend structure
+    if (!file_exists('frontend/src/views/Dashboard.vue')) {
+        throw new Exception('Dashboard.vue not found - Vue.js frontend structure missing');
+    }
+    
+    if (!file_exists('frontend/package.json')) {
+        throw new Exception('package.json not found - Node.js frontend dependencies missing');
     }
     
     echo "SUCCESS";
@@ -396,16 +379,10 @@ test_css_integrity() {
     local test_name="CSS File Integrity"
     local css_issues=0
     
-    # Check that all CSS files exist and are readable
+    # Check that frontend CSS files exist and are readable
     local css_files=(
-        "css/base.css"
-        "css/layout.css"
-        "css/menu.css"
-        "css/tables.css"
-        "css/forms.css"
-        "css/widgets.css"
-        "css/responsive.css"
-        "css/custom.css.example"
+        "frontend/src/assets/css/main.css"
+        "supermon-ng.css"
     )
     
     for css_file in "${css_files[@]}"; do
@@ -449,9 +426,7 @@ test_documentation() {
     # Check for essential documentation files
     local doc_files=(
         "README.md"
-        "docs/CONTRIBUTING.md"
-        "docs/DEVELOPER_GUIDE.md"
-        "css/README.md"
+        "includes/README.md"
     )
     
     for doc_file in "${doc_files[@]}"; do

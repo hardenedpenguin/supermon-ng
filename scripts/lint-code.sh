@@ -184,20 +184,24 @@ print_status "Running project-specific checks..."
 print_status "Checking include paths..."
 INCLUDE_ISSUES=0
 
-# Look for old-style includes that might need updating
-if grep -r "include.*session\.inc" "$PROJECT_ROOT" --include="*.php" | grep -v "includes/session.inc"; then
-    print_warning "Found includes that might need to be updated to includes/ directory"
+# Check for legacy includes that should no longer exist
+if grep -r "include.*session\.inc" "$PROJECT_ROOT" --include="*.php"; then
+    print_warning "Found includes for removed session.inc - functionality moved to middleware"
     INCLUDE_ISSUES=$((INCLUDE_ISSUES + 1))
 fi
 
-# Check for proper modular include usage
-if grep -r "include.*server-functions\.inc" "$PROJECT_ROOT" --include="*.php" | grep -v "includes/sse/server-functions.inc"; then
-    print_warning "Found server-functions.inc includes that should use includes/sse/ path"
+if grep -r "include.*csrf\.inc" "$PROJECT_ROOT" --include="*.php"; then
+    print_warning "Found includes for removed csrf.inc - functionality moved to middleware"
     INCLUDE_ISSUES=$((INCLUDE_ISSUES + 1))
 fi
 
-if grep -r "include.*link-config\.inc" "$PROJECT_ROOT" --include="*.php" | grep -v "includes/link/link-config.inc"; then
-    print_warning "Found link-config.inc includes that should use includes/link/ path"
+if grep -r "include.*helpers\.inc" "$PROJECT_ROOT" --include="*.php"; then
+    print_warning "Found includes for removed helpers.inc - functionality moved to service classes"
+    INCLUDE_ISSUES=$((INCLUDE_ISSUES + 1))
+fi
+
+if grep -r "include.*server-functions\.inc" "$PROJECT_ROOT" --include="*.php"; then
+    print_warning "Found includes for removed server-functions.inc - functionality moved to NodeController"
     INCLUDE_ISSUES=$((INCLUDE_ISSUES + 1))
 fi
 
@@ -235,7 +239,7 @@ if [ -n "$LEGACY_JS_FILES" ]; then
     echo "$LEGACY_JS_FILES"
     JS_ISSUES=$((JS_ISSUES + 1))
 else
-    print_success "No legacy JavaScript files found - Vue.js frontend is properly handling all JS"
+    print_status "No legacy JavaScript files found - Vue.js frontend is properly handling all JS"
 fi
 
 # Configuration file checks

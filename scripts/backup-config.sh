@@ -6,7 +6,7 @@
 # Backs up only essential configuration files used in V4.0.0+
 #
 # Author: Supermon-ng Team
-# Version: 4.0.0
+# Version: 4.0.2
 #
 
 set -e
