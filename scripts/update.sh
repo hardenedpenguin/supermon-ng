@@ -131,35 +131,9 @@ compare_versions() {
 detect_config_changes() {
     print_status "Analyzing configuration changes..."
     
-    # List of configuration files to check
-    CONFIG_FILES=(
-        "user_files/global.inc.example"
-        "user_files/authini.inc"
-        "user_files/favini.inc"
-        "user_files/controlpanel.ini"
-        "user_files/allmon.ini"
-    )
-    
     CONFIG_CHANGED=false
     
-    for config_file in "${CONFIG_FILES[@]}"; do
-        current_file="$APP_DIR/$config_file"
-        new_file="$PROJECT_ROOT/$config_file"
-        
-        if [ -f "$current_file" ] && [ -f "$new_file" ]; then
-            # Compare files using diff, ignoring comments and whitespace
-            if ! diff -q -I '^[[:space:]]*#' -I '^[[:space:]]*$' "$current_file" "$new_file" >/dev/null 2>&1; then
-                print_warning "Configuration change detected in: $config_file"
-                CONFIG_CHANGED=true
-            fi
-        elif [ -f "$new_file" ]; then
-            # New configuration file
-            print_warning "New configuration file detected: $config_file"
-            CONFIG_CHANGED=true
-        fi
-    done
-    
-    # Check for new configuration options in common.inc
+    # Only check for new configuration variables in common.inc (core system changes)
     if [ -f "$APP_DIR/includes/common.inc" ] && [ -f "$PROJECT_ROOT/includes/common.inc" ]; then
         # Extract variable definitions (lines starting with $)
         current_vars=$(grep -E '^\$[A-Z_]+' "$APP_DIR/includes/common.inc" | sort)
@@ -167,14 +141,37 @@ detect_config_changes() {
         
         if [ "$current_vars" != "$new_vars" ]; then
             print_warning "New configuration variables detected in common.inc"
+            print_status "This may require updating global.inc with new options"
             CONFIG_CHANGED=true
         fi
     fi
     
+    # Check for new template files that might be needed
+    NEW_TEMPLATE_FILES=(
+        "user_files/global.inc.example"
+        "user_files/favini.inc"
+    )
+    
+    for template_file in "${NEW_TEMPLATE_FILES[@]}"; do
+        current_file="$APP_DIR/$template_file"
+        new_file="$PROJECT_ROOT/$template_file"
+        
+        if [ ! -f "$current_file" ] && [ -f "$new_file" ]; then
+            print_status "New template file available: $template_file"
+            # Don't set CONFIG_CHANGED=true for new template files
+        fi
+    done
+    
+    # Note: We do NOT check allmon.ini, authusers.inc, authini.inc, favorites.ini, 
+    # privatenodes.txt, or controlpanel.ini for changes because these are user-specific
+    # configuration files that should ALWAYS be preserved regardless of template changes
+    
     if [ "$CONFIG_CHANGED" = true ]; then
-        print_warning "Configuration changes detected. User files may need attention."
+        print_warning "Configuration changes detected in core system files."
+        print_status "Critical user files (allmon.ini, authusers.inc, etc.) will be preserved."
     else
         print_status "No significant configuration changes detected."
+        print_status "All user configuration files will be preserved."
     fi
 }
 
@@ -223,45 +220,85 @@ update_application() {
         find "$PROJECT_ROOT/scripts" -name "*.sh" ! -name "update.sh" -exec cp {} "$TEMP_DIR/scripts/" \;
     fi
     
-    # Preserve user_files if no config changes
-    if [ "$CONFIG_CHANGED" = false ] && [ -d "$APP_DIR/user_files" ]; then
-        print_status "Preserving user_files (no configuration changes detected)..."
-        cp -r "$APP_DIR/user_files" "$TEMP_DIR/"
-    else
-        print_warning "Configuration changes detected. User files will be updated."
-        print_warning "Your original user_files have been backed up to: $USER_FILES_BACKUP_DIR"
+    # Always preserve critical user files, regardless of config changes
+    if [ -d "$APP_DIR/user_files" ]; then
+        print_status "Preserving critical user configuration files..."
         
-        # Copy new user_files templates
+        # Copy new user_files templates first
         if [ -d "$PROJECT_ROOT/user_files" ]; then
             cp -r "$PROJECT_ROOT/user_files" "$TEMP_DIR/"
         fi
         
-        # Restore user customizations from backup if they exist
-        if [ -d "$USER_FILES_BACKUP_DIR" ]; then
-            print_status "Attempting to preserve user customizations..."
-            
-            # List of files that typically contain user customizations
-            USER_CUSTOM_FILES=(
-                "global.inc"
-                "authusers.inc"
-                "favorites.ini"
-                "privatenodes.txt"
-                "preferences"
-            )
-            
-            for custom_file in "${USER_CUSTOM_FILES[@]}"; do
-                if [ -f "$USER_FILES_BACKUP_DIR/$custom_file" ]; then
-                    print_status "Preserving user customizations in: $custom_file"
-                    cp "$USER_FILES_BACKUP_DIR/$custom_file" "$TEMP_DIR/user_files/"
+        # List of critical files that should ALWAYS be preserved from user's existing installation
+        CRITICAL_USER_FILES=(
+            "allmon.ini"           # Node configuration - NEVER replace
+            "authusers.inc"        # User authentication - NEVER replace
+            "authini.inc"          # Authentication settings - NEVER replace
+            "favorites.ini"        # User favorites - NEVER replace
+            "privatenodes.txt"     # Private nodes list - NEVER replace
+            "controlpanel.ini"     # Control panel settings - NEVER replace
+        )
+        
+        # Always preserve these critical files from the existing installation
+        for critical_file in "${CRITICAL_USER_FILES[@]}"; do
+            if [ -f "$APP_DIR/user_files/$critical_file" ]; then
+                print_status "Preserving critical file: $critical_file"
+                cp "$APP_DIR/user_files/$critical_file" "$TEMP_DIR/user_files/"
+            fi
+        done
+        
+        # Preserve sbin directory (contains user scripts and configurations)
+        if [ -d "$APP_DIR/user_files/sbin" ]; then
+            print_status "Preserving sbin directory..."
+            cp -r "$APP_DIR/user_files/sbin" "$TEMP_DIR/user_files/"
+        fi
+        
+        # Preserve preferences directory
+        if [ -d "$APP_DIR/user_files/preferences" ]; then
+            print_status "Preserving preferences directory..."
+            cp -r "$APP_DIR/user_files/preferences" "$TEMP_DIR/user_files/"
+        fi
+        
+        # Handle global.inc more carefully - only update if there are actual new variables
+        if [ -f "$APP_DIR/user_files/global.inc" ]; then
+            if [ "$CONFIG_CHANGED" = true ]; then
+                print_warning "Configuration changes detected in global.inc"
+                print_warning "Your original global.inc has been backed up to: $USER_FILES_BACKUP_DIR"
+                print_status "Running configuration migration for global.inc..."
+                
+                # Use the migration system for global.inc
+                if [ -f "$PROJECT_ROOT/scripts/migrate-config.php" ]; then
+                    php "$PROJECT_ROOT/scripts/migrate-config.php" "$USER_FILES_BACKUP_DIR" 2>/dev/null || {
+                        print_warning "Migration failed, preserving original global.inc"
+                        cp "$APP_DIR/user_files/global.inc" "$TEMP_DIR/user_files/"
+                    }
+                else
+                    print_warning "Migration script not found, preserving original global.inc"
+                    cp "$APP_DIR/user_files/global.inc" "$TEMP_DIR/user_files/"
                 fi
-            done
-            
-            # Preserve sbin directory if it exists
-            if [ -d "$USER_FILES_BACKUP_DIR/sbin" ]; then
-                print_status "Preserving sbin directory..."
-                cp -r "$USER_FILES_BACKUP_DIR/sbin" "$TEMP_DIR/user_files/"
+            else
+                print_status "No configuration changes detected, preserving global.inc"
+                cp "$APP_DIR/user_files/global.inc" "$TEMP_DIR/user_files/"
             fi
         fi
+        
+        # Handle other template files (favini.inc, etc.) - only update if they don't exist
+        TEMPLATE_FILES=(
+            "favini.inc"
+            "global.inc.example"
+        )
+        
+        for template_file in "${TEMPLATE_FILES[@]}"; do
+            if [ ! -f "$APP_DIR/user_files/$template_file" ] && [ -f "$PROJECT_ROOT/user_files/$template_file" ]; then
+                print_status "Adding new template file: $template_file"
+                cp "$PROJECT_ROOT/user_files/$template_file" "$TEMP_DIR/user_files/"
+            elif [ -f "$APP_DIR/user_files/$template_file" ]; then
+                print_status "Preserving existing template file: $template_file"
+                cp "$APP_DIR/user_files/$template_file" "$TEMP_DIR/user_files/"
+            fi
+        done
+        
+        print_status "User configuration files preservation completed"
     fi
     
     # Replace application directory

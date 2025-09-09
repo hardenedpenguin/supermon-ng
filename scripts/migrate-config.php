@@ -152,6 +152,28 @@ class ConfigMigrator
     }
     
     /**
+     * Migrate allmon.ini configuration
+     */
+    public function migrateAllmonIni($backupFile, $newFile)
+    {
+        $this->log("Migrating allmon.ini configuration");
+        
+        if (!file_exists($backupFile)) {
+            $this->log("No existing allmon.ini found, using new template", 'WARNING');
+            return true;
+        }
+        
+        // For allmon.ini, we ALWAYS preserve the entire file
+        // as it contains critical node configuration data
+        if (file_exists($backupFile)) {
+            copy($backupFile, $this->userFilesDir . '/allmon.ini');
+            $this->log("allmon.ini preserved from backup (critical node configuration)");
+        }
+        
+        return true;
+    }
+    
+    /**
      * Migrate favorites.ini configuration
      */
     public function migrateFavorites($backupFile, $newFile)
@@ -280,6 +302,7 @@ class ConfigMigrator
         $migrations = [
             'global.inc' => [$this, 'migrateGlobalInc'],
             'authusers.inc' => [$this, 'migrateAuthUsers'],
+            'allmon.ini' => [$this, 'migrateAllmonIni'],
             'favorites.ini' => [$this, 'migrateFavorites'],
             'privatenodes.txt' => [$this, 'migratePrivateNodes']
         ];
