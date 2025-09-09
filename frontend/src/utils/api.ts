@@ -1,6 +1,20 @@
 import axios from 'axios'
 import type { ApiResponse, ApiError } from '@/types'
 
+// CSRF token management
+let csrfToken: string | null = null
+
+const fetchCsrfToken = async (): Promise<string> => {
+  try {
+    const response = await axios.get('/api/csrf-token', { withCredentials: true })
+    csrfToken = response.data.csrf_token
+    return csrfToken
+  } catch (error) {
+    console.error('Failed to fetch CSRF token:', error)
+    return ''
+  }
+}
+
 // Create axios instance
 const api = axios.create({
   baseURL: '/api',
@@ -14,8 +28,16 @@ const api = axios.create({
 
 // Request interceptor
 api.interceptors.request.use(
-  (config) => {
-    // Add any request modifications here
+  async (config) => {
+    // Add CSRF token for POST, PUT, DELETE requests
+    if (config.method && ['post', 'put', 'delete'].includes(config.method.toLowerCase())) {
+      if (!csrfToken) {
+        csrfToken = await fetchCsrfToken()
+      }
+      if (csrfToken) {
+        config.headers['X-CSRF-Token'] = csrfToken
+      }
+    }
     return config
   },
   (error) => {
@@ -28,7 +50,7 @@ api.interceptors.response.use(
   (response) => {
     return response
   },
-  (error) => {
+  async (error) => {
     // Handle common errors
     if (error.response) {
       // Server responded with error status
@@ -38,7 +60,16 @@ api.interceptors.response.use(
           window.location.href = '/login'
           break
         case 403:
-          // Forbidden
+          // Check if it's a CSRF token error
+          if (error.response.data?.message?.includes('CSRF token validation failed')) {
+            // Refresh CSRF token and retry the request
+            csrfToken = null
+            const newToken = await fetchCsrfToken()
+            if (newToken && error.config) {
+              error.config.headers['X-CSRF-Token'] = newToken
+              return api.request(error.config)
+            }
+          }
           console.error('Access forbidden')
           break
         case 404:
@@ -191,5 +222,10 @@ export const apiHelpers = {
   }
 }
 
-export { api }
+// Initialize CSRF token
+export const initializeCsrfToken = async (): Promise<void> => {
+  await fetchCsrfToken()
+}
+
+export { api, fetchCsrfToken }
 export default api

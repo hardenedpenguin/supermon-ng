@@ -25,6 +25,13 @@ $app->get('/health', function ($request, $response) {
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+// CSRF token endpoint
+$app->get('/api/csrf-token', function ($request, $response) {
+    $response->getBody()->write(json_encode([
+        'csrf_token' => $_SESSION['csrf_token'] ?? ''
+    ]));
+    return $response->withHeader('Content-Type', 'application/json');
+});
 
 // API v1 routes
 $app->group('/api/v1', function (RouteCollectorProxy $group) {
