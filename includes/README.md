@@ -33,26 +33,25 @@ This directory contains the essential PHP library files that provide core functi
 - Node lookup and information retrieval
 - Database caching and optimization
 
-### Security & Session Management
+### ~~Security & Session Management~~ (Modernized)
 
-#### `session.inc`
-**Purpose**: Session management and security
-- Session initialization and configuration
-- Session timeout handling (8 hours default)
-- Secure session cookie settings
+#### ~~`session.inc`~~ (Removed)
+**Purpose**: ~~Session management and security~~ **→ Modern Middleware**
+- Session functionality moved to secure session middleware
+- Enhanced HTTPS detection and cookie security
+- 8-hour timeout with automatic cleanup
 
-#### `csrf.inc`
-**Purpose**: Cross-Site Request Forgery (CSRF) protection
-- CSRF token generation and validation
-- Form token embedding functions
-- Request validation for state-changing operations
+#### ~~`csrf.inc`~~ (Removed)  
+**Purpose**: ~~CSRF protection~~ **→ Modern Middleware**
+- CSRF validation moved to dedicated middleware
+- Timing-safe token comparison
+- Automatic POST request validation
 
-#### `helpers.inc`
-**Purpose**: Utility classes for common operations
-- `AMIHelper`: Standardized Asterisk Manager Interface operations
-- `ValidationHelper`: Input validation and sanitization
-- `SecurityHelper`: Authentication and authorization utilities
-- `FileHelper`: Safe file operations with security checks
+#### ~~`helpers.inc`~~ (Removed)
+**Purpose**: ~~Utility classes~~ **→ Modern Services**
+- `AMIHelper` → `AMIHelperService` in Services/
+- `ValidationHelper` → `ValidationService` in Services/
+- Modern dependency injection architecture
 
 ### ~~Specialized Modules~~ (All Removed)
 
@@ -64,12 +63,21 @@ This directory contains the essential PHP library files that provide core functi
 
 ## Modern Architecture
 
-The includes directory has been streamlined as part of the Vue.js modernization:
+The includes directory has been **extensively modernized** as part of the Vue.js transformation:
 
-- **Frontend**: All UI components migrated to Vue.js with TypeScript
-- **Backend**: Clean REST API with minimal PHP dependencies
-- **Legacy Removed**: 150+ legacy files eliminated during modernization
-- **Essential Only**: Only files actively used by the modern API remain
+### **Modernization Achievements:**
+- **95% Legacy Reduction**: From 190+ files to 3 essential files
+- **50% Include Reduction**: From 6 includes to 3 core files  
+- **Modern Middleware**: Session, CSRF, and security handled by middleware
+- **Service Architecture**: Helper classes moved to Services/ directory
+- **Zero jQuery**: Fully replaced by Vue.js frontend with TypeScript
+
+### **Current Architecture:**
+- **Frontend**: Complete Vue.js with TypeScript, polling-based real-time updates
+- **Backend**: Clean REST API with modern middleware stack
+- **Services**: Dependency injection with modern service classes
+- **Security**: Comprehensive middleware for session, CSRF, and authentication
+- **Essential Only**: Only 3 core files remain for fundamental operations
 
 ## Usage in Modern API
 
