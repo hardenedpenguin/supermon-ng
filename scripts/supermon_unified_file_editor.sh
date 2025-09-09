@@ -6,15 +6,11 @@ declare -A WHITELISTED_FILES
 
 # Supermon-ng files
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/allmon.ini"]="root:www-data:664:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/authini.ini"]="root:www-data:664:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/authuser.ini"]="root:www-data:664:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/cntrlini.inc"]="root:www-data:664:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/cntrlnolog.ini"]="root:www-data:664:"
+WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/authini.inc"]="root:www-data:664:"
+WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/authusers.inc"]="root:www-data:664:"
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/controlpanel.ini"]="root:www-data:664:"
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/favini.inc"]="root:www-data:664:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/favnolog.ini"]="root:www-data:664:"
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/favorites.ini"]="root:www-data:664:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/nolog.ini"]="root:www-data:664:"
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/privatenodes.txt"]="root:www-data:664:"
 WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/global.inc"]="root:www-data:664:"
 

@@ -2595,15 +2595,11 @@ class ConfigController
         return [
             'Supermon-ng' => [
                 ['path' => '/var/www/html/supermon-ng/user_files/allmon.ini', 'name' => 'Allmon Configuration', 'description' => 'Main AllStar configuration file'],
-                ['path' => '/var/www/html/supermon-ng/user_files/authini.ini', 'name' => 'Authentication Configuration', 'description' => 'User authentication settings'],
-                ['path' => '/var/www/html/supermon-ng/user_files/authuser.ini', 'name' => 'User Configuration', 'description' => 'User-specific settings'],
-                ['path' => '/var/www/html/supermon-ng/user_files/cntrlini.inc', 'name' => 'Control Panel Configuration', 'description' => 'Control panel settings'],
-                ['path' => '/var/www/html/supermon-ng/user_files/cntrlnolog.ini', 'name' => 'Control Panel Log Configuration', 'description' => 'Control panel logging settings'],
+                ['path' => '/var/www/html/supermon-ng/user_files/authini.inc', 'name' => 'Authentication Configuration', 'description' => 'User authentication settings'],
+                ['path' => '/var/www/html/supermon-ng/user_files/authusers.inc', 'name' => 'User Configuration', 'description' => 'User-specific settings'],
                 ['path' => '/var/www/html/supermon-ng/user_files/controlpanel.ini', 'name' => 'Control Panel Settings', 'description' => 'Control panel configuration'],
                 ['path' => '/var/www/html/supermon-ng/user_files/favini.inc', 'name' => 'Favorites Configuration', 'description' => 'User favorites settings'],
-                ['path' => '/var/www/html/supermon-ng/user_files/favnolog.ini', 'name' => 'Favorites Log Configuration', 'description' => 'Favorites logging settings'],
                 ['path' => '/var/www/html/supermon-ng/user_files/favorites.ini', 'name' => 'Favorites List', 'description' => 'User favorites list'],
-                ['path' => '/var/www/html/supermon-ng/user_files/nolog.ini', 'name' => 'No Log Configuration', 'description' => 'No logging settings'],
                 ['path' => '/var/www/html/supermon-ng/user_files/privatenodes.txt', 'name' => 'Private Nodes', 'description' => 'Private nodes list'],
                 ['path' => '/var/www/html/supermon-ng/user_files/global.inc', 'name' => 'Global Configuration', 'description' => 'Global settings']
             ],

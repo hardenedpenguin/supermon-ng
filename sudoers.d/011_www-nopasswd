@@ -4,15 +4,11 @@ www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/ssinfo
 
 # Supermon-ng files
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/allmon.ini
-www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/authini.ini
-www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/authuser.ini
-www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/cntrlini.inc
-www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/cntrlnolog.ini
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/authini.inc
+www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/authusers.inc
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/controlpanel.ini
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/favini.inc
-www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/favnolog.ini
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/favorites.ini
-www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/nolog.ini
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/privatenodes.txt
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /var/www/html/supermon-ng/user_files/global.inc
 
