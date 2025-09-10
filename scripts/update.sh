@@ -340,11 +340,18 @@ update_application() {
     rm -rf "$APP_DIR"
     mv "$TEMP_DIR" "$APP_DIR"
     
+    # Create necessary directories if they don't exist
+    print_status "Creating necessary directories..."
+    mkdir -p "$APP_DIR/logs"
+    mkdir -p "$APP_DIR/database"
+    mkdir -p "$APP_DIR/cache"
+    
     # Set proper permissions
     chown -R www-data:www-data "$APP_DIR"
     chmod -R 755 "$APP_DIR"
     chmod -R 777 "$APP_DIR/logs" 2>/dev/null || true
     chmod -R 777 "$APP_DIR/database" 2>/dev/null || true
+    chmod -R 777 "$APP_DIR/cache" 2>/dev/null || true
     chmod -R 777 "$APP_DIR/user_files" 2>/dev/null || true
 }
 
