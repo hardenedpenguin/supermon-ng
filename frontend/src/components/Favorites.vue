@@ -69,10 +69,19 @@
                       </div>
                     </td>
                     <td>
-                      <span v-if="favorite.node" class="section-badge node">
-                        {{ favorite.node }}
-                      </span>
-                      <span v-else class="no-target">-</span>
+                      <div class="node-info">
+                        <div v-if="favorite.node" class="source-node">
+                          <span class="node-label">From:</span>
+                          <span class="section-badge node">{{ favorite.node }}</span>
+                        </div>
+                        <div v-if="favorite.target_node" class="target-node">
+                          <span class="node-label">To:</span>
+                          <span class="section-badge target">{{ favorite.target_node }}</span>
+                        </div>
+                        <div v-if="!favorite.node && !favorite.target_node" class="no-target">
+                          <span class="node-label">General</span>
+                        </div>
+                      </div>
                     </td>
                     <td>
                       <button 
@@ -135,6 +144,7 @@ interface Favorite {
   label: string
   command: string
   node: string | false
+  target_node?: string | null
 }
 
 interface ExecuteResult {
@@ -477,9 +487,32 @@ onMounted(() => {
   color: #ffffff;
 }
 
+.section-badge.target {
+  background-color: #dc2626;
+  color: #ffffff;
+}
+
 .no-node {
   color: #6b7280;
   font-style: italic;
+}
+
+.node-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.source-node, .target-node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.node-label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  font-weight: 500;
 }
 
 .general-badge {

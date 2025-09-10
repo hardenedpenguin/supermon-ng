@@ -2939,7 +2939,8 @@ class ConfigController
                             'index' => $i,
                             'label' => $labels[$i],
                             'command' => $cmds[$i],
-                            'node' => $this->extractTargetNodeFromCommand($cmds[$i])
+                            'node' => false, // General favorites don't have a specific source node
+                            'target_node' => $this->extractTargetNodeFromCommand($cmds[$i])
                         ];
                     }
                 }
@@ -2955,7 +2956,8 @@ class ConfigController
                             'index' => $i,
                             'label' => $labels[$i],
                             'command' => $cmds[$i],
-                            'node' => $this->extractTargetNodeFromCommand($cmds[$i])
+                            'node' => $section, // For node-specific favorites, the section IS the node
+                            'target_node' => $this->extractTargetNodeFromCommand($cmds[$i])
                         ];
                     }
                 }
@@ -3276,7 +3278,7 @@ class ConfigController
             $customLabel = $nodeInfo['callsign'] . ' ' . $nodeInfo['description'] . ' ' . $node;
         }
 
-        // Generate command
+        // Generate command - use %node% for source node, target node is the actual node number
         $command = "rpt cmd %node% ilink 13 " . $node;
 
         // Add to favorites
