@@ -100,6 +100,9 @@
             <p class="help-text">
               Select which local node this favorite is for. The connect command will use this node as the source.
             </p>
+            <p v-if="availableNodes.length === 0" class="help-text" style="color: #ff6b6b;">
+              No available nodes found. Please check your configuration.
+            </p>
           </div>
 
           <div class="button-group">
@@ -160,9 +163,14 @@ watch(() => props.nodeNumber, async (newNode) => {
 
 // Watch for modal visibility
 watch(() => props.isVisible, async (visible) => {
-  if (visible && props.nodeNumber) {
-    await loadNodeInfo(props.nodeNumber)
+  if (visible) {
+    // Always load available nodes when modal opens
     await loadAvailableNodes()
+    
+    // Load node info if a specific node is provided
+    if (props.nodeNumber) {
+      await loadNodeInfo(props.nodeNumber)
+    }
   } else if (!visible) {
     resetForm()
   }
@@ -208,9 +216,15 @@ const loadNodeInfo = async (node) => {
 
 const loadAvailableNodes = async () => {
   try {
+    console.log('Loading available nodes...')
     const response = await api.get('/config/nodes')
+    console.log('Available nodes response:', response.data)
     if (response.data.success) {
       availableNodes.value = response.data.data || []
+      console.log('Available nodes loaded:', availableNodes.value)
+    } else {
+      console.warn('Failed to load available nodes:', response.data.message)
+      availableNodes.value = []
     }
   } catch (err) {
     console.error('Failed to load available nodes:', err)
