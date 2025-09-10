@@ -256,6 +256,7 @@ update_application() {
             "favorites.ini"        # User favorites - NEVER replace
             "privatenodes.txt"     # Private nodes list - NEVER replace
             "controlpanel.ini"     # Control panel settings - NEVER replace
+            "global.inc"           # Global user configuration - NEVER replace
             ".htpasswd"            # Apache authentication file - NEVER replace
         )
         
@@ -318,28 +319,7 @@ update_application() {
             cp -r "$APP_DIR/user_files/preferences" "$TEMP_DIR/user_files/"
         fi
         
-        # Handle global.inc more carefully - only update if there are actual new variables
-        if [ -f "$APP_DIR/user_files/global.inc" ]; then
-            if [ "$CONFIG_CHANGED" = true ]; then
-                print_warning "Configuration changes detected in global.inc"
-                print_warning "Your original global.inc has been backed up to: $USER_FILES_BACKUP_DIR"
-                print_status "Running configuration migration for global.inc..."
-                
-                # Use the migration system for global.inc
-                if [ -f "$PROJECT_ROOT/scripts/migrate-config.php" ]; then
-                    php "$PROJECT_ROOT/scripts/migrate-config.php" "$USER_FILES_BACKUP_DIR" 2>/dev/null || {
-                        print_warning "Migration failed, preserving original global.inc"
-                        cp "$APP_DIR/user_files/global.inc" "$TEMP_DIR/user_files/"
-                    }
-                else
-                    print_warning "Migration script not found, preserving original global.inc"
-                    cp "$APP_DIR/user_files/global.inc" "$TEMP_DIR/user_files/"
-                fi
-            else
-                print_status "No configuration changes detected, preserving global.inc"
-                cp "$APP_DIR/user_files/global.inc" "$TEMP_DIR/user_files/"
-            fi
-        fi
+        # Note: global.inc is now protected as a critical file and will be preserved automatically
         
         # Handle other template files (favini.inc, etc.) - only update if they don't exist
         TEMPLATE_FILES=(
