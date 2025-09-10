@@ -30,7 +30,7 @@
  * Dependencies: None (core configuration)
  * 
  * @author Supermon-ng Team
- * @version 4.0.3
+ * @version 4.0.4
  * @since 1.0.0
  */
 
@@ -42,17 +42,17 @@ $USERFILES="user_files";
 /**
  * @var string Title in header when logged in.
  */
-$TITLE_LOGGED = "Supermon-ng V4.0.3 AllStar Manager";
+$TITLE_LOGGED = "Supermon-ng V4.0.4 AllStar Manager";
 
 /**
  * @var string Version date of the Supermon-ng software.
  */
-$VERSION_DATE = "September 10, 2025";
+$VERSION_DATE = "September 09, 2025";
 
 /**
  * @var string Title in header when not logged in.
  */
-$TITLE_NOT_LOGGED = "Supermon-ng V4.0.3 AllStar Monitor";
+$TITLE_NOT_LOGGED = "Supermon-ng V4.0.4 AllStar Monitor";
 
 /**
  * @var string Path to the webserver access log.
