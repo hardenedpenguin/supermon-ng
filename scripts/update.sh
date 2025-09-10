@@ -274,6 +274,12 @@ update_application() {
             "astdb.txt"            # Asterisk database - NEVER replace
         )
         
+        # List of template files that should only be updated if they don't exist
+        TEMPLATE_FILES=(
+            "favini.inc"
+            "global.inc.example"
+        )
+        
         # Always preserve these critical files from the existing installation
         for critical_file in "${CRITICAL_USER_FILES[@]}"; do
             if [ -f "$APP_DIR/user_files/$critical_file" ]; then
@@ -287,6 +293,17 @@ update_application() {
             if [ -f "$APP_DIR/user_files/$custom_file" ]; then
                 print_status "Preserving user customization file: $custom_file"
                 cp "$APP_DIR/user_files/$custom_file" "$TEMP_DIR/user_files/"
+            fi
+        done
+        
+        # Protect ALL .inc and .ini files in user_files/ that users may have added
+        print_status "Protecting all user configuration files (.inc and .ini)..."
+        find "$APP_DIR/user_files" -maxdepth 1 -name "*.inc" -o -name "*.ini" | while read -r config_file; do
+            filename=$(basename "$config_file")
+            # Skip files that are already handled by critical files or template files
+            if [[ ! " ${CRITICAL_USER_FILES[@]} " =~ " ${filename} " ]] && [[ ! " ${TEMPLATE_FILES[@]} " =~ " ${filename} " ]]; then
+                print_status "Preserving user configuration file: $filename"
+                cp "$config_file" "$TEMP_DIR/user_files/"
             fi
         done
         
@@ -322,10 +339,6 @@ update_application() {
         # Note: global.inc is now protected as a critical file and will be preserved automatically
         
         # Handle other template files (favini.inc, etc.) - only update if they don't exist
-        TEMPLATE_FILES=(
-            "favini.inc"
-            "global.inc.example"
-        )
         
         for template_file in "${TEMPLATE_FILES[@]}"; do
             if [ ! -f "$APP_DIR/user_files/$template_file" ] && [ -f "$PROJECT_ROOT/user_files/$template_file" ]; then
