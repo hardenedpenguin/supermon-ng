@@ -217,7 +217,6 @@ update_application() {
         "index.php"          # Main application entry point
         "composer.json"      # PHP dependencies
         "composer.lock"      # PHP dependency lock file
-        "astdb.txt"          # Asterisk database template
         "includes"           # PHP include files
         "src"                # PHP backend source code
         "vendor"             # PHP dependencies
@@ -297,6 +296,15 @@ update_application() {
                 cp "$APP_DIR/$critical_file" "$TEMP_DIR/"
             fi
         done
+        
+        # Handle astdb.txt template - preserve user's existing file or copy template if none exists
+        if [ -f "$APP_DIR/astdb.txt" ]; then
+            print_status "Preserving existing astdb.txt file"
+            cp "$APP_DIR/astdb.txt" "$TEMP_DIR/"
+        elif [ -f "$PROJECT_ROOT/astdb.txt" ]; then
+            print_status "Copying astdb.txt template (no existing file found)"
+            cp "$PROJECT_ROOT/astdb.txt" "$TEMP_DIR/"
+        fi
         
         # Preserve sbin directory (contains user scripts and configurations)
         if [ -d "$APP_DIR/user_files/sbin" ]; then
