@@ -80,6 +80,28 @@
             </p>
           </div>
 
+          <div v-if="!addToGeneral" class="form-group">
+            <label for="source-node">Source Node (required for node-specific favorites):</label>
+            <select
+              id="source-node"
+              v-model="sourceNode"
+              class="form-select"
+              required
+            >
+              <option value="">Select a source node...</option>
+              <option
+                v-for="node in availableNodes"
+                :key="node.id"
+                :value="node.id"
+              >
+                {{ node.id }} - {{ node.system || 'Node' }}
+              </option>
+            </select>
+            <p class="help-text">
+              Select which local node this favorite is for. The connect command will use this node as the source.
+            </p>
+          </div>
+
           <div class="button-group">
             <button
               @click="addFavorite"
@@ -126,6 +148,8 @@ const nodeInfo = ref(null)
 const customLabel = ref('')
 const addToGeneral = ref(true)
 const manualNodeNumber = ref('')
+const sourceNode = ref('')
+const availableNodes = ref([])
 
 // Watch for changes in nodeNumber and load node info
 watch(() => props.nodeNumber, async (newNode) => {
@@ -138,6 +162,7 @@ watch(() => props.nodeNumber, async (newNode) => {
 watch(() => props.isVisible, async (visible) => {
   if (visible && props.nodeNumber) {
     await loadNodeInfo(props.nodeNumber)
+    await loadAvailableNodes()
   } else if (!visible) {
     resetForm()
   }
@@ -178,6 +203,18 @@ const loadNodeInfo = async (node) => {
     customLabel.value = `Node ${node}`
   } finally {
     loading.value = false
+}
+}
+
+const loadAvailableNodes = async () => {
+  try {
+    const response = await api.get('/config/nodes')
+    if (response.data.success) {
+      availableNodes.value = response.data.data || []
+    }
+  } catch (err) {
+    console.error('Failed to load available nodes:', err)
+    availableNodes.value = []
   }
 }
 
@@ -192,7 +229,8 @@ const addFavorite = async () => {
     const response = await api.post('/config/favorites/add', {
       node: nodeToUse,
       custom_label: customLabel.value,
-      add_to_general: addToGeneral.value ? '1' : '0'
+      add_to_general: addToGeneral.value ? '1' : '0',
+      source_node: addToGeneral.value ? null : sourceNode.value
     })
     
     if (response.data.success) {
@@ -225,6 +263,8 @@ const resetForm = () => {
   customLabel.value = ''
   addToGeneral.value = true
   manualNodeNumber.value = ''
+  sourceNode.value = ''
+  availableNodes.value = []
 }
 </script>
 
@@ -351,6 +391,29 @@ const resetForm = () => {
 .form-input:focus {
   outline: none;
   border-color: #63b3ed;
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #4a5568;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #1a202c;
+  color: #e2e8f0;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #63b3ed;
+}
+
+.form-select option {
+  background: #1a202c;
+  color: #e2e8f0;
 }
 
 .checkbox-label {

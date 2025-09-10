@@ -3243,6 +3243,7 @@ class ConfigController
         $node = $data['node'] ?? '';
         $customLabel = trim($data['custom_label'] ?? '');
         $addToGeneral = ($data['add_to_general'] ?? '') === '1';
+        $sourceNode = $data['source_node'] ?? null; // New parameter for source node
 
         // Validate node parameter
         if (!is_numeric($node) || $node === '') {
@@ -3278,11 +3279,24 @@ class ConfigController
             $customLabel = $nodeInfo['callsign'] . ' ' . $nodeInfo['description'] . ' ' . $node;
         }
 
-        // Generate command - use %node% for source node, target node is the actual node number
-        $command = "rpt cmd %node% ilink 13 " . $node;
+        // Generate command based on whether it's general or node-specific
+        if ($addToGeneral) {
+            // For general favorites, use %node% placeholder (will be replaced at execution time)
+            $command = "rpt cmd %node% ilink 13 " . $node;
+        } else {
+            // For node-specific favorites, use the actual source node number
+            if (empty($sourceNode)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Source node is required for node-specific favorites'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+            $command = "rpt cmd " . $sourceNode . " ilink 13 " . $node;
+        }
 
         // Add to favorites
-        $result = $this->addFavoriteToConfiguration($currentUser, $node, $customLabel, $command, $addToGeneral);
+        $result = $this->addFavoriteToConfiguration($currentUser, $node, $customLabel, $command, $addToGeneral, $sourceNode);
 
         if ($result['success']) {
             $response->getBody()->write(json_encode([
@@ -3445,14 +3459,14 @@ class ConfigController
     /**
      * Add favorite to configuration
      */
-    private function addFavoriteToConfiguration(string $user, string $node, string $label, string $command, bool $addToGeneral): array
+    private function addFavoriteToConfiguration(string $user, string $node, string $label, string $command, bool $addToGeneral, ?string $sourceNode = null): array
     {
         $favoritesIniPath = $this->getFavoritesIniPath($user);
         $config = [];
 
-        // Load existing configuration
+        // Load existing configuration using the same parser as loadFavoritesConfiguration
         if (file_exists($favoritesIniPath)) {
-            $config = parse_ini_file($favoritesIniPath, true);
+            $config = $this->parseIniWithRepeatedKeys($favoritesIniPath);
             if ($config === false) {
                 $config = [];
             }
@@ -3476,19 +3490,20 @@ class ConfigController
             array_push($config['general']['label'], $label);
             array_push($config['general']['cmd'], $command);
         } else {
-            // Add to node-specific section
-            if (!isset($config[$node])) {
-                $config[$node] = [];
+            // Add to node-specific section (use source node as section name)
+            $sectionName = $sourceNode ?? $node; // Use source node as section, fallback to target node
+            if (!isset($config[$sectionName])) {
+                $config[$sectionName] = [];
             }
-            if (!isset($config[$node]['label'])) {
-                $config[$node]['label'] = [];
+            if (!isset($config[$sectionName]['label'])) {
+                $config[$sectionName]['label'] = [];
             }
-            if (!isset($config[$node]['cmd'])) {
-                $config[$node]['cmd'] = [];
+            if (!isset($config[$sectionName]['cmd'])) {
+                $config[$sectionName]['cmd'] = [];
             }
 
-            array_push($config[$node]['label'], $label);
-            array_push($config[$node]['cmd'], $command);
+            array_push($config[$sectionName]['label'], $label);
+            array_push($config[$sectionName]['cmd'], $command);
         }
 
         // Write back to file
