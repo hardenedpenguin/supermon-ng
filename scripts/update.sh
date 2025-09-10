@@ -408,22 +408,22 @@ update_dependencies() {
 # Function to update frontend
 update_frontend() {
     print_status "Updating frontend..."
-    cd "$APP_DIR/frontend"
     
-    if [ -f "package.json" ]; then
+    # Check if we're in a development environment with frontend source
+    if [ -d "$PROJECT_ROOT/frontend" ] && [ -f "$PROJECT_ROOT/frontend/package.json" ]; then
         # Development mode - build from source
         print_status "Building frontend from source..."
+        cd "$PROJECT_ROOT/frontend"
         npm install
         npm run build
         cp -r dist/* "$APP_DIR/public/"
-    elif [ -d "dist" ] && [ -f "dist/index.html" ]; then
-        # Production mode - pre-built frontend
-        print_status "Using pre-built frontend..."
-        cp -r dist/* "$APP_DIR/public/"
-    elif [ -f "index.html" ] && [ -d "assets" ]; then
-        # Release package
-        print_status "Using release package frontend..."
-        cp -r * "$APP_DIR/public/"
+    elif [ -d "$PROJECT_ROOT/frontend/dist" ] && [ -f "$PROJECT_ROOT/frontend/dist/index.html" ]; then
+        # Production mode - pre-built frontend in project root
+        print_status "Using pre-built frontend from project root..."
+        cp -r "$PROJECT_ROOT/frontend/dist"/* "$APP_DIR/public/"
+    else
+        # Frontend files are already in public directory from production files copy
+        print_status "Frontend files already updated via production files copy..."
     fi
 }
 
