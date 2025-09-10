@@ -149,6 +149,13 @@ if [ "$(pwd)" != "$APP_DIR" ]; then
     cd "$APP_DIR"
 fi
 
+# Verify astdb.txt was installed
+if [ -f "$APP_DIR/astdb.txt" ]; then
+    echo "✅ Asterisk database template (astdb.txt) installed successfully"
+else
+    echo "⚠️  Warning: astdb.txt not found in installation directory"
+fi
+
 # Install unified file editor script
 echo "📝 Installing unified file editor script..."
 EDITOR_SCRIPT="/usr/local/sbin/supermon_unified_file_editor.sh"
