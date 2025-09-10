@@ -256,6 +256,7 @@ update_application() {
             "favorites.ini"        # User favorites - NEVER replace
             "privatenodes.txt"     # Private nodes list - NEVER replace
             "controlpanel.ini"     # Control panel settings - NEVER replace
+            ".htpasswd"            # Apache authentication file - NEVER replace
         )
         
         # List of user customization files that should ALWAYS be preserved
@@ -269,7 +270,6 @@ update_application() {
         
         # List of critical root-level files that should ALWAYS be preserved
         CRITICAL_ROOT_FILES=(
-            ".htpasswd"            # Apache authentication file - NEVER replace
             "astdb.txt"            # Asterisk database - NEVER replace
         )
         
