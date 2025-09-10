@@ -455,10 +455,6 @@ main() {
     cp scripts/update.sh "$release_dir/scripts/"
     cp scripts/migrate-config.php "$release_dir/scripts/"
     cp scripts/version-check.sh "$release_dir/scripts/"
-    cp scripts/test-update.sh "$release_dir/scripts/"
-    cp scripts/quick-test.sh "$release_dir/scripts/"
-    cp scripts/test-production-update.sh "$release_dir/scripts/"
-    cp scripts/test-component.sh "$release_dir/scripts/"
     
     # Static assets
     cp *.jpg "$release_dir/" 2>/dev/null || true
@@ -497,7 +493,6 @@ main() {
     echo "   - User configuration files (user_files/)"
     echo "   - Installation script (install.sh)"
     echo "   - Update system (scripts/update.sh, scripts/migrate-config.php, scripts/version-check.sh)"
-    echo "   - Testing tools (scripts/test-update.sh, scripts/quick-test.sh, scripts/test-production-update.sh, scripts/test-component.sh)"
     echo "   - Security configurations (sudoers.d/, systemd/)"
     echo "   - Essential scripts (supermon_unified_file_editor.sh, manage_users.php)"
     echo "   - Documentation and checksums"

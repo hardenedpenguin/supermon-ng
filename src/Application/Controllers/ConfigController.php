@@ -3327,14 +3327,7 @@ class ConfigController
                 $currentUser = 'default';
             }
             
-            // Check user permissions
-            if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => 'FAVUSER permission required'
-                ]));
-                return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
-            }
+            // Note: No permission check needed - node info is public data from astdb.txt
 
             $node = $request->getQueryParams()['node'] ?? '';
             
