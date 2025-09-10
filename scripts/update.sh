@@ -259,6 +259,15 @@ update_application() {
             "controlpanel.ini"     # Control panel settings - NEVER replace
         )
         
+        # List of user customization files that should ALWAYS be preserved
+        USER_CUSTOMIZATION_FILES=(
+            "header-background.jpg"
+            "header-background.jpeg"
+            "header-background.png"
+            "header-background.gif"
+            "header-background.webp"
+        )
+        
         # List of critical root-level files that should ALWAYS be preserved
         CRITICAL_ROOT_FILES=(
             ".htpasswd"            # Apache authentication file - NEVER replace
@@ -270,6 +279,14 @@ update_application() {
             if [ -f "$APP_DIR/user_files/$critical_file" ]; then
                 print_status "Preserving critical file: $critical_file"
                 cp "$APP_DIR/user_files/$critical_file" "$TEMP_DIR/user_files/"
+            fi
+        done
+        
+        # Always preserve user customization files from the existing installation
+        for custom_file in "${USER_CUSTOMIZATION_FILES[@]}"; do
+            if [ -f "$APP_DIR/user_files/$custom_file" ]; then
+                print_status "Preserving user customization file: $custom_file"
+                cp "$APP_DIR/user_files/$custom_file" "$TEMP_DIR/user_files/"
             fi
         done
         
