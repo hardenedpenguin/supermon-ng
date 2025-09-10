@@ -93,8 +93,9 @@
                 v-for="node in availableNodes"
                 :key="node.id"
                 :value="node.id"
+                :disabled="node.id === (props.nodeNumber || manualNodeNumber)"
               >
-                {{ node.id }} - {{ node.system || 'Node' }}
+                {{ node.id }} - {{ node.system || 'Node' }}{{ node.id === (props.nodeNumber || manualNodeNumber) ? ' (same as target)' : '' }}
               </option>
             </select>
             <p class="help-text">
@@ -428,6 +429,12 @@ const resetForm = () => {
 .form-select option {
   background: #1a202c;
   color: #e2e8f0;
+}
+
+.form-select option:disabled {
+  background: #2d3748;
+  color: #718096;
+  font-style: italic;
 }
 
 .checkbox-label {

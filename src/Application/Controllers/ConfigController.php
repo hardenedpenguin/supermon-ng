@@ -3292,6 +3292,16 @@ class ConfigController
                 ]));
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
             }
+            
+            // Prevent creating favorites where source and target are the same
+            if ($sourceNode === $node) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Source node and target node cannot be the same. A node cannot connect to itself.'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+            
             $command = "rpt cmd " . $sourceNode . " ilink 13 " . $node;
         }
 
