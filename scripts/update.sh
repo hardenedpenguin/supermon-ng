@@ -209,9 +209,29 @@ update_application() {
     TEMP_DIR="/tmp/supermon-ng-update-$(date +%Y%m%d_%H%M%S)"
     mkdir -p "$TEMP_DIR"
     
-    # Copy new files to temporary directory
+    # Copy only production files to temporary directory
     print_status "Preparing new files..."
-    find "$PROJECT_ROOT" -maxdepth 1 ! -name . ! -name "*.md" ! -name "install.sh" ! -name "update.sh" ! -name sudoers.d ! -name systemd ! -name scripts -exec cp -r {} "$TEMP_DIR/" \;
+    
+    # Copy essential production files only (excludes development files like frontend/, README.md, install.sh, etc.)
+    PRODUCTION_FILES=(
+        "index.php"          # Main application entry point
+        "composer.json"      # PHP dependencies
+        "composer.lock"      # PHP dependency lock file
+        "astdb.txt"          # Asterisk database template
+        "includes"           # PHP include files
+        "src"                # PHP backend source code
+        "vendor"             # PHP dependencies
+        "public"             # Web-accessible files
+        "cache"              # Application cache
+        "logs"               # Log directory
+    )
+    
+    for file in "${PRODUCTION_FILES[@]}"; do
+        if [ -e "$PROJECT_ROOT/$file" ]; then
+            print_status "Copying production file: $file"
+            cp -r "$PROJECT_ROOT/$file" "$TEMP_DIR/"
+        fi
+    done
     
     # Copy scripts directory (excluding update.sh)
     if [ -d "$PROJECT_ROOT/scripts" ]; then
