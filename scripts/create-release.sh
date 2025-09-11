@@ -460,6 +460,7 @@ main() {
     cp *.jpg "$release_dir/" 2>/dev/null || true
     cp *.png "$release_dir/" 2>/dev/null || true
     cp favicon.ico "$release_dir/" 2>/dev/null || true
+    cp astdb.txt "$release_dir/" 2>/dev/null || true
     
     log "Excluding development files (node_modules, .git, logs, tests, etc.)"
     
