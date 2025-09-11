@@ -3446,4 +3446,222 @@ class NodeController
             'formatted' => $connectedNodes
         ];
     }
+
+    /**
+     * Handle lsnod requests - equivalent to /cgi-bin/sm_lsnodes
+     */
+    public function lsnodes(Request $request, Response $response, array $args): Response
+    {
+        $this->logger->info('lsnodes request', ['args' => $args]);
+        
+        try {
+            $nodeId = $args['id'] ?? null;
+            if (!$nodeId) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Node ID is required'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+
+            // Get current user for permission checking
+            $currentUser = $this->getCurrentUser();
+            
+            // Check if user has permission to access this node
+            if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Access denied'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+            }
+
+            // Execute lsnod command via AMI
+            $lsnodData = $this->executeLsnodCommand($nodeId);
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => $lsnodData,
+                'node' => $nodeId,
+                'timestamp' => date('c')
+            ]));
+
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (Exception $e) {
+            $this->logger->error('lsnodes error', ['error' => $e->getMessage(), 'node' => $nodeId ?? 'unknown']);
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Failed to execute lsnod command: ' . $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
+    /**
+     * Handle lsnod web interface - equivalent to /cgi-bin/lsnodes_web
+     */
+    public function lsnodesWeb(Request $request, Response $response, array $args): Response
+    {
+        $this->logger->info('lsnodes web request', ['args' => $args]);
+        
+        try {
+            $nodeId = $args['id'] ?? null;
+            if (!$nodeId) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Node ID is required'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+
+            // Get current user for permission checking
+            $currentUser = $this->getCurrentUser();
+            
+            // Check if user has permission to access this node
+            if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Access denied'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+            }
+
+            // Execute lsnod command and format for web display
+            $lsnodData = $this->executeLsnodCommand($nodeId);
+            $webData = $this->formatLsnodForWeb($lsnodData, $nodeId);
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => $webData,
+                'node' => $nodeId,
+                'timestamp' => date('c')
+            ]));
+
+            return $response->withHeader('Content-Type', 'application/json');
+
+        } catch (Exception $e) {
+            $this->logger->error('lsnodes web error', ['error' => $e->getMessage(), 'node' => $nodeId ?? 'unknown']);
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Failed to execute lsnod web command: ' . $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
+    /**
+     * Execute lsnod command via AMI
+     */
+    private function executeLsnodCommand(string $nodeId): array
+    {
+        try {
+            // Get AMI connection
+            $ami = $this->getAmiConnection();
+            if (!$ami) {
+                throw new Exception('AMI connection not available');
+            }
+
+            // Execute lsnod command
+            $command = "rpt cmd {$nodeId} lsnod";
+            $result = $ami->command($command);
+            
+            $this->logger->info('lsnod command executed', [
+                'node' => $nodeId,
+                'command' => $command,
+                'result' => $result
+            ]);
+
+            // Parse the result
+            $parsedData = $this->parseLsnodOutput($result);
+            
+            return [
+                'raw_output' => $result,
+                'parsed_data' => $parsedData,
+                'command' => $command,
+                'executed_at' => date('c')
+            ];
+
+        } catch (Exception $e) {
+            $this->logger->error('Failed to execute lsnod command', [
+                'node' => $nodeId,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Parse lsnod command output
+     */
+    private function parseLsnodOutput(string $output): array
+    {
+        $lines = explode("\n", trim($output));
+        $nodes = [];
+        $currentNode = null;
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            // Look for node entries (typically start with node number)
+            if (preg_match('/^(\d+)\s+(.+)$/', $line, $matches)) {
+                $nodeNumber = $matches[1];
+                $description = $matches[2];
+                
+                $nodes[] = [
+                    'node_number' => $nodeNumber,
+                    'description' => $description,
+                    'status' => 'unknown' // Would need additional parsing for status
+                ];
+            }
+        }
+        
+        return [
+            'total_nodes' => count($nodes),
+            'nodes' => $nodes,
+            'raw_lines' => $lines
+        ];
+    }
+
+    /**
+     * Format lsnod data for web display
+     */
+    private function formatLsnodForWeb(array $lsnodData, string $nodeId): array
+    {
+        $parsedData = $lsnodData['parsed_data'] ?? [];
+        $nodes = $parsedData['nodes'] ?? [];
+        
+        // Create HTML table format similar to original CGI script
+        $html = '<div class="lsnod-container">';
+        $html .= '<h3>lsnod Output for Node ' . htmlspecialchars($nodeId) . '</h3>';
+        $html .= '<p>Total Nodes: ' . count($nodes) . '</p>';
+        
+        if (!empty($nodes)) {
+            $html .= '<table class="lsnod-table">';
+            $html .= '<thead><tr><th>Node</th><th>Description</th><th>Status</th></tr></thead>';
+            $html .= '<tbody>';
+            
+            foreach ($nodes as $node) {
+                $html .= '<tr>';
+                $html .= '<td>' . htmlspecialchars($node['node_number']) . '</td>';
+                $html .= '<td>' . htmlspecialchars($node['description']) . '</td>';
+                $html .= '<td>' . htmlspecialchars($node['status']) . '</td>';
+                $html .= '</tr>';
+            }
+            
+            $html .= '</tbody></table>';
+        } else {
+            $html .= '<p>No nodes found in lsnod output.</p>';
+        }
+        
+        $html .= '</div>';
+        
+        return [
+            'html' => $html,
+            'node_count' => count($nodes),
+            'nodes' => $nodes,
+            'raw_data' => $lsnodData
+        ];
+    }
 }

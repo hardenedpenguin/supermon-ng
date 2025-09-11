@@ -160,6 +160,10 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         
         // Web Error Log Route
         $group->post('/weberrlog', [NodeController::class, 'weberrlog']);
+        
+        // Lsnod Routes
+        $group->get('/{id}/lsnodes', [NodeController::class, 'lsnodes']);
+        $group->get('/{id}/lsnodes/web', [NodeController::class, 'lsnodesWeb']);
     });
 
     // Config routes

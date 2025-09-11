@@ -180,7 +180,8 @@ const nodeTitle = computed(() => {
   if (props.config && props.config[nodeId]?.lsnodes) {
     links.push(`<a href="${props.config[nodeId].lsnodes}" target="_blank">lsNodes</a>`)
   } else if (props.config && props.config[nodeId]?.host && /localhost|127\.0\.0\.1/.test(props.config[nodeId].host)) {
-    const lsNodesChart = `/cgi-bin/lsnodes_web?node=${encodeURIComponent(nodeId)}`
+    // Use new Vue route for lsnod display
+    const lsNodesChart = `/lsnod/${encodeURIComponent(nodeId)}`
     links.push(`<a href="${lsNodesChart}" target="_blank">lsNodes</a>`)
   }
   
