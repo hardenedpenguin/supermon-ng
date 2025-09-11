@@ -146,6 +146,11 @@ if [ "$(pwd)" != "$APP_DIR" ]; then
         find scripts -name "*.php" -exec cp {} "$APP_DIR/scripts/" \;
         find scripts -name "*.sh" ! -name "supermon_unified_file_editor.sh" -exec cp {} "$APP_DIR/scripts/" \;
     fi
+    # Explicitly copy astdb.txt if it exists
+    if [ -f "astdb.txt" ]; then
+        echo "📄 Copying astdb.txt..."
+        cp astdb.txt "$APP_DIR/"
+    fi
     cd "$APP_DIR"
 fi
 

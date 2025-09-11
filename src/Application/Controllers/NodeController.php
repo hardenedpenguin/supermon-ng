@@ -2399,13 +2399,19 @@ class NodeController
     public function reboot(Request $request, Response $response, array $args): Response
     {
         $currentUser = $this->getCurrentUser();
+        $this->logger->info('Reboot request', ['user' => $currentUser]);
+        
         if (!$this->hasUserPermission($currentUser, 'RBTUSER')) {
+            $this->logger->info('Reboot permission denied', ['user' => $currentUser]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to reboot the server.']));
             return $response->withHeader('Content-Type', 'application/json');
         }
 
         try {
-            // Send success response immediately
+            // Execute reboot command in background first
+            $this->executeRebootInBackground();
+            
+            // Send success response
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'data' => [
@@ -2414,9 +2420,6 @@ class NodeController
                 ],
                 'message' => 'Server reboot initiated successfully'
             ]));
-            
-            // Execute reboot command in background after response is sent
-            $this->executeRebootInBackground();
             
             return $response->withHeader('Content-Type', 'application/json');
 
@@ -2429,12 +2432,34 @@ class NodeController
 
     private function executeRebootInBackground(): void
     {
-        // Execute reboot command in background to avoid blocking the response
-        $command = "sudo /usr/sbin/reboot > /dev/null 2>&1 &";
-        exec($command);
-        
-        // Log the reboot attempt
-        $this->logger->info('Server reboot command executed in background');
+        try {
+            // Create a temporary script to handle the delayed reboot
+            $scriptContent = "#!/bin/bash\nsleep 10\nsudo /usr/sbin/reboot\n";
+            $scriptPath = '/tmp/reboot_' . uniqid() . '.sh';
+            
+            // Write the script
+            file_put_contents($scriptPath, $scriptContent);
+            chmod($scriptPath, 0755);
+            
+            // Execute the script in background
+            $command = "nohup $scriptPath > /dev/null 2>&1 &";
+            $output = [];
+            $returnCode = 0;
+            exec($command, $output, $returnCode);
+            
+            // Log the reboot attempt
+            $this->logger->info('Server reboot command executed in background', [
+                'command' => $command,
+                'script_path' => $scriptPath,
+                'return_code' => $returnCode,
+                'output' => $output
+            ]);
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to execute reboot command in background', [
+                'error' => $e->getMessage(),
+                'command' => $command ?? 'unknown'
+            ]);
+        }
     }
 
     public function smlog(Request $request, Response $response, array $args): Response

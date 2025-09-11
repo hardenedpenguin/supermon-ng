@@ -114,7 +114,10 @@ const executeReboot = async () => {
     const response = await api.post('/nodes/reboot')
 
     if (response.data.success) {
-      result.value = response.data.data
+      result.value = {
+        success: true,
+        ...response.data.data
+      }
     } else {
       result.value = {
         success: false,

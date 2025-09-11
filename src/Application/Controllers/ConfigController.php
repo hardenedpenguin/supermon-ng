@@ -1165,7 +1165,7 @@ class ConfigController
     /**
      * Check if user has specific permission
      */
-    private function hasUserPermission(string $user, string $permission): bool
+    private function hasUserPermission(?string $user, string $permission): bool
     {
         // If no user is provided, use default permissions for unauthenticated users
         if (!$user) {
@@ -2745,13 +2745,26 @@ class ConfigController
     public function getFavorites(Request $request, Response $response): Response
     {
         try {
-            $currentUser = $this->getCurrentUser();
-            if (!$currentUser) {
-                $currentUser = 'default';
-            }
+        $currentUser = $this->getCurrentUser();
+        
+        // If no user is authenticated, use a generic approach
+        if (!$currentUser) {
+            // Try to determine user from available user-specific files
+            $userFilesDir = __DIR__ . '/../../../user_files/';
+            $userSpecificFiles = glob($userFilesDir . '*-favorites.ini');
             
-            // Check user permissions
-            if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
+            if (!empty($userSpecificFiles)) {
+                // Extract username from the first user-specific file found
+                $firstFile = basename($userSpecificFiles[0]);
+                $currentUser = str_replace('-favorites.ini', '', $firstFile);
+            } else {
+                // No user-specific files found, use generic approach
+                $currentUser = null;
+            }
+        }
+        
+        // Check user permissions (pass null for unauthenticated users to use default permissions)
+        if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
                     'message' => 'FAVUSER permission required'
@@ -2759,7 +2772,7 @@ class ConfigController
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
             }
 
-            $favoritesData = $this->loadFavoritesConfiguration($currentUser);
+            $favoritesData = $this->loadFavoritesConfiguration($currentUser ?? 'default');
             
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -2784,13 +2797,13 @@ class ConfigController
     public function deleteFavorite(Request $request, Response $response): Response
     {
         try {
-            $currentUser = $this->getCurrentUser();
-            if (!$currentUser) {
-                $currentUser = 'default';
-            }
-            
-            // Check user permissions
-            if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $currentUser = 'default';
+        }
+        
+        // Check user permissions (pass null for unauthenticated users to use default permissions)
+        if (!$this->hasUserPermission($currentUser === 'default' ? null : $currentUser, 'FAVUSER')) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
                     'message' => 'FAVUSER permission required'
@@ -2838,13 +2851,13 @@ class ConfigController
     public function executeFavorite(Request $request, Response $response): Response
     {
         try {
-            $currentUser = $this->getCurrentUser();
-            if (!$currentUser) {
-                $currentUser = 'default';
-            }
-            
-            // Check user permissions
-            if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $currentUser = 'default';
+        }
+        
+        // Check user permissions (pass null for unauthenticated users to use default permissions)
+        if (!$this->hasUserPermission($currentUser === 'default' ? null : $currentUser, 'FAVUSER')) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
                     'message' => 'FAVUSER permission required'
@@ -2853,7 +2866,7 @@ class ConfigController
             }
 
             $body = $request->getParsedBody();
-            $node = $body['node'] ?? '';
+            $node = (string) ($body['node'] ?? '');
             $command = $body['command'] ?? '';
 
             if (empty($node) || empty($command)) {
@@ -2929,9 +2942,13 @@ class ConfigController
         foreach ($config as $section => $sectionData) {
             if ($section === 'general') {
                 // General favorites (available for all nodes)
-                if (isset($sectionData['label']) && isset($sectionData['cmd'])) {
-                    $labels = is_array($sectionData['label']) ? $sectionData['label'] : [$sectionData['label']];
-                    $cmds = is_array($sectionData['cmd']) ? $sectionData['cmd'] : [$sectionData['cmd']];
+                // Handle both 'label'/'cmd' and 'label[]'/'cmd[]' formats
+                $labelKey = isset($sectionData['label[]']) ? 'label[]' : 'label';
+                $cmdKey = isset($sectionData['cmd[]']) ? 'cmd[]' : 'cmd';
+                
+                if (isset($sectionData[$labelKey]) && isset($sectionData[$cmdKey])) {
+                    $labels = is_array($sectionData[$labelKey]) ? $sectionData[$labelKey] : [$sectionData[$labelKey]];
+                    $cmds = is_array($sectionData[$cmdKey]) ? $sectionData[$cmdKey] : [$sectionData[$cmdKey]];
                     
                     for ($i = 0; $i < count($labels) && $i < count($cmds); $i++) {
                         $favorites[] = [
@@ -2946,9 +2963,13 @@ class ConfigController
                 }
             } else {
                 // Node-specific favorites
-                if (isset($sectionData['label']) && isset($sectionData['cmd'])) {
-                    $labels = is_array($sectionData['label']) ? $sectionData['label'] : [$sectionData['label']];
-                    $cmds = is_array($sectionData['cmd']) ? $sectionData['cmd'] : [$sectionData['cmd']];
+                // Handle both 'label'/'cmd' and 'label[]'/'cmd[]' formats
+                $labelKey = isset($sectionData['label[]']) ? 'label[]' : 'label';
+                $cmdKey = isset($sectionData['cmd[]']) ? 'cmd[]' : 'cmd';
+                
+                if (isset($sectionData[$labelKey]) && isset($sectionData[$cmdKey])) {
+                    $labels = is_array($sectionData[$labelKey]) ? $sectionData[$labelKey] : [$sectionData[$labelKey]];
+                    $cmds = is_array($sectionData[$cmdKey]) ? $sectionData[$cmdKey] : [$sectionData[$cmdKey]];
                     
                     for ($i = 0; $i < count($labels) && $i < count($cmds); $i++) {
                         $favorites[] = [
@@ -2979,6 +3000,7 @@ class ConfigController
         if ($content === false) {
             return false;
         }
+        
         
         $lines = explode("\n", $content);
         $config = [];
@@ -3031,6 +3053,34 @@ class ConfigController
                 if ($key === 'label' || $key === 'cmd') {
                     if (!is_array($value)) {
                         $value = [$value];
+                    }
+                }
+            }
+            
+            // Handle mixed array-style and single entries for label and cmd
+            if (isset($sectionData['label']) && isset($sectionData['cmd'])) {
+                // Ensure both are arrays
+                if (!is_array($sectionData['label'])) {
+                    $sectionData['label'] = [$sectionData['label']];
+                }
+                if (!is_array($sectionData['cmd'])) {
+                    $sectionData['cmd'] = [$sectionData['cmd']];
+                }
+                
+                // If arrays have different lengths, pad the shorter one with empty strings
+                $labelCount = count($sectionData['label']);
+                $cmdCount = count($sectionData['cmd']);
+                if ($labelCount !== $cmdCount) {
+                    if ($labelCount < $cmdCount) {
+                        // Pad labels with empty strings
+                        for ($i = $labelCount; $i < $cmdCount; $i++) {
+                            $sectionData['label'][] = '';
+                        }
+                    } else {
+                        // Pad commands with empty strings
+                        for ($i = $cmdCount; $i < $labelCount; $i++) {
+                            $sectionData['cmd'][] = '';
+                        }
                     }
                 }
             }
@@ -3185,12 +3235,15 @@ class ConfigController
             $content .= "[$section]\n";
             
             foreach ($sectionData as $key => $value) {
+                // Strip [] from key name if present
+                $cleanKey = rtrim($key, '[]');
+                
                 if (is_array($value)) {
                     foreach ($value as $item) {
-                        $content .= "$key = " . $this->escapeIniValue($item) . "\n";
+                        $content .= $cleanKey . "[] = " . $this->escapeIniValue($item) . "\n";
                     }
                 } else {
-                    $content .= "$key = " . $this->escapeIniValue($value) . "\n";
+                    $content .= "$cleanKey = " . $this->escapeIniValue($value) . "\n";
                 }
             }
             $content .= "\n";
@@ -3225,102 +3278,132 @@ class ConfigController
      */
     public function addFavorite(Request $request, Response $response): Response
     {
-        $currentUser = $this->getCurrentUser();
-        if (!$currentUser) {
-            $currentUser = 'default';
-        }
+        try {
+            $currentUser = $this->getCurrentUser();
+            
+            // If no user is authenticated, use a generic approach
+            if (!$currentUser) {
+                // Try to determine user from available user-specific files
+                $userFilesDir = __DIR__ . '/../../../user_files/';
+                $userSpecificFiles = glob($userFilesDir . '*-favorites.ini');
+                
+                if (!empty($userSpecificFiles)) {
+                    // Extract username from the first user-specific file found
+                    $firstFile = basename($userSpecificFiles[0]);
+                    $currentUser = str_replace('-favorites.ini', '', $firstFile);
+                } else {
+                    // No user-specific files found, use generic approach
+                    $currentUser = null;
+                }
+            }
 
-        // Check user permissions
-        if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => 'FAVUSER permission required'
-            ]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
-        }
-
-        $data = $request->getParsedBody();
-        $node = $data['node'] ?? '';
-        $customLabel = trim($data['custom_label'] ?? '');
-        $addToGeneral = ($data['add_to_general'] ?? '') === '1';
-        $sourceNode = $data['source_node'] ?? null; // New parameter for source node
-
-        // Validate node parameter
-        if (!is_numeric($node) || $node === '') {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => 'Invalid node number provided'
-            ]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-        }
-
-        // Look up node information from astdb.txt
-        $nodeInfo = $this->lookupNodeInfo($node);
-        if ($nodeInfo === false) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => "Node $node not found in astdb.txt database"
-            ]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
-        }
-
-        // Check if node already exists in favorites
-        $alreadyExists = $this->nodeExistsInFavorites($currentUser, $node);
-        if ($alreadyExists) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => "Node $node already exists in your favorites"
-            ]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(409);
-        }
-
-        // Use custom label if provided, otherwise generate from node info
-        if (empty($customLabel)) {
-            $customLabel = $nodeInfo['callsign'] . ' ' . $nodeInfo['description'] . ' ' . $node;
-        }
-
-        // Generate command based on whether it's general or node-specific
-        if ($addToGeneral) {
-            // For general favorites, use %node% placeholder (will be replaced at execution time)
-            $command = "rpt cmd %node% ilink 13 " . $node;
-        } else {
-            // For node-specific favorites, use the actual source node number
-            if (empty($sourceNode)) {
+            // Check user permissions
+            if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
-                    'message' => 'Source node is required for node-specific favorites'
+                    'message' => 'FAVUSER permission required'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+            }
+
+            $data = $request->getParsedBody();
+            $node = $data['node'] ?? '';
+            $customLabel = trim($data['custom_label'] ?? '');
+            $addToGeneral = ($data['add_to_general'] ?? '') === '1';
+            $sourceNode = $data['source_node'] ?? null; // New parameter for source node
+            if ($sourceNode !== null) {
+                $sourceNode = (string) $sourceNode; // Convert to string if not null
+            }
+
+            // Validate node parameter
+            if (!is_numeric($node) || $node === '') {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Invalid node number provided'
                 ]));
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
             }
-            
-            // Prevent creating favorites where source and target are the same
-            if ($sourceNode === $node) {
+
+            // Look up node information from astdb.txt
+            $nodeInfo = $this->lookupNodeInfo($node);
+            if ($nodeInfo === false) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
-                    'message' => 'Source node and target node cannot be the same. A node cannot connect to itself.'
+                    'message' => "Node $node not found in astdb.txt database"
                 ]));
-                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
             }
+
+            // Check if node already exists in favorites
+            $alreadyExists = $this->nodeExistsInFavorites($currentUser, $node);
+            if ($alreadyExists) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => "Node $node already exists in your favorites"
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(409);
+            }
+
+            // Use custom label if provided, otherwise generate from node info
+            if (empty($customLabel)) {
+                $customLabel = $nodeInfo['callsign'] . ' ' . $nodeInfo['description'] . ' ' . $node;
+            }
+
+            // Generate command based on whether it's general or node-specific
+            if ($addToGeneral) {
+                // For general favorites, use %node% placeholder (will be replaced at execution time)
+                $command = "rpt cmd %node% ilink 13 " . $node;
+            } else {
+                // For node-specific favorites, use the actual source node number
+                if (empty($sourceNode)) {
+                    $response->getBody()->write(json_encode([
+                        'success' => false,
+                        'message' => 'Source node is required for node-specific favorites'
+                    ]));
+                    return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+                }
+                
+                // Prevent creating favorites where source and target are the same
+                if ($sourceNode === $node) {
+                    $response->getBody()->write(json_encode([
+                        'success' => false,
+                        'message' => 'Source node and target node cannot be the same. A node cannot connect to itself.'
+                    ]));
+                    return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+                }
+                
+                $command = "rpt cmd " . $sourceNode . " ilink 13 " . $node;
+            }
+
+            // Add to favorites
+            $result = $this->addFavoriteToConfiguration($currentUser ?? 'default', $node, $customLabel, $command, $addToGeneral, $sourceNode);
+
+            if ($result['success']) {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'message' => "Node $node has been successfully added to your favorites as \"$customLabel\"",
+                    'node' => $node,
+                    'label' => $customLabel,
+                    'file' => $result['fileName']
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            } else {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => $result['message']
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+            }
+        
+        } catch (\Exception $e) {
+            $this->logger->error('Error in addFavorite: ' . $e->getMessage(), [
+                'exception' => $e,
+                'trace' => $e->getTraceAsString()
+            ]);
             
-            $command = "rpt cmd " . $sourceNode . " ilink 13 " . $node;
-        }
-
-        // Add to favorites
-        $result = $this->addFavoriteToConfiguration($currentUser, $node, $customLabel, $command, $addToGeneral, $sourceNode);
-
-        if ($result['success']) {
-            $response->getBody()->write(json_encode([
-                'success' => true,
-                'message' => "Node $node has been successfully added to your favorites as \"$customLabel\"",
-                'node' => $node,
-                'label' => $customLabel,
-                'file' => $result['fileName']
-            ]));
-            return $response->withHeader('Content-Type', 'application/json');
-        } else {
             $response->getBody()->write(json_encode([
                 'success' => false,
-                'message' => $result['message']
+                'message' => 'Internal server error: ' . $e->getMessage()
             ]));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
@@ -3413,7 +3496,10 @@ class ConfigController
     private function getAstdbPath(): ?string
     {
         // Load ASTDB_TXT from common.inc
-        include_once __DIR__ . '/../../../includes/common.inc';
+        $commonIncPath = __DIR__ . '/../../../includes/common.inc';
+        if (file_exists($commonIncPath)) {
+            include_once $commonIncPath;
+        }
         global $ASTDB_TXT;
         
         if (isset($ASTDB_TXT)) {
