@@ -372,6 +372,115 @@
             </div>
           </div>
         </div>
+
+        <!-- COS/PTT Status Colors -->
+        <div class="color-section">
+          <h4>COS/PTT Status Colors</h4>
+          <p class="section-description">These colors control the visual status indicators for node states. Choose colors with good contrast for readability.</p>
+          <div class="color-grid">
+            <div class="color-item">
+              <label>Idle Status</label>
+              <div class="color-picker-wrapper">
+                <input 
+                  v-model="themeData.colors.statusIdle" 
+                  type="color" 
+                  class="color-picker"
+                />
+                <input 
+                  v-model="themeData.colors.statusIdle" 
+                  type="text" 
+                  class="color-input"
+                  placeholder="#2a2a2a"
+                />
+              </div>
+            </div>
+            
+            <div class="color-item">
+              <label>PTT-Keyed Status</label>
+              <div class="color-picker-wrapper">
+                <input 
+                  v-model="themeData.colors.statusPtt" 
+                  type="color" 
+                  class="color-picker"
+                />
+                <input 
+                  v-model="themeData.colors.statusPtt" 
+                  type="text" 
+                  class="color-input"
+                  placeholder="#4a90e2"
+                />
+              </div>
+            </div>
+            
+            <div class="color-item">
+              <label>COS-Detected Status</label>
+              <div class="color-picker-wrapper">
+                <input 
+                  v-model="themeData.colors.statusCos" 
+                  type="color" 
+                  class="color-picker"
+                />
+                <input 
+                  v-model="themeData.colors.statusCos" 
+                  type="text" 
+                  class="color-input"
+                  placeholder="#17a2b8"
+                />
+              </div>
+            </div>
+            
+            <div class="color-item">
+              <label>Full-Duplex Status</label>
+              <div class="color-picker-wrapper">
+                <input 
+                  v-model="themeData.colors.statusFullDuplex" 
+                  type="color" 
+                  class="color-picker"
+                />
+                <input 
+                  v-model="themeData.colors.statusFullDuplex" 
+                  type="text" 
+                  class="color-input"
+                  placeholder="#e74c3c"
+                />
+              </div>
+            </div>
+            
+            <div class="color-item">
+              <label>Receiving Status</label>
+              <div class="color-picker-wrapper">
+                <input 
+                  v-model="themeData.colors.statusReceiving" 
+                  type="color" 
+                  class="color-picker"
+                />
+                <input 
+                  v-model="themeData.colors.statusReceiving" 
+                  type="text" 
+                  class="color-input"
+                  placeholder="#9b59b6"
+                />
+              </div>
+            </div>
+            
+            <div class="color-item">
+              <label>First Node Status</label>
+              <div class="color-picker-wrapper">
+                <input 
+                  v-model="themeData.colors.statusFirstNode" 
+                  type="color" 
+                  class="color-picker"
+                />
+                <input 
+                  v-model="themeData.colors.statusFirstNode" 
+                  type="text" 
+                  class="color-input"
+                  placeholder="#6c757d"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Theme Preview -->
@@ -389,6 +498,49 @@
           <div class="preview-table">
             <div class="preview-table-header">Table Header</div>
             <div class="preview-table-row">Table Row Content</div>
+          </div>
+          
+          <!-- Status Color Preview -->
+          <div class="preview-status-colors">
+            <h5>Status Colors Preview</h5>
+            <div class="status-preview-grid">
+              <div class="status-preview-item" :style="{ backgroundColor: themeData.colors.statusIdle, color: themeData.colors.text }">
+                <div>Idle</div>
+                <div class="contrast-indicator" :style="{ color: getContrastStatus(getContrastRatio(themeData.colors.statusIdle, themeData.colors.text)).color }">
+                  {{ getContrastStatus(getContrastRatio(themeData.colors.statusIdle, themeData.colors.text)).status }}
+                </div>
+              </div>
+              <div class="status-preview-item" :style="{ backgroundColor: themeData.colors.statusPtt, color: themeData.colors.text }">
+                <div>PTT</div>
+                <div class="contrast-indicator" :style="{ color: getContrastStatus(getContrastRatio(themeData.colors.statusPtt, themeData.colors.text)).color }">
+                  {{ getContrastStatus(getContrastRatio(themeData.colors.statusPtt, themeData.colors.text)).status }}
+                </div>
+              </div>
+              <div class="status-preview-item" :style="{ backgroundColor: themeData.colors.statusCos, color: themeData.colors.text }">
+                <div>COS</div>
+                <div class="contrast-indicator" :style="{ color: getContrastStatus(getContrastRatio(themeData.colors.statusCos, themeData.colors.text)).color }">
+                  {{ getContrastStatus(getContrastRatio(themeData.colors.statusCos, themeData.colors.text)).status }}
+                </div>
+              </div>
+              <div class="status-preview-item" :style="{ backgroundColor: themeData.colors.statusFullDuplex, color: themeData.colors.text }">
+                <div>Full</div>
+                <div class="contrast-indicator" :style="{ color: getContrastStatus(getContrastRatio(themeData.colors.statusFullDuplex, themeData.colors.text)).color }">
+                  {{ getContrastStatus(getContrastRatio(themeData.colors.statusFullDuplex, themeData.colors.text)).status }}
+                </div>
+              </div>
+              <div class="status-preview-item" :style="{ backgroundColor: themeData.colors.statusReceiving, color: themeData.colors.text }">
+                <div>RX</div>
+                <div class="contrast-indicator" :style="{ color: getContrastStatus(getContrastRatio(themeData.colors.statusReceiving, themeData.colors.text)).color }">
+                  {{ getContrastStatus(getContrastRatio(themeData.colors.statusReceiving, themeData.colors.text)).status }}
+                </div>
+              </div>
+              <div class="status-preview-item" :style="{ backgroundColor: themeData.colors.statusFirstNode, color: themeData.colors.text }">
+                <div>First</div>
+                <div class="contrast-indicator" :style="{ color: getContrastStatus(getContrastRatio(themeData.colors.statusFirstNode, themeData.colors.text)).color }">
+                  {{ getContrastStatus(getContrastRatio(themeData.colors.statusFirstNode, themeData.colors.text)).status }}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -424,6 +576,37 @@ const emit = defineEmits<{
 
 const { createCustomTheme, updateCustomTheme } = useTheme()
 
+// Utility function to calculate contrast ratio
+const getContrastRatio = (color1: string, color2: string): number => {
+  const getLuminance = (color: string): number => {
+    const hex = color.replace('#', '')
+    const r = parseInt(hex.substr(0, 2), 16) / 255
+    const g = parseInt(hex.substr(2, 2), 16) / 255
+    const b = parseInt(hex.substr(4, 2), 16) / 255
+    
+    const [rs, gs, bs] = [r, g, b].map(c => 
+      c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4)
+    )
+    
+    return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs
+  }
+  
+  const lum1 = getLuminance(color1)
+  const lum2 = getLuminance(color2)
+  const brightest = Math.max(lum1, lum2)
+  const darkest = Math.min(lum1, lum2)
+  
+  return (brightest + 0.05) / (darkest + 0.05)
+}
+
+// Check contrast for text readability
+const getContrastStatus = (ratio: number): { status: string; color: string } => {
+  if (ratio >= 7) return { status: 'Excellent', color: '#4caf50' }
+  if (ratio >= 4.5) return { status: 'Good', color: '#8bc34a' }
+  if (ratio >= 3) return { status: 'Fair', color: '#ff9800' }
+  return { status: 'Poor', color: '#f44336' }
+}
+
 const isEditing = computed(() => !!props.editingTheme)
 
 const themeData = ref({
@@ -447,7 +630,14 @@ const themeData = ref({
     localNodeBorder: '#404040',
     localNodeHeader: '#404040',
     localNodeHeaderText: '#e0e0e0',
-    tableBg: '#1a1a1a'
+    tableBg: '#1a1a1a',
+    // COS/PTT Status Colors
+    statusIdle: '#2a2a2a',
+    statusPtt: '#4a90e2',
+    statusCos: '#17a2b8',
+    statusFullDuplex: '#e74c3c',
+    statusReceiving: '#9b59b6',
+    statusFirstNode: '#6c757d'
   }
 })
 
@@ -693,6 +883,51 @@ const saveTheme = () => {
   background-color: var(--preview-container);
   color: var(--preview-text);
   padding: 0.5rem;
+}
+
+.section-description {
+  font-size: 0.9rem;
+  color: var(--text-color);
+  opacity: 0.8;
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+.preview-status-colors {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--preview-border);
+}
+
+.preview-status-colors h5 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: var(--preview-text);
+}
+
+.status-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 0.5rem;
+}
+
+.status-preview-item {
+  padding: 0.5rem;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid var(--preview-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.contrast-indicator {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  opacity: 0.8;
 }
 
 .form-actions {
