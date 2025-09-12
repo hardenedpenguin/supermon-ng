@@ -512,8 +512,8 @@ const headerTitle = computed(() => {
   }
   // Fallback to default titles if API doesn't provide them
   return appStore.isAuthenticated ? 
-    'Supermon-ng V4.0.3 AllStar Manager' : 
-    'Supermon-ng V4.0.3 AllStar Monitor'
+    'Supermon-ng V4.0.5 AllStar Manager' : 
+    'Supermon-ng V4.0.5 AllStar Monitor'
 })
 
 // Watcher to update selectedLocalNode when selectedNode changes
