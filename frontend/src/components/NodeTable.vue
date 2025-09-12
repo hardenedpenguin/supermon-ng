@@ -192,13 +192,13 @@ const nodeTitle = computed(() => {
   // Add external links
   const links: string[] = []
   
+  // Add Bubble Chart and lsNodes links for the main node on the same line
+  const modalLinks = []
   if (!isPrivateOrHidden && parseInt(nodeId) >= 2000) {
     // Bubble Chart link - now opens modal instead of external site
-    links.push(`<a href="#" class="bubble-chart-modal-link" data-node-id="${nodeId}">Bubble Chart</a>`)
+    modalLinks.push(`<a href="#" class="bubble-chart-modal-link" data-node-id="${nodeId}">Bubble Chart</a>`)
   }
-  
-  // Only add lsNodes link for the main node (not for connected nodes)
-  // This will be handled in the template where we know it's the main node
+  modalLinks.push(`<a href="#" class="lsnod-modal-link" data-node-id="${nodeId}">lsNodes</a>`)
   
   if (props.config && props.config[nodeId]?.listenlive) {
     links.push(`<a href="${props.config[nodeId].listenlive}" target="_blank">Listen Live</a>`)
@@ -210,12 +210,14 @@ const nodeTitle = computed(() => {
   
   let title = `  ${baseTitle} ${nodeLink} => ${infoDisplay}  `
   
+  // Add modal links on the same line with 4 spaces between them
+  if (modalLinks.length > 0) {
+    title += '<br>' + modalLinks.join('    ')
+  }
+  
   if (links.length > 0) {
     title += '<br>' + links.join('  ')
   }
-  
-  // Add lsNodes link for the main node
-  title += '<br><a href="#" class="lsnod-modal-link" data-node-id="' + nodeId + '">lsNodes</a>'
   
   return title
 })
