@@ -71,25 +71,25 @@ const loading = ref<boolean>(true)
 const error = ref<string>('')
 const showRawData = ref<boolean>(false)
 
-const loadLsnodData = async () => {
-  try {
-    loading.value = true
-    error.value = ''
-    
-    const response = await api.get(`/nodes/${nodeId.value}/lsnodes/web`)
-    
-    if (response.data.success) {
-      data.value = response.data.data
-    } else {
-      error.value = response.data.message || 'Failed to load lsnod data'
-    }
-  } catch (err: any) {
-    console.error('Error loading lsnod data:', err)
-    error.value = err.response?.data?.message || 'Failed to load lsnod data'
-  } finally {
-    loading.value = false
-  }
-}
+        const loadLsnodData = async () => {
+          try {
+            loading.value = true
+            error.value = ''
+            
+            const response = await api.get(`/nodes/${nodeId.value}/lsnodes/web`)
+            
+            if (response.data.success) {
+              data.value = response.data.data
+            } else {
+              error.value = response.data.message || 'Failed to load lsnod data'
+            }
+          } catch (err: any) {
+            console.error('Error loading lsnod data:', err)
+            error.value = err.response?.data?.message || 'Failed to load lsnod data'
+          } finally {
+            loading.value = false
+          }
+        }
 
 onMounted(() => {
   nodeId.value = route.params.id as string

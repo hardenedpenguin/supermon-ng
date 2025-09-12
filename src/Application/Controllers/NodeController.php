@@ -3556,34 +3556,50 @@ class NodeController
     private function executeLsnodCommand(string $nodeId): array
     {
         try {
-            // Get AMI connection
-            $ami = $this->getAmiConnection();
-            if (!$ami) {
-                throw new Exception('AMI connection not available');
-            }
-
-            // Execute lsnod command
-            $command = "rpt cmd {$nodeId} lsnod";
-            $result = $ami->command($command);
+            // Use the original supermon approach with shell commands
+            $commands = [
+                "sudo /usr/sbin/asterisk -rx \"rpt nodes {$nodeId}\"",
+                "sudo /usr/sbin/asterisk -rx \"rpt stats {$nodeId}\"",
+                "sudo /usr/sbin/asterisk -rx \"rpt lstats {$nodeId}\"",
+                "sudo /usr/sbin/asterisk -rx \"iax2 show registry\""
+            ];
             
-            $this->logger->info('lsnod command executed', [
+            $results = [];
+            $successfulCommands = [];
+            
+            foreach ($commands as $cmd) {
+                $this->logger->info('Executing lsnod shell command', ['command' => $cmd]);
+                $result = shell_exec($cmd);
+                
+                if ($result !== null && $result !== '') {
+                    $results[] = [
+                        'command' => $cmd,
+                        'output' => $result
+                    ];
+                    $successfulCommands[] = $cmd;
+                } else {
+                    $this->logger->warning('Command returned empty result', ['command' => $cmd]);
+                }
+            }
+            
+            $this->logger->info('lsnod shell commands executed', [
                 'node' => $nodeId,
-                'command' => $command,
-                'result' => $result
+                'successful_commands' => $successfulCommands,
+                'total_results' => count($results)
             ]);
 
-            // Parse the result
-            $parsedData = $this->parseLsnodOutput($result);
+            // Parse the results using the original supermon logic
+            $parsedData = $this->parseLsnodOutputFromShell($results, $nodeId);
             
             return [
-                'raw_output' => $result,
+                'raw_output' => $results,
                 'parsed_data' => $parsedData,
-                'command' => $command,
+                'command' => 'shell_commands',
                 'executed_at' => date('c')
             ];
 
         } catch (Exception $e) {
-            $this->logger->error('Failed to execute lsnod command', [
+            $this->logger->error('Failed to execute lsnod shell commands', [
                 'node' => $nodeId,
                 'error' => $e->getMessage()
             ]);
@@ -3592,7 +3608,119 @@ class NodeController
     }
 
     /**
-     * Parse lsnod command output
+     * Parse lsnod output from shell commands (original supermon approach)
+     */
+    private function parseLsnodOutputFromShell(array $results, string $nodeId): array
+    {
+        $nodes = [];
+        $nodeStatus = [];
+        $nodeLstatus = [];
+        $iaxRegistry = [];
+        
+        // Load astdb.txt for node descriptions
+        $astdb = $this->loadAstDb(__DIR__ . '/../../../astdb.txt');
+        
+        // Parse each command result
+        foreach ($results as $result) {
+            $command = $result['command'];
+            $output = $result['output'];
+            
+            if (str_contains($command, 'rpt nodes')) {
+                // Parse connected nodes
+                $lines = explode("\n", $output);
+                $lines = array_slice($lines, 3); // Remove first 3 lines like original
+                $nodesConnected = implode(' ', $lines);
+                $nodesConnected = str_replace([',', "\n"], [' ', ' '], $nodesConnected);
+                $nodesConnected = preg_replace('/\s+/', ' ', $nodesConnected);
+                
+                $nodeArray = explode(' ', trim($nodesConnected));
+                foreach ($nodeArray as $nodeNum) {
+                    $nodeNum = substr($nodeNum, 1, 10); // Remove first character like original
+                    if (is_numeric($nodeNum) && $nodeNum > 0) {
+                        $nodeInfo = $this->getNodeInfoFromAstdb($nodeNum, $astdb);
+                        $nodes[] = [
+                            'node_number' => $nodeNum,
+                            'description' => $nodeInfo['description'],
+                            'status' => 'Connected',
+                            'callsign' => $nodeInfo['callsign'],
+                            'frequency' => $nodeInfo['frequency'],
+                            'location' => $nodeInfo['location']
+                        ];
+                    }
+                }
+            } elseif (str_contains($command, 'rpt stats')) {
+                // Parse node status
+                $lines = explode("\n", $output);
+                $lines = array_slice($lines, 2); // Remove first 2 lines like original
+                $statusData = implode('&', $lines);
+                $statusData = str_replace(['.', "\n", ': '], ['', '&', '&'], $statusData);
+                $statusData = str_replace(',', '', $statusData);
+                $nodeStatus = explode('&', $statusData);
+            } elseif (str_contains($command, 'rpt lstats')) {
+                // Parse node lstatus
+                $lines = explode("\n", $output);
+                $lines = array_slice($lines, 2); // Remove first 2 lines like original
+                $lstatusData = implode(' ', $lines);
+                $lstatusData = preg_replace('/\s+/', ' ', $lstatusData);
+                $nodeLstatus = explode(' ', trim($lstatusData));
+            } elseif (str_contains($command, 'iax2 show registry')) {
+                // Parse IAX registry
+                $lines = explode("\n", $output);
+                $lines = array_slice($lines, 1); // Remove first line like original
+                $registryData = implode(' ', $lines);
+                $registryData = preg_replace('/\s+/', ' ', $registryData);
+                $iaxRegistry = explode(' ', trim($registryData));
+            }
+        }
+        
+        return [
+            'nodes' => $nodes,
+            'node_status' => $nodeStatus,
+            'node_lstatus' => $nodeLstatus,
+            'iax_registry' => $iaxRegistry,
+            'total_nodes' => count($nodes)
+        ];
+    }
+
+    /**
+     * Get node information from astdb
+     */
+    private function getNodeInfoFromAstdb(string $nodeNum, array $astdb): array
+    {
+        $nodeNumInt = (int)$nodeNum;
+        
+        // Check if node is private (less than 2000)
+        if ($nodeNumInt < 2000) {
+            return [
+                'description' => 'Private Node',
+                'callsign' => 'Private',
+                'frequency' => 'Private',
+                'location' => 'Private'
+            ];
+        }
+        
+        // Look up in astdb (format: [nodeId, callsign, frequency, location])
+        if (isset($astdb[$nodeNum]) && is_array($astdb[$nodeNum]) && count($astdb[$nodeNum]) >= 4) {
+            $info = $astdb[$nodeNum];
+            return [
+                'description' => $info[1] . ' - ' . $info[2],
+                'callsign' => $info[1],
+                'frequency' => $info[2],
+                'location' => $info[3]
+            ];
+        }
+        
+        // Node not found in database
+        return [
+            'description' => 'Node not in database',
+            'callsign' => 'Unknown',
+            'frequency' => 'Unknown',
+            'location' => 'Unknown'
+        ];
+    }
+
+    /**
+     * Parse lsnod command output (legacy method)
      */
     private function parseLsnodOutput(string $output): array
     {
@@ -3631,37 +3759,122 @@ class NodeController
     {
         $parsedData = $lsnodData['parsed_data'] ?? [];
         $nodes = $parsedData['nodes'] ?? [];
+        $nodeStatus = $parsedData['node_status'] ?? [];
+        $nodeLstatus = $parsedData['node_lstatus'] ?? [];
+        $iaxRegistry = $parsedData['iax_registry'] ?? [];
         
-        // Create HTML table format similar to original CGI script
-        $html = '<div class="lsnod-container">';
-        $html .= '<h3>lsnod Output for Node ' . htmlspecialchars($nodeId) . '</h3>';
-        $html .= '<p>Total Nodes: ' . count($nodes) . '</p>';
-        
-        if (!empty($nodes)) {
-            $html .= '<table class="lsnod-table">';
-            $html .= '<thead><tr><th>Node</th><th>Description</th><th>Status</th></tr></thead>';
-            $html .= '<tbody>';
-            
-            foreach ($nodes as $node) {
-                $html .= '<tr>';
-                $html .= '<td>' . htmlspecialchars($node['node_number']) . '</td>';
-                $html .= '<td>' . htmlspecialchars($node['description']) . '</td>';
-                $html .= '<td>' . htmlspecialchars($node['status']) . '</td>';
-                $html .= '</tr>';
-            }
-            
-            $html .= '</tbody></table>';
-        } else {
-            $html .= '<p>No nodes found in lsnod output.</p>';
+        // Check if this is an error case
+        if (isset($parsedData['error']) && $parsedData['error'] === 'lsnod not available') {
+            return [
+                'error' => true,
+                'message' => $parsedData['message'] ?? 'lsnod functionality is not available',
+                'node_count' => 0,
+                'nodes' => [],
+                'raw_data' => $lsnodData
+            ];
         }
         
-        $html .= '</div>';
+        // Parse system state from node status array (matching original supermon logic)
+        $systemState = $this->parseSystemStateFromStatus($nodeStatus);
+        
+        // Get main node information from astdb (like the original supermon script)
+        $astdb = $this->loadAstDb(__DIR__ . '/../../../astdb.txt');
+        $mainNodeInfo = $this->getNodeInfoFromAstdb($nodeId, $astdb);
         
         return [
-            'html' => $html,
+            'error' => false,
             'node_count' => count($nodes),
+            'main_node' => [
+                'node_number' => $nodeId,
+                'callsign' => $mainNodeInfo['callsign'] ?? 'Unknown',
+                'frequency' => $mainNodeInfo['frequency'] ?? 'Unknown', 
+                'location' => $mainNodeInfo['location'] ?? 'Unknown'
+            ],
             'nodes' => $nodes,
-            'raw_data' => $lsnodData
+            'node_status' => $nodeStatus,
+            'node_lstatus' => $nodeLstatus,
+            'iax_registry' => $iaxRegistry,
+            'raw_data' => $lsnodData,
+            // System state fields for frontend
+            'selected_system_state' => $systemState['selected_system_state'] ?? '0',
+            'signal_on_input' => $systemState['signal_on_input'] ?? 'NO',
+            'system' => $systemState['system'] ?? 'ENABLED',
+            'parrot_mode' => $systemState['parrot_mode'] ?? 'DISABLED',
+            'scheduler' => $systemState['scheduler'] ?? 'ENABLED',
+            'tail_time' => $systemState['tail_time'] ?? 'STANDARD',
+            'timeout_timer' => $systemState['timeout_timer'] ?? 'ENABLED',
+            'incoming_connections' => $systemState['incoming_connections'] ?? 'ENABLED',
+            'timeout_timer_state' => $systemState['timeout_timer_state'] ?? 'RESET',
+            'timeouts_since_init' => $systemState['timeouts_since_init'] ?? '0',
+            'identifier_state' => $systemState['identifier_state'] ?? 'CLEAN',
+            'kerchunks_today' => $systemState['kerchunks_today'] ?? '0',
+            'kerchunks_since_init' => $systemState['kerchunks_since_init'] ?? '0',
+            'keyups_today' => $systemState['keyups_today'] ?? '0',
+            'keyups_since_init' => $systemState['keyups_since_init'] ?? '0',
+            'dtmf_commands_today' => $systemState['dtmf_commands_today'] ?? '0',
+            'dtmf_commands_since_init' => $systemState['dtmf_commands_since_init'] ?? '0',
+            'last_dtmf_command' => $systemState['last_dtmf_command'] ?? 'N/A',
+            'tx_time_today' => $systemState['tx_time_today'] ?? '00:00:00:000',
+            'tx_time_since_init' => $systemState['tx_time_since_init'] ?? '00:00:00:000',
+            'uptime' => $systemState['uptime'] ?? '00:00:00',
+            'nodes_connected' => $systemState['nodes_connected'] ?? '0',
+            'autopatch' => $systemState['autopatch'] ?? 'ENABLED',
+            'autopatch_state' => $systemState['autopatch_state'] ?? 'DOWN',
+            'autopatch_called_number' => $systemState['autopatch_called_number'] ?? 'N/A',
+            'reverse_patch' => $systemState['reverse_patch'] ?? 'DOWN',
+            'user_linking_commands' => $systemState['user_linking_commands'] ?? 'ENABLED',
+            'user_functions' => $systemState['user_functions'] ?? 'ENABLED'
         ];
+    }
+
+    /**
+     * Parse system state from raw status array (matching original supermon logic)
+     */
+    private function parseSystemStateFromStatus(array $nodeStatus): array
+    {
+        // The original supermon script parses the status data into specific fields
+        // This is a simplified version that maps the array indices to field names
+        // based on the original Perl script structure
+        
+        $systemState = [];
+        
+        // Map array indices to field names (based on original supermon parsing)
+        $fieldMapping = [
+            0 => 'selected_system_state',
+            1 => 'signal_on_input', 
+            2 => 'system',
+            3 => 'parrot_mode',
+            4 => 'scheduler',
+            5 => 'tail_time',
+            6 => 'timeout_timer',
+            7 => 'incoming_connections',
+            8 => 'timeout_timer_state',
+            9 => 'timeouts_since_init',
+            10 => 'identifier_state',
+            11 => 'kerchunks_today',
+            12 => 'kerchunks_since_init',
+            13 => 'keyups_today',
+            14 => 'keyups_since_init',
+            15 => 'dtmf_commands_today',
+            16 => 'dtmf_commands_since_init',
+            17 => 'last_dtmf_command',
+            18 => 'tx_time_today',
+            19 => 'tx_time_since_init',
+            20 => 'uptime',
+            21 => 'nodes_connected',
+            22 => 'autopatch',
+            23 => 'autopatch_state',
+            24 => 'autopatch_called_number',
+            25 => 'reverse_patch',
+            26 => 'user_linking_commands',
+            27 => 'user_functions'
+        ];
+        
+        // Map the status array to named fields
+        foreach ($fieldMapping as $index => $fieldName) {
+            $systemState[$fieldName] = $nodeStatus[$index] ?? '';
+        }
+        
+        return $systemState;
     }
 }

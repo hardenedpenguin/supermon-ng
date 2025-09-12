@@ -35,18 +35,27 @@
           <i class="fas fa-check-circle"></i> {{ success }}
         </div>
 
-        <!-- Bubble Chart URL Display -->
-        <div v-if="bubbleChartUrl" class="bubble-chart-info">
-          <h4>Bubble Chart URL:</h4>
-          <div class="url-display">
-            <code>{{ bubbleChartUrl }}</code>
-            <button class="copy-button" @click="copyToClipboard">
-              <i class="fas fa-copy"></i> Copy
-            </button>
+        <!-- Bubble Chart Display -->
+        <div v-if="bubbleChartUrl" class="bubble-chart-container">
+          <div class="bubble-chart-header">
+            <h4>Bubble Chart for Node {{ nodeInput }}</h4>
+            <div class="bubble-chart-actions">
+              <button class="copy-button" @click="copyToClipboard">
+                <i class="fas fa-copy"></i> Copy URL
+              </button>
+              <button class="btn btn-secondary btn-sm" @click="openInNewWindow">
+                <i class="fas fa-external-link-alt"></i> Open in New Window
+              </button>
+            </div>
           </div>
-          <p class="url-description">
-            This URL will open the AllStarLink bubble chart for node {{ nodeInput }} on stats.allstarlink.org
-          </p>
+          <div class="bubble-chart-iframe-container">
+            <iframe 
+              :src="bubbleChartUrl" 
+              class="bubble-chart-iframe"
+              title="Bubble Chart"
+              frameborder="0"
+            ></iframe>
+          </div>
         </div>
       </div>
 
@@ -57,7 +66,7 @@
           @click="openBubbleChart"
           :disabled="loading || !nodeInput.trim()"
         >
-          <i class="fas fa-external-link-alt"></i> Open Bubble Chart
+          <i class="fas fa-chart-line"></i> Generate Bubble Chart
         </button>
         <button class="btn btn-secondary" @click="closeModal">
           Close
@@ -69,7 +78,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import axios from 'axios'
+import api from '@/utils/api'
 
 // Props
 const props = defineProps({
@@ -119,7 +128,7 @@ const openBubbleChart = async () => {
   bubbleChartUrl.value = ''
 
   try {
-    const response = await axios.post('/api/config/bubblechart', {
+    const response = await api.post('/config/bubblechart', {
       node: nodeInput.value.trim(),
       localNode: props.localNode || ''
     })
@@ -127,9 +136,6 @@ const openBubbleChart = async () => {
     if (response.data.success) {
       bubbleChartUrl.value = response.data.statsUrl
       success.value = response.data.message || 'Bubble chart URL generated successfully'
-      
-      // Open the bubble chart in a new window
-      window.open(bubbleChartUrl.value, 'BubbleChart', 'status=no,location=no,toolbar=no,width=1200,height=800,left=100,top=100')
     } else {
       error.value = response.data.message || 'Failed to generate bubble chart URL'
     }
@@ -158,6 +164,11 @@ const copyToClipboard = async () => {
     console.error('Copy to clipboard failed:', err)
     error.value = 'Failed to copy URL to clipboard'
   }
+}
+
+const openInNewWindow = () => {
+  if (!bubbleChartUrl.value) return
+  window.open(bubbleChartUrl.value, 'BubbleChart', 'status=no,location=no,toolbar=no,width=1200,height=800,left=100,top=100')
 }
 
 // Watch for modal open/close
@@ -191,9 +202,9 @@ watch(() => props.open, (newValue) => {
   background: white;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
+  width: 95%;
+  max-width: 1200px;
+  max-height: 90vh;
   overflow-y: auto;
 }
 
@@ -421,6 +432,82 @@ watch(() => props.open, (newValue) => {
   .btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+/* Bubble Chart Container Styles */
+.bubble-chart-container {
+  margin-top: 20px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.bubble-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.bubble-chart-header h4 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.bubble-chart-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.bubble-chart-actions .copy-button {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color 0.2s;
+}
+
+.bubble-chart-actions .copy-button:hover {
+  background: #5a6268;
+}
+
+.bubble-chart-iframe-container {
+  position: relative;
+  width: 100%;
+  height: 600px;
+  background: #f8f9fa;
+}
+
+.bubble-chart-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: white;
+}
+
+@media (max-width: 768px) {
+  .bubble-chart-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+  }
+  
+  .bubble-chart-actions {
+    justify-content: center;
+  }
+  
+  .bubble-chart-iframe-container {
+    height: 400px;
   }
 }
 </style>

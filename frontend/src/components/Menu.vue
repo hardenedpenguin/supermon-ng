@@ -41,6 +41,12 @@
     :url="currentUrl"
     :title="currentUrlTitle"
   />
+  
+  <!-- Lsnod Modal for lsnod data -->
+  <LsnodModal
+    v-model:isVisible="showLsnodModal"
+    :nodeId="currentLsnodNodeId"
+  />
 </template>
 
 <script setup lang="ts">
@@ -48,6 +54,7 @@ import { ref, onMounted, watch } from 'vue'
 import { api } from '@/utils/api'
 import { useAppStore } from '@/stores/app'
 import UrlModal from './UrlModal.vue'
+import LsnodModal from './LsnodModal.vue'
 
 interface MenuItem {
   name: string
@@ -67,6 +74,10 @@ const isLoading = ref(false)
 const showUrlModal = ref(false)
 const currentUrl = ref('')
 const currentUrlTitle = ref('')
+
+// Lsnod Modal state
+const showLsnodModal = ref(false)
+const currentLsnodNodeId = ref('')
 
 const loadMenu = async () => {
   try {
@@ -103,6 +114,11 @@ const handleMenuClick = (item: MenuItem, event: Event) => {
     if (nodes) {
       emit('nodeSelection', nodes)
     }
+  } else if (item.url.startsWith('/lsnod/')) {
+    // Handle lsnod URLs - open in modal
+    const nodeId = item.url.replace('/lsnod/', '')
+    currentLsnodNodeId.value = nodeId
+    showLsnodModal.value = true
   } else if (item.url.startsWith('http')) {
     // External links - open in modal instead of leaving dashboard
     currentUrl.value = item.url

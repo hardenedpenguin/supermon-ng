@@ -2084,11 +2084,9 @@ class ConfigController
         $currentUser = $this->getCurrentUser();
         
         // Allow bubble chart to proceed even without authentication (using default permissions)
-        if (!$currentUser) {
-            $currentUser = 'default'; // Use default user for INI file resolution
-        }
+        $userForIni = $currentUser ?: 'default'; // Use default user for INI file resolution
 
-        // Check if user has BUBLUSER permission
+        // Check if user has BUBLUSER permission (pass null for unauthenticated users to use default permissions)
         if (!$this->hasUserPermission($currentUser, 'BUBLUSER')) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -2137,7 +2135,7 @@ class ConfigController
      */
     private function buildBubbleChartStatsUrl(string $node): string
     {
-        $statsBaseUrl = "http://stats.allstarlink.org/getstatus.cgi";
+        $statsBaseUrl = "https://stats.allstarlink.org/getstatus.cgi";
         return $statsBaseUrl . "?" . urlencode($node);
     }
 
