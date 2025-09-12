@@ -3832,47 +3832,103 @@ class NodeController
      */
     private function parseSystemStateFromStatus(array $nodeStatus): array
     {
-        // The original supermon script parses the status data into specific fields
-        // This is a simplified version that maps the array indices to field names
-        // based on the original Perl script structure
-        
+        // The node_status array contains alternating key-value pairs
+        // Parse them into a proper associative array
         $systemState = [];
         
-        // Map array indices to field names (based on original supermon parsing)
-        $fieldMapping = [
-            0 => 'selected_system_state',
-            1 => 'signal_on_input', 
-            2 => 'system',
-            3 => 'parrot_mode',
-            4 => 'scheduler',
-            5 => 'tail_time',
-            6 => 'timeout_timer',
-            7 => 'incoming_connections',
-            8 => 'timeout_timer_state',
-            9 => 'timeouts_since_init',
-            10 => 'identifier_state',
-            11 => 'kerchunks_today',
-            12 => 'kerchunks_since_init',
-            13 => 'keyups_today',
-            14 => 'keyups_since_init',
-            15 => 'dtmf_commands_today',
-            16 => 'dtmf_commands_since_init',
-            17 => 'last_dtmf_command',
-            18 => 'tx_time_today',
-            19 => 'tx_time_since_init',
-            20 => 'uptime',
-            21 => 'nodes_connected',
-            22 => 'autopatch',
-            23 => 'autopatch_state',
-            24 => 'autopatch_called_number',
-            25 => 'reverse_patch',
-            26 => 'user_linking_commands',
-            27 => 'user_functions'
-        ];
-        
-        // Map the status array to named fields
-        foreach ($fieldMapping as $index => $fieldName) {
-            $systemState[$fieldName] = $nodeStatus[$index] ?? '';
+        for ($i = 0; $i < count($nodeStatus); $i += 2) {
+            if (isset($nodeStatus[$i]) && isset($nodeStatus[$i + 1])) {
+                $key = $nodeStatus[$i];
+                $value = $nodeStatus[$i + 1];
+                
+                // Map the keys to the expected field names
+                switch ($key) {
+                    case 'Selected system state':
+                        $systemState['selected_system_state'] = $value;
+                        break;
+                    case 'Signal on input':
+                        $systemState['signal_on_input'] = $value;
+                        break;
+                    case 'System':
+                        $systemState['system'] = $value;
+                        break;
+                    case 'Parrot Mode':
+                        $systemState['parrot_mode'] = $value;
+                        break;
+                    case 'Scheduler':
+                        $systemState['scheduler'] = $value;
+                        break;
+                    case 'Tail Time':
+                        $systemState['tail_time'] = $value;
+                        break;
+                    case 'Time out timer':
+                        $systemState['timeout_timer'] = $value;
+                        break;
+                    case 'Incoming connections':
+                        $systemState['incoming_connections'] = $value;
+                        break;
+                    case 'Time out timer state':
+                        $systemState['timeout_timer_state'] = $value;
+                        break;
+                    case 'Time outs since system initialization':
+                        $systemState['timeouts_since_init'] = $value;
+                        break;
+                    case 'Identifier state':
+                        $systemState['identifier_state'] = $value;
+                        break;
+                    case 'Kerchunks today':
+                        $systemState['kerchunks_today'] = $value;
+                        break;
+                    case 'Kerchunks since system initialization':
+                        $systemState['kerchunks_since_init'] = $value;
+                        break;
+                    case 'Keyups today':
+                        $systemState['keyups_today'] = $value;
+                        break;
+                    case 'Keyups since system initialization':
+                        $systemState['keyups_since_init'] = $value;
+                        break;
+                    case 'DTMF commands today':
+                        $systemState['dtmf_commands_today'] = $value;
+                        break;
+                    case 'DTMF commands since system initialization':
+                        $systemState['dtmf_commands_since_init'] = $value;
+                        break;
+                    case 'Last DTMF command executed':
+                        $systemState['last_dtmf_command'] = $value;
+                        break;
+                    case 'TX time today':
+                        $systemState['tx_time_today'] = $value;
+                        break;
+                    case 'TX time since system initialization':
+                        $systemState['tx_time_since_init'] = $value;
+                        break;
+                    case 'Uptime':
+                        $systemState['uptime'] = $value;
+                        break;
+                    case 'Nodes currently connected to us':
+                        $systemState['nodes_connected'] = $value;
+                        break;
+                    case 'Autopatch':
+                        $systemState['autopatch'] = $value;
+                        break;
+                    case 'Autopatch state':
+                        $systemState['autopatch_state'] = $value;
+                        break;
+                    case 'Autopatch called number':
+                        $systemState['autopatch_called_number'] = $value;
+                        break;
+                    case 'Reverse patch/IAXRPT connected':
+                        $systemState['reverse_patch'] = $value;
+                        break;
+                    case 'User linking commands':
+                        $systemState['user_linking_commands'] = $value;
+                        break;
+                    case 'User functions':
+                        $systemState['user_functions'] = $value;
+                        break;
+                }
+            }
         }
         
         return $systemState;

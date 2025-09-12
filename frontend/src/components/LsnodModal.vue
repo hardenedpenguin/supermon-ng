@@ -250,6 +250,7 @@
         <button class="btn btn-secondary" @click="closeModal">Close</button>
       </div>
     </div>
+    
   </div>
 </template>
 
@@ -310,6 +311,7 @@ const emit = defineEmits<{
   'update:isVisible': [value: boolean]
 }>()
 
+
 const loading = ref(false)
 const error = ref('')
 const data = ref<LsnodData | null>(null)
@@ -345,7 +347,7 @@ watch(() => props.isVisible, (newValue) => {
   if (newValue && props.nodeId) {
     loadLsnodData()
   }
-})
+}, { immediate: true })
 
 // Watch for nodeId changes
 watch(() => props.nodeId, (newValue) => {
@@ -356,26 +358,25 @@ watch(() => props.nodeId, (newValue) => {
 
 // Helper functions for display
 const getNodeCallsign = () => {
-  // Try to get from astdb data if available
-  if (data.value?.nodes && data.value.nodes.length > 0) {
-    const nodeInfo = data.value.nodes.find(n => n.node_number === props.nodeId)
-    return nodeInfo?.callsign || 'Unknown'
+  // Get from main node data if available
+  if (data.value?.main_node) {
+    return data.value.main_node.callsign || 'Unknown'
   }
   return 'Unknown'
 }
 
 const getNodeFrequency = () => {
-  if (data.value?.nodes && data.value.nodes.length > 0) {
-    const nodeInfo = data.value.nodes.find(n => n.node_number === props.nodeId)
-    return nodeInfo?.frequency || 'Unknown'
+  // Get from main node data if available
+  if (data.value?.main_node) {
+    return data.value.main_node.frequency || 'Unknown'
   }
   return 'Unknown'
 }
 
 const getNodeLocation = () => {
-  if (data.value?.nodes && data.value.nodes.length > 0) {
-    const nodeInfo = data.value.nodes.find(n => n.node_number === props.nodeId)
-    return nodeInfo?.location || 'Unknown'
+  // Get from main node data if available
+  if (data.value?.main_node) {
+    return data.value.main_node.location || 'Unknown'
   }
   return 'Unknown'
 }

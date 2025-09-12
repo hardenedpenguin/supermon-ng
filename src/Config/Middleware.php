@@ -69,8 +69,8 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
     if ($request->getMethod() === 'POST') {
         $uri = $request->getUri()->getPath();
         
-        // Skip CSRF validation for auth endpoints (login, etc.)
-        $skipPaths = ['/api/auth/login', '/api/auth/logout', '/api/auth/me'];
+        // Skip CSRF validation for auth endpoints (login, etc.) and bubble chart
+        $skipPaths = ['/api/auth/login', '/api/auth/logout', '/api/auth/me', '/api/config/bubblechart'];
         if (!in_array($uri, $skipPaths)) {
             $parsedBody = $request->getParsedBody();
             $token = $parsedBody['csrf_token'] ?? $request->getHeaderLine('X-CSRF-Token') ?? '';

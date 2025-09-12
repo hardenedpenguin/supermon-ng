@@ -9,8 +9,8 @@
 
       <!-- Modal Body -->
       <div class="modal-body">
-        <!-- Node Input Form -->
-        <div class="form-group">
+        <!-- Node Input Form - only show if no localNode prop -->
+        <div v-if="!props.localNode" class="form-group">
           <label for="nodeInput">Node Number:</label>
           <input
             id="nodeInput"
@@ -20,6 +20,12 @@
             placeholder="Enter node number (e.g., 546051)"
             @keyup.enter="openBubbleChart"
           />
+        </div>
+        
+        <!-- Show node info when localNode is provided -->
+        <div v-if="props.localNode" class="form-group">
+          <label>Node Number:</label>
+          <div class="node-display">{{ props.localNode }}</div>
         </div>
 
         <!-- Status Messages -->
@@ -61,13 +67,6 @@
 
       <!-- Modal Footer -->
       <div class="modal-footer">
-        <button 
-          class="btn btn-primary" 
-          @click="openBubbleChart"
-          :disabled="loading || !nodeInput.trim()"
-        >
-          <i class="fas fa-chart-line"></i> Generate Bubble Chart
-        </button>
         <button class="btn btn-secondary" @click="closeModal">
           Close
         </button>
@@ -77,8 +76,16 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import api from '@/utils/api'
+
+onMounted(() => {
+  // If the component is mounted with open=true and localNode, automatically generate the chart
+  if (props.open && props.localNode) {
+    nodeInput.value = props.localNode
+    openBubbleChart()
+  }
+})
 
 // Props
 const props = defineProps({
@@ -117,7 +124,7 @@ const resetState = () => {
 }
 
 const openBubbleChart = async () => {
-  if (!nodeInput.value.trim()) {
+  if (!nodeInput.value || !String(nodeInput.value).trim()) {
     error.value = 'Please enter a node number'
     return
   }
@@ -129,7 +136,7 @@ const openBubbleChart = async () => {
 
   try {
     const response = await api.post('/config/bubblechart', {
-      node: nodeInput.value.trim(),
+      node: String(nodeInput.value).trim(),
       localNode: props.localNode || ''
     })
 
@@ -175,8 +182,10 @@ const openInNewWindow = () => {
 watch(() => props.open, (newValue) => {
   if (newValue) {
     // When modal opens, pre-fill with local node if available
-    if (props.localNode && !nodeInput.value) {
+    if (props.localNode) {
       nodeInput.value = props.localNode
+      // Automatically generate the chart for the local node
+      openBubbleChart()
     }
   } else {
     resetState()
@@ -274,6 +283,16 @@ watch(() => props.open, (newValue) => {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.node-display {
+  padding: 12px;
+  background-color: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: #495057;
 }
 
 .status-message {

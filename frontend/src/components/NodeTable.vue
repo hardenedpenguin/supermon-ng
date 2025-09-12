@@ -78,11 +78,29 @@
     </tbody>
   </table>
   <br />
+  
+  <!-- Bubble Chart Modal -->
+  <BubbleChart 
+    v-if="showBubbleChart"
+    :open="showBubbleChart"
+    :localNode="node.id"
+    @update:open="showBubbleChart = $event"
+  />
+  
+  <!-- Lsnod Modal -->
+  <LsnodModal 
+    v-if="showLsnodModal"
+    :isVisible="showLsnodModal"
+    :nodeId="node.id"
+    @update:isVisible="showLsnodModal = $event"
+  />
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect } from 'vue'
+import { computed, ref, watchEffect, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '@/stores/app'
+import BubbleChart from './BubbleChart.vue'
+import LsnodModal from './LsnodModal.vue'
 
 // Emits
 const emit = defineEmits<{
@@ -114,6 +132,8 @@ const nodeData = ref<any>(null)
 const connectedNodes = ref<any[]>([])
 const totalNodes = ref(0)
 const displayedNodes = ref(0)
+const showBubbleChart = ref(false)
+const showLsnodModal = ref(false)
 
 // Computed properties
 const colspan = computed(() => props.showDetail ? 7 : 5)
@@ -173,17 +193,12 @@ const nodeTitle = computed(() => {
   const links: string[] = []
   
   if (!isPrivateOrHidden && parseInt(nodeId) >= 2000) {
-    const bubbleChart = `http://stats.allstarlink.org/getstatus.cgi?${encodeURIComponent(nodeId)}`
-    links.push(`<a href="${bubbleChart}" target="_blank">Bubble Chart</a>`)
+    // Bubble Chart link - now opens modal instead of external site
+    links.push(`<a href="#" class="bubble-chart-modal-link" data-node-id="${nodeId}">Bubble Chart</a>`)
   }
   
-  if (props.config && props.config[nodeId]?.lsnodes) {
-    links.push(`<a href="${props.config[nodeId].lsnodes}" target="_blank">lsNodes</a>`)
-  } else if (props.config && props.config[nodeId]?.host && /localhost|127\.0\.0\.1/.test(props.config[nodeId].host)) {
-    // Use new Vue route for lsnod display
-    const lsNodesChart = `/lsnod/${encodeURIComponent(nodeId)}`
-    links.push(`<a href="${lsNodesChart}" target="_blank">lsNodes</a>`)
-  }
+  // Only add lsNodes link for the main node (not for connected nodes)
+  // This will be handled in the template where we know it's the main node
   
   if (props.config && props.config[nodeId]?.listenlive) {
     links.push(`<a href="${props.config[nodeId].listenlive}" target="_blank">Listen Live</a>`)
@@ -198,6 +213,9 @@ const nodeTitle = computed(() => {
   if (links.length > 0) {
     title += '<br>' + links.join('  ')
   }
+  
+  // Add lsNodes link for the main node
+  title += '<br><a href="#" class="lsnod-modal-link" data-node-id="' + nodeId + '">lsNodes</a>'
   
   return title
 })
@@ -360,6 +378,14 @@ const handleNodeClick = (nodeId: string) => {
   emit('node-click', nodeId, props.node.id)
 }
 
+const openBubbleChartModal = () => {
+  showBubbleChart.value = true
+}
+
+const openLsnodModal = () => {
+  showLsnodModal.value = true
+}
+
 // Update node data from real-time store
 const updateNodeData = (data: any) => {
   nodeData.value = data
@@ -416,6 +442,36 @@ const formatLastKeyed = (lastKeyed: any): string => {
   // If it's already a formatted string, return as is
   return String(lastKeyed)
 }
+
+// Event handling for modal links
+const handleModalLinkClick = (event: Event) => {
+  const target = event.target as HTMLElement
+  if (target.classList.contains('bubble-chart-modal-link')) {
+    event.preventDefault()
+    event.stopPropagation()
+    openBubbleChartModal()
+  } else if (target.classList.contains('lsnod-modal-link')) {
+    event.preventDefault()
+    event.stopPropagation()
+    openLsnodModal()
+  }
+}
+
+// Set up event delegation with more specific targeting
+onMounted(() => {
+  // Use a more specific selector to avoid conflicts
+  const tableElement = document.querySelector(`#table_${props.node.id}`)
+  if (tableElement) {
+    tableElement.addEventListener('click', handleModalLinkClick)
+  }
+})
+
+onUnmounted(() => {
+  const tableElement = document.querySelector(`#table_${props.node.id}`)
+  if (tableElement) {
+    tableElement.removeEventListener('click', handleModalLinkClick)
+  }
+})
 
 // Expose methods for parent component
 defineExpose({

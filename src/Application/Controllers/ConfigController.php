@@ -2096,8 +2096,8 @@ class ConfigController
         }
 
         $data = $request->getParsedBody();
-        $node = trim($data['node'] ?? '');
-        $localNode = trim($data['localNode'] ?? '');
+        $node = trim((string)($data['node'] ?? ''));
+        $localNode = trim((string)($data['localNode'] ?? ''));
 
         // Determine which node to use (priority to 'node' parameter)
         $nodeToUse = '';

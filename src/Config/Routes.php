@@ -27,6 +27,11 @@ $app->get('/health', function ($request, $response) {
 
 // CSRF token endpoint
 $app->get('/api/csrf-token', function ($request, $response) {
+    // Ensure session is started
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
     $response->getBody()->write(json_encode([
         'csrf_token' => $_SESSION['csrf_token'] ?? ''
     ]));
