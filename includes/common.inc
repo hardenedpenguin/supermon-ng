@@ -47,7 +47,7 @@ $TITLE_LOGGED = "Supermon-ng V4.0.5 AllStar Manager";
 /**
  * @var string Version date of the Supermon-ng software.
  */
-$VERSION_DATE = "September 09, 2025";
+$VERSION_DATE = "September 11, 2025";
 
 /**
  * @var string Title in header when not logged in.
