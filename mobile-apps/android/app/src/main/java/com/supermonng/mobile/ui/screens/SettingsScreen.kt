@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -16,12 +17,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.supermonng.mobile.ui.components.LoadingIndicator
 import com.supermonng.mobile.ui.viewmodel.SettingsViewModel
+import com.supermonng.mobile.ui.viewmodel.ViewModelFactory
 
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
     onSaveAndLogin: () -> Unit,
-    viewModel: SettingsViewModel = viewModel()
+    viewModel: SettingsViewModel = viewModel(factory = ViewModelFactory(LocalContext.current))
 ) {
     val uiState by viewModel.uiState.collectAsState()
     

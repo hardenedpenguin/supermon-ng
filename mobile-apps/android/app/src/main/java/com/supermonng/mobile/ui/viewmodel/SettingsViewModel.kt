@@ -1,7 +1,9 @@
 package com.supermonng.mobile.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.supermonng.mobile.data.local.PreferencesManager
 import com.supermonng.mobile.data.network.NetworkModule
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,21 +12,28 @@ import kotlinx.coroutines.launch
 import java.net.URL
 import java.net.HttpURLConnection
 
-class SettingsViewModel : ViewModel() {
+class SettingsViewModel(private val context: Context) : ViewModel() {
     
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
     
+    private val preferencesManager = PreferencesManager(context)
+    
     fun loadSettings() {
         viewModelScope.launch {
-            // Load saved settings from SharedPreferences or DataStore
-            // For now, we'll use default values
+            // Load saved settings from PreferencesManager
+            val savedUrl = preferencesManager.getServerUrl() ?: "https://sm.w5gle.us"
+            val savedPort = preferencesManager.getServerPort() ?: "443"
+            val savedUsername = preferencesManager.getUsername() ?: ""
+            val savedPassword = preferencesManager.getPassword() ?: ""
+            val rememberMe = preferencesManager.getRememberMe()
+            
             _uiState.value = _uiState.value.copy(
-                serverUrl = "https://sm.w5gle.us", // Default to your server as example
-                serverPort = "443",
-                username = "",
-                password = "",
-                rememberCredentials = true
+                serverUrl = savedUrl,
+                serverPort = savedPort,
+                username = savedUsername,
+                password = savedPassword,
+                rememberCredentials = rememberMe
             )
         }
     }
@@ -168,11 +177,13 @@ class SettingsViewModel : ViewModel() {
                 }
                 NetworkModule.setBaseUrl(baseUrl)
                 
-                // Simulate saving settings
-                kotlinx.coroutines.delay(500)
-                
-                // TODO: Save to SharedPreferences or DataStore
-                // saveToPreferences(currentState)
+                // Save settings to PreferencesManager
+                preferencesManager.saveServerSettings(currentState.serverUrl, currentState.serverPort)
+                preferencesManager.saveCredentials(
+                    currentState.username,
+                    currentState.password,
+                    currentState.rememberCredentials
+                )
                 
                 _uiState.value = _uiState.value.copy(
                     isSaving = false,
