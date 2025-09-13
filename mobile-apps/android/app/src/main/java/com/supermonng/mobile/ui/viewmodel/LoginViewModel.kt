@@ -53,8 +53,8 @@ class LoginViewModel : ViewModel() {
                 // Simulate network delay
                 kotlinx.coroutines.delay(1000)
                 
-                // Simple validation
-                if (currentState.username == "admin" && currentState.password == "password") {
+                // Simple validation - accept any non-empty credentials for now
+                if (currentState.username.isNotBlank() && currentState.password.isNotBlank()) {
                     _uiState.value = currentState.copy(
                         isLoading = false,
                         isLoginSuccessful = true,
@@ -63,7 +63,7 @@ class LoginViewModel : ViewModel() {
                 } else {
                     _uiState.value = currentState.copy(
                         isLoading = false,
-                        errorMessage = "Invalid username or password"
+                        errorMessage = "Username and password are required"
                     )
                 }
             } catch (e: Exception) {

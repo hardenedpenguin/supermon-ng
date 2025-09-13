@@ -40,6 +40,14 @@ fun LoginScreen(
             color = MaterialTheme.colors.primary
         )
         
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        Text(
+            text = "Enter any username and password to continue",
+            style = MaterialTheme.typography.body2,
+            color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+        )
+        
         Spacer(modifier = Modifier.height(32.dp))
         
         OutlinedTextField(
