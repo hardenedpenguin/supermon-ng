@@ -18,10 +18,10 @@ interface SupermonApiService {
     
     // Node endpoints
     @GET("api/nodes")
-    suspend fun getNodes(): Response<List<Node>>
+    suspend fun getNodes(): Response<NodesResponse>
     
     @GET("api/nodes/{id}")
-    suspend fun getNode(@Path("id") nodeId: String): Response<Node>
+    suspend fun getNode(@Path("id") nodeId: String): Response<NodeResponse>
     
     @GET("api/nodes/{id}/status")
     suspend fun getNodeStatus(@Path("id") nodeId: String): Response<NodeStatusResponse>
@@ -169,4 +169,18 @@ data class NodeConfigData(
     val archive: String?,
     val menu: String?,
     val system: String?
+)
+
+data class NodesResponse(
+    val success: Boolean,
+    val data: List<Node>?,
+    val count: Int?,
+    val timestamp: String?,
+    val config_source: String?
+)
+
+data class NodeResponse(
+    val success: Boolean,
+    val data: Node,
+    val timestamp: String?
 )

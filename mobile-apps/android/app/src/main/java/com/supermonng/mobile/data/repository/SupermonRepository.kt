@@ -52,8 +52,13 @@ class SupermonRepository {
         return try {
             val response = apiService.getNodes()
             if (response.isSuccessful) {
-                val nodes = response.body() ?: emptyList()
-                Result.success(nodes)
+                val nodesResponse = response.body()
+                if (nodesResponse?.success == true) {
+                    val nodes = nodesResponse.data ?: emptyList()
+                    Result.success(nodes)
+                } else {
+                    Result.failure(Exception("API returned success=false"))
+                }
             } else {
                 Result.failure(Exception("Failed to fetch nodes: ${response.code()}"))
             }
@@ -66,11 +71,12 @@ class SupermonRepository {
         return try {
             val response = apiService.getNode(nodeId)
             if (response.isSuccessful) {
-                val node = response.body()
-                if (node != null) {
+                val nodeResponse = response.body()
+                if (nodeResponse?.success == true) {
+                    val node = nodeResponse.data
                     Result.success(node)
                 } else {
-                    Result.failure(Exception("Node not found"))
+                    Result.failure(Exception("API returned success=false"))
                 }
             } else {
                 Result.failure(Exception("Failed to fetch node: ${response.code()}"))
