@@ -168,21 +168,56 @@ class NodeController
                 ->withHeader('Content-Type', 'application/json');
         }
 
-        // Get real node status from AMI
-        $ami = $this->connectToAmi($nodeConfig, $nodeId);
-        if (!$ami) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'error' => 'Failed to connect to AMI'
-            ]));
-            
-            return $response
-                ->withStatus(500)
-                ->withHeader('Content-Type', 'application/json');
+        // Get real node status using the existing lsnod command that works
+        $lsnodData = $this->executeLsnodCommand($nodeId);
+        $parsedData = $lsnodData['parsed_data'] ?? [];
+        
+        // Convert lsnod data to the expected format
+        $statusInfo = [
+            'status' => 'unknown',
+            'last_heard' => date('Y-m-d H:i:s'),
+            'connected_nodes' => null,
+            'cos_keyed' => '0',
+            'tx_keyed' => '0',
+            'cpu_temp' => 'N/A',
+            'alert' => null,
+            'wx' => null,
+            'disk' => null,
+            'is_online' => false,
+            'is_keyed' => false
+        ];
+        
+        // Update with real data from lsnod
+        if (!empty($parsedData['main_node'])) {
+            $mainNode = $parsedData['main_node'];
+            $statusInfo['status'] = $mainNode['status'] ?? 'unknown';
+            $statusInfo['is_online'] = ($mainNode['status'] ?? '') === 'online';
+            $statusInfo['cos_keyed'] = $mainNode['cos_keyed'] ?? '0';
+            $statusInfo['tx_keyed'] = $mainNode['tx_keyed'] ?? '0';
+            $statusInfo['cpu_temp'] = $mainNode['cpu_temp'] ?? 'N/A';
+            $statusInfo['alert'] = $mainNode['alert'] ?? null;
+            $statusInfo['wx'] = $mainNode['wx'] ?? null;
+            $statusInfo['disk'] = $mainNode['disk'] ?? null;
         }
-
-        // Get node status information
-        $statusInfo = $this->getNodeStatusInfo($ami, $nodeId);
+        
+        // Get connected nodes
+        if (!empty($parsedData['nodes'])) {
+            $connectedNodes = [];
+            foreach ($parsedData['nodes'] as $connectedNode) {
+                $connectedNodes[] = [
+                    'node' => $connectedNode['node_number'] ?? 'unknown',
+                    'info' => $connectedNode['description'] ?? 'unknown',
+                    'ip' => null,
+                    'last_keyed' => date('Y-m-d H:i:s'),
+                    'link' => 'IAX',
+                    'direction' => 'unknown',
+                    'elapsed' => 'unknown',
+                    'mode' => 'duplex',
+                    'keyed' => '0'
+                ];
+            }
+            $statusInfo['connected_nodes'] = $connectedNodes;
+        }
         
         $node = [
             'id' => Uuid::uuid4()->toString(),
@@ -3323,6 +3358,95 @@ class NodeController
         } catch (Exception $e) {
             return "Voter Node";
         }
+    }
+
+    /**
+     * Get node status information using shell commands (more reliable)
+     */
+    private function getNodeStatusInfoFromShell(string $nodeId): array
+    {
+        $statusInfo = [
+            'status' => 'unknown',
+            'last_heard' => date('Y-m-d H:i:s'),
+            'connected_nodes' => null,
+            'cos_keyed' => '0',
+            'tx_keyed' => '0',
+            'cpu_temp' => 'N/A',
+            'alert' => null,
+            'wx' => null,
+            'disk' => null,
+            'is_online' => false,
+            'is_keyed' => false
+        ];
+
+        try {
+            // Get node status
+            $statusCmd = "sudo /usr/sbin/asterisk -rx 'rpt status $nodeId'";
+            $statusResponse = shell_exec($statusCmd);
+            if ($statusResponse) {
+                if (strpos($statusResponse, 'Online') !== false) {
+                    $statusInfo['status'] = 'online';
+                    $statusInfo['is_online'] = true;
+                } elseif (strpos($statusResponse, 'Offline') !== false) {
+                    $statusInfo['status'] = 'offline';
+                    $statusInfo['is_online'] = false;
+                }
+            }
+
+            // Get connected nodes with detailed information
+            $connectedCmd = "sudo /usr/sbin/asterisk -rx 'rpt nodes $nodeId'";
+            $connectedResponse = shell_exec($connectedCmd);
+            if ($connectedResponse && !empty(trim($connectedResponse))) {
+                $lines = explode("\n", $connectedResponse);
+                $connectedNodes = [];
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (empty($line) || strpos($line, 'CONNECTED NODES') !== false) {
+                        continue;
+                    }
+                    
+                    // Parse connected nodes (they're space-separated)
+                    $nodes = preg_split('/\s+/', $line);
+                    foreach ($nodes as $node) {
+                        $node = trim($node);
+                        if (!empty($node) && preg_match('/^[TR]\d+$/', $node)) {
+                            $connectedNodes[] = [
+                                'node' => $node,
+                                'info' => $node,
+                                'ip' => null,
+                                'last_keyed' => date('Y-m-d H:i:s'),
+                                'link' => 'IAX',
+                                'direction' => 'unknown',
+                                'elapsed' => 'unknown',
+                                'mode' => 'duplex',
+                                'keyed' => '0'
+                            ];
+                        }
+                    }
+                }
+                if (!empty($connectedNodes)) {
+                    $statusInfo['connected_nodes'] = $connectedNodes;
+                }
+            }
+
+            // Get key status
+            $keyCmd = "sudo /usr/sbin/asterisk -rx 'rpt keyed $nodeId'";
+            $keyResponse = shell_exec($keyCmd);
+            if ($keyResponse) {
+                if (strpos($keyResponse, 'Keyed') !== false) {
+                    $statusInfo['is_keyed'] = true;
+                    $statusInfo['tx_keyed'] = '1';
+                }
+            }
+
+        } catch (Exception $e) {
+            $this->logger->error('Failed to get node status from shell', [
+                'node' => $nodeId,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return $statusInfo;
     }
 
     /**
