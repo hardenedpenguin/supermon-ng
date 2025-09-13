@@ -42,8 +42,8 @@ class NodeController
             foreach ($availableNodes as $node) {
                 $nodeId = $node['id'];
                 
-                // For testing, set some nodes as online
-                $isOnline = ($nodeId == '546051' || $nodeId == '546054');
+                // For testing, set all nodes as online
+                $isOnline = true;
                 
                 $nodes[] = [
                     'id' => $nodeId,
