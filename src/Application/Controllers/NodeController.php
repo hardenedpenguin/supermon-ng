@@ -37,16 +37,22 @@ class NodeController
             // Get available nodes from AllStar configuration
             $availableNodes = $this->configService->getAvailableNodes($currentUser);
             
-            // Convert to the expected format
+            // Convert to the expected format with real status
             $nodes = [];
             foreach ($availableNodes as $node) {
-                $nodes[] = [
-                    'id' => $node['id'],
-                    'node_number' => $node['id'],
-                    'callsign' => 'N/A', // Would come from ASTDB
+                $nodeId = $node['id'];
+                
+                // Get node configuration for AMI connection
+                $nodeConfig = $this->configService->getNodeConfig($nodeId);
+                
+                // Initialize with default values
+                $nodeData = [
+                    'id' => $nodeId,
+                    'node_number' => $nodeId,
+                    'callsign' => 'N/A',
                     'description' => $node['system'],
-                    'location' => 'N/A', // Would come from ASTDB
-                    'status' => 'unknown', // Would be determined by AMI connection
+                    'location' => 'N/A',
+                    'status' => 'unknown',
                     'last_heard' => null,
                     'connected_nodes' => null,
                     'cos_keyed' => null,
@@ -60,6 +66,40 @@ class NodeController
                     'created_at' => date('c'),
                     'updated_at' => date('c'),
                 ];
+                
+                // Try to get real status if node is configured
+                if ($nodeConfig && isset($nodeConfig['host'])) {
+                    try {
+                        $ami = $this->connectToAmi($nodeConfig, $nodeId);
+                        if ($ami) {
+                            $statusInfo = $this->getNodeStatusInfo($ami, $nodeId);
+                            
+                            // Update with real data
+                            $nodeData['status'] = $statusInfo['status'] ?? 'unknown';
+                            $nodeData['is_online'] = $statusInfo['is_online'] ?? false;
+                            $nodeData['is_keyed'] = $statusInfo['is_keyed'] ?? false;
+                            $nodeData['last_heard'] = $statusInfo['last_heard'] ?? null;
+                            $nodeData['cos_keyed'] = $statusInfo['cos_keyed'] ?? null;
+                            $nodeData['tx_keyed'] = $statusInfo['tx_keyed'] ?? null;
+                            $nodeData['cpu_temp'] = $statusInfo['cpu_temp'] ?? null;
+                            $nodeData['alert'] = $statusInfo['alert'] ?? null;
+                            $nodeData['wx'] = $statusInfo['wx'] ?? null;
+                            $nodeData['disk'] = $statusInfo['disk'] ?? null;
+                            
+                            // Get callsign and location from ASTDB if available
+                            $astdbInfo = $this->getNodeInfoFromAstdb($nodeId);
+                            if ($astdbInfo) {
+                                $nodeData['callsign'] = $astdbInfo['callsign'] ?? 'N/A';
+                                $nodeData['location'] = $astdbInfo['location'] ?? 'N/A';
+                            }
+                        }
+                    } catch (Exception $e) {
+                        $this->logger->warning("Failed to get status for node $nodeId", ['error' => $e->getMessage()]);
+                        // Keep default values
+                    }
+                }
+                
+                $nodes[] = $nodeData;
             }
 
             $response->getBody()->write(json_encode([
