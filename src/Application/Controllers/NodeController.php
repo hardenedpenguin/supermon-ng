@@ -53,7 +53,30 @@ class NodeController
                     'location' => 'Austin, TX',
                     'status' => $isOnline ? 'online' : 'offline',
                     'last_heard' => $isOnline ? date('Y-m-d H:i:s') : null,
-                    'connected_nodes' => $isOnline ? ['node1', 'node2'] : null,
+                    'connected_nodes' => $isOnline ? [
+                        [
+                            'node' => '546052',
+                            'info' => 'W5GLE-2',
+                            'ip' => '192.168.1.100',
+                            'last_keyed' => '2025-09-13 15:30:00',
+                            'link' => 'IAX',
+                            'direction' => 'in',
+                            'elapsed' => '00:05:30',
+                            'mode' => 'duplex',
+                            'keyed' => '0'
+                        ],
+                        [
+                            'node' => '546053',
+                            'info' => 'W5GLE-3',
+                            'ip' => '192.168.1.101',
+                            'last_keyed' => '2025-09-13 15:25:00',
+                            'link' => 'IAX',
+                            'direction' => 'out',
+                            'elapsed' => '00:02:15',
+                            'mode' => 'duplex',
+                            'keyed' => '0'
+                        ]
+                    ] : null,
                     'cos_keyed' => $isOnline ? '0' : null,
                     'tx_keyed' => $isOnline ? '0' : null,
                     'cpu_temp' => $isOnline ? '45°C' : null,
