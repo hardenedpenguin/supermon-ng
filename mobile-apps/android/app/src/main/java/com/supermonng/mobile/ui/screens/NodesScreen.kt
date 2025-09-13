@@ -5,22 +5,21 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material3.*
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.supermonng.mobile.ui.components.LoadingIndicator
 import com.supermonng.mobile.ui.components.NodeCard
 import com.supermonng.mobile.ui.viewmodel.NodesViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NodesScreen(
     onLogout: () -> Unit,
-    viewModel: NodesViewModel = hiltViewModel()
+    viewModel: NodesViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
@@ -60,14 +59,12 @@ fun NodesScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
+                    backgroundColor = MaterialTheme.colors.error
                 ) {
                     Text(
-                        text = uiState.errorMessage,
+                        text = uiState.errorMessage ?: "",
                         modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer
+                        color = MaterialTheme.colors.onError
                     )
                 }
             } else if (uiState.nodes.isEmpty()) {
@@ -77,7 +74,7 @@ fun NodesScreen(
                 ) {
                     Text(
                         text = "No nodes configured",
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.body1
                     )
                 }
             } else {

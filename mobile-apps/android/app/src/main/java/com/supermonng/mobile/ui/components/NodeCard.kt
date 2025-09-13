@@ -2,15 +2,15 @@ package com.supermonng.mobile.ui.components
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.supermonng.mobile.domain.model.Node
-import com.supermonng.mobile.domain.model.NodeStatus
+import com.supermonng.mobile.model.Node
+import com.supermonng.mobile.model.NodeStatus
 
 @Composable
 fun NodeCard(
@@ -23,7 +23,7 @@ fun NodeCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = 4.dp
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -37,13 +37,13 @@ fun NodeCard(
                 Column {
                     Text(
                         text = node.callsign ?: "Unknown",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.h6,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "Node ${node.id}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.caption,
+                        color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                     )
                 }
                 
@@ -57,8 +57,8 @@ fun NodeCard(
             if (!node.description.isNullOrBlank()) {
                 Text(
                     text = node.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.body2,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
                 )
                 Spacer(modifier = Modifier.height(4.dp))
             }
@@ -66,8 +66,8 @@ fun NodeCard(
             if (!node.location.isNullOrBlank()) {
                 Text(
                     text = node.location,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
@@ -119,7 +119,7 @@ private fun StatusChip(status: NodeStatus?) {
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.caption,
             color = color
         )
     }

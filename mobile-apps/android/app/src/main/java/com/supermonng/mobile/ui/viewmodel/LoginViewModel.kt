@@ -2,19 +2,14 @@ package com.supermonng.mobile.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.supermonng.mobile.domain.model.LoginCredentials
-import com.supermonng.mobile.domain.usecase.LoginUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
+// import com.supermonng.mobile.domain.model.LoginCredentials
+// import com.supermonng.mobile.domain.usecase.LoginUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class LoginViewModel @Inject constructor(
-    private val loginUseCase: LoginUseCase
-) : ViewModel() {
+class LoginViewModel : ViewModel() {
     
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -51,26 +46,32 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = currentState.copy(isLoading = true, errorMessage = null)
             
-            val credentials = LoginCredentials(
-                username = currentState.username,
-                password = currentState.password,
-                remember = currentState.rememberMe
-            )
+            // Simple credentials validation
             
-            loginUseCase(credentials)
-                .onSuccess { loginData ->
+            // Simulate login for now - replace with actual API call later
+            try {
+                // Simulate network delay
+                kotlinx.coroutines.delay(1000)
+                
+                // Simple validation
+                if (currentState.username == "admin" && currentState.password == "password") {
                     _uiState.value = currentState.copy(
                         isLoading = false,
                         isLoginSuccessful = true,
                         errorMessage = null
                     )
-                }
-                .onFailure { exception ->
+                } else {
                     _uiState.value = currentState.copy(
                         isLoading = false,
-                        errorMessage = exception.message ?: "Login failed"
+                        errorMessage = "Invalid username or password"
                     )
                 }
+            } catch (e: Exception) {
+                _uiState.value = currentState.copy(
+                    isLoading = false,
+                    errorMessage = e.message ?: "Login failed"
+                )
+            }
         }
     }
 }

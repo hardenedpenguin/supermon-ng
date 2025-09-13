@@ -2,7 +2,7 @@ package com.supermonng.mobile.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -10,15 +10,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.supermonng.mobile.ui.components.LoadingIndicator
 import com.supermonng.mobile.ui.viewmodel.LoginViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
-    viewModel: LoginViewModel = hiltViewModel()
+    viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
@@ -37,8 +36,8 @@ fun LoginScreen(
     ) {
         Text(
             text = "SupermonNG",
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.primary
+            style = MaterialTheme.typography.h4,
+            color = MaterialTheme.colors.primary
         )
         
         Spacer(modifier = Modifier.height(32.dp))
@@ -70,14 +69,7 @@ fun LoginScreen(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             trailingIcon = {
                 IconButton(onClick = { viewModel.togglePasswordVisibility() }) {
-                    Icon(
-                        imageVector = if (uiState.passwordVisible) {
-                            androidx.compose.material.icons.Icons.Default.VisibilityOff
-                        } else {
-                            androidx.compose.material.icons.Icons.Default.Visibility
-                        },
-                        contentDescription = if (uiState.passwordVisible) "Hide password" else "Show password"
-                    )
+                    Text(if (uiState.passwordVisible) "Hide" else "Show")
                 }
             }
         )
@@ -87,14 +79,12 @@ fun LoginScreen(
         if (uiState.errorMessage != null) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
-                )
+                backgroundColor = MaterialTheme.colors.error
             ) {
                 Text(
-                    text = uiState.errorMessage,
+                    text = uiState.errorMessage ?: "",
                     modifier = Modifier.padding(16.dp),
-                    color = MaterialTheme.colorScheme.onErrorContainer
+                    color = MaterialTheme.colors.onError
                 )
             }
             

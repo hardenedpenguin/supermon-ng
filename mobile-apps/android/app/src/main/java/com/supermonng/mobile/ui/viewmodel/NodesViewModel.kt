@@ -2,21 +2,14 @@ package com.supermonng.mobile.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.supermonng.mobile.domain.model.Node
-import com.supermonng.mobile.domain.usecase.GetNodesUseCase
-import com.supermonng.mobile.domain.usecase.NodeControlUseCase
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.supermonng.mobile.model.Node
+import com.supermonng.mobile.model.NodeStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class NodesViewModel @Inject constructor(
-    private val getNodesUseCase: GetNodesUseCase,
-    private val nodeControlUseCase: NodeControlUseCase
-) : ViewModel() {
+class NodesViewModel : ViewModel() {
     
     private val _uiState = MutableStateFlow(NodesUiState())
     val uiState: StateFlow<NodesUiState> = _uiState.asStateFlow()
@@ -25,72 +18,105 @@ class NodesViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             
-            getNodesUseCase()
-                .onSuccess { nodes ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        nodes = nodes,
-                        errorMessage = null
+            try {
+                // Simulate network delay
+                kotlinx.coroutines.delay(1000)
+                
+                // Create sample nodes for testing
+                val sampleNodes = listOf(
+                    Node(
+                        id = "12345",
+                        callsign = "W5GLE",
+                        description = "Main Repeater",
+                        location = "Austin, TX",
+                        status = NodeStatus.ONLINE
+                    ),
+                    Node(
+                        id = "67890",
+                        callsign = "W5ABC",
+                        description = "Backup Repeater",
+                        location = "Houston, TX",
+                        status = NodeStatus.OFFLINE
                     )
-                }
-                .onFailure { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = exception.message ?: "Failed to load nodes"
-                    )
-                }
+                )
+                
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    nodes = sampleNodes,
+                    errorMessage = null
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = e.message ?: "Failed to load nodes"
+                )
+            }
         }
     }
     
     fun connectNode(nodeId: String) {
-        // For now, we'll use a default local node ID
-        // In a real implementation, this would come from user preferences or node config
-        val localNode = "546051" // This should be configurable
-        
         viewModelScope.launch {
-            nodeControlUseCase.connectNode(localNode, nodeId)
-                .onSuccess {
-                    // Refresh nodes to update status
-                    loadNodes()
-                }
-                .onFailure { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = "Failed to connect: ${exception.message}"
-                    )
-                }
+            try {
+                // Simulate network delay
+                kotlinx.coroutines.delay(500)
+                
+                // For now, just show success message
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Connected to node $nodeId"
+                )
+                
+                // Clear message after 3 seconds
+                kotlinx.coroutines.delay(3000)
+                _uiState.value = _uiState.value.copy(errorMessage = null)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Failed to connect: ${e.message}"
+                )
+            }
         }
     }
     
     fun disconnectNode(nodeId: String) {
-        val localNode = "546051" // This should be configurable
-        
         viewModelScope.launch {
-            nodeControlUseCase.disconnectNode(localNode, nodeId)
-                .onSuccess {
-                    // Refresh nodes to update status
-                    loadNodes()
-                }
-                .onFailure { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = "Failed to disconnect: ${exception.message}"
-                    )
-                }
+            try {
+                // Simulate network delay
+                kotlinx.coroutines.delay(500)
+                
+                // For now, just show success message
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Disconnected from node $nodeId"
+                )
+                
+                // Clear message after 3 seconds
+                kotlinx.coroutines.delay(3000)
+                _uiState.value = _uiState.value.copy(errorMessage = null)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Failed to disconnect: ${e.message}"
+                )
+            }
         }
     }
     
     fun monitorNode(nodeId: String) {
-        val localNode = "546051" // This should be configurable
-        
         viewModelScope.launch {
-            nodeControlUseCase.monitorNode(localNode, nodeId)
-                .onSuccess {
-                    // Could show a toast or navigate to monitor screen
-                }
-                .onFailure { exception ->
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = "Failed to monitor: ${exception.message}"
-                    )
-                }
+            try {
+                // Simulate network delay
+                kotlinx.coroutines.delay(500)
+                
+                // For now, just show success message
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Monitoring node $nodeId"
+                )
+                
+                // Clear message after 3 seconds
+                kotlinx.coroutines.delay(3000)
+                _uiState.value = _uiState.value.copy(errorMessage = null)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Failed to monitor: ${e.message}"
+                )
+            }
         }
     }
     
