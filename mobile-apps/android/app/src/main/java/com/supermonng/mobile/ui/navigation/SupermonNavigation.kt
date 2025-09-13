@@ -20,6 +20,9 @@ fun SupermonNavigation(navController: NavHostController) {
                     navController.navigate("nodes") {
                         popUpTo("login") { inclusive = true }
                     }
+                },
+                onConfigureServer = {
+                    navController.navigate("settings")
                 }
             )
         }
@@ -41,6 +44,11 @@ fun SupermonNavigation(navController: NavHostController) {
             SettingsScreen(
                 onBack = {
                     navController.popBackStack()
+                },
+                onSaveAndLogin = {
+                    navController.navigate("login") {
+                        popUpTo("settings") { inclusive = true }
+                    }
                 }
             )
         }

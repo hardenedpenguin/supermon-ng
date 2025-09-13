@@ -20,6 +20,7 @@ import com.supermonng.mobile.ui.viewmodel.SettingsViewModel
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onSaveAndLogin: () -> Unit,
     viewModel: SettingsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -237,6 +238,20 @@ fun SettingsScreen(
                 } else {
                     Text("Save Settings")
                 }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Save and Login Button
+            OutlinedButton(
+                onClick = {
+                    viewModel.saveSettings()
+                    onSaveAndLogin()
+                },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.isSaving && uiState.serverUrl.isNotBlank() && uiState.username.isNotBlank()
+            ) {
+                Text("Save Settings and Login")
             }
             
             // Save Status

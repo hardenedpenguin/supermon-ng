@@ -17,6 +17,7 @@ import com.supermonng.mobile.ui.viewmodel.LoginViewModel
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
+    onConfigureServer: () -> Unit,
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -106,9 +107,21 @@ fun LoginScreen(
         ) {
             if (uiState.isLoading) {
                 LoadingIndicator()
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Logging in...")
             } else {
                 Text("Login")
             }
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Configure Server Button
+        OutlinedButton(
+            onClick = onConfigureServer,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Configure Server")
         }
     }
 }
