@@ -42,7 +42,8 @@ class NodeController
             foreach ($availableNodes as $node) {
                 $nodeId = $node['id'];
                 
-                // For testing, set all nodes as online
+                // For now, set all nodes as online but with no connected nodes
+                // This will be updated when individual node details are requested
                 $isOnline = true;
                 
                 $nodes[] = [
@@ -53,30 +54,7 @@ class NodeController
                     'location' => 'Austin, TX',
                     'status' => $isOnline ? 'online' : 'offline',
                     'last_heard' => $isOnline ? date('Y-m-d H:i:s') : null,
-                    'connected_nodes' => $isOnline ? [
-                        [
-                            'node' => '546052',
-                            'info' => 'W5GLE-2',
-                            'ip' => '192.168.1.100',
-                            'last_keyed' => '2025-09-13 15:30:00',
-                            'link' => 'IAX',
-                            'direction' => 'in',
-                            'elapsed' => '00:05:30',
-                            'mode' => 'duplex',
-                            'keyed' => '0'
-                        ],
-                        [
-                            'node' => '546053',
-                            'info' => 'W5GLE-3',
-                            'ip' => '192.168.1.101',
-                            'last_keyed' => '2025-09-13 15:25:00',
-                            'link' => 'IAX',
-                            'direction' => 'out',
-                            'elapsed' => '00:02:15',
-                            'mode' => 'duplex',
-                            'keyed' => '0'
-                        ]
-                    ] : null,
+                    'connected_nodes' => null, // Will be populated when individual node is requested
                     'cos_keyed' => $isOnline ? '0' : null,
                     'tx_keyed' => $isOnline ? '0' : null,
                     'cpu_temp' => $isOnline ? '45°C' : null,
@@ -3355,7 +3333,7 @@ class NodeController
         $statusInfo = [
             'status' => 'unknown',
             'last_heard' => date('Y-m-d H:i:s'),
-            'connected_nodes' => '',
+            'connected_nodes' => null,
             'cos_keyed' => '0',
             'tx_keyed' => '0',
             'cpu_temp' => 'N/A',
@@ -3379,17 +3357,41 @@ class NodeController
                 }
             }
 
-            // Get connected nodes
+            // Get connected nodes with detailed information
             $connectedResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt nodes $nodeId'"]);
             if ($connectedResponse) {
                 $lines = explode("\n", $connectedResponse);
                 $connectedNodes = [];
                 foreach ($lines as $line) {
                     if (preg_match('/Node\s+(\d+)/', $line, $matches)) {
-                        $connectedNodes[] = $matches[1];
+                        $connectedNodeId = $matches[1];
+                        // Get additional info for each connected node
+                        $nodeInfoResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt stats $connectedNodeId'"]);
+                        $info = 'Unknown';
+                        $ip = null;
+                        if ($nodeInfoResponse) {
+                            if (preg_match('/Info:\s*(.+)/', $nodeInfoResponse, $infoMatches)) {
+                                $info = trim($infoMatches[1]);
+                            }
+                            if (preg_match('/IP:\s*(\d+\.\d+\.\d+\.\d+)/', $nodeInfoResponse, $ipMatches)) {
+                                $ip = $ipMatches[1];
+                            }
+                        }
+                        
+                        $connectedNodes[] = [
+                            'node' => $connectedNodeId,
+                            'info' => $info,
+                            'ip' => $ip,
+                            'last_keyed' => date('Y-m-d H:i:s'),
+                            'link' => 'IAX',
+                            'direction' => 'unknown',
+                            'elapsed' => 'unknown',
+                            'mode' => 'duplex',
+                            'keyed' => '0'
+                        ];
                     }
                 }
-                $statusInfo['connected_nodes'] = implode(',', $connectedNodes);
+                $statusInfo['connected_nodes'] = $connectedNodes;
             }
 
             // Get key status
