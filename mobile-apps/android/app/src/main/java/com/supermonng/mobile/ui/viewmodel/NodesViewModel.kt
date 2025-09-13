@@ -2,6 +2,7 @@ package com.supermonng.mobile.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.supermonng.mobile.data.repository.SupermonRepository
 import com.supermonng.mobile.model.Node
 import com.supermonng.mobile.model.NodeStatus
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,41 +15,33 @@ class NodesViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(NodesUiState())
     val uiState: StateFlow<NodesUiState> = _uiState.asStateFlow()
     
+    private val repository = SupermonRepository()
+    
     fun loadNodes() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
             
             try {
-                // Simulate network delay
-                kotlinx.coroutines.delay(1000)
-                
-                // Create sample nodes for testing
-                val sampleNodes = listOf(
-                    Node(
-                        id = "12345",
-                        callsign = "W5GLE",
-                        description = "Main Repeater",
-                        location = "Austin, TX",
-                        status = NodeStatus.ONLINE
-                    ),
-                    Node(
-                        id = "67890",
-                        callsign = "W5ABC",
-                        description = "Backup Repeater",
-                        location = "Houston, TX",
-                        status = NodeStatus.OFFLINE
-                    )
-                )
-                
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    nodes = sampleNodes,
-                    errorMessage = null
+                val result = repository.getNodes()
+                result.fold(
+                    onSuccess = { nodes ->
+                        _uiState.value = _uiState.value.copy(
+                            nodes = nodes,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { exception ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = exception.message ?: "Failed to load nodes"
+                        )
+                    }
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    errorMessage = e.message ?: "Failed to load nodes"
+                    errorMessage = e.message ?: "Network error"
                 )
             }
         }
@@ -57,20 +50,21 @@ class NodesViewModel : ViewModel() {
     fun connectNode(nodeId: String) {
         viewModelScope.launch {
             try {
-                // Simulate network delay
-                kotlinx.coroutines.delay(500)
-                
-                // For now, just show success message
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = "Connected to node $nodeId"
+                val result = repository.connectNode(nodeId)
+                result.fold(
+                    onSuccess = {
+                        // Reload nodes to get updated status
+                        loadNodes()
+                    },
+                    onFailure = { exception ->
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = exception.message ?: "Failed to connect node"
+                        )
+                    }
                 )
-                
-                // Clear message after 3 seconds
-                kotlinx.coroutines.delay(3000)
-                _uiState.value = _uiState.value.copy(errorMessage = null)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = "Failed to connect: ${e.message}"
+                    errorMessage = e.message ?: "Network error"
                 )
             }
         }
@@ -79,20 +73,21 @@ class NodesViewModel : ViewModel() {
     fun disconnectNode(nodeId: String) {
         viewModelScope.launch {
             try {
-                // Simulate network delay
-                kotlinx.coroutines.delay(500)
-                
-                // For now, just show success message
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = "Disconnected from node $nodeId"
+                val result = repository.disconnectNode(nodeId)
+                result.fold(
+                    onSuccess = {
+                        // Reload nodes to get updated status
+                        loadNodes()
+                    },
+                    onFailure = { exception ->
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = exception.message ?: "Failed to disconnect node"
+                        )
+                    }
                 )
-                
-                // Clear message after 3 seconds
-                kotlinx.coroutines.delay(3000)
-                _uiState.value = _uiState.value.copy(errorMessage = null)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = "Failed to disconnect: ${e.message}"
+                    errorMessage = e.message ?: "Network error"
                 )
             }
         }
@@ -101,20 +96,21 @@ class NodesViewModel : ViewModel() {
     fun monitorNode(nodeId: String) {
         viewModelScope.launch {
             try {
-                // Simulate network delay
-                kotlinx.coroutines.delay(500)
-                
-                // For now, just show success message
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = "Monitoring node $nodeId"
+                val result = repository.monitorNode(nodeId)
+                result.fold(
+                    onSuccess = {
+                        // Reload nodes to get updated status
+                        loadNodes()
+                    },
+                    onFailure = { exception ->
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = exception.message ?: "Failed to monitor node"
+                        )
+                    }
                 )
-                
-                // Clear message after 3 seconds
-                kotlinx.coroutines.delay(3000)
-                _uiState.value = _uiState.value.copy(errorMessage = null)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = "Failed to monitor: ${e.message}"
+                    errorMessage = e.message ?: "Network error"
                 )
             }
         }

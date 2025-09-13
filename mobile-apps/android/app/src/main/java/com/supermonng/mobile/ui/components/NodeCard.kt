@@ -36,7 +36,7 @@ fun NodeCard(
             ) {
                 Column {
                     Text(
-                        text = node.callsign ?: "Unknown",
+                        text = node.getDisplayName(),
                         style = MaterialTheme.typography.h6,
                         fontWeight = FontWeight.Bold
                     )
@@ -48,20 +48,18 @@ fun NodeCard(
                 }
                 
                 // Status indicator
-                StatusChip(status = node.status)
+                StatusChip(status = node.getNodeStatus())
             }
             
             Spacer(modifier = Modifier.height(8.dp))
             
             // Node info
-            if (!node.description.isNullOrBlank()) {
-                Text(
-                    text = node.description,
-                    style = MaterialTheme.typography.body2,
-                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-            }
+            Text(
+                text = node.getDisplayDescription(),
+                style = MaterialTheme.typography.body2,
+                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
             
             if (!node.location.isNullOrBlank()) {
                 Text(

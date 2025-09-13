@@ -2,6 +2,7 @@ package com.supermonng.mobile.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.supermonng.mobile.data.network.NetworkModule
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -159,8 +160,16 @@ class SettingsViewModel : ViewModel() {
             )
             
             try {
+                // Update the network module with the new base URL
+                val baseUrl = if (currentState.serverPort.isNotBlank() && currentState.serverPort != "443" && currentState.serverPort != "80") {
+                    "${currentState.serverUrl}:${currentState.serverPort}"
+                } else {
+                    currentState.serverUrl
+                }
+                NetworkModule.setBaseUrl(baseUrl)
+                
                 // Simulate saving settings
-                kotlinx.coroutines.delay(1000)
+                kotlinx.coroutines.delay(500)
                 
                 // TODO: Save to SharedPreferences or DataStore
                 // saveToPreferences(currentState)

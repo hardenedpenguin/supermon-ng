@@ -2,8 +2,8 @@ package com.supermonng.mobile.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-// import com.supermonng.mobile.domain.model.LoginCredentials
-// import com.supermonng.mobile.domain.usecase.LoginUseCase
+import com.supermonng.mobile.data.network.NetworkModule
+import com.supermonng.mobile.data.repository.SupermonRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,6 +13,8 @@ class LoginViewModel : ViewModel() {
     
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+    
+    private val repository = SupermonRepository()
     
     fun updateUsername(username: String) {
         _uiState.value = _uiState.value.copy(
@@ -46,30 +48,27 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.value = currentState.copy(isLoading = true, errorMessage = null)
             
-            // Simple credentials validation
-            
-            // Simulate login for now - replace with actual API call later
             try {
-                // Simulate network delay
-                kotlinx.coroutines.delay(1000)
-                
-                // Simple validation - accept any non-empty credentials for now
-                if (currentState.username.isNotBlank() && currentState.password.isNotBlank()) {
-                    _uiState.value = currentState.copy(
-                        isLoading = false,
-                        isLoginSuccessful = true,
-                        errorMessage = null
-                    )
-                } else {
-                    _uiState.value = currentState.copy(
-                        isLoading = false,
-                        errorMessage = "Username and password are required"
-                    )
-                }
+                val result = repository.login(currentState.username, currentState.password)
+                result.fold(
+                    onSuccess = {
+                        _uiState.value = currentState.copy(
+                            isLoading = false,
+                            isLoginSuccessful = true,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { exception ->
+                        _uiState.value = currentState.copy(
+                            isLoading = false,
+                            errorMessage = exception.message ?: "Login failed"
+                        )
+                    }
+                )
             } catch (e: Exception) {
                 _uiState.value = currentState.copy(
                     isLoading = false,
-                    errorMessage = e.message ?: "Login failed"
+                    errorMessage = e.message ?: "Network error"
                 )
             }
         }
