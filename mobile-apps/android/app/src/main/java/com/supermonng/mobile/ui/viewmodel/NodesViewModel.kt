@@ -25,8 +25,28 @@ class NodesViewModel : ViewModel() {
                 val result = repository.getNodes()
                 result.fold(
                     onSuccess = { nodes ->
+                        // Fetch detailed information (including connected nodes) for each node
+                        val nodesWithDetails = mutableListOf<Node>()
+                        for (node in nodes) {
+                            try {
+                                val detailResult = repository.getNode(node.id)
+                                detailResult.fold(
+                                    onSuccess = { detailedNode ->
+                                        nodesWithDetails.add(detailedNode)
+                                    },
+                                    onFailure = { 
+                                        // If individual node fetch fails, use the basic node info
+                                        nodesWithDetails.add(node)
+                                    }
+                                )
+                            } catch (e: Exception) {
+                                // If individual node fetch fails, use the basic node info
+                                nodesWithDetails.add(node)
+                            }
+                        }
+                        
                         _uiState.value = _uiState.value.copy(
-                            nodes = nodes,
+                            nodes = nodesWithDetails,
                             isLoading = false,
                             errorMessage = null
                         )
