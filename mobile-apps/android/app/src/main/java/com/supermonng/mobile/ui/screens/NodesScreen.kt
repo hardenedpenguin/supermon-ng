@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +20,7 @@ import com.supermonng.mobile.ui.viewmodel.NodesViewModel
 @Composable
 fun NodesScreen(
     onLogout: () -> Unit,
+    onSettings: () -> Unit,
     viewModel: NodesViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -32,6 +34,12 @@ fun NodesScreen(
             TopAppBar(
                 title = { Text("AllStar Nodes") },
                 actions = {
+                    IconButton(onClick = onSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Settings"
+                        )
+                    }
                     IconButton(onClick = onLogout) {
                         Icon(
                             imageVector = Icons.Default.ExitToApp,

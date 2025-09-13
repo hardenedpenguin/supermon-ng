@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.supermonng.mobile.ui.screens.LoginScreen
 import com.supermonng.mobile.ui.screens.NodesScreen
+import com.supermonng.mobile.ui.screens.SettingsScreen
 
 @Composable
 fun SupermonNavigation(navController: NavHostController) {
@@ -29,6 +30,17 @@ fun SupermonNavigation(navController: NavHostController) {
                     navController.navigate("login") {
                         popUpTo("nodes") { inclusive = true }
                     }
+                },
+                onSettings = {
+                    navController.navigate("settings")
+                }
+            )
+        }
+        
+        composable("settings") {
+            SettingsScreen(
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }
