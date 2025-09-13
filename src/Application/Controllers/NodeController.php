@@ -3779,27 +3779,41 @@ class NodeController
             $command = $result['command'];
             $output = $result['output'];
             
-            if (str_contains($command, 'rpt nodes')) {
-                // Parse connected nodes
+            if (str_contains($command, 'rpt lstats')) {
+                // Parse directly connected nodes from lstats (this shows actual direct connections)
                 $lines = explode("\n", $output);
-                $lines = array_slice($lines, 3); // Remove first 3 lines like original
-                $nodesConnected = implode(' ', $lines);
-                $nodesConnected = str_replace([',', "\n"], [' ', ' '], $nodesConnected);
-                $nodesConnected = preg_replace('/\s+/', ' ', $nodesConnected);
+                $lines = array_slice($lines, 2); // Remove header lines
                 
-                $nodeArray = explode(' ', trim($nodesConnected));
-                foreach ($nodeArray as $nodeNum) {
-                    $nodeNum = substr($nodeNum, 1, 10); // Remove first character like original
-                    if (is_numeric($nodeNum) && $nodeNum > 0) {
-                        $nodeInfo = $this->getNodeInfoFromAstdb($nodeNum, $astdb);
-                        $nodes[] = [
-                            'node_number' => $nodeNum,
-                            'description' => $nodeInfo['description'],
-                            'status' => 'Connected',
-                            'callsign' => $nodeInfo['callsign'],
-                            'frequency' => $nodeInfo['frequency'],
-                            'location' => $nodeInfo['location']
-                        ];
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (empty($line)) continue;
+                    
+                    // Parse the lstats line: NODE PEER RECONNECTS DIRECTION CONNECT_TIME CONNECT_STATE
+                    $parts = preg_split('/\s+/', $line);
+                    if (count($parts) >= 6) {
+                        $connectedNodeId = $parts[0];
+                        $peerIp = $parts[1];
+                        $reconnects = $parts[2];
+                        $direction = $parts[3];
+                        $connectTime = $parts[4];
+                        $connectState = $parts[5];
+                        
+                        if (is_numeric($connectedNodeId) && $connectedNodeId > 0) {
+                            $nodeInfo = $this->getNodeInfoFromAstdb($connectedNodeId, $astdb);
+                            $nodes[] = [
+                                'node_number' => $connectedNodeId,
+                                'description' => $nodeInfo['description'],
+                                'status' => 'Connected',
+                                'callsign' => $nodeInfo['callsign'],
+                                'frequency' => $nodeInfo['frequency'],
+                                'location' => $nodeInfo['location'],
+                                'peer_ip' => $peerIp,
+                                'reconnects' => $reconnects,
+                                'direction' => $direction,
+                                'connect_time' => $connectTime,
+                                'connect_state' => $connectState
+                            ];
+                        }
                     }
                 }
             } elseif (str_contains($command, 'rpt stats')) {
