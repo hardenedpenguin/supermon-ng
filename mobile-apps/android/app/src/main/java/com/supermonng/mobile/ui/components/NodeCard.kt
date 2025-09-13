@@ -70,30 +70,119 @@ fun NodeCard(
                 Spacer(modifier = Modifier.height(8.dp))
             }
             
-            // Action buttons
+            // Connected nodes information
+            if (!node.connected_nodes.isNullOrEmpty()) {
+                Text(
+                    text = "Connected Nodes:",
+                    style = MaterialTheme.typography.caption,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.8f)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                
+                node.connected_nodes.forEach { connectedNode ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Node ${connectedNode.node} - ${connectedNode.info}",
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
+                            )
+                            Text(
+                                text = "Link: ${connectedNode.link} | Direction: ${connectedNode.direction}",
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                        
+                        // Quick action buttons for connected nodes
+                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            IconButton(
+                                onClick = { /* TODO: Disconnect specific node */ },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Text(
+                                    text = "✕",
+                                    style = MaterialTheme.typography.caption,
+                                    color = Color.Red
+                                )
+                            }
+                            IconButton(
+                                onClick = { /* TODO: Monitor specific node */ },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Text(
+                                    text = "👁",
+                                    style = MaterialTheme.typography.caption,
+                                    color = Color.Blue
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+            } else if (node.is_online == true) {
+                Text(
+                    text = "No connected nodes",
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+            
+            // Action buttons - contextual based on node state
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedButton(
-                    onClick = onConnect,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Connect")
-                }
-                
-                OutlinedButton(
-                    onClick = onDisconnect,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Disconnect")
-                }
-                
-                OutlinedButton(
-                    onClick = onMonitor,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Monitor")
+                if (node.is_online == true && !node.connected_nodes.isNullOrEmpty()) {
+                    // Node is online and has connections - show disconnect and monitor
+                    OutlinedButton(
+                        onClick = onDisconnect,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
+                    ) {
+                        Text("Disconnect All")
+                    }
+                    
+                    OutlinedButton(
+                        onClick = onMonitor,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Blue)
+                    ) {
+                        Text("Monitor")
+                    }
+                } else if (node.is_online == true) {
+                    // Node is online but no connections - show connect and monitor
+                    OutlinedButton(
+                        onClick = onConnect,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Green)
+                    ) {
+                        Text("Connect")
+                    }
+                    
+                    OutlinedButton(
+                        onClick = onMonitor,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Blue)
+                    ) {
+                        Text("Monitor")
+                    }
+                } else {
+                    // Node is offline - show connect only
+                    OutlinedButton(
+                        onClick = onConnect,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Green)
+                    ) {
+                        Text("Connect Node")
+                    }
                 }
             }
         }
