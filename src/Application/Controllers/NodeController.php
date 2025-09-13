@@ -53,7 +53,7 @@ class NodeController
                     'location' => 'Austin, TX',
                     'status' => $isOnline ? 'online' : 'offline',
                     'last_heard' => $isOnline ? date('Y-m-d H:i:s') : null,
-                    'connected_nodes' => $isOnline ? '2' : null,
+                    'connected_nodes' => $isOnline ? ['node1', 'node2'] : null,
                     'cos_keyed' => $isOnline ? '0' : null,
                     'tx_keyed' => $isOnline ? '0' : null,
                     'cpu_temp' => $isOnline ? '45°C' : null,
