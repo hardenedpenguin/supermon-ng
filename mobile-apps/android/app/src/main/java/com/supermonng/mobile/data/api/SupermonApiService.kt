@@ -26,14 +26,20 @@ interface SupermonApiService {
     @GET("api/nodes/{id}/status")
     suspend fun getNodeStatus(@Path("id") nodeId: String): Response<NodeStatusResponse>
     
+    @GET("api/nodes/ami/status")
+    suspend fun getAmiStatus(@Query("nodes") nodes: String): Response<AmiStatusResponse>
+    
     @POST("api/nodes/connect")
-    suspend fun connectNode(@Body request: NodeActionRequest): Response<NodeActionResponse>
+    @Headers("Content-Type: application/json")
+    suspend fun connectNodeRaw(@Body jsonBody: okhttp3.RequestBody): Response<NodeActionResponse>
     
     @POST("api/nodes/disconnect")
-    suspend fun disconnectNode(@Body request: NodeActionRequest): Response<NodeActionResponse>
+    @Headers("Content-Type: application/json")
+    suspend fun disconnectNodeRaw(@Body jsonBody: okhttp3.RequestBody): Response<NodeActionResponse>
     
     @POST("api/nodes/monitor")
-    suspend fun monitorNode(@Body request: NodeActionRequest): Response<NodeActionResponse>
+    @Headers("Content-Type: application/json")
+    suspend fun monitorNodeRaw(@Body jsonBody: okhttp3.RequestBody): Response<NodeActionResponse>
     
     @POST("api/nodes/local-monitor")
     suspend fun localMonitorNode(@Body request: NodeActionRequest): Response<NodeActionResponse>
@@ -54,6 +60,10 @@ interface SupermonApiService {
     
     @GET("api/config/system-info")
     suspend fun getConfigSystemInfo(): Response<SystemInfoResponse>
+    
+    // CSRF token endpoint
+    @GET("api/csrf-token")
+    suspend fun getCsrfToken(): Response<CsrfTokenResponse>
 }
 
 // Request/Response data classes
@@ -81,8 +91,14 @@ data class User(
 
 data class AuthCheckResponse(
     val success: Boolean,
+    val data: AuthCheckData?
+)
+
+data class AuthCheckData(
     val authenticated: Boolean,
-    val user: User?
+    val user: User?,
+    val permissions: Map<String, Boolean>?,
+    val config_source: String?
 )
 
 data class LogoutResponse(
@@ -114,9 +130,10 @@ data class ConnectedNode(
 )
 
 data class NodeActionRequest(
-    val node: String,
-    val target_node: String? = null,
-    val permanent: Boolean = false
+    val localnode: String,
+    val remotenode: String? = null,
+    val perm: Boolean = false,
+    val csrf_token: String? = null
 )
 
 data class NodeActionResponse(
@@ -183,4 +200,29 @@ data class NodeResponse(
     val success: Boolean,
     val data: Node,
     val timestamp: String?
+)
+
+data class AmiStatusResponse(
+    val success: Boolean,
+    val data: Map<String, AmiNodeData>?
+)
+
+data class AmiNodeData(
+    val node: String,
+    val info: String,
+    val status: String,
+    val cos_keyed: Int,
+    val tx_keyed: Int,
+    val cpu_temp: String,
+    val cpu_up: String,
+    val cpu_load: String,
+    val ALERT: String?,
+    val WX: String?,
+    val DISK: String?,
+    val remote_nodes: List<ConnectedNode>?
+)
+
+data class CsrfTokenResponse(
+    val success: Boolean,
+    val csrf_token: String
 )

@@ -1,7 +1,7 @@
 package com.supermonng.mobile.model
 
 data class Node(
-    val id: String,
+    val id: Int,
     val node_number: Int? = null,
     val callsign: String? = null,
     val description: String? = null,
@@ -38,11 +38,31 @@ data class Node(
     }
     
     fun getDisplayName(): String {
-        return callsign ?: "Node $id"
+        // Parse callsign from info field if callsign is null
+        val parsedCallsign = callsign ?: parseCallsignFromInfo()
+        return parsedCallsign ?: "Node $id"
     }
     
     fun getDisplayDescription(): String {
-        return description ?: location ?: "No description"
+        // Parse location from info field if location is null
+        val parsedLocation = location ?: parseLocationFromInfo()
+        return description ?: parsedLocation ?: "No description"
+    }
+    
+    private fun parseCallsignFromInfo(): String? {
+        return info?.let { infoText ->
+            // Parse format like "W5GLE  Portable Node"
+            val match = Regex("^([A-Z0-9/]+)\\s+(.+)$").find(infoText)
+            match?.groupValues?.get(1)
+        }
+    }
+    
+    private fun parseLocationFromInfo(): String? {
+        return info?.let { infoText ->
+            // Parse format like "W5GLE  Portable Node"
+            val match = Regex("^([A-Z0-9/]+)\\s+(.+)$").find(infoText)
+            match?.groupValues?.get(2)
+        }
     }
 }
 

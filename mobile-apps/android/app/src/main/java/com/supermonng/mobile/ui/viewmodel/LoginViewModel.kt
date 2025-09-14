@@ -1,7 +1,9 @@
 package com.supermonng.mobile.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.supermonng.mobile.data.local.PreferencesManager
 import com.supermonng.mobile.data.network.NetworkModule
 import com.supermonng.mobile.data.repository.SupermonRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,12 +11,31 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class LoginViewModel : ViewModel() {
+class LoginViewModel(private val context: Context) : ViewModel() {
     
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
     
     private val repository = SupermonRepository()
+    private val preferencesManager = PreferencesManager(context)
+    
+    init {
+        loadSavedCredentials()
+    }
+    
+    private fun loadSavedCredentials() {
+        val savedUsername = preferencesManager.getUsername()
+        val savedPassword = preferencesManager.getPassword()
+        val rememberMe = preferencesManager.getRememberMe()
+        
+        if (savedUsername != null) {
+            _uiState.value = _uiState.value.copy(
+                username = savedUsername,
+                password = savedPassword ?: "",
+                rememberMe = rememberMe
+            )
+        }
+    }
     
     fun updateUsername(username: String) {
         _uiState.value = _uiState.value.copy(
@@ -36,6 +57,12 @@ class LoginViewModel : ViewModel() {
         )
     }
     
+    fun toggleRememberMe() {
+        _uiState.value = _uiState.value.copy(
+            rememberMe = !_uiState.value.rememberMe
+        )
+    }
+    
     fun login() {
         val currentState = _uiState.value
         if (currentState.username.isBlank() || currentState.password.isBlank()) {
@@ -52,6 +79,13 @@ class LoginViewModel : ViewModel() {
                 val result = repository.login(currentState.username, currentState.password)
                 result.fold(
                     onSuccess = {
+                        // Save credentials if remember me is checked
+                        preferencesManager.saveCredentials(
+                            currentState.username,
+                            currentState.password,
+                            currentState.rememberMe
+                        )
+                        
                         _uiState.value = currentState.copy(
                             isLoading = false,
                             isLoginSuccessful = true,

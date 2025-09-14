@@ -37,69 +37,71 @@ class NodeController
             // Get available nodes from AllStar configuration
             $availableNodes = $this->configService->getAvailableNodes($currentUser);
             
-            // Convert to the expected format with real status
+            // Convert to the expected format with real AMI data
             $nodes = [];
             foreach ($availableNodes as $node) {
                 $nodeId = $node['id'];
                 
-                // Get node configuration for AMI connection
-                $nodeConfig = $this->configService->getNodeConfig($nodeId);
+                // Get real AMI data for this node
+                $amiData = $this->getNodeAmiData($node, $nodeId);
                 
-                // Initialize with default values
-                $nodeData = [
-                    'id' => $nodeId,
-                    'node_number' => $nodeId,
-                    'callsign' => 'N/A',
-                    'description' => $node['system'],
-                    'location' => 'N/A',
-                    'status' => 'unknown',
-                    'last_heard' => null,
-                    'connected_nodes' => null,
-                    'cos_keyed' => null,
-                    'tx_keyed' => null,
-                    'cpu_temp' => null,
-                    'alert' => null,
-                    'wx' => null,
-                    'disk' => null,
-                    'is_online' => false,
-                    'is_keyed' => false,
-                    'created_at' => date('c'),
-                    'updated_at' => date('c'),
-                ];
+                // Parse node info to extract callsign and location
+                $nodeInfo = $amiData['info'] ?? '';
+                $callsign = 'Unknown';
+                $location = 'Unknown';
                 
-                // Try to get real status if node is configured
-                if ($nodeConfig && isset($nodeConfig['host'])) {
-                    try {
-                        $ami = $this->connectToAmi($nodeConfig, $nodeId);
-                        if ($ami) {
-                            $statusInfo = $this->getNodeStatusInfo($ami, $nodeId);
-                            
-                            // Update with real data
-                            $nodeData['status'] = $statusInfo['status'] ?? 'unknown';
-                            $nodeData['is_online'] = $statusInfo['is_online'] ?? false;
-                            $nodeData['is_keyed'] = $statusInfo['is_keyed'] ?? false;
-                            $nodeData['last_heard'] = $statusInfo['last_heard'] ?? null;
-                            $nodeData['cos_keyed'] = $statusInfo['cos_keyed'] ?? null;
-                            $nodeData['tx_keyed'] = $statusInfo['tx_keyed'] ?? null;
-                            $nodeData['cpu_temp'] = $statusInfo['cpu_temp'] ?? null;
-                            $nodeData['alert'] = $statusInfo['alert'] ?? null;
-                            $nodeData['wx'] = $statusInfo['wx'] ?? null;
-                            $nodeData['disk'] = $statusInfo['disk'] ?? null;
-                            
-                            // Get callsign and location from ASTDB if available
-                            $astdbInfo = $this->getNodeInfoFromAstdb($nodeId);
-                            if ($astdbInfo) {
-                                $nodeData['callsign'] = $astdbInfo['callsign'] ?? 'N/A';
-                                $nodeData['location'] = $astdbInfo['location'] ?? 'N/A';
-                            }
-                        }
-                    } catch (Exception $e) {
-                        $this->logger->warning("Failed to get status for node $nodeId", ['error' => $e->getMessage()]);
-                        // Keep default values
+                if (!empty($nodeInfo)) {
+                    // Parse info string format: "CALLSIGN [Node XXXXX] LOCATION"
+                    if (preg_match('/^([A-Z0-9\/]+)\s+\[Node\s+\d+\]\s+(.+)$/', $nodeInfo, $matches)) {
+                        $callsign = $matches[1];
+                        $location = $matches[2];
+                    } elseif (preg_match('/^([A-Z0-9\/]+)\s+(.+)$/', $nodeInfo, $matches)) {
+                        $callsign = $matches[1];
+                        $location = $matches[2];
+                    } else {
+                        // If no specific format, use the whole info as callsign
+                        $callsign = $nodeInfo;
                     }
                 }
                 
-                $nodes[] = $nodeData;
+                // Determine if node is online based on AMI data
+                $isOnline = ($amiData['status'] ?? 'offline') === 'online';
+                
+                // Process connected nodes
+                $connectedNodes = [];
+                if (!empty($amiData['remote_nodes'])) {
+                    foreach ($amiData['remote_nodes'] as $remoteNode) {
+                        $connectedNodes[] = [
+                            'node' => $remoteNode['node'] ?? 'unknown',
+                            'info' => $remoteNode['info'] ?? 'unknown',
+                            'ip' => $remoteNode['ip'] ?? null,
+                            'last_keyed' => date('Y-m-d H:i:s'),
+                            'link' => $remoteNode['link'] ?? 'IAX',
+                            'direction' => $remoteNode['direction'] ?? 'unknown',
+                        ];
+                    }
+                }
+                
+                $nodes[] = [
+                    'id' => $nodeId,
+                    'node_number' => $nodeId,
+                    'callsign' => $callsign,
+                    'description' => $node['system'],
+                    'location' => $location,
+                    'status' => $amiData['status'] ?? 'offline',
+                    'last_heard' => $isOnline ? date('Y-m-d H:i:s') : null,
+                    'connected_nodes' => $connectedNodes,
+                    'cos_keyed' => $amiData['cos_keyed'] ?? '0',
+                    'tx_keyed' => $amiData['tx_keyed'] ?? '0',
+                    'cpu_temp' => $amiData['cpu_temp'] ?? null,
+                    'alert' => $amiData['ALERT'] ?? null,
+                    'wx' => $amiData['WX'] ?? null,
+                    'disk' => $amiData['DISK'] ?? null,
+                    'is_online' => $isOnline,
+                    'is_keyed' => (($amiData['cos_keyed'] ?? '0') === '1' || ($amiData['tx_keyed'] ?? '0') === '1'),
+                    'created_at' => date('c'),
+                    'updated_at' => date('c'),
+                ];
             }
 
             $response->getBody()->write(json_encode([
@@ -202,21 +204,56 @@ class NodeController
                 ->withHeader('Content-Type', 'application/json');
         }
 
-        // Get real node status from AMI
-        $ami = $this->connectToAmi($nodeConfig, $nodeId);
-        if (!$ami) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'error' => 'Failed to connect to AMI'
-            ]));
-            
-            return $response
-                ->withStatus(500)
-                ->withHeader('Content-Type', 'application/json');
+        // Get real node status using the existing lsnod command that works
+        $lsnodData = $this->executeLsnodCommand($nodeId);
+        $parsedData = $lsnodData['parsed_data'] ?? [];
+        
+        // Convert lsnod data to the expected format
+        $statusInfo = [
+            'status' => 'unknown',
+            'last_heard' => date('Y-m-d H:i:s'),
+            'connected_nodes' => null,
+            'cos_keyed' => '0',
+            'tx_keyed' => '0',
+            'cpu_temp' => 'N/A',
+            'alert' => null,
+            'wx' => null,
+            'disk' => null,
+            'is_online' => false,
+            'is_keyed' => false
+        ];
+        
+        // Update with real data from lsnod
+        if (!empty($parsedData['main_node'])) {
+            $mainNode = $parsedData['main_node'];
+            $statusInfo['status'] = $mainNode['status'] ?? 'unknown';
+            $statusInfo['is_online'] = ($mainNode['status'] ?? '') === 'online';
+            $statusInfo['cos_keyed'] = $mainNode['cos_keyed'] ?? '0';
+            $statusInfo['tx_keyed'] = $mainNode['tx_keyed'] ?? '0';
+            $statusInfo['cpu_temp'] = $mainNode['cpu_temp'] ?? 'N/A';
+            $statusInfo['alert'] = $mainNode['alert'] ?? null;
+            $statusInfo['wx'] = $mainNode['wx'] ?? null;
+            $statusInfo['disk'] = $mainNode['disk'] ?? null;
         }
-
-        // Get node status information
-        $statusInfo = $this->getNodeStatusInfo($ami, $nodeId);
+        
+        // Get connected nodes
+        if (!empty($parsedData['nodes'])) {
+            $connectedNodes = [];
+            foreach ($parsedData['nodes'] as $connectedNode) {
+                $connectedNodes[] = [
+                    'node' => $connectedNode['node_number'] ?? 'unknown',
+                    'info' => $connectedNode['description'] ?? 'unknown',
+                    'ip' => null,
+                    'last_keyed' => date('Y-m-d H:i:s'),
+                    'link' => 'IAX',
+                    'direction' => 'unknown',
+                    'elapsed' => 'unknown',
+                    'mode' => 'duplex',
+                    'keyed' => '0'
+                ];
+            }
+            $statusInfo['connected_nodes'] = $connectedNodes;
+        }
         
         $node = [
             'id' => Uuid::uuid4()->toString(),
@@ -562,6 +599,19 @@ class NodeController
             return $response->withHeader('Content-Type', 'application/json');
         }
 
+        // Validate CSRF token
+        $csrfToken = $data['csrf_token'] ?? '';
+        if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || 
+            !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'CSRF token validation failed. Please refresh the page and try again.'
+            ]));
+            return $response
+                ->withStatus(403)
+                ->withHeader('Content-Type', 'application/json');
+        }
+
         // Check user permissions
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, $this->getActionPermission($action))) {
@@ -760,8 +810,10 @@ class NodeController
         $password = $nodeConfig['passwd'] ?? '';
         
         // Try to connect to AMI
+        $this->logger->info("Attempting AMI connection", ['host' => $host, 'node_id' => $nodeId]);
         $socket = \SimpleAmiClient::connect($host);
         if ($socket === false) {
+            $this->logger->warning("AMI connection failed", ['host' => $host, 'node_id' => $nodeId]);
             return [
                 'node' => $nodeId,
                 'info' => 'AMI connection failed',
@@ -779,8 +831,10 @@ class NodeController
         }
         
         // Try to login
+        $this->logger->info("Attempting AMI login", ['user' => $user, 'node_id' => $nodeId]);
         $loginResult = \SimpleAmiClient::login($socket, $user, $password);
         if ($loginResult !== true) {
+            $this->logger->warning("AMI login failed", ['user' => $user, 'node_id' => $nodeId]);
             \SimpleAmiClient::logoff($socket);
             return [
                 'node' => $nodeId,
@@ -3360,6 +3414,95 @@ class NodeController
     }
 
     /**
+     * Get node status information using shell commands (more reliable)
+     */
+    private function getNodeStatusInfoFromShell(string $nodeId): array
+    {
+        $statusInfo = [
+            'status' => 'unknown',
+            'last_heard' => date('Y-m-d H:i:s'),
+            'connected_nodes' => null,
+            'cos_keyed' => '0',
+            'tx_keyed' => '0',
+            'cpu_temp' => 'N/A',
+            'alert' => null,
+            'wx' => null,
+            'disk' => null,
+            'is_online' => false,
+            'is_keyed' => false
+        ];
+
+        try {
+            // Get node status
+            $statusCmd = "sudo /usr/sbin/asterisk -rx 'rpt status $nodeId'";
+            $statusResponse = shell_exec($statusCmd);
+            if ($statusResponse) {
+                if (strpos($statusResponse, 'Online') !== false) {
+                    $statusInfo['status'] = 'online';
+                    $statusInfo['is_online'] = true;
+                } elseif (strpos($statusResponse, 'Offline') !== false) {
+                    $statusInfo['status'] = 'offline';
+                    $statusInfo['is_online'] = false;
+                }
+            }
+
+            // Get connected nodes with detailed information
+            $connectedCmd = "sudo /usr/sbin/asterisk -rx 'rpt nodes $nodeId'";
+            $connectedResponse = shell_exec($connectedCmd);
+            if ($connectedResponse && !empty(trim($connectedResponse))) {
+                $lines = explode("\n", $connectedResponse);
+                $connectedNodes = [];
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (empty($line) || strpos($line, 'CONNECTED NODES') !== false) {
+                        continue;
+                    }
+                    
+                    // Parse connected nodes (they're space-separated)
+                    $nodes = preg_split('/\s+/', $line);
+                    foreach ($nodes as $node) {
+                        $node = trim($node);
+                        if (!empty($node) && preg_match('/^[TR]\d+$/', $node)) {
+                            $connectedNodes[] = [
+                                'node' => $node,
+                                'info' => $node,
+                                'ip' => null,
+                                'last_keyed' => date('Y-m-d H:i:s'),
+                                'link' => 'IAX',
+                                'direction' => 'unknown',
+                                'elapsed' => 'unknown',
+                                'mode' => 'duplex',
+                                'keyed' => '0'
+                            ];
+                        }
+                    }
+                }
+                if (!empty($connectedNodes)) {
+                    $statusInfo['connected_nodes'] = $connectedNodes;
+                }
+            }
+
+            // Get key status
+            $keyCmd = "sudo /usr/sbin/asterisk -rx 'rpt keyed $nodeId'";
+            $keyResponse = shell_exec($keyCmd);
+            if ($keyResponse) {
+                if (strpos($keyResponse, 'Keyed') !== false) {
+                    $statusInfo['is_keyed'] = true;
+                    $statusInfo['tx_keyed'] = '1';
+                }
+            }
+
+        } catch (Exception $e) {
+            $this->logger->error('Failed to get node status from shell', [
+                'node' => $nodeId,
+                'error' => $e->getMessage()
+            ]);
+        }
+
+        return $statusInfo;
+    }
+
+    /**
      * Get node status information from AMI
      */
     private function getNodeStatusInfo($ami, string $nodeId): array
@@ -3367,7 +3510,7 @@ class NodeController
         $statusInfo = [
             'status' => 'unknown',
             'last_heard' => date('Y-m-d H:i:s'),
-            'connected_nodes' => '',
+            'connected_nodes' => null,
             'cos_keyed' => '0',
             'tx_keyed' => '0',
             'cpu_temp' => 'N/A',
@@ -3391,17 +3534,41 @@ class NodeController
                 }
             }
 
-            // Get connected nodes
+            // Get connected nodes with detailed information
             $connectedResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt nodes $nodeId'"]);
             if ($connectedResponse) {
                 $lines = explode("\n", $connectedResponse);
                 $connectedNodes = [];
                 foreach ($lines as $line) {
                     if (preg_match('/Node\s+(\d+)/', $line, $matches)) {
-                        $connectedNodes[] = $matches[1];
+                        $connectedNodeId = $matches[1];
+                        // Get additional info for each connected node
+                        $nodeInfoResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt stats $connectedNodeId'"]);
+                        $info = 'Unknown';
+                        $ip = null;
+                        if ($nodeInfoResponse) {
+                            if (preg_match('/Info:\s*(.+)/', $nodeInfoResponse, $infoMatches)) {
+                                $info = trim($infoMatches[1]);
+                            }
+                            if (preg_match('/IP:\s*(\d+\.\d+\.\d+\.\d+)/', $nodeInfoResponse, $ipMatches)) {
+                                $ip = $ipMatches[1];
+                            }
+                        }
+                        
+                        $connectedNodes[] = [
+                            'node' => $connectedNodeId,
+                            'info' => $info,
+                            'ip' => $ip,
+                            'last_keyed' => date('Y-m-d H:i:s'),
+                            'link' => 'IAX',
+                            'direction' => 'unknown',
+                            'elapsed' => 'unknown',
+                            'mode' => 'duplex',
+                            'keyed' => '0'
+                        ];
                     }
                 }
-                $statusInfo['connected_nodes'] = implode(',', $connectedNodes);
+                $statusInfo['connected_nodes'] = $connectedNodes;
             }
 
             // Get key status
@@ -3665,27 +3832,41 @@ class NodeController
             $command = $result['command'];
             $output = $result['output'];
             
-            if (str_contains($command, 'rpt nodes')) {
-                // Parse connected nodes
+            if (str_contains($command, 'rpt lstats')) {
+                // Parse directly connected nodes from lstats (this shows actual direct connections)
                 $lines = explode("\n", $output);
-                $lines = array_slice($lines, 3); // Remove first 3 lines like original
-                $nodesConnected = implode(' ', $lines);
-                $nodesConnected = str_replace([',', "\n"], [' ', ' '], $nodesConnected);
-                $nodesConnected = preg_replace('/\s+/', ' ', $nodesConnected);
+                $lines = array_slice($lines, 2); // Remove header lines
                 
-                $nodeArray = explode(' ', trim($nodesConnected));
-                foreach ($nodeArray as $nodeNum) {
-                    $nodeNum = substr($nodeNum, 1, 10); // Remove first character like original
-                    if (is_numeric($nodeNum) && $nodeNum > 0) {
-                        $nodeInfo = $this->getNodeInfoFromAstdb($nodeNum, $astdb);
-                        $nodes[] = [
-                            'node_number' => $nodeNum,
-                            'description' => $nodeInfo['description'],
-                            'status' => 'Connected',
-                            'callsign' => $nodeInfo['callsign'],
-                            'frequency' => $nodeInfo['frequency'],
-                            'location' => $nodeInfo['location']
-                        ];
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (empty($line)) continue;
+                    
+                    // Parse the lstats line: NODE PEER RECONNECTS DIRECTION CONNECT_TIME CONNECT_STATE
+                    $parts = preg_split('/\s+/', $line);
+                    if (count($parts) >= 6) {
+                        $connectedNodeId = $parts[0];
+                        $peerIp = $parts[1];
+                        $reconnects = $parts[2];
+                        $direction = $parts[3];
+                        $connectTime = $parts[4];
+                        $connectState = $parts[5];
+                        
+                        if (is_numeric($connectedNodeId) && $connectedNodeId > 0) {
+                            $nodeInfo = $this->getNodeInfoFromAstdb($connectedNodeId, $astdb);
+                            $nodes[] = [
+                                'node_number' => $connectedNodeId,
+                                'description' => $nodeInfo['description'],
+                                'status' => 'Connected',
+                                'callsign' => $nodeInfo['callsign'],
+                                'frequency' => $nodeInfo['frequency'],
+                                'location' => $nodeInfo['location'],
+                                'peer_ip' => $peerIp,
+                                'reconnects' => $reconnects,
+                                'direction' => $direction,
+                                'connect_time' => $connectTime,
+                                'connect_state' => $connectState
+                            ];
+                        }
                     }
                 }
             } elseif (str_contains($command, 'rpt stats')) {

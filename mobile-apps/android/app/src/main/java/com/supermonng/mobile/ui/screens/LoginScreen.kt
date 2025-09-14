@@ -1,11 +1,13 @@
 package com.supermonng.mobile.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -13,12 +15,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.supermonng.mobile.ui.components.LoadingIndicator
 import com.supermonng.mobile.ui.viewmodel.LoginViewModel
+import com.supermonng.mobile.ui.viewmodel.ViewModelFactory
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onConfigureServer: () -> Unit,
-    viewModel: LoginViewModel = viewModel()
+    viewModel: LoginViewModel = viewModel(factory = ViewModelFactory(LocalContext.current))
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
@@ -82,6 +85,30 @@ fun LoginScreen(
                 }
             }
         )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Remember Me checkbox
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = uiState.rememberMe,
+                onCheckedChange = { viewModel.toggleRememberMe() },
+                enabled = !uiState.isLoading
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Remember me",
+                style = MaterialTheme.typography.body2,
+                modifier = Modifier.clickable { 
+                    if (!uiState.isLoading) {
+                        viewModel.toggleRememberMe() 
+                    }
+                }
+            )
+        }
         
         Spacer(modifier = Modifier.height(24.dp))
         

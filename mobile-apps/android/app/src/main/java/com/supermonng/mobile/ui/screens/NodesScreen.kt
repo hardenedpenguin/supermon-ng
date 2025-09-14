@@ -5,6 +5,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.*
 import androidx.compose.runtime.*
@@ -29,11 +30,23 @@ fun NodesScreen(
         viewModel.loadNodes()
     }
     
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.stopPolling()
+        }
+    }
+    
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("AllStar Nodes") },
                 actions = {
+                    IconButton(onClick = { viewModel.loadNodes() }) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Refresh"
+                        )
+                    }
                     IconButton(onClick = onSettings) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -69,11 +82,27 @@ fun NodesScreen(
                         .padding(16.dp),
                     backgroundColor = MaterialTheme.colors.error
                 ) {
-                    Text(
-                        text = uiState.errorMessage ?: "",
-                        modifier = Modifier.padding(16.dp),
-                        color = MaterialTheme.colors.onError
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = uiState.errorMessage ?: "",
+                            color = MaterialTheme.colors.onError,
+                            modifier = Modifier.weight(1f)
+                        )
+                        TextButton(
+                            onClick = { viewModel.clearErrorMessage() }
+                        ) {
+                            Text(
+                                text = "Dismiss",
+                                color = MaterialTheme.colors.onError
+                            )
+                        }
+                    }
                 }
             } else if (uiState.nodes.isEmpty()) {
                 Box(
@@ -94,9 +123,9 @@ fun NodesScreen(
                     items(uiState.nodes) { node ->
                         NodeCard(
                             node = node,
-                            onConnect = { viewModel.connectNode(node.id) },
-                            onDisconnect = { viewModel.disconnectNode(node.id) },
-                            onMonitor = { viewModel.monitorNode(node.id) }
+                            onConnect = { targetNodeId -> viewModel.connectNode(node.id.toString(), targetNodeId) },
+                            onDisconnect = { targetNodeId -> viewModel.disconnectNode(node.id.toString(), targetNodeId) },
+                            onMonitor = { targetNodeId -> viewModel.monitorNode(node.id.toString(), targetNodeId) }
                         )
                     }
                 }

@@ -33,6 +33,7 @@ $app->get('/api/csrf-token', function ($request, $response) {
     }
     
     $response->getBody()->write(json_encode([
+        'success' => true,
         'csrf_token' => $_SESSION['csrf_token'] ?? ''
     ]));
     return $response->withHeader('Content-Type', 'application/json');
