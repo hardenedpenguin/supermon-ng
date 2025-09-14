@@ -1,4 +1,4 @@
-# Supermon-NG V4.0.0 - Modern AllStar Link Management Dashboard
+# Supermon-NG V4.0.5 - Modern AllStar Link Management Dashboard
 
 A modern, responsive web-based management interface for AllStar Link nodes, built with Vue.js 3 and PHP 8. This is a complete rewrite of the original Supermon with enhanced features, better security, and modern web technologies.
 
@@ -29,15 +29,15 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 Download and extract the latest release tarball:
 
 ```bash
-# Download the release
-cd /tmp
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.3/supermon-ng-V4.0.3.tar.xz
+# Download the release to your home directory (avoids /tmp permission issues)
+cd $HOME
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.5/supermon-ng-V4.0.5.tar.xz
 
-# Extract to temporary directory
-tar -xJf supermon-ng-V4.0.3.tar.xz
+# Extract to your home directory
+tar -xJf supermon-ng-V4.0.5.tar.xz
 
 # Run installation script
-cd /tmp/supermon-ng
+cd $HOME/supermon-ng
 sudo ./install.sh
 ```
 
@@ -87,131 +87,17 @@ The `install.sh` script automatically handles:
 
 ### 1. Apache Web Server Configuration
 
-After running `install.sh`, you **must** complete the Apache configuration manually. The installation script creates a template but cannot automatically configure Apache for security reasons.
+The installation script automatically configures Apache for you! It handles:
 
-#### Step-by-Step Apache Setup
+- ✅ Enabling required Apache modules (`proxy`, `proxy_http`, `proxy_wstunnel`, `rewrite`, `headers`)
+- ✅ Creating the site configuration file (`/etc/apache2/sites-available/supermon-ng.conf`)
+- ✅ Enabling the supermon-ng site
+- ✅ Testing the Apache configuration
+- ✅ Restarting Apache
 
-**1. Enable Required Apache Modules**
-```bash
-sudo a2enmod proxy
-sudo a2enmod proxy_http
-sudo a2enmod proxy_wstunnel
-sudo a2enmod rewrite
-sudo a2enmod headers
-sudo a2enmod expires
-```
+**No manual configuration required!** The installer does everything automatically.
 
-**2. Copy the Configuration Template**
 
-The installer creates a template at `/var/www/html/supermon-ng/apache-config-template.conf`. Copy it to Apache's sites-available directory:
-
-```bash
-sudo cp /var/www/html/supermon-ng/apache-config-template.conf /etc/apache2/sites-available/supermon-ng.conf
-```
-
-**3. Enable the Site**
-```bash
-# Enable the new site
-sudo a2ensite supermon-ng
-
-# Test the configuration
-sudo apache2ctl configtest
-
-# Restart Apache
-sudo systemctl restart apache2
-```
-
-#### Apache Configuration Template Explained
-
-The generated configuration includes:
-
-```apache
-<VirtualHost *:80>
-    ServerName localhost
-    DocumentRoot /var/www/html/supermon-ng/public
-    
-    # Proxy configurations (must come before Directory blocks)
-    ProxyPreserveHost On
-    
-    # Proxy API requests to backend PHP service
-    ProxyPass /api http://localhost:8000/api
-    ProxyPassReverse /api http://localhost:8000/api
-    
-    # HamClock proxy (uncomment and modify if using HamClock)
-    # ProxyPass /hamclock/ http://192.168.1.100:8082/
-    # ProxyPassReverse /hamclock/ http://192.168.1.100:8082/
-    # ProxyPass /live-ws ws://192.168.1.100:8082/live-ws
-    # ProxyPassReverse /live-ws ws://192.168.1.100:8082/live-ws
-    
-    # Serve static files and handle Vue.js routing
-    <Directory "/var/www/html/supermon-ng/public">
-        AllowOverride All
-        Require all granted
-        
-        # Vue.js SPA routing with API/HamClock exclusions
-        RewriteEngine On
-        RewriteBase /
-        RewriteRule ^index\.html$ - [L]
-        RewriteCond %{REQUEST_FILENAME} !-f
-        RewriteCond %{REQUEST_FILENAME} !-d
-        RewriteCond %{REQUEST_URI} !^/api/
-        RewriteCond %{REQUEST_URI} !^/hamclock/
-        RewriteRule . /index.html [L]
-    </Directory>
-    
-    ErrorLog ${APACHE_LOG_DIR}/supermon-ng_error.log
-    CustomLog ${APACHE_LOG_DIR}/supermon-ng_access.log combined
-</VirtualHost>
-```
-
-#### Customizing for Your Domain
-
-To use a custom domain instead of `localhost`, edit the configuration:
-
-```bash
-sudo nano /etc/apache2/sites-available/supermon-ng.conf
-```
-
-Change:
-```apache
-ServerName localhost
-```
-
-To:
-```apache
-ServerName your-domain.com
-ServerAlias www.your-domain.com
-```
-
-#### SSL/HTTPS Configuration (Optional)
-
-For SSL support, create an additional configuration:
-
-```bash
-sudo nano /etc/apache2/sites-available/supermon-ng-ssl.conf
-```
-
-```apache
-<VirtualHost *:443>
-    ServerName your-domain.com
-    DocumentRoot /var/www/html/supermon-ng/public
-    
-    # SSL Configuration
-    SSLEngine on
-    SSLCertificateFile /path/to/your/certificate.crt
-    SSLCertificateKeyFile /path/to/your/private.key
-    
-    # Same proxy and directory configuration as HTTP version
-    # ... (copy from the HTTP configuration)
-</VirtualHost>
-```
-
-Then enable SSL and the new site:
-```bash
-sudo a2enmod ssl
-sudo a2ensite supermon-ng-ssl
-sudo systemctl restart apache2
-```
 
 ### 2. Node Configuration
 
@@ -460,23 +346,16 @@ sudo apache2ctl configtest
 
 # Common issues and fixes:
 
-# 1. Missing modules
-sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers expires
+# 1. Missing modules (should be enabled automatically during installation)
+sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers
 
-# 2. Invalid DocumentRoot path
-# Edit /etc/apache2/sites-available/supermon-ng.conf
-# Ensure DocumentRoot points to: /var/www/html/supermon-ng/public
-
-# 3. Permission issues
+# 2. Permission issues
 sudo chown -R www-data:www-data /var/www/html/supermon-ng/
 sudo chmod -R 755 /var/www/html/supermon-ng/
 ```
 
-**Site not accessible after Apache configuration**
+**Site not accessible**
 ```bash
-# Check if site is enabled
-sudo a2ensite supermon-ng
-
 # Check Apache status
 sudo systemctl status apache2
 
@@ -498,9 +377,6 @@ sudo systemctl enable supermon-ng-backend
 
 # Check backend logs
 sudo journalctl -u supermon-ng-backend -f
-
-# Verify proxy configuration in Apache
-grep -A5 -B5 "ProxyPass" /etc/apache2/sites-available/supermon-ng.conf
 ```
 
 ### Runtime Issues
@@ -513,10 +389,6 @@ sudo systemctl restart apache2
 
 # Verify files are in place
 ls -la /var/www/html/supermon-ng/public/
-
-# Check Apache site configuration
-sudo a2ensite supermon-ng
-sudo systemctl reload apache2
 ```
 
 **AMI connection failures**
@@ -547,31 +419,6 @@ sudo setfacl -R -m u:www-data:r /var/log/apache2/
 
 ## 📊 Performance Optimization
 
-### Apache Tuning
-
-For high-traffic installations, consider these Apache optimizations in your virtual host:
-
-```apache
-# Enable compression
-LoadModule deflate_module modules/mod_deflate.so
-<Location />
-    SetOutputFilter DEFLATE
-    SetEnvIfNoCase Request_URI \
-        \.(?:gif|jpe?g|png)$ no-gzip dont-vary
-    SetEnvIfNoCase Request_URI \
-        \.(?:exe|t?gz|zip|bz2|sit|rar)$ no-gzip dont-vary
-</Location>
-
-# Enable caching
-ExpiresActive On
-ExpiresByType text/css "access plus 1 month"
-ExpiresByType application/javascript "access plus 1 month"
-ExpiresByType image/png "access plus 1 month"
-ExpiresByType image/jpg "access plus 1 month"
-ExpiresByType image/jpeg "access plus 1 month"
-ExpiresByType image/gif "access plus 1 month"
-```
-
 ### System Resources
 
 Monitor system resources:
@@ -595,13 +442,13 @@ Supermon-NG includes an intelligent, conservative update system that **NEVER** r
 **For most updates, simply run:**
 
 ```bash
-# 1. Download the latest release
-cd /tmp
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.3/supermon-ng-V4.0.3.tar.xz
+# 1. Download the latest release to your home directory
+cd $HOME
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.5/supermon-ng-V4.0.5.tar.xz
 
 # 2. Extract the new version
-tar -xJf supermon-ng-V4.0.3.tar.xz
-cd supermon-ng
+tar -xJf supermon-ng-V4.0.5.tar.xz
+cd $HOME/supermon-ng
 
 # 3. Run the update script
 sudo ./scripts/update.sh
@@ -685,15 +532,15 @@ This shows:
 #### Step 2: Download New Version
 
 ```bash
-# Create temporary directory
-mkdir -p /tmp/supermon-ng-update
-cd /tmp/supermon-ng-update
+# Create update directory in your home directory
+mkdir -p $HOME/supermon-ng-update
+cd $HOME/supermon-ng-update
 
-# Download latest release (replace V4.0.3 with actual version)
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.3/supermon-ng-V4.0.3.tar.xz
+# Download latest release (replace V4.0.5 with actual version)
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.5/supermon-ng-V4.0.5.tar.xz
 
 # Extract the package
-tar -xJf supermon-ng-V4.0.3.tar.xz
+tar -xJf supermon-ng-V4.0.5.tar.xz
 cd supermon-ng
 ```
 
@@ -1000,8 +847,8 @@ sudo ./install.sh --help
 sudo /var/www/html/supermon-ng/scripts/version-check.sh
 
 # Quick update (download, extract, run update script)
-cd /tmp && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.3/supermon-ng-V4.0.3.tar.xz
-tar -xJf supermon-ng-V4.0.3.tar.xz && cd supermon-ng
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.5/supermon-ng-V4.0.5.tar.xz
+tar -xJf supermon-ng-V4.0.5.tar.xz && cd supermon-ng
 sudo ./scripts/update.sh
 
 # Update without Apache configuration changes
@@ -1016,12 +863,13 @@ sudo tar -czf /tmp/supermon-ng-backup-$(date +%Y%m%d_%H%M%S).tar.gz /var/www/htm
 
 ### Apache Configuration Commands
 ```bash
-# Complete Apache setup after installation
-sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers expires
-sudo cp /var/www/html/supermon-ng/apache-config-template.conf /etc/apache2/sites-available/supermon-ng.conf
-sudo a2ensite supermon-ng
+# Apache is automatically configured during installation!
+# No manual steps required.
+
+# Troubleshooting (if needed):
 sudo apache2ctl configtest
 sudo systemctl restart apache2
+sudo systemctl status apache2
 ```
 
 ### Service Management Commands
@@ -1133,4 +981,4 @@ We welcome feature requests! Please:
 
 ---
 
-**Supermon-NG V4.0.0** - Bringing AllStar Link management into the modern era! 🚀📡
+**Supermon-NG V4.0.5** - Bringing AllStar Link management into the modern era! 🚀📡
