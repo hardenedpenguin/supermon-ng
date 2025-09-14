@@ -192,6 +192,15 @@ class AuthController
     {
         $this->logger->info('Auth check request');
         
+        // Debug session information
+        $this->logger->info('Session debug', [
+            'session_status' => session_status(),
+            'session_id' => session_id(),
+            'session_data' => $_SESSION ?? [],
+            'cookie_header' => $request->getHeaderLine('Cookie'),
+            'user_agent' => $request->getHeaderLine('User-Agent')
+        ]);
+        
         // Check if user is actually logged in via session
         $user = $this->getCurrentUser();
         
@@ -451,13 +460,27 @@ class AuthController
             session_start();
         }
         
+        // Debug session data
+        $this->logger->info('getCurrentUser debug', [
+            'session_status' => session_status(),
+            'session_id' => session_id(),
+            'session_data' => $_SESSION ?? [],
+            'has_user' => isset($_SESSION['user']),
+            'has_authenticated' => isset($_SESSION['authenticated']),
+            'user_value' => $_SESSION['user'] ?? 'not_set',
+            'authenticated_value' => $_SESSION['authenticated'] ?? 'not_set',
+            'login_time' => $_SESSION['login_time'] ?? 'not_set'
+        ]);
+        
         // Check if user is logged in via session
         if (isset($_SESSION['user']) && !empty($_SESSION['user']) && isset($_SESSION['authenticated']) && $_SESSION['authenticated']) {
             // Check if session is not too old (24 hours)
             if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) < 86400) {
+                $this->logger->info('User authenticated via session', ['user' => $_SESSION['user']]);
                 return $_SESSION['user'];
             } else {
                 // Session expired, clear it
+                $this->logger->info('Session expired, clearing');
                 session_destroy();
                 return null;
             }

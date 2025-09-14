@@ -33,7 +33,7 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
         }
 
         session_set_cookie_params([
-            'lifetime' => 0,
+            'lifetime' => 86400, // 24 hours (86400 seconds) - match auth controller timeout
             'path' => '/',
             'domain' => '',
             'secure' => $isSecure,
@@ -44,11 +44,11 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
         session_start();
     }
     
-    // Handle session timeout (8 hours) - only if session is active
+    // Handle session timeout (24 hours) - only if session is active
     if (session_status() === PHP_SESSION_ACTIVE) {
         if (!isset($_SESSION['last_activity'])) {
             $_SESSION['last_activity'] = time();
-        } elseif (time() - $_SESSION['last_activity'] > 28800) { // 8 hours
+        } elseif (time() - $_SESSION['last_activity'] > 86400) { // 24 hours
             session_unset();
             session_destroy();
             session_start();
@@ -77,6 +77,9 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
             
             if (empty($token) || !isset($_SESSION['csrf_token']) || 
                 !hash_equals($_SESSION['csrf_token'], $token)) {
+                
+                // Debug logging
+                error_log("CSRF validation failed: token='$token', session_token='" . ($_SESSION['csrf_token'] ?? 'null') . "', uri='$uri', session_id='" . session_id() . "'");
                 
                 $response = new \Slim\Psr7\Response();
                 $response->getBody()->write(json_encode([
@@ -115,7 +118,7 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
 
 // Add error handling middleware
 $errorMiddleware = $app->addErrorMiddleware(
-    $_ENV['APP_DEBUG'] === 'true',
+    true, // Enable error details for debugging
     true,
     true
 );

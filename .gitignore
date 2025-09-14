@@ -69,3 +69,4 @@ yarn-error.log*
 # Configuration overrides (users should create from examples)
 user_files/custom_*
 user_files/local_*
+cookies.txt

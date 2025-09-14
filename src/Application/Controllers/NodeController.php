@@ -37,32 +37,68 @@ class NodeController
             // Get available nodes from AllStar configuration
             $availableNodes = $this->configService->getAvailableNodes($currentUser);
             
-            // Convert to the expected format with test status
+            // Convert to the expected format with real AMI data
             $nodes = [];
             foreach ($availableNodes as $node) {
                 $nodeId = $node['id'];
                 
-                // For now, set all nodes as online but with no connected nodes
-                // This will be updated when individual node details are requested
-                $isOnline = true;
+                // Get real AMI data for this node
+                $amiData = $this->getNodeAmiData($node, $nodeId);
+                
+                // Parse node info to extract callsign and location
+                $nodeInfo = $amiData['info'] ?? '';
+                $callsign = 'Unknown';
+                $location = 'Unknown';
+                
+                if (!empty($nodeInfo)) {
+                    // Parse info string format: "CALLSIGN [Node XXXXX] LOCATION"
+                    if (preg_match('/^([A-Z0-9\/]+)\s+\[Node\s+\d+\]\s+(.+)$/', $nodeInfo, $matches)) {
+                        $callsign = $matches[1];
+                        $location = $matches[2];
+                    } elseif (preg_match('/^([A-Z0-9\/]+)\s+(.+)$/', $nodeInfo, $matches)) {
+                        $callsign = $matches[1];
+                        $location = $matches[2];
+                    } else {
+                        // If no specific format, use the whole info as callsign
+                        $callsign = $nodeInfo;
+                    }
+                }
+                
+                // Determine if node is online based on AMI data
+                $isOnline = ($amiData['status'] ?? 'offline') === 'online';
+                
+                // Process connected nodes
+                $connectedNodes = [];
+                if (!empty($amiData['remote_nodes'])) {
+                    foreach ($amiData['remote_nodes'] as $remoteNode) {
+                        $connectedNodes[] = [
+                            'node' => $remoteNode['node'] ?? 'unknown',
+                            'info' => $remoteNode['info'] ?? 'unknown',
+                            'ip' => $remoteNode['ip'] ?? null,
+                            'last_keyed' => date('Y-m-d H:i:s'),
+                            'link' => $remoteNode['link'] ?? 'IAX',
+                            'direction' => $remoteNode['direction'] ?? 'unknown',
+                        ];
+                    }
+                }
                 
                 $nodes[] = [
                     'id' => $nodeId,
                     'node_number' => $nodeId,
-                    'callsign' => 'W5GLE',
+                    'callsign' => $callsign,
                     'description' => $node['system'],
-                    'location' => 'Austin, TX',
-                    'status' => $isOnline ? 'online' : 'offline',
+                    'location' => $location,
+                    'status' => $amiData['status'] ?? 'offline',
                     'last_heard' => $isOnline ? date('Y-m-d H:i:s') : null,
-                    'connected_nodes' => null, // Will be populated when individual node is requested
-                    'cos_keyed' => $isOnline ? '0' : null,
-                    'tx_keyed' => $isOnline ? '0' : null,
-                    'cpu_temp' => $isOnline ? '45°C' : null,
-                    'alert' => null,
-                    'wx' => null,
-                    'disk' => null,
+                    'connected_nodes' => $connectedNodes,
+                    'cos_keyed' => $amiData['cos_keyed'] ?? '0',
+                    'tx_keyed' => $amiData['tx_keyed'] ?? '0',
+                    'cpu_temp' => $amiData['cpu_temp'] ?? null,
+                    'alert' => $amiData['ALERT'] ?? null,
+                    'wx' => $amiData['WX'] ?? null,
+                    'disk' => $amiData['DISK'] ?? null,
                     'is_online' => $isOnline,
-                    'is_keyed' => false,
+                    'is_keyed' => (($amiData['cos_keyed'] ?? '0') === '1' || ($amiData['tx_keyed'] ?? '0') === '1'),
                     'created_at' => date('c'),
                     'updated_at' => date('c'),
                 ];
@@ -563,6 +599,19 @@ class NodeController
             return $response->withHeader('Content-Type', 'application/json');
         }
 
+        // Validate CSRF token
+        $csrfToken = $data['csrf_token'] ?? '';
+        if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || 
+            !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'CSRF token validation failed. Please refresh the page and try again.'
+            ]));
+            return $response
+                ->withStatus(403)
+                ->withHeader('Content-Type', 'application/json');
+        }
+
         // Check user permissions
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, $this->getActionPermission($action))) {
@@ -761,8 +810,10 @@ class NodeController
         $password = $nodeConfig['passwd'] ?? '';
         
         // Try to connect to AMI
+        $this->logger->info("Attempting AMI connection", ['host' => $host, 'node_id' => $nodeId]);
         $socket = \SimpleAmiClient::connect($host);
         if ($socket === false) {
+            $this->logger->warning("AMI connection failed", ['host' => $host, 'node_id' => $nodeId]);
             return [
                 'node' => $nodeId,
                 'info' => 'AMI connection failed',
@@ -780,8 +831,10 @@ class NodeController
         }
         
         // Try to login
+        $this->logger->info("Attempting AMI login", ['user' => $user, 'node_id' => $nodeId]);
         $loginResult = \SimpleAmiClient::login($socket, $user, $password);
         if ($loginResult !== true) {
+            $this->logger->warning("AMI login failed", ['user' => $user, 'node_id' => $nodeId]);
             \SimpleAmiClient::logoff($socket);
             return [
                 'node' => $nodeId,
