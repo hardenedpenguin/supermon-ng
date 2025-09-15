@@ -43,7 +43,7 @@ class NodeController
                 $nodeId = $node['id'];
                 
                 // Get real AMI data for this node
-                $amiData = $this->getNodeAmiData($node, $nodeId);
+                $amiData = $this->getNodeAmiData($node, (string)$nodeId);
                 
                 // Parse node info to extract callsign and location
                 $nodeInfo = $amiData['info'] ?? '';
