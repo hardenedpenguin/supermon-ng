@@ -17,7 +17,7 @@ try {
     $_ENV['APP_ENV'] = $_ENV['APP_ENV'] ?? 'production';
     $_ENV['APP_DEBUG'] = $_ENV['APP_DEBUG'] ?? 'false';
     $_ENV['JWT_SECRET'] = $_ENV['JWT_SECRET'] ?? 'your-secret-key';
-    $_ENV['USER_FILES_PATH'] = $_ENV['USER_FILES_PATH'] ?? '/var/www/html/supermon-ng/user_files/';
+    $_ENV['USER_FILES_PATH'] = $_ENV['USER_FILES_PATH'] ?? __DIR__ . '/../user_files/';
 }
 
 // Set error reporting based on environment

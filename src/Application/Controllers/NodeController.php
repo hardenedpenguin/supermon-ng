@@ -1269,7 +1269,7 @@ class NodeController
         $iniFile = null;
         if ($user) {
             // Try user-specific INI file
-            $userIniFile = '/var/www/html/supermon-ng/user_files/' . $user . '.ini';
+            $userIniFile = __DIR__ . '/../../../user_files/' . $user . '.ini';
             if (file_exists($userIniFile)) {
                 $iniFile = $userIniFile;
             }
@@ -1277,7 +1277,7 @@ class NodeController
         
         // Fallback to allmon.ini
         if (!$iniFile) {
-            $allmonIni = '/var/www/html/supermon-ng/user_files/allmon.ini';
+            $allmonIni = __DIR__ . '/../../../user_files/allmon.ini';
             if (file_exists($allmonIni)) {
                 $iniFile = $allmonIni;
             }
@@ -1285,7 +1285,7 @@ class NodeController
         
         // Fallback to default user INI file
         if (!$iniFile) {
-            $defaultIni = '/var/www/html/supermon-ng/user_files/default-allmon.ini';
+            $defaultIni = __DIR__ . '/../../../user_files/default-allmon.ini';
             if (file_exists($defaultIni)) {
                 $iniFile = $defaultIni;
             }
@@ -1378,7 +1378,7 @@ class NodeController
         $iniFile = null;
         if ($user) {
             // Try user-specific INI file
-            $userIniFile = '/var/www/html/supermon-ng/user_files/' . $user . '.ini';
+            $userIniFile = __DIR__ . '/../../../user_files/' . $user . '.ini';
             if (file_exists($userIniFile)) {
                 $iniFile = $userIniFile;
             }
@@ -1386,7 +1386,7 @@ class NodeController
         
         // Fallback to allmon.ini
         if (!$iniFile) {
-            $allmonIni = '/var/www/html/supermon-ng/user_files/allmon.ini';
+            $allmonIni = __DIR__ . '/../../../user_files/allmon.ini';
             if (file_exists($allmonIni)) {
                 $iniFile = $allmonIni;
             }
@@ -1394,7 +1394,7 @@ class NodeController
         
         // Fallback to default user INI file
         if (!$iniFile) {
-            $defaultIni = '/var/www/html/supermon-ng/user_files/default-allmon.ini';
+            $defaultIni = __DIR__ . '/../../../user_files/default-allmon.ini';
             if (file_exists($defaultIni)) {
                 $iniFile = $defaultIni;
             }
@@ -1877,7 +1877,7 @@ class NodeController
             // Get IRLP log file path from common.inc
             require_once __DIR__ . '/../../../includes/common.inc';
             global $IRLP_LOG;
-            $irlpLogPath = $IRLP_LOG ?? '/home/irlp/log/messages';
+            $irlpLogPath = $IRLP_LOG ?? '/var/log/irlp/messages';
 
             if (!file_exists($irlpLogPath)) {
                 $response->getBody()->write(json_encode([

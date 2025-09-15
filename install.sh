@@ -20,7 +20,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Check if this is an update or fresh installation
-APP_DIR="/var/www/html/supermon-ng"
+APP_DIR="${SUPERMON_INSTALL_DIR:-/var/www/html/supermon-ng}"
 if [ -d "$APP_DIR" ] && [ -f "$APP_DIR/includes/common.inc" ]; then
     echo "📋 Existing Supermon-NG installation detected."
     echo "   For updates, please use: sudo ./scripts/update.sh"
@@ -117,7 +117,7 @@ fi
 configure_logs
 
 # Set up the application directory
-APP_DIR="/var/www/html/supermon-ng"
+APP_DIR="${SUPERMON_INSTALL_DIR:-/var/www/html/supermon-ng}"
 echo "📁 Setting up application in $APP_DIR"
 
 # Check if we're in the right directory (should contain the extracted files)
@@ -163,7 +163,7 @@ fi
 
 # Install unified file editor script
 echo "📝 Installing unified file editor script..."
-EDITOR_SCRIPT="/usr/local/sbin/supermon_unified_file_editor.sh"
+EDITOR_SCRIPT="${SUPERMON_EDITOR_SCRIPT:-/usr/local/sbin/supermon_unified_file_editor.sh}"
 if [ -f "$EDITOR_SCRIPT" ]; then
     echo "⚠️  Unified file editor already exists. Backing up existing file..."
     cp "$EDITOR_SCRIPT" "$EDITOR_SCRIPT.backup.$(date +%Y%m%d_%H%M%S)"
