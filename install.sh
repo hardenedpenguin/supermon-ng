@@ -165,8 +165,7 @@ fi
 echo "📝 Installing unified file editor script..."
 EDITOR_SCRIPT="${SUPERMON_EDITOR_SCRIPT:-/usr/local/sbin/supermon_unified_file_editor.sh}"
 if [ -f "$EDITOR_SCRIPT" ]; then
-    echo "⚠️  Unified file editor already exists. Backing up existing file..."
-    cp "$EDITOR_SCRIPT" "$EDITOR_SCRIPT.backup.$(date +%Y%m%d_%H%M%S)"
+    echo "⚠️  Unified file editor already exists. Overwriting existing file..."
 fi
 
 # Copy and set proper permissions for editor script
@@ -180,10 +179,6 @@ if bash -n "$EDITOR_SCRIPT"; then
 else
     echo "❌ Error: Invalid script syntax. Removing file..."
     rm "$EDITOR_SCRIPT"
-    if [ -f "$EDITOR_SCRIPT.backup.$(date +%Y%m%d_%H%M%S)" ]; then
-        echo "   Restoring backup..."
-        mv "$EDITOR_SCRIPT.backup.$(date +%Y%m%d_%H%M%S)" "$EDITOR_SCRIPT"
-    fi
     exit 1
 fi
 
@@ -191,8 +186,7 @@ fi
 echo "🔐 Installing sudoers configuration..."
 SUDOERS_FILE="/etc/sudoers.d/011_www-nopasswd"
 if [ -f "$SUDOERS_FILE" ]; then
-    echo "⚠️  Sudoers file already exists. Backing up existing file..."
-    cp "$SUDOERS_FILE" "$SUDOERS_FILE.backup.$(date +%Y%m%d_%H%M%S)"
+    echo "⚠️  Sudoers file already exists. Overwriting existing file..."
 fi
 
 # Copy and set proper permissions for sudoers file
@@ -206,10 +200,6 @@ if visudo -c -f "$SUDOERS_FILE"; then
 else
     echo "❌ Error: Invalid sudoers syntax. Removing file..."
     rm "$SUDOERS_FILE"
-    if [ -f "$SUDOERS_FILE.backup.$(date +%Y%m%d_%H%M%S)" ]; then
-        echo "   Restoring backup..."
-        mv "$SUDOERS_FILE.backup.$(date +%Y%m%d_%H%M%S)" "$SUDOERS_FILE"
-    fi
     exit 1
 fi
 
@@ -546,8 +536,7 @@ if [ "$SKIP_APACHE" = false ]; then
 
     # Install the Apache site configuration
     if [ -f "$APACHE_SITE_FILE" ]; then
-        echo "⚠️  Apache site configuration already exists. Backing up existing file..."
-        cp "$APACHE_SITE_FILE" "$APACHE_SITE_FILE.backup.$(date +%Y%m%d_%H%M%S)"
+        echo "⚠️  Apache site configuration already exists. Overwriting existing file..."
     fi
 
     echo "📝 Installing Apache site configuration..."
