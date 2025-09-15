@@ -599,8 +599,8 @@ class NodeController
             return $response->withHeader('Content-Type', 'application/json');
         }
 
-        // Validate CSRF token
-        $csrfToken = $data['csrf_token'] ?? '';
+        // Validate CSRF token (check both body and header)
+        $csrfToken = $data['csrf_token'] ?? $request->getHeaderLine('X-CSRF-Token') ?? '';
         if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || 
             !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
             $response->getBody()->write(json_encode([
