@@ -205,7 +205,7 @@ const handleLogin = async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: url('/background.jpg');
+  background-image: url('/supermon-ng/background.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

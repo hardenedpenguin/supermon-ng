@@ -1,14 +1,15 @@
 import axios from 'axios'
-import type { ApiResponse, ApiError } from '@/types'
+// import type { ApiResponse, ApiError } from '@/types'
 
 // CSRF token management
 let csrfToken: string | null = null
 
 const fetchCsrfToken = async (): Promise<string> => {
   try {
-    const response = await axios.get('/api/csrf-token', { withCredentials: true })
-    csrfToken = response.data.csrf_token
-    return csrfToken
+    const response = await axios.get('/supermon-ng/api/csrf-token', { withCredentials: true })
+    const token = response.data.csrf_token || ''
+    csrfToken = token
+    return token
   } catch (error) {
     console.error('Failed to fetch CSRF token:', error)
     return ''
@@ -17,7 +18,7 @@ const fetchCsrfToken = async (): Promise<string> => {
 
 // Create axios instance
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: '/supermon-ng/api',
   timeout: 10000,
   withCredentials: true,
   headers: {
@@ -67,7 +68,7 @@ api.interceptors.response.use(
       switch (error.response.status) {
         case 401:
           // Unauthorized - redirect to login
-          window.location.href = '/login'
+          window.location.href = '/supermon-ng/login'
           break
         case 403:
           // Check if it's a CSRF token error

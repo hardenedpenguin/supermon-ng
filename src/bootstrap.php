@@ -37,7 +37,7 @@ ini_set('session.cookie_samesite', 'Lax'); // Use Lax for development
 ini_set('session.cookie_secure', '0'); // Set to 1 in production with HTTPS
 ini_set('session.cookie_httponly', '1');
 ini_set('session.cookie_domain', '');
-ini_set('session.cookie_path', '/');
+ini_set('session.cookie_path', '/supermon-ng');
 ini_set('session.cookie_lifetime', '86400'); // 24 hours - match auth controller timeout
 
 // Build container

@@ -4,6 +4,7 @@ import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [vue()],
+  base: '/supermon-ng/',
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src')
@@ -13,7 +14,7 @@ export default defineConfig({
     port: 5179,
     host: true,
     proxy: {
-      '/api': {
+      '/supermon-ng/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,
@@ -21,23 +22,19 @@ export default defineConfig({
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
             console.log('🔐 Proxy request:', req.method, req.url)
+            // Forward cookies from browser to backend
+            if (req.headers.cookie) {
+              proxyReq.setHeader('Cookie', req.headers.cookie)
+            }
           })
           proxy.on('proxyRes', (proxyRes, req, res) => {
             console.log('🔐 Proxy response:', proxyRes.statusCode, req.url)
             console.log('🔐 Proxy cookies:', proxyRes.headers['set-cookie'])
+            // Forward cookies from backend to browser
+            if (proxyRes.headers['set-cookie']) {
+              res.setHeader('Set-Cookie', proxyRes.headers['set-cookie'])
+            }
           })
-        },
-        onProxyReq: (proxyReq, req, res) => {
-          // Forward cookies from browser to backend
-          if (req.headers.cookie) {
-            proxyReq.setHeader('Cookie', req.headers.cookie)
-          }
-        },
-        onProxyRes: (proxyRes, req, res) => {
-          // Forward cookies from backend to browser
-          if (proxyRes.headers['set-cookie']) {
-            res.setHeader('Set-Cookie', proxyRes.headers['set-cookie'])
-          }
         }
       },
       '/server.php': {

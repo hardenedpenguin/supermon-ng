@@ -474,14 +474,20 @@ else
 
 <VirtualHost *:80>
     ServerName localhost
-$SERVER_ALIASES    DocumentRoot $APP_DIR/public
+$SERVER_ALIASES    DocumentRoot /var/www/html
     
-    # Proxy configurations (must come before Directory blocks)
+    # Proxy configurations (must come before Alias directives)
     ProxyPreserveHost On
     
-    # Proxy API requests to backend
-    ProxyPass /api http://localhost:8000/api
-    ProxyPassReverse /api http://localhost:8000/api
+    # Proxy supermon-ng API requests to backend (must come before Alias)
+    ProxyPass /supermon-ng/api http://localhost:8000/api
+    ProxyPassReverse /supermon-ng/api http://localhost:8000/api
+    
+    # Alias for Supermon-NG application (after ProxyPass)
+    Alias /supermon-ng $APP_DIR/public
+    
+    # Alias for user files
+    Alias /supermon-ng/user_files $APP_DIR/user_files
     
     # Proxy HamClock requests (adjust IP and port as needed)
     # Uncomment and modify the following lines if you have HamClock running:
@@ -492,7 +498,7 @@ $SERVER_ALIASES    DocumentRoot $APP_DIR/public
     # ProxyPass /live-ws ws://10.0.0.41:8082/live-ws
     # ProxyPassReverse /live-ws ws://10.0.0.41:8082/live-ws
     
-    # Serve static files from public directory
+    # Configure Supermon-NG directory
     <Directory "$APP_DIR/public">
         AllowOverride All
         Require all granted
@@ -500,15 +506,24 @@ $SERVER_ALIASES    DocumentRoot $APP_DIR/public
         # Ensure index.html is served by default (Vue.js frontend)
         DirectoryIndex index.html index.php
         
-        # Handle Vue router (SPA) with exclusions for proxy paths
+        # Handle Vue router (SPA) - rewrite all requests to index.html
         RewriteEngine On
-        RewriteBase /
-        RewriteRule ^index\.html$ - [L]
         RewriteCond %{REQUEST_FILENAME} !-f
         RewriteCond %{REQUEST_FILENAME} !-d
-        RewriteCond %{REQUEST_URI} !^/api/
-        RewriteCond %{REQUEST_URI} !^/hamclock/
-        RewriteRule . /index.html [L]
+        RewriteRule ^ index.html [QSA,L]
+    </Directory>
+    
+    # Configure user files directory
+    <Directory "$APP_DIR/user_files">
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    # Configure main document root
+    <Directory "/var/www/html">
+        AllowOverride All
+        Require all granted
+        Options Indexes FollowSymLinks
     </Directory>
     
     ErrorLog \${APACHE_LOG_DIR}/supermon-ng_error.log

@@ -35,9 +35,9 @@
       <!-- Custom Logo (if configured) -->
       <div v-if="systemInfo?.logoName" class="custom-logo" :style="customLogoStyle">
         <a v-if="systemInfo?.logoUrl" :href="getCleanUrl(systemInfo.logoUrl)" :target="shouldOpenInNewTab(systemInfo.logoUrl) ? '_blank' : '_self'">
-          <img :src="`/user_files/${systemInfo.logoName}`" :style="{ width: systemInfo?.logoSize || '15%', border: '0px' }" alt="Custom Logo">
+          <img :src="`/supermon-ng/user_files/${systemInfo.logoName}`" :style="{ width: systemInfo?.logoSize || '15%', border: '0px' }" alt="Custom Logo">
         </a>
-        <img v-else :src="`/user_files/${systemInfo.logoName}`" :style="{ width: systemInfo?.logoSize || '15%', border: '0px' }" alt="Custom Logo">
+        <img v-else :src="`/supermon-ng/user_files/${systemInfo.logoName}`" :style="{ width: systemInfo?.logoSize || '15%', border: '0px' }" alt="Custom Logo">
       </div>
 
       <!-- AllStar Logo (default or if no custom logo) -->
@@ -290,7 +290,7 @@
     <!-- HamClock Modal -->
     <HamClock
       v-model:isVisible="showHamClockModal"
-      :url="hamclockUrl"
+      :url="systemInfo?.hamclockUrlExternal || systemInfo?.hamclockUrlInternal || ''"
       @close="showHamClockModal = false"
     />
 
@@ -442,7 +442,7 @@ const headerBackgroundUrl = computed(() => {
   if (systemInfo.value?.customHeaderBackground) {
     return `url('${systemInfo.value.customHeaderBackground}')`
   }
-  return "url('/background.jpg')"
+  return "url('/supermon-ng/background.jpg')"
 })
 
 const formatHeaderTag = () => {
@@ -810,7 +810,8 @@ const openHamClock = async () => {
       alert('HamClock is not enabled')
     }
   } catch (error) {
-    alert('Error opening HamClock: ' + (error.message || 'Unknown error'))
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert('Error opening HamClock: ' + errorMessage)
   }
 }
 
@@ -818,7 +819,8 @@ const openNodeStatus = async () => {
   try {
     showNodeStatusModal.value = true
   } catch (error) {
-    alert('Error opening Node Status: ' + (error.message || 'Unknown error'))
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert('Error opening Node Status: ' + errorMessage)
   }
 }
 
@@ -1117,7 +1119,7 @@ const handleLoginSuccess = async () => {
   
   // Refetch configuration data after login to get user's personal default node
   try {
-    const nodesResponse = await fetch('/api/config/nodes')
+    const nodesResponse = await fetch('/supermon-ng/api/config/nodes')
     if (nodesResponse.ok) {
       const nodesData = await nodesResponse.json()
       if (nodesData.data?.default_node) {
@@ -1150,7 +1152,7 @@ const handleLogout = async () => {
   
   // Refetch configuration data after logout to get new default node
   try {
-    const nodesResponse = await fetch('/api/config/nodes')
+    const nodesResponse = await fetch('/supermon-ng/api/config/nodes')
     if (nodesResponse.ok) {
       const nodesData = await nodesResponse.json()
       if (nodesData.data?.default_node) {
@@ -1240,9 +1242,9 @@ onMounted(async () => {
   // Load system info, database status, and check for default node
   try {
     const [systemResponse, databaseResponse, nodesResponse] = await Promise.all([
-      fetch('/api/config/system-info'),
-      fetch('/api/database/status'),
-      fetch('/api/config/nodes')
+      fetch('/supermon-ng/api/config/system-info'),
+      fetch('/supermon-ng/api/database/status'),
+      fetch('/supermon-ng/api/config/nodes')
     ])
     
     if (systemResponse.ok) {

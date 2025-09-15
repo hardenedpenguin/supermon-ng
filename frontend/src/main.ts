@@ -14,7 +14,7 @@ app.use(router)
 
 console.log('🚀 Supermon-ng Vue 3 App Started')
 console.log('Environment:', import.meta.env.MODE)
-console.log('API Base: /api')
+console.log('API Base: /supermon-ng/api')
 
 // Initialize CSRF token
 initializeCsrfToken().then(() => {

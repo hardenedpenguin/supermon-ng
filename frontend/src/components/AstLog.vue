@@ -87,7 +87,7 @@ const loadAstLog = async () => {
   error.value = ''
   
   try {
-    const response = await axios.get('/api/config/astlog', { 
+    const response = await axios.get('/supermon-ng/api/config/astlog', { 
       withCredentials: true 
     })
     

@@ -163,7 +163,7 @@ const loadFavorites = async () => {
   result.value = null
   
   try {
-    const response = await axios.get('/api/config/favorites', { 
+    const response = await axios.get('/supermon-ng/api/config/favorites', { 
       withCredentials: true 
     })
     
@@ -195,7 +195,7 @@ const deleteFavorite = async (favorite: Favorite) => {
   error.value = ''
   
   try {
-    const response = await axios.delete('/api/config/favorites', {
+    const response = await axios.delete('/supermon-ng/api/config/favorites', {
       data: {
         section: favorite.section,
         index: favorite.index

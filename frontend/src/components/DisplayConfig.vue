@@ -124,7 +124,7 @@ const closeModal = () => {
 const loadSettings = async () => {
   try {
     loading.value = true
-    const response = await axios.get('/api/config/display', { withCredentials: true })
+    const response = await axios.get('/supermon-ng/api/config/display', { withCredentials: true })
     if (response.data.success) {
       const data = response.data.data
       settings.value = {
@@ -144,7 +144,7 @@ const loadSettings = async () => {
 const saveSettings = async () => {
   try {
     loading.value = true
-    const response = await axios.put('/api/config/display', {
+    const response = await axios.put('/supermon-ng/api/config/display', {
       show_detailed: settings.value.show_detailed,
       show_number: settings.value.show_number,
       show_all: settings.value.show_all,

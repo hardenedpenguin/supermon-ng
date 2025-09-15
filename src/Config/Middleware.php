@@ -34,7 +34,7 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
 
         session_set_cookie_params([
             'lifetime' => 86400, // 24 hours (86400 seconds) - match auth controller timeout
-            'path' => '/',
+            'path' => '/supermon-ng',
             'domain' => '',
             'secure' => $isSecure,
             'httponly' => true,

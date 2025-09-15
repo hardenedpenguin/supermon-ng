@@ -157,7 +157,7 @@ const performLookup = async () => {
   hasSearched.value = true
   
   try {
-    const response = await axios.post('/api/config/astlookup', {
+    const response = await axios.post('/supermon-ng/api/config/astlookup', {
       lookupNode: lookupNode.value.trim(),
       localNode: props.localNode || '546051' // Default local node if not provided
     }, { 
