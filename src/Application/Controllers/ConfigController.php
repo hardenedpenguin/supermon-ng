@@ -159,6 +159,15 @@ class ConfigController
             $defaultNode = $firstNodeId;
             $this->logger->info("Using first available node as fallback: $defaultNode");
         }
+        
+        // Resolve group names to actual node IDs
+        if ($defaultNode && isset($iniConfig)) {
+            $resolvedDefaultNode = $this->resolveGroupToNodes($defaultNode, $iniConfig);
+            if ($resolvedDefaultNode !== $defaultNode) {
+                $this->logger->info("Resolved group '$defaultNode' to nodes: $resolvedDefaultNode");
+                $defaultNode = $resolvedDefaultNode;
+            }
+        }
 
         $response->getBody()->write(json_encode([
             'success' => true,
@@ -634,6 +643,37 @@ class ConfigController
         }
         
         return null;
+    }
+
+    /**
+     * Resolve group names to actual node IDs
+     */
+    private function resolveGroupToNodes(string $defaultNode, array $iniConfig): string
+    {
+        // If it's already a comma-separated list of node IDs, return as-is
+        if (strpos($defaultNode, ',') !== false) {
+            return $defaultNode;
+        }
+        
+        // If it's a single node ID (numeric), return as-is
+        if (is_numeric($defaultNode)) {
+            return $defaultNode;
+        }
+        
+        // Check if it's a group name by looking for a section with that name
+        if (isset($iniConfig[$defaultNode]) && is_array($iniConfig[$defaultNode])) {
+            $groupConfig = $iniConfig[$defaultNode];
+            
+            // Check if this group has a 'nodes' property
+            if (isset($groupConfig['nodes'])) {
+                $nodesString = $groupConfig['nodes'];
+                $this->logger->info("Found group '$defaultNode' with nodes: $nodesString");
+                return $nodesString;
+            }
+        }
+        
+        // If not a group or no nodes property, return the original value
+        return $defaultNode;
     }
 
     

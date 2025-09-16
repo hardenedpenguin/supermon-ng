@@ -540,6 +540,13 @@ watch(displayedNodes, (newNodes) => {
   }
 }, { immediate: true })
 
+// Watcher to update document title when systemInfo changes
+watch(systemInfo, (newSystemInfo) => {
+  if (newSystemInfo?.smServerName) {
+    document.title = newSystemInfo.smServerName
+  }
+}, { immediate: true })
+
 // Methods
 const onNodeChange = () => {
   
@@ -1250,6 +1257,11 @@ onMounted(async () => {
     if (systemResponse.ok) {
       const systemData = await systemResponse.json()
       systemInfo.value = systemData.data || systemData
+      
+      // Set dynamic page title based on SMSERVERNAME from global.inc
+      if (systemInfo.value?.smServerName) {
+        document.title = systemInfo.value.smServerName
+      }
     }
     
     if (databaseResponse.ok) {
