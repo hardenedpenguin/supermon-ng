@@ -205,7 +205,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const connectNode = async (nodeId: string, perm: boolean = false) => {
     try {
       await api.connectNode(nodeId, nodeId, perm)
-      console.log(`Connected to node ${nodeId}`)
     } catch (error) {
       console.error('Connect error:', error)
       throw error
@@ -215,7 +214,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const disconnectNode = async (nodeId: string) => {
     try {
       await api.disconnectNode(nodeId, nodeId)
-      console.log(`Disconnected from node ${nodeId}`)
     } catch (error) {
       console.error('Disconnect error:', error)
       throw error
@@ -225,7 +223,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const monitorNode = async (nodeId: string) => {
     try {
       await api.monitorNode(nodeId, nodeId)
-      console.log(`Monitoring node ${nodeId}`)
     } catch (error) {
       console.error('Monitor error:', error)
       throw error
@@ -235,7 +232,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const permConnectNode = async (nodeId: string) => {
     try {
       await api.connectNode(nodeId, nodeId, true)
-      console.log(`Permanently connected to node ${nodeId}`)
     } catch (error) {
       console.error('Perm connect error:', error)
       throw error
@@ -245,7 +241,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const localMonitorNode = async (nodeId: string) => {
     try {
       await api.localMonitorNode(nodeId, nodeId)
-      console.log(`Local monitoring node ${nodeId}`)
     } catch (error) {
       console.error('Local monitor error:', error)
       throw error
@@ -255,7 +250,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const monitorCmdNode = async (nodeId: string) => {
     try {
       await api.monitorNode(nodeId, nodeId)
-      console.log(`Monitor CMD for node ${nodeId}`)
     } catch (error) {
       console.error('Monitor CMD error:', error)
       throw error

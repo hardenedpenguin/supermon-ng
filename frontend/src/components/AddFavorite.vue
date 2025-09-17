@@ -217,14 +217,10 @@ const loadNodeInfo = async (node) => {
 
 const loadAvailableNodes = async () => {
   try {
-    console.log('Loading available nodes...')
     const response = await api.get('/nodes')
-    console.log('Available nodes response:', response.data)
     if (response.data.success) {
       availableNodes.value = response.data.data || []
-      console.log('Available nodes loaded:', availableNodes.value)
     } else {
-      console.warn('Failed to load available nodes:', response.data.message)
       availableNodes.value = []
     }
   } catch (err) {

@@ -168,14 +168,7 @@
                       <td>{{ data.main_node.frequency }}</td>
                       <td>{{ data.main_node.location }}</td>
                     </tr>
-                    <!-- Connected nodes -->
-                    <tr v-for="(node, index) in getConnectedNodesForDisplay()" :key="node.node_number" 
-                        :class="getNodeRowClass(index + 1)">
-                      <td>{{ node.node_number }}</td>
-                      <td>{{ node.callsign }}</td>
-                      <td>{{ node.frequency }}</td>
-                      <td>{{ node.location }}</td>
-                    </tr>
+                    <!-- No additional connected nodes in this table - they are shown in the Connected Nodes Table below -->
                   </tbody>
                 </table>
               </div>
@@ -194,14 +187,17 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-if="data?.node_lstatus && data.node_lstatus.length >= 6" class="data-row-3">
-                      <td>{{ data.node_lstatus[0] }}</td>
-                      <td>{{ data.node_lstatus[1] }}</td>
-                      <td>{{ data.node_lstatus[2] }}</td>
-                      <td>{{ data.node_lstatus[3] }}</td>
-                      <td>{{ data.node_lstatus[4] }}</td>
-                      <td>{{ data.node_lstatus[5] }}</td>
-                    </tr>
+                    <template v-if="data?.nodes && data.nodes.length > 0">
+                      <tr v-for="(node, index) in data.nodes" :key="node.node_number" 
+                          :class="getConnectionRowClass(index)">
+                        <td>{{ node.node_number }}</td>
+                        <td>{{ node.peer_ip || 'N/A' }}</td>
+                        <td>{{ node.reconnects || 'N/A' }}</td>
+                        <td>{{ node.direction || 'N/A' }}</td>
+                        <td>{{ node.connect_time || 'N/A' }}</td>
+                        <td>{{ node.connect_state || 'Connected' }}</td>
+                      </tr>
+                    </template>
                     <tr v-else class="data-row-3">
                       <td>No connections</td>
                       <td>-</td>
@@ -219,24 +215,30 @@
                 <table class="info-table">
                   <thead>
                     <tr class="header-row">
-                      <th>Registry IP:Port</th>
-                      <th>Registry Host FQDN</th>
-                      <th>(Group/)Node(#Port) registrations</th>
+                      <th>Host</th>
+                      <th>Username</th>
+                      <th>Perceived</th>
+                      <th>Refresh</th>
                       <th>State</th>
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-if="data?.iax_registry && data.iax_registry.length > 0" class="data-row-white">
-                      <td>{{ data.iax_registry[0] || '0' }}</td>
-                      <td>{{ data.iax_registry[1] || '' }}</td>
-                      <td>{{ data.iax_registry[2] || '' }}</td>
-                      <td>{{ data.iax_registry[3] || '' }}</td>
-                    </tr>
+                    <template v-if="data?.iax_registry && data.iax_registry.length > 0">
+                      <tr v-for="(registration, index) in data.iax_registry" :key="index" 
+                          :class="getRegistrationRowClass(index)">
+                        <td>{{ registration.host || 'N/A' }}</td>
+                        <td>{{ registration.username || 'N/A' }}</td>
+                        <td>{{ registration.perceived || 'N/A' }}</td>
+                        <td>{{ registration.refresh || 'N/A' }}</td>
+                        <td>{{ registration.state || 'N/A' }}</td>
+                      </tr>
+                    </template>
                     <tr v-else class="data-row-white">
-                      <td>0</td>
-                      <td>IAX2</td>
-                      <td>registrations.</td>
-                      <td></td>
+                      <td>No registrations</td>
+                      <td>-</td>
+                      <td>-</td>
+                      <td>-</td>
+                      <td>-</td>
                     </tr>
                   </tbody>
                 </table>
@@ -408,16 +410,21 @@ const getBubbleChartUrl = () => {
   return `https://stats.allstarlink.org/getstatus.cgi?${props.nodeId}`
 }
 
-const getConnectedNodesForDisplay = () => {
-  // Return all connected nodes for display in the Node Information table
-  if (data.value?.nodes && data.value.nodes.length > 0) {
-    return data.value.nodes
-  }
-  return []
-}
 
 const getNodeRowClass = (index: number) => {
   // Apply different row classes based on index to match original color scheme
+  const classes = ['data-row-1', 'data-row-2', 'data-row-3']
+  return classes[index % classes.length]
+}
+
+const getConnectionRowClass = (index: number) => {
+  // Apply different row classes for connection table
+  const classes = ['data-row-1', 'data-row-2', 'data-row-3']
+  return classes[index % classes.length]
+}
+
+const getRegistrationRowClass = (index: number) => {
+  // Apply different row classes for registration table
   const classes = ['data-row-1', 'data-row-2', 'data-row-3']
   return classes[index % classes.length]
 }
@@ -594,6 +601,11 @@ const getNodeRowClass = (index: number) => {
   border-collapse: collapse;
   background: #87ceeb; /* powderblue - matching original */
   border: 1px solid #666;
+}
+
+/* Remove hover effects from system state table to make it static */
+.system-state-table tr:hover {
+  background-color: inherit !important;
 }
 
 .system-state-table tr {

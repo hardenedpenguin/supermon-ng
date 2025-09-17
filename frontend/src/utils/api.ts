@@ -41,7 +41,6 @@ api.interceptors.request.use(
         try {
           csrfToken = await fetchCsrfToken()
         } catch (error) {
-          console.warn('Failed to fetch CSRF token:', error)
           // Continue without CSRF token
         }
       }
@@ -163,32 +162,37 @@ export const apiHelpers = {
   // Node operations
   async connectNode(nodeId: string, targetNode: string, perm: boolean = false) {
     return api.post(endpoints.nodes.connect(nodeId), {
-      target_node: targetNode,
+      localnode: nodeId,
+      remotenode: targetNode,
       perm
     })
   },
   
   async disconnectNode(nodeId: string, targetNode: string) {
     return api.post(endpoints.nodes.disconnect(nodeId), {
-      target_node: targetNode
+      localnode: nodeId,
+      remotenode: targetNode
     })
   },
   
   async monitorNode(nodeId: string, targetNode: string) {
     return api.post(endpoints.nodes.monitor(nodeId), {
-      target_node: targetNode
+      localnode: nodeId,
+      remotenode: targetNode
     })
   },
   
   async localMonitorNode(nodeId: string, targetNode: string) {
     return api.post(endpoints.nodes.localMonitor(nodeId), {
-      target_node: targetNode
+      localnode: nodeId,
+      remotenode: targetNode
     })
   },
   
-  async executeDtmf(nodeId: string, targetNode: string) {
+  async executeDtmf(nodeId: string, dtmfCommand: string) {
     return api.post(endpoints.nodes.dtmf(nodeId), {
-      target_node: targetNode
+      localnode: nodeId,
+      dtmf: dtmfCommand
     })
   },
   

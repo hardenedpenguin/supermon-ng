@@ -1103,12 +1103,19 @@ class NodeController
         
         // Parse modes from LinkedNodes in XStat response
         $modes = [];
+        $allLinkedNodes = [];
         if (!empty($rptStatus) && preg_match("/LinkedNodes: (.*)/", $rptStatus, $matches)) {
             $longRangeLinks = preg_split("/, /", trim($matches[1]));
             foreach ($longRangeLinks as $line) {
                 if (!empty($line)) {
                     $n_val = substr($line, 1);
-                    $modes[$n_val]['mode'] = substr($line, 0, 1);
+                    $connectionType = substr($line, 0, 1);
+                    $modes[$n_val]['mode'] = $connectionType;
+                    
+                    // Add to all linked nodes list (filter out private nodes < 2000)
+                    if (is_numeric($n_val) && intval($n_val) >= 2000) {
+                        $allLinkedNodes[] = $n_val;
+                    }
                 }
             }
         }
@@ -1123,7 +1130,7 @@ class NodeController
         $mainNodeWX = $parsedVars['WX'] ?? null;
         $mainNodeDISK = $parsedVars['DISK'] ?? null;
 
-        // Process connected nodes
+        // Process connected nodes - first add direct connections
         if (count($conns) > 0) {
             foreach ($conns as $connData) {
                 $n = $connData[0];
@@ -3748,7 +3755,7 @@ class NodeController
             return $response->withHeader('Content-Type', 'application/json');
 
         } catch (Exception $e) {
-            $this->logger->error('lsnodes web error', ['error' => $e->getMessage(), 'node' => $nodeId ?? 'unknown']);
+            $this->logger->error('lsnodes web error', ['error' => $e->getMessage(), 'node' => $nodeId ?? 'unknown', 'trace' => $e->getTraceAsString()]);
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'message' => 'Failed to execute lsnod web command: ' . $e->getMessage()
@@ -3763,55 +3770,198 @@ class NodeController
     private function executeLsnodCommand(string $nodeId): array
     {
         try {
-            // Use the original supermon approach with shell commands
-            $commands = [
-                "sudo /usr/sbin/asterisk -rx \"rpt nodes {$nodeId}\"",
-                "sudo /usr/sbin/asterisk -rx \"rpt stats {$nodeId}\"",
-                "sudo /usr/sbin/asterisk -rx \"rpt lstats {$nodeId}\"",
-                "sudo /usr/sbin/asterisk -rx \"iax2 show registry\""
-            ];
-            
-            $results = [];
-            $successfulCommands = [];
-            
-            foreach ($commands as $cmd) {
-                $this->logger->info('Executing lsnod shell command', ['command' => $cmd]);
-                $result = shell_exec($cmd);
-                
-                if ($result !== null && $result !== '') {
-                    $results[] = [
-                        'command' => $cmd,
-                        'output' => $result
-                    ];
-                    $successfulCommands[] = $cmd;
-                } else {
-                    $this->logger->warning('Command returned empty result', ['command' => $cmd]);
-                }
+            // Use the original supermon 1.0.6 approach with AMI commands
+            $nodeConfig = $this->loadNodeConfig($this->getCurrentUser(), $nodeId);
+            if (!$nodeConfig) {
+                throw new \Exception("Configuration for node $nodeId not found");
             }
-            
-            $this->logger->info('lsnod shell commands executed', [
-                'node' => $nodeId,
-                'successful_commands' => $successfulCommands,
-                'total_results' => count($results)
-            ]);
 
-            // Parse the results using the original supermon logic
-            $parsedData = $this->parseLsnodOutputFromShell($results, $nodeId);
+            // Connect to AMI
+            $fp = $this->connectToAmi($nodeConfig, $nodeId);
+            if (!$fp) {
+                throw new \Exception("Could not connect to Asterisk Manager for node $nodeId");
+            }
+
+            // Get node data using AMI for lsnod (includes all linked nodes)
+            $nodeData = $this->getNodeDataForLsnod($fp, $nodeId);
+        
+        // Clean up connection
+        \SimpleAmiClient::logoff($fp);
+
+            // Get registration data using shell command
+            $registrationData = $this->getRegistrationData($nodeId);
+            
+            // Add registration data to node data
+            $nodeData['iax_registry'] = $registrationData;
+
+            // Format the data for lsnod display
+            $parsedData = $this->formatLsnodDataFromAmi($nodeData, $nodeId);
             
             return [
-                'raw_output' => $results,
+                'raw_output' => [], // AMI data is already parsed
                 'parsed_data' => $parsedData,
-                'command' => 'shell_commands',
+                'command' => 'ami_xstat_sawstat',
                 'executed_at' => date('c')
             ];
 
         } catch (Exception $e) {
-            $this->logger->error('Failed to execute lsnod shell commands', [
+            $this->logger->error('Failed to execute lsnod via AMI', [
                 'node' => $nodeId,
                 'error' => $e->getMessage()
             ]);
             throw $e;
         }
+    }
+
+    /**
+     * Get node data for lsnod display (direct connections only)
+     * Keep it simple - just show direct connections
+     */
+    private function getNodeDataForLsnod($fp, string $node): array
+    {
+        // Get basic node data (direct connections and system stats only)
+        $basicNodeData = $this->getNodeData($fp, $node);
+        
+        // Filter to only show direct connections (no linked nodes)
+        $directConnections = [];
+        foreach ($basicNodeData['remote_nodes'] ?? [] as $remoteNode) {
+            // Only include direct connections (those with actual connection details)
+            if (isset($remoteNode['ip']) && $remoteNode['ip'] !== 'N/A' && $remoteNode['ip'] !== 'Indirect') {
+                $directConnections[] = $remoteNode;
+            }
+        }
+        
+        $basicNodeData['remote_nodes'] = $directConnections;
+        
+        return $basicNodeData;
+    }
+
+
+    /**
+     * Get registration data using shell command (filtered for specific node)
+     */
+    private function getRegistrationData(string $nodeId): array
+    {
+        $command = "sudo /usr/sbin/asterisk -rx \"rpt show registrations\"";
+        $output = shell_exec($command);
+        
+        if (!$output || empty(trim($output))) {
+            return [];
+        }
+        
+        $lines = explode("\n", $output);
+        // Remove header line and summary line
+        $lines = array_slice($lines, 1);
+        $lines = array_filter($lines, function($line) {
+            return !empty(trim($line)) && !str_contains($line, 'HTTP registrations');
+        });
+        
+        $registrations = [];
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            // Parse lines like "52.44.147.201:443                              546051      73.6.70.88:4572                          179  Registered"
+            if (preg_match('/^(.+?)\s{2,}(\d+)\s+(.+?)\s+(\d+)\s+(.+)$/', $line, $matches)) {
+                $host = trim($matches[1]);
+                $username = trim($matches[2]);
+                $perceived = trim($matches[3]);
+                $refresh = trim($matches[4]);
+                $state = trim($matches[5]);
+                
+                // SECURITY: Only include registrations for the specific node being queried
+                if ($username === $nodeId) {
+                    $registrations[] = [
+                        'host' => $host,
+                        'username' => $username,
+                        'perceived' => $perceived,
+                        'refresh' => $refresh,
+                        'state' => $state
+                    ];
+                }
+            }
+        }
+        
+        return $registrations;
+    }
+
+    /**
+     * Format AMI node data for lsnod display (like original supermon 1.0.6)
+     */
+    private function formatLsnodDataFromAmi(array $nodeData, string $nodeId): array
+    {
+        // Load astdb.txt for node descriptions
+        $astdb = $this->loadAstDb(__DIR__ . '/../../../astdb.txt');
+        
+        // Get main node info
+        $mainNodeInfo = $this->getNodeInfoFromAstdb($nodeId, $astdb);
+        
+        // Format connected nodes from remote_nodes
+        $nodes = [];
+        $connectedNodes = $nodeData['remote_nodes'] ?? [];
+        
+        foreach ($connectedNodes as $remoteNode) {
+            $nodeNumber = $remoteNode['node'] ?? '';
+            if (empty($nodeNumber) || intval($nodeNumber) < 2000) {
+                continue; // Skip private nodes
+            }
+            
+            $nodeInfo = $this->getNodeInfoFromAstdb($nodeNumber, $astdb);
+            
+            $nodes[] = [
+                'node_number' => $nodeNumber,
+                'description' => $nodeInfo['description'],
+                'status' => 'Connected',
+                'callsign' => $nodeInfo['callsign'],
+                'frequency' => $nodeInfo['frequency'],
+                'location' => $nodeInfo['location'],
+                'peer_ip' => $remoteNode['ip'] ?? 'N/A',
+                'reconnects' => 'N/A', // Not available in AMI data
+                'direction' => $remoteNode['direction'] ?? 'N/A',
+                'connect_time' => $remoteNode['elapsed'] ?? 'N/A',
+                'connect_state' => $remoteNode['link'] ?? 'Connected'
+            ];
+        }
+        
+        // Format system state from main node data
+        $systemState = [];
+        if (isset($nodeData['cos_keyed'])) {
+            $systemState[] = ['COS Keyed', $nodeData['cos_keyed'] ? 'Yes' : 'No'];
+        }
+        if (isset($nodeData['tx_keyed'])) {
+            $systemState[] = ['TX Keyed', $nodeData['tx_keyed'] ? 'Yes' : 'No'];
+        }
+        if (isset($nodeData['cpu_temp'])) {
+            $systemState[] = ['CPU Temp', $nodeData['cpu_temp']];
+        }
+        if (isset($nodeData['cpu_up'])) {
+            $systemState[] = ['CPU Uptime', $nodeData['cpu_up']];
+        }
+        if (isset($nodeData['cpu_load'])) {
+            $systemState[] = ['CPU Load', $nodeData['cpu_load']];
+        }
+        if (isset($nodeData['ALERT'])) {
+            $systemState[] = ['Alert', $nodeData['ALERT']];
+        }
+        if (isset($nodeData['WX'])) {
+            $systemState[] = ['Weather', $nodeData['WX']];
+        }
+        if (isset($nodeData['DISK'])) {
+            $systemState[] = ['Disk', $nodeData['DISK']];
+        }
+        
+        return [
+            'main_node' => [
+                'node_number' => $nodeId,
+                'callsign' => $mainNodeInfo['callsign'],
+                'frequency' => $mainNodeInfo['frequency'],
+                'location' => $mainNodeInfo['location']
+            ],
+            'system_state' => $systemState,
+            'nodes' => $nodes,
+            'node_lstatus' => [], // Not used in AMI approach
+            'iax_registry' => $nodeData['iax_registry'] ?? [] // Registration data from shell command
+        ];
     }
 
     /**
@@ -3823,6 +3973,8 @@ class NodeController
         $nodeStatus = [];
         $nodeLstatus = [];
         $iaxRegistry = [];
+        $allConnectedNodeIds = [];
+        $xnodeData = [];
         
         // Load astdb.txt for node descriptions
         $astdb = $this->loadAstDb(__DIR__ . '/../../../astdb.txt');
@@ -3832,17 +3984,49 @@ class NodeController
             $command = $result['command'];
             $output = $result['output'];
             
-            if (str_contains($command, 'rpt lstats')) {
+            if (str_contains($command, 'rpt nodes')) {
+                // Parse connected nodes list - this shows ALL connected nodes
+                $lines = explode("\n", $output);
+                // Remove header lines (first 2 lines with asterisks)
+                $lines = array_slice($lines, 2);
+                
+                $connectedNodeIds = [];
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (empty($line)) continue;
+                    
+                    // Parse lines like "T1000, T1050, T1776, T1975, T1995, T27462, T3855305, T40255"
+                    $nodeIds = explode(',', $line);
+                    foreach ($nodeIds as $nodeIdItem) {
+                        $nodeIdItem = trim($nodeIdItem);
+                        if (!empty($nodeIdItem)) {
+                            // Remove the 'T' prefix if present
+                            $nodeIdItem = ltrim($nodeIdItem, 'T');
+                            if (is_numeric($nodeIdItem) && intval($nodeIdItem) >= 2000) {
+                                $connectedNodeIds[] = $nodeIdItem;
+                            }
+                        }
+                    }
+                }
+                
+                // Store connected node IDs for later use - don't create entries yet
+                // The actual entries will be created from rpt lstats data
+                $allConnectedNodeIds = $connectedNodeIds;
+            } elseif (str_contains($command, 'rpt lstats')) {
                 // Parse directly connected nodes from lstats (this shows actual direct connections)
                 $lines = explode("\n", $output);
-                $lines = array_slice($lines, 2); // Remove header lines
+                // Remove header lines - the output has 2 header lines
+                $lines = array_slice($lines, 2);
                 
+                // Store lstats data for nodes that have direct connections
+                $lstatsData = [];
                 foreach ($lines as $line) {
                     $line = trim($line);
                     if (empty($line)) continue;
                     
                     // Parse the lstats line: NODE PEER RECONNECTS DIRECTION CONNECT_TIME CONNECT_STATE
                     $parts = preg_split('/\s+/', $line);
+                    
                     if (count($parts) >= 6) {
                         $connectedNodeId = $parts[0];
                         $peerIp = $parts[1];
@@ -3851,46 +4035,199 @@ class NodeController
                         $connectTime = $parts[4];
                         $connectState = $parts[5];
                         
-                        if (is_numeric($connectedNodeId) && $connectedNodeId > 0) {
-                            $nodeInfo = $this->getNodeInfoFromAstdb($connectedNodeId, $astdb);
-                            $nodes[] = [
-                                'node_number' => $connectedNodeId,
-                                'description' => $nodeInfo['description'],
-                                'status' => 'Connected',
-                                'callsign' => $nodeInfo['callsign'],
-                                'frequency' => $nodeInfo['frequency'],
-                                'location' => $nodeInfo['location'],
+                        if (is_numeric($connectedNodeId) && intval($connectedNodeId) >= 2000) {
+                            $lstatsData[$connectedNodeId] = [
                                 'peer_ip' => $peerIp,
                                 'reconnects' => $reconnects,
                                 'direction' => $direction,
                                 'connect_time' => $connectTime,
                                 'connect_state' => $connectState
                             ];
+                            
+                            // Populate node_lstatus array for the connections table (only first connection)
+                            if (empty($nodeLstatus)) {
+                                $nodeLstatus = [
+                                    $connectedNodeId,
+                                    $peerIp,
+                                    $reconnects,
+                                    $direction,
+                                    $connectTime,
+                                    $connectState
+                                ];
+                            }
                         }
                     }
                 }
+                
+                // Now create entries for ALL connected nodes (from rpt nodes), using lstats and xnode data where available
+                if (isset($allConnectedNodeIds)) {
+                    foreach ($allConnectedNodeIds as $connectedNodeId) {
+                        $nodeInfo = $this->getNodeInfoFromAstdb($connectedNodeId, $astdb);
+                        
+                        // Start with defaults
+                        $connectionData = [
+                            'peer_ip' => 'N/A',
+                            'reconnects' => 'N/A',
+                            'direction' => 'N/A',
+                            'connect_time' => 'N/A',
+                            'connect_state' => 'Connected'
+                        ];
+                        
+                        // Use lstats data if available (direct connections)
+                        if (isset($lstatsData[$connectedNodeId])) {
+                            $connectionData = $lstatsData[$connectedNodeId];
+                        }
+                        // Use xnode direct connection data if available
+                        elseif (isset($xnodeData['direct_connection']) && $xnodeData['direct_connection']['node_id'] === $connectedNodeId) {
+                            $directConn = $xnodeData['direct_connection'];
+                            $connectionData = [
+                                'peer_ip' => $directConn['peer_ip'],
+                                'reconnects' => $directConn['reconnects'],
+                                'direction' => $directConn['direction'],
+                                'connect_time' => $directConn['connect_time'],
+                                'connect_state' => $directConn['connect_state']
+                            ];
+                        }
+                        // Use xnode RPT_LINKS data to determine connection type
+                        elseif (isset($xnodeData['rpt_links'][$connectedNodeId])) {
+                            $connectionType = $xnodeData['rpt_links'][$connectedNodeId];
+                            $connectionData['direction'] = $connectionType === 'T' ? 'TCP' : 'RPT';
+                            $connectionData['connect_state'] = 'LINKED';
+                        }
+                        
+                        $nodes[] = [
+                            'node_number' => $connectedNodeId,
+                            'description' => $nodeInfo['description'],
+                            'status' => 'Connected',
+                            'callsign' => $nodeInfo['callsign'],
+                            'frequency' => $nodeInfo['frequency'],
+                            'location' => $nodeInfo['location'],
+                            'peer_ip' => $connectionData['peer_ip'],
+                            'reconnects' => $connectionData['reconnects'],
+                            'direction' => $connectionData['direction'],
+                            'connect_time' => $connectionData['connect_time'],
+                            'connect_state' => $connectionData['connect_state']
+                        ];
+                    }
+                }
             } elseif (str_contains($command, 'rpt stats')) {
-                // Parse node status
+                // Parse node status - the output format is different than expected
                 $lines = explode("\n", $output);
-                $lines = array_slice($lines, 2); // Remove first 2 lines like original
-                $statusData = implode('&', $lines);
-                $statusData = str_replace(['.', "\n", ': '], ['', '&', '&'], $statusData);
-                $statusData = str_replace(',', '', $statusData);
-                $nodeStatus = explode('&', $statusData);
+                // Remove the header line with asterisks
+                $lines = array_slice($lines, 1);
+                
+                $nodeStatus = [];
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (empty($line)) continue;
+                    
+                    // Parse lines like "Selected system state............................: 0"
+                    if (preg_match('/^(.+?)\s*\.+\s*:\s*(.+)$/', $line, $matches)) {
+                        $key = trim($matches[1]);
+                        $value = trim($matches[2]);
+                        $nodeStatus[] = $key;
+                        $nodeStatus[] = $value;
+                    }
+                }
             } elseif (str_contains($command, 'rpt lstats')) {
-                // Parse node lstatus
+                // This is already handled above in the first rpt lstats condition
+                // Skip duplicate processing
+            } elseif (str_contains($command, 'rpt xnode')) {
+                // Parse extended node information to get more detailed connection data
                 $lines = explode("\n", $output);
-                $lines = array_slice($lines, 2); // Remove first 2 lines like original
-                $lstatusData = implode(' ', $lines);
-                $lstatusData = preg_replace('/\s+/', ' ', $lstatusData);
-                $nodeLstatus = explode(' ', trim($lstatusData));
-            } elseif (str_contains($command, 'iax2 show registry')) {
-                // Parse IAX registry
+                
+                // Parse the first line which contains direct connection info
+                if (count($lines) > 0) {
+                    $firstLine = trim($lines[0]);
+                    if (!empty($firstLine) && !str_contains($firstLine, 'T1000')) {
+                        // This is a direct connection line: "48752     66.170.205.59       0           OUT        00:08:44            ESTABLISHED"
+                        $parts = preg_split('/\s+/', $firstLine);
+                        if (count($parts) >= 6) {
+                            $directNodeId = $parts[0];
+                            $directPeerIp = $parts[1];
+                            $directReconnects = $parts[2];
+                            $directDirection = $parts[3];
+                            $directConnectTime = $parts[4];
+                            $directConnectState = $parts[5];
+                            
+                            // Store this as the primary connection info
+                            $xnodeDirectConnection = [
+                                'node_id' => $directNodeId,
+                                'peer_ip' => $directPeerIp,
+                                'reconnects' => $directReconnects,
+                                'direction' => $directDirection,
+                                'connect_time' => $directConnectTime,
+                                'connect_state' => $directConnectState
+                            ];
+                        }
+                    }
+                }
+                
+                // Parse RPT_LINKS variable to get connection types for all nodes
+                $rptLinks = [];
+                foreach ($lines as $line) {
+                    if (str_starts_with($line, 'RPT_LINKS=')) {
+                        $linksData = substr($line, 9); // Remove 'RPT_LINKS='
+                        $links = explode(',', $linksData);
+                        foreach ($links as $link) {
+                            $link = trim($link);
+                            if (!empty($link)) {
+                                // Extract node ID and connection type
+                                if (preg_match('/^([TR])(\d+)$/', $link, $matches)) {
+                                    $connectionType = $matches[1]; // T or R
+                                    $linkedNodeId = $matches[2];
+                                    // Only store nodes >= 2000 to match our filtering
+                                    if (intval($linkedNodeId) >= 2000) {
+                                        $rptLinks[$linkedNodeId] = $connectionType;
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+                }
+                
+                // Store the extended node data for later use
+                $xnodeData = [
+                    'direct_connection' => $xnodeDirectConnection ?? null,
+                    'rpt_links' => $rptLinks
+                ];
+                
+                
+            } elseif (str_contains($command, 'rpt show registrations')) {
+                // Parse RPT registrations - get all registrations, not just for specific node
                 $lines = explode("\n", $output);
-                $lines = array_slice($lines, 1); // Remove first line like original
-                $registryData = implode(' ', $lines);
-                $registryData = preg_replace('/\s+/', ' ', $registryData);
-                $iaxRegistry = explode(' ', trim($registryData));
+                // Remove header line and summary line
+                $lines = array_slice($lines, 1);
+                $lines = array_filter($lines, function($line) {
+                    return !empty(trim($line)) && !str_contains($line, 'HTTP registrations');
+                });
+                
+                $allRegistrations = [];
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (empty($line)) continue;
+                    
+                    // Parse lines like "52.44.147.201:443                              546051      73.6.70.88:4572                          179  Registered"
+                    // The format is: Host (with lots of spaces) Username (spaces) Perceived (spaces) Refresh (spaces) State
+                    if (preg_match('/^(.+?)\s{2,}(\d+)\s+(.+?)\s+(\d+)\s+(.+)$/', $line, $matches)) {
+                        $host = trim($matches[1]);
+                        $username = trim($matches[2]);
+                        $perceived = trim($matches[3]);
+                        $refresh = trim($matches[4]);
+                        $state = trim($matches[5]);
+                        
+                        $allRegistrations[] = [
+                            'host' => $host,
+                            'username' => $username,
+                            'perceived' => $perceived,
+                            'refresh' => $refresh,
+                            'state' => $state
+                        ];
+                    }
+                }
+                
+                $iaxRegistry = $allRegistrations;
             }
         }
         
