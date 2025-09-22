@@ -104,8 +104,6 @@ const handleMenuClick = (item: MenuItem, event: Event) => {
   // Prevent default link behavior
   event.preventDefault()
   
-  
-  
   // Handle internal navigation if needed
   if (item.url.startsWith('link.php') || item.url.startsWith('voter.php')) {
     // Parse node selection from URL
@@ -120,18 +118,24 @@ const handleMenuClick = (item: MenuItem, event: Event) => {
     currentLsnodNodeId.value = nodeId
     showLsnodModal.value = true
   } else if (item.url.startsWith('http')) {
-    // External links - open in modal instead of leaving dashboard
-    currentUrl.value = item.url
-    currentUrlTitle.value = item.name
-    showUrlModal.value = true
+    // External links - check if they should open in new tab or modal
+    if (item.targetBlank) {
+      // Open in new tab/window as intended
+      window.open(item.url, '_blank', 'noopener,noreferrer')
+    } else {
+      // Open in modal for internal dashboard experience
+      currentUrl.value = item.url
+      currentUrlTitle.value = item.name
+      showUrlModal.value = true
+    }
   } else {
     // For other internal links, just emit the nodeSelection if it's a node-related URL
     // This handles cases where the URL might contain node information in other formats
     if (item.url.includes('nodes=')) {
       const urlParams = new URLSearchParams(item.url.split('?')[1])
       const nodes = urlParams.get('nodes')
-              if (nodes) {
-          emit('nodeSelection', nodes)
+      if (nodes) {
+        emit('nodeSelection', nodes)
       }
     }
   }
