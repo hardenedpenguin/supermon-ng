@@ -1140,22 +1140,12 @@ class ConfigController
             // Include AMI functions
             require_once 'includes/amifunctions.inc';
 
-            // Connect to AMI
-            $fp = \SimpleAmiClient::connect($amiHost);
-            if ($fp === FALSE) {
+            // Get connection from pool
+            $fp = \SimpleAmiClient::getConnection($amiHost, $amiUser, $amiPass);
+            if (!$fp) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
-                    'message' => "Could not connect to Asterisk Manager at $amiHost for node $localNode"
-                ]));
-                return $response->withStatus(500);
-            }
-
-            // Login to AMI
-            if (\SimpleAmiClient::login($fp, $amiUser, $amiPass) === FALSE) {
-                \SimpleAmiClient::logoff($fp);
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => "Could not login to Asterisk Manager for node $localNode with user $amiUser"
+                    'message' => "Could not connect to Asterisk Manager for node $localNode"
                 ]));
                 return $response->withStatus(500);
             }
@@ -1163,28 +1153,18 @@ class ConfigController
             $results = [];
             $results[] = "Reloading configurations for node - $localNode:";
 
-            // Execute reload commands
-            if (\SimpleAmiClient::command($fp, "rpt reload") !== false) {
-                $results[] = "- rpt.conf reloaded successfully.";
-            } else {
-                $results[] = "- FAILED to reload rpt.conf.";
-            }
-            sleep(1);
-
-            if (\SimpleAmiClient::command($fp, "iax2 reload") !== false) {
-                $results[] = "- iax.conf reloaded successfully.";
-            } else {
-                $results[] = "- FAILED to reload iax.conf.";
-            }
-            sleep(1);
-
-            if (\SimpleAmiClient::command($fp, "extensions reload") !== false) {
-                $results[] = "- extensions.conf reloaded successfully.";
-            } else {
-                $results[] = "- FAILED to reload extensions.conf.";
+            // Execute reload commands (remove sleep delays for faster execution)
+            $commands = ["rpt reload", "iax2 reload", "extensions reload"];
+            foreach ($commands as $cmd) {
+                if (\SimpleAmiClient::command($fp, $cmd) !== false) {
+                    $results[] = "- {$cmd} reloaded successfully.";
+                } else {
+                    $results[] = "- FAILED to reload {$cmd}.";
+                }
             }
 
-            \SimpleAmiClient::logoff($fp);
+            // Return connection to pool instead of closing
+            \SimpleAmiClient::returnConnection($fp, $amiHost, $amiUser);
 
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -2037,7 +2017,7 @@ class ConfigController
             throw new \Exception("Node $node not found in configuration");
         }
 
-        // Connect to AMI
+        // Get connection from pool
         $fp = $this->connectToAmi($nodeConfig);
         if (!$fp) {
             throw new \Exception("Failed to connect to AMI for node $node");
@@ -2054,10 +2034,8 @@ class ConfigController
 
             return $result;
         } finally {
-            // Always close the connection
-            if ($fp) {
-                \SimpleAmiClient::logoff($fp);
-            }
+            // Return connection to pool instead of closing
+            $this->returnAmiConnection($fp, $nodeConfig);
         }
     }
 
@@ -2081,7 +2059,7 @@ class ConfigController
     }
 
     /**
-     * Connect to AMI
+     * Connect to AMI using connection pooling
      */
     private function connectToAmi(array $nodeConfig)
     {
@@ -2089,18 +2067,22 @@ class ConfigController
             return false;
         }
 
-        $fp = \SimpleAmiClient::connect($nodeConfig['host']);
-        if (!$fp) {
-            return false;
-        }
+        // Use connection pooling instead of direct connect/login
+        return \SimpleAmiClient::getConnection(
+            $nodeConfig['host'], 
+            $nodeConfig['user'], 
+            $nodeConfig['passwd']
+        );
+    }
 
-        $loginResult = \SimpleAmiClient::login($fp, $nodeConfig['user'], $nodeConfig['passwd']);
-        if (!$loginResult) {
-            \SimpleAmiClient::logoff($fp);
-            return false;
+    /**
+     * Return AMI connection to pool
+     */
+    private function returnAmiConnection($fp, array $nodeConfig): void
+    {
+        if ($fp && isset($nodeConfig['host']) && isset($nodeConfig['user'])) {
+            \SimpleAmiClient::returnConnection($fp, $nodeConfig['host'], $nodeConfig['user']);
         }
-
-        return $fp;
     }
 
     /**
@@ -2491,7 +2473,7 @@ class ConfigController
                 throw new \Exception("Node $node not found in configuration");
             }
 
-            // Connect to AMI
+            // Get connection from pool
             $fp = $this->connectToAmi($nodeConfig);
             if (!$fp) {
                 throw new \Exception("Failed to connect to AMI for node $node");
@@ -2513,11 +2495,8 @@ class ConfigController
                     'method' => 'AMI'
                 ];
             } finally {
-                // Always close the connection
-                if ($fp) {
-                    // Use shell command to close connection instead of SimpleAmiClient
-                    fclose($fp);
-                }
+                // Return connection to pool instead of closing
+                $this->returnAmiConnection($fp, $nodeConfig);
             }
         } catch (\Exception $e) {
             // If AMI fails, try shell execution as fallback

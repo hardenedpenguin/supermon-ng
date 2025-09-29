@@ -37,13 +37,27 @@ class NodeController
             // Get available nodes from AllStar configuration
             $availableNodes = $this->configService->getAvailableNodes($currentUser);
             
-            // Convert to the expected format with real AMI data
+            // Convert to the expected format with basic data (AMI data is expensive)
             $nodes = [];
             foreach ($availableNodes as $node) {
                 $nodeId = $node['id'];
                 
-                // Get real AMI data for this node
-                $amiData = $this->getNodeAmiData($node, (string)$nodeId);
+                // Skip AMI data for list view - it's too expensive
+                // AMI data is fetched separately via getAmiStatus endpoint
+                $amiData = [
+                    'node' => $nodeId,
+                    'info' => 'Node ' . $nodeId,
+                    'status' => 'unknown',
+                    'cos_keyed' => 0,
+                    'tx_keyed' => 0,
+                    'cpu_temp' => null,
+                    'cpu_up' => null,
+                    'cpu_load' => null,
+                    'ALERT' => null,
+                    'WX' => null,
+                    'DISK' => null,
+                    'remote_nodes' => []
+                ];
                 
                 // Parse node info to extract callsign and location
                 $nodeInfo = $amiData['info'] ?? '';
@@ -451,8 +465,8 @@ class NodeController
             // Execute DTMF command
             $commandResult = $this->executeDtmfCommand($fp, (string)$localNode, $dtmfCommand);
             
-            // Clean up connection
-            \SimpleAmiClient::logoff($fp);
+            // Return connection to pool
+            $this->returnAmiConnection($fp, $nodeConfig);
 
             // Return success response
             $response->getBody()->write(json_encode([
@@ -539,7 +553,7 @@ class NodeController
                 }
 
                 $statsResult = $this->executeRptStatsCommand($fp, (string)$localnode);
-                \SimpleAmiClient::logoff($fp);
+                $this->returnAmiConnection($fp, $nodeConfig);
 
                 $response->getBody()->write(json_encode([
                     'success' => true,
@@ -646,7 +660,7 @@ class NodeController
             // Process action and get ilink command
             $actionResult = $this->processAction($action, $permInput, (string)$localNode, $remoteNode, $currentUser);
             if (!$actionResult) {
-                \SimpleAmiClient::logoff($fp);
+                $this->returnAmiConnection($fp, $nodeConfig);
                 $response->getBody()->write(json_encode([
                     'success' => false,
                     'message' => "Invalid action or insufficient permissions for '$action'."
@@ -660,8 +674,8 @@ class NodeController
             // Execute AMI command
             $commandResult = $this->executeAmiCommand($fp, $ilink, (string)$localNode, $remoteNode, $action);
             
-            // Clean up connection
-            \SimpleAmiClient::logoff($fp);
+            // Return connection to pool
+            $this->returnAmiConnection($fp, $nodeConfig);
 
             // Return success response
             $response->getBody()->write(json_encode([
@@ -809,37 +823,15 @@ class NodeController
         $user = $nodeConfig['user'] ?? '';
         $password = $nodeConfig['passwd'] ?? '';
         
-        // Try to connect to AMI
+        // Try to connect to AMI using connection pooling
         $this->logger->info("Attempting AMI connection", ['host' => $host, 'node_id' => $nodeId]);
-        $socket = \SimpleAmiClient::connect($host);
+        $socket = \SimpleAmiClient::getConnection($host, $user, $password);
         if ($socket === false) {
             $this->logger->warning("AMI connection failed", ['host' => $host, 'node_id' => $nodeId]);
             return [
                 'node' => $nodeId,
                 'info' => 'AMI connection failed',
                 'status' => 'offline',
-                'cos_keyed' => 0,
-                'tx_keyed' => 0,
-                'cpu_temp' => null,
-                'cpu_up' => null,
-                'cpu_load' => null,
-                'ALERT' => null,
-                'WX' => null,
-                'DISK' => null,
-                'remote_nodes' => []
-            ];
-        }
-        
-        // Try to login
-        $this->logger->info("Attempting AMI login", ['user' => $user, 'node_id' => $nodeId]);
-        $loginResult = \SimpleAmiClient::login($socket, $user, $password);
-        if ($loginResult !== true) {
-            $this->logger->warning("AMI login failed", ['user' => $user, 'node_id' => $nodeId]);
-            \SimpleAmiClient::logoff($socket);
-            return [
-                'node' => $nodeId,
-                'info' => 'AMI login failed',
-                'status' => 'auth_failed',
                 'cos_keyed' => 0,
                 'tx_keyed' => 0,
                 'cpu_temp' => null,
@@ -859,7 +851,8 @@ class NodeController
             // Get complete node data using XStat and SawStat
             $nodeData = $this->getNodeData($socket, $nodeId);
             
-            \SimpleAmiClient::logoff($socket);
+            // Return connection to pool
+            \SimpleAmiClient::returnConnection($socket, $host, $user);
             
             return [
                 'node' => $nodeId,
@@ -877,7 +870,8 @@ class NodeController
             ];
             
         } catch (\Exception $e) {
-            \SimpleAmiClient::logoff($socket);
+            // Return connection to pool
+            \SimpleAmiClient::returnConnection($socket, $host, $user);
             $this->logger->error('Error getting AMI data for node', [
                 'node_id' => $nodeId,
                 'error' => $e->getMessage()
@@ -897,6 +891,9 @@ class NodeController
                 'DISK' => null,
                 'remote_nodes' => []
             ];
+        } finally {
+            // Return connection to pool
+            \SimpleAmiClient::returnConnection($socket, $host, $user);
         }
     }
     
@@ -1439,24 +1436,29 @@ class NodeController
     }
 
     /**
-     * Connect to AMI
+     * Connect to AMI using connection pooling
      */
     private function connectToAmi(array $nodeConfig, string $localNode): mixed
     {
         // Include AMI functions
         require_once __DIR__ . '/../../../includes/amifunctions.inc';
         
-        $fp = \SimpleAmiClient::connect($nodeConfig['host']);
-        if ($fp === false) {
-            return false;
-        }
+        // Use connection pooling instead of direct connect/login
+        return \SimpleAmiClient::getConnection(
+            $nodeConfig['host'], 
+            $nodeConfig['user'], 
+            $nodeConfig['passwd']
+        );
+    }
 
-        if (\SimpleAmiClient::login($fp, $nodeConfig['user'], $nodeConfig['passwd']) === false) {
-            \SimpleAmiClient::logoff($fp);
-            return false;
+    /**
+     * Return AMI connection to pool
+     */
+    private function returnAmiConnection($fp, array $nodeConfig): void
+    {
+        if ($fp && isset($nodeConfig['host']) && isset($nodeConfig['user'])) {
+            \SimpleAmiClient::returnConnection($fp, $nodeConfig['host'], $nodeConfig['user']);
         }
-
-        return $fp;
     }
 
     /**
