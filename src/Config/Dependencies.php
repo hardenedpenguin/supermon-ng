@@ -11,11 +11,15 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Contracts\Cache\CacheInterface;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
+use Psr\Container\ContainerInterface;
 use SupermonNg\Services\DatabaseGenerationService;
 use SupermonNg\Services\AllStarConfigService;
 use SupermonNg\Services\CacheService;
 use SupermonNg\Services\AmiBatchService;
 use SupermonNg\Services\FileCacheService;
+use SupermonNg\Services\WebSocketService;
+use SupermonNg\Services\RealtimeEventPublisher;
+use SupermonNg\Services\DatabaseOptimizationService;
 
 return [
     // Logger
@@ -23,19 +27,19 @@ return [
         $logger = new Logger('supermon-ng');
         
         // Set log level based on environment
-        $logLevel = $_ENV['APP_ENV'] === 'production' 
+        $logLevel = ($_ENV['APP_ENV'] ?? 'production') === 'production' 
             ? ($_ENV['LOG_LEVEL'] ?? Logger::WARNING)  // Only warnings and errors in production
             : ($_ENV['LOG_LEVEL'] ?? Logger::INFO);    // Full logging in development
         
         // Add rotating file handler with optimized settings
         $logger->pushHandler(new RotatingFileHandler(
             $_ENV['LOG_PATH'] ?? 'logs/app.log',
-            $_ENV['LOG_MAX_FILES'] ?? ($_ENV['APP_ENV'] === 'production' ? 7 : 30), // Fewer files in production
+            $_ENV['LOG_MAX_FILES'] ?? (($_ENV['APP_ENV'] ?? 'production') === 'production' ? 7 : 30), // Fewer files in production
             $logLevel
         ));
         
         // Only add UID processor in development for performance
-        if ($_ENV['APP_ENV'] !== 'production') {
+        if (($_ENV['APP_ENV'] ?? 'production') !== 'production') {
             $logger->pushProcessor(new UidProcessor());
         }
         
@@ -210,4 +214,84 @@ return [
             $c->get(LoggerInterface::class)
         );
     },
+    
+    // WebSocket service
+    WebSocketService::class => function (ContainerInterface $c) {
+        return new WebSocketService(
+            $c->get(LoggerInterface::class)
+        );
+    },
+    
+    // Real-time event publisher
+    RealtimeEventPublisher::class => function (ContainerInterface $c) {
+        return new RealtimeEventPublisher(
+            $c->get(LoggerInterface::class),
+            $c->get(WebSocketService::class)
+        );
+    },
+    
+    // Database optimization service
+    DatabaseOptimizationService::class => function (ContainerInterface $c) {
+        return new DatabaseOptimizationService(
+            $c->get(LoggerInterface::class),
+            $c->get(CacheInterface::class),
+            $c->get(Connection::class)
+        );
+    },
+    
+    
+    // Controllers with dependency injection
+    \SupermonNg\Application\Controllers\ConfigController::class => function (ContainerInterface $c) {
+        try {
+            $cacheService = $c->get(CacheService::class);
+        } catch (\Exception $e) {
+            $cacheService = null;
+        }
+        
+        try {
+            $eventPublisher = $c->get(RealtimeEventPublisher::class);
+        } catch (\Exception $e) {
+            $eventPublisher = null;
+        }
+        
+        return new \SupermonNg\Application\Controllers\ConfigController(
+            $c->get(LoggerInterface::class),
+            $cacheService,
+            $eventPublisher
+        );
+    },
+    
+    \SupermonNg\Application\Controllers\NodeController::class => function (ContainerInterface $c) {
+        try {
+            $eventPublisher = $c->get(RealtimeEventPublisher::class);
+        } catch (\Exception $e) {
+            $eventPublisher = null;
+        }
+        
+        return new \SupermonNg\Application\Controllers\NodeController(
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\AllStarConfigService::class),
+            $eventPublisher
+        );
+    },
+    
+    \SupermonNg\Application\Controllers\WebSocketController::class => function (ContainerInterface $c) {
+        try {
+            $eventPublisher = $c->get(RealtimeEventPublisher::class);
+        } catch (\Exception $e) {
+            $eventPublisher = null;
+        }
+        
+        return new \SupermonNg\Application\Controllers\WebSocketController(
+            $c->get(LoggerInterface::class),
+            $eventPublisher
+        );
+    },
+    
+    \SupermonNg\Application\Controllers\AuthController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\AuthController(
+            $c->get(LoggerInterface::class)
+        );
+    },
+    
 ];

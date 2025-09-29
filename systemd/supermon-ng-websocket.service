@@ -1,0 +1,37 @@
+[Unit]
+Description=Supermon-NG WebSocket Server
+After=network.target supermon-ng-backend.service
+Requires=supermon-ng-backend.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/html/supermon-ng
+ExecStart=/var/www/html/supermon-ng/scripts/start-websocket.sh
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=supermon-ng-websocket
+
+# Environment variables
+Environment=WEBSOCKET_PORT=9091
+Environment=WEBSOCKET_HOST=localhost
+Environment=WEBSOCKET_SECURE=false
+Environment=APP_DIR=/var/www/html/supermon-ng
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/html/supermon-ng
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+[Install]
+WantedBy=multi-user.target

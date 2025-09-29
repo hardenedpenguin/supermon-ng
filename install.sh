@@ -206,15 +206,9 @@ fi
 # Set proper permissions
 chown -R www-data:www-data "$APP_DIR"
 chmod -R 755 "$APP_DIR"
-chmod -R 777 "$APP_DIR/logs"
-chmod -R 777 "$APP_DIR/database"
-chmod -R 777 "$APP_DIR/user_files"
-
-# Set specific permissions for config directory (performance optimization files)
-if [ -d "$APP_DIR/config" ]; then
-    chmod -R 644 "$APP_DIR/config"
-    echo "✅ Performance optimization configuration files installed"
-fi
+chmod -R 755 "$APP_DIR/logs"
+chmod -R 755 "$APP_DIR/database"
+chmod -R 755 "$APP_DIR/user_files"
 
 # Install PHP dependencies
 echo "📦 Installing PHP dependencies..."
@@ -311,7 +305,7 @@ if [ -f "$SERVICE_FILE" ]; then
     echo "   sudo rm $SERVICE_FILE"
 else
     echo "📝 Creating backend service file..."
-    cat > "$SERVICE_FILE" << EOF
+    cat > "$SERVICE_FILE" << 'SERVICE_EOF'
 [Unit]
 Description=Supermon-NG Backend
 After=network.target
@@ -319,49 +313,54 @@ After=network.target
 [Service]
 Type=simple
 User=www-data
-WorkingDirectory=$APP_DIR
+WorkingDirectory=APP_DIR_PLACEHOLDER
 ExecStart=/usr/bin/php -S localhost:8000 -t public public/index.php
 Restart=always
 RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
-EOF
+SERVICE_EOF
+    # Replace placeholder with actual path
+    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$SERVICE_FILE"
     echo "✅ Backend service file created"
 fi
 
-# Node Status service (optional)
-NODE_STATUS_SERVICE_FILE="/etc/systemd/system/supermon-ng-node-status.service"
-NODE_STATUS_TIMER_FILE="/etc/systemd/system/supermon-ng-node-status.timer"
-
-if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
-    echo "📝 Installing node status service files..."
-    
-    if [ -f "$NODE_STATUS_SERVICE_FILE" ]; then
-        echo "⚠️  Node status service file already exists. Skipping installation."
-    else
-        if [ -f "$INSTALLER_DIR/systemd/supermon-ng-node-status.service" ]; then
-            # Update the service file with correct paths and copy it
-            sed "s|WorkingDirectory=.*|WorkingDirectory=$APP_DIR/user_files/sbin|g; s|ExecStart=.*|ExecStart=/usr/bin/python3 $APP_DIR/user_files/sbin/ast_node_status_update.py|g; s|StandardOutput=.*|StandardOutput=append:$APP_DIR/logs/node-status-update.log|g; s|StandardError=.*|StandardError=append:$APP_DIR/logs/node-status-update.log|g" "$INSTALLER_DIR/systemd/supermon-ng-node-status.service" > "$NODE_STATUS_SERVICE_FILE"
-            echo "✅ Node status service file installed"
-        else
-            echo "❌ Node status service template not found in systemd directory"
+# Install systemd service files from systemd directory
+echo "📝 Installing systemd service files..."
+if [ -d "$APP_DIR/systemd" ]; then
+    for service_file in "$APP_DIR/systemd"/*.service; do
+        if [ -f "$service_file" ]; then
+            service_name=$(basename "$service_file")
+            target_file="/etc/systemd/system/$service_name"
+            
+            if [ -f "$target_file" ]; then
+                echo "⚠️  Service file $target_file already exists. Skipping."
+            else
+                echo "📋 Installing $service_name..."
+                cp "$service_file" "$target_file"
+                echo "✅ $service_name installed"
+            fi
         fi
-    fi
+    done
     
-    if [ -f "$NODE_STATUS_TIMER_FILE" ]; then
-        echo "⚠️  Node status timer file already exists. Skipping installation."
-    else
-        if [ -f "$INSTALLER_DIR/systemd/supermon-ng-node-status.timer" ]; then
-            cp "$INSTALLER_DIR/systemd/supermon-ng-node-status.timer" "$NODE_STATUS_TIMER_FILE"
-            echo "✅ Node status timer file installed"
-        else
-            echo "❌ Node status timer template not found in systemd directory"
+    # Install timer files if they exist
+    for timer_file in "$APP_DIR/systemd"/*.timer; do
+        if [ -f "$timer_file" ]; then
+            timer_name=$(basename "$timer_file")
+            target_file="/etc/systemd/system/$timer_name"
+            
+            if [ -f "$target_file" ]; then
+                echo "⚠️  Timer file $target_file already exists. Skipping."
+            else
+                echo "📋 Installing $timer_name..."
+                cp "$timer_file" "$target_file"
+                echo "✅ $timer_name installed"
+            fi
         fi
-    fi
+    done
 else
-    echo "ℹ️  Node status configuration not found. Skipping node status service setup."
-    echo "   To enable node status updates, configure $APP_DIR/user_files/sbin/node_info.ini"
+    echo "⚠️  No systemd directory found at $APP_DIR/systemd"
 fi
 
 # Install Apache if not present (unless skipping Apache configuration)
@@ -463,7 +462,7 @@ else
         done
     fi
     
-    cat > "$APACHE_TEMPLATE" << EOF
+    cat > "$APACHE_TEMPLATE" << APACHE_EOF
 # Supermon-NG Apache Configuration Template
 # Copy this configuration to your Apache sites-available directory
 # Generated with detected IP addresses as ServerAlias entries
@@ -480,10 +479,10 @@ $SERVER_ALIASES    DocumentRoot /var/www/html
     ProxyPassReverse /supermon-ng/api http://localhost:8000/api
     
     # Alias for Supermon-NG application (after ProxyPass)
-    Alias /supermon-ng $APP_DIR/public
+    Alias /supermon-ng APP_DIR_PLACEHOLDER/public
     
     # Alias for user files
-    Alias /supermon-ng/user_files $APP_DIR/user_files
+    Alias /supermon-ng/user_files APP_DIR_PLACEHOLDER/user_files
     
     # Proxy HamClock requests (adjust IP and port as needed)
     # Uncomment and modify the following lines if you have HamClock running:
@@ -495,7 +494,7 @@ $SERVER_ALIASES    DocumentRoot /var/www/html
     # ProxyPassReverse /live-ws ws://10.0.0.41:8082/live-ws
     
     # Configure Supermon-NG directory
-    <Directory "$APP_DIR/public">
+    <Directory "APP_DIR_PLACEHOLDER/public">
         AllowOverride All
         Require all granted
         
@@ -510,7 +509,7 @@ $SERVER_ALIASES    DocumentRoot /var/www/html
     </Directory>
     
     # Configure user files directory
-    <Directory "$APP_DIR/user_files">
+    <Directory "APP_DIR_PLACEHOLDER/user_files">
         AllowOverride All
         Require all granted
     </Directory>
@@ -525,7 +524,9 @@ $SERVER_ALIASES    DocumentRoot /var/www/html
     ErrorLog \${APACHE_LOG_DIR}/supermon-ng_error.log
     CustomLog \${APACHE_LOG_DIR}/supermon-ng_access.log combined
 </VirtualHost>
-EOF
+APACHE_EOF
+    # Replace placeholder with actual path
+    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$APACHE_TEMPLATE"
     echo "✅ Apache configuration template created"
 fi
 
@@ -581,95 +582,30 @@ else
     APACHE_AUTO_CONFIGURED=false
 fi
 
-echo ""
-if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
-    echo "✅ APACHE CONFIGURATION COMPLETED AUTOMATICALLY"
-    echo "=============================================="
-    echo "Apache has been configured and is running with the following access points:"
-    echo "   - http://localhost"
-    for ip in "${IP_ADDRESSES[@]}"; do
-        echo "   - http://$ip"
-    done
-    echo ""
-    echo "The site is now accessible via all detected IP addresses!"
-elif [ "$SKIP_APACHE" = true ]; then
-    echo "⏭️  APACHE CONFIGURATION SKIPPED"
-    echo "==============================="
-    echo "Apache configuration was skipped as requested (--skip-apache flag)."
-    echo ""
-    echo "The installation script has created a template configuration file at:"
-    echo "   $APP_DIR/apache-config-template.conf"
-    echo ""
-    echo "To configure your web server later:"
-    echo ""
-    echo "1. For Apache users:"
-    echo "   sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers"
-    echo "   sudo cp $APP_DIR/apache-config-template.conf /etc/apache2/sites-available/supermon-ng.conf"
-    echo "   sudo a2ensite supermon-ng"
-    echo "   sudo systemctl restart apache2"
-    echo ""
-    echo "2. For Nginx users:"
-    echo "   # Use the Apache template as reference for proxy configuration"
-    echo "   # Configure proxy_pass to http://localhost:8000/api"
-    echo "   # Configure static file serving from $APP_DIR/public"
-    echo ""
-    echo "3. For other web servers:"
-    echo "   # Configure reverse proxy to http://localhost:8000/api"
-    echo "   # Serve static files from $APP_DIR/public"
-    echo "   # Handle Vue.js SPA routing (fallback to index.html)"
-    echo ""
-    echo "The backend service is running and ready to accept connections on port 8000."
-else
-    echo "⚠️  MANUAL APACHE CONFIGURATION REQUIRED"
-    echo "========================================"
-    echo "The installation script has created a template configuration file at:"
-    echo "   $APP_DIR/apache-config-template.conf"
-    echo ""
-    echo "To complete the setup, you need to:"
-    echo ""
-    echo "1. Enable required Apache modules:"
-    echo "   sudo a2enmod proxy"
-    echo "   sudo a2enmod proxy_http"
-    echo "   sudo a2enmod proxy_wstunnel"
-    echo "   sudo a2enmod rewrite"
-    echo ""
-    echo "2. Copy the configuration template to Apache:"
-    echo "   sudo cp $APP_DIR/apache-config-template.conf /etc/apache2/sites-available/supermon-ng.conf"
-    echo ""
-    echo "3. Enable the site and restart Apache:"
-    echo "   sudo a2ensite supermon-ng"
-    echo "   sudo a2dissite 000-default  # Optional: disable default site"
-    echo "   sudo systemctl restart apache2"
-    echo ""
-    echo "4. If you have HamClock, edit the configuration to enable the proxy:"
-    echo "   sudo nano /etc/apache2/sites-available/supermon-ng.conf"
-    echo "   # Uncomment and modify the HamClock proxy lines with your server IP/port"
-    echo ""
-    echo "5. Verify the configuration:"
-    echo "   sudo apache2ctl configtest"
-    echo ""
-fi
-
 # Enable and start services
 echo "🚀 Starting services..."
 systemctl daemon-reload
+
+# Enable and start backend service
 systemctl enable supermon-ng-backend
 systemctl start supermon-ng-backend
 
-# Enable node status service if configured
-if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
-    echo "🚀 Starting node status service..."
-    systemctl enable supermon-ng-node-status.timer
-    systemctl start supermon-ng-node-status.timer
-    echo "✅ Node status service enabled and started"
+# Enable and start WebSocket service (if it exists)
+if systemctl list-unit-files | grep -q "supermon-ng-websocket.service"; then
+    systemctl enable supermon-ng-websocket
+    systemctl start supermon-ng-websocket
+    echo "✅ WebSocket service enabled and started"
+else
+    echo "⚠️  WebSocket service not found, skipping"
 fi
 
-# Note about Apache configuration
-if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
-    echo "📝 Note: Apache has been automatically configured and is ready to use."
+# Enable and start node status timer (if it exists)
+if systemctl list-unit-files | grep -q "supermon-ng-node-status.timer"; then
+    systemctl enable supermon-ng-node-status.timer
+    systemctl start supermon-ng-node-status.timer
+    echo "✅ Node status timer enabled and started"
 else
-    echo "📝 Note: Apache configuration must be completed manually as shown above."
-    echo "   The backend service will start, but the web interface won't work until Apache is configured."
+    echo "⚠️  Node status timer not found, skipping"
 fi
 
 # Make user management scripts executable
@@ -687,13 +623,9 @@ fi
 echo ""
 echo "🎉 Supermon-NG Installation Complete!"
 echo ""
-echo "🚀 Performance Optimizations Available:"
-echo "   • PHP OPcache configuration: $APP_DIR/config/php-opcache.ini"
-echo "   • Apache performance config: $APP_DIR/config/apache-performance.conf"
-echo "   • See PERFORMANCE_OPTIMIZATIONS.md for setup instructions"
-echo ""
 echo "📊 Status:"
 systemctl is-active supermon-ng-backend > /dev/null && echo "✅ Backend: Running" || echo "❌ Backend: Failed"
+systemctl is-active supermon-ng-websocket > /dev/null && echo "✅ WebSocket: Running" || echo "❌ WebSocket: Failed"
 systemctl is-active apache2 > /dev/null && echo "✅ Apache: Running" || echo "❌ Apache: Failed"
 echo ""
 echo "🌐 Access your Supermon-NG application at:"
@@ -725,13 +657,11 @@ if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
     echo "   1. Configure your AMI settings in $APP_DIR/user_files/"
     echo "   2. Set up your node configurations"
     echo "   3. Access the web interface to complete setup"
-    echo "   4. (Optional) Configure performance optimizations (see PERFORMANCE_OPTIMIZATIONS.md)"
 else
     echo "   1. Complete Apache configuration (see instructions above)"
     echo "   2. Configure your AMI settings in $APP_DIR/user_files/"
     echo "   3. Set up your node configurations"
     echo "   4. Access the web interface to complete setup"
-    echo "   5. (Optional) Configure performance optimizations (see PERFORMANCE_OPTIMIZATIONS.md)"
 fi
 
 echo ""
@@ -755,10 +685,6 @@ echo "   ✅ PHP dependencies installed"
 echo "   ✅ Node.js dependencies installed"
 echo "   ✅ Frontend built"
 echo "   ✅ Backend service created and started"
-echo "   ✅ Performance optimization configurations installed"
-if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
-    echo "   ✅ Node status service enabled and started"
-fi
 if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
     echo "   ✅ Apache configuration completed automatically with IP aliases"
 elif [ "$SKIP_APACHE" = true ]; then

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SupermonNg\Application\Services;
+namespace SupermonNg\Services;
 
 use Psr\Log\LoggerInterface;
 

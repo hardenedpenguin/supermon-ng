@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use SupermonNg\Services\CacheService;
+use SupermonNg\Services\RealtimeEventPublisher;
 
 // Include required files for AMI functionality
 require_once __DIR__ . '/../../../includes/amifunctions.inc';
@@ -17,11 +18,13 @@ class ConfigController
 {
     private LoggerInterface $logger;
     private ?CacheService $cacheService;
+    private ?RealtimeEventPublisher $eventPublisher;
 
-    public function __construct(LoggerInterface $logger, ?CacheService $cacheService = null)
+    public function __construct(LoggerInterface $logger, ?CacheService $cacheService = null, ?RealtimeEventPublisher $eventPublisher = null)
     {
         $this->logger = $logger;
         $this->cacheService = $cacheService;
+        $this->eventPublisher = $eventPublisher;
     }
 
     public function list(Request $request, Response $response): Response
@@ -357,49 +360,83 @@ class ConfigController
 
     public function getSystemInfo(Request $request, Response $response): Response
     {
-        $this->logger->info('System info request');
+        try {
+            $this->logger->info('System info request');
 
-        // Try to get cached system info first
-        $cachedSystemInfo = null;
-        if ($this->cacheService !== null) {
-            $cachedSystemInfo = $this->cacheService->getCachedSystemInfo();
-        }
-        
-        if ($cachedSystemInfo !== null) {
-            $systemInfo = $cachedSystemInfo;
-        } else {
-            // Read system information from global.inc
-            $systemInfo = $this->loadSystemInfo();
-            // Cache the system info
+            // Try to get cached system info first
+            $cachedSystemInfo = null;
             if ($this->cacheService !== null) {
-                $this->cacheService->cacheSystemInfo($systemInfo);
+                $cachedSystemInfo = $this->cacheService->getCachedSystemInfo();
             }
+            
+            if ($cachedSystemInfo !== null) {
+                $systemInfo = $cachedSystemInfo;
+            } else {
+                // Read system information from global.inc
+                $systemInfo = $this->loadSystemInfo();
+                // Cache the system info
+                if ($this->cacheService !== null) {
+                    $this->cacheService->cacheSystemInfo($systemInfo);
+                }
+            }
+
+            // Publish real-time system info update
+            if ($this->eventPublisher !== null) {
+                $this->eventPublisher->publishSystemInfo($systemInfo);
+            }
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => $systemInfo
+            ]));
+
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $this->logger->error('Error in getSystemInfo', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Internal server error',
+                'error' => ($_ENV['APP_ENV'] ?? 'production') === 'development' ? $e->getMessage() : 'An error occurred'
+            ]));
+            
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
-
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'data' => $systemInfo
-        ]));
-
-        return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function getMenu(Request $request, Response $response): Response
     {
-        $this->logger->info('Menu request');
+        try {
+            $this->logger->info('Menu request');
 
-        // Get current user (or null if not logged in)
-        $currentUser = $this->getCurrentUser();
-        
-        // Get menu items from AllStar configuration
-        $menuItems = $this->loadMenuItems($currentUser);
+            // Get current user (or null if not logged in)
+            $currentUser = $this->getCurrentUser();
+            
+            // Get menu items from AllStar configuration
+            $menuItems = $this->loadMenuItems($currentUser);
 
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'data' => $menuItems
-        ]));
+            // Publish real-time menu update
+            if ($this->eventPublisher !== null && $currentUser) {
+                $this->eventPublisher->publishMenuUpdate($currentUser, $menuItems);
+            }
 
-        return $response->withHeader('Content-Type', 'application/json');
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => $menuItems
+            ]));
+
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $this->logger->error('Error in getMenu', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Internal server error',
+                'error' => ($_ENV['APP_ENV'] ?? 'production') === 'development' ? $e->getMessage() : 'An error occurred'
+            ]));
+            
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
     }
 
     /**
@@ -929,6 +966,10 @@ class ConfigController
             $config = $cachedConfig;
         } else {
             $config = parse_ini_file($iniFile, true);
+            if ($config === false) {
+                $this->logger->error("Failed to parse INI file", ['file' => $iniFile]);
+                return [];
+            }
             // Cache the parsed INI file data
             if ($this->cacheService !== null) {
                 $this->cacheService->cacheIniFile($iniFile, $config);

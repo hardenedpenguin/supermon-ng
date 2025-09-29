@@ -9,10 +9,9 @@
         "php-di/php-di": "^7.0",
         "vlucas/phpdotenv": "^5.5",
         "monolog/monolog": "^3.4",
-        "firebase/php-jwt": "^6.8",
         "ramsey/uuid": "^4.7",
         "symfony/cache": "^6.3",
-        "doctrine/dbal": "^3.7",
+        "cboden/ratchet": "^0.4",
         "phpunit/phpunit": "^10.5"
     },
     "require-dev": {

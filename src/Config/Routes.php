@@ -9,6 +9,7 @@ use SupermonNg\Application\Controllers\DatabaseController;
 use SupermonNg\Application\Controllers\ConfigController;
 use SupermonNg\Application\Controllers\NodeStatusController;
 use SupermonNg\Application\Controllers\AdminController;
+use SupermonNg\Application\Controllers\WebSocketController;
 use SupermonNg\Application\Middleware\ApiAuthMiddleware;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
 
@@ -21,6 +22,18 @@ $app->get('/health', function ($request, $response) {
         'status' => 'healthy',
         'timestamp' => date('c'),
         'version' => $_ENV['API_VERSION'] ?? '1.0.0'
+    ]));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+// Simple test endpoint to verify basic functionality
+$app->get('/api/test', function ($request, $response) {
+    $response->getBody()->write(json_encode([
+        'success' => true,
+        'message' => 'API is working',
+        'timestamp' => date('c'),
+        'php_version' => PHP_VERSION,
+        'session_status' => session_status()
     ]));
     return $response->withHeader('Content-Type', 'application/json');
 });
@@ -45,7 +58,6 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) {
     $group->group('/auth', function (RouteCollectorProxy $group) {
         $group->post('/login', [AuthController::class, 'login']);
         $group->post('/logout', [AuthController::class, 'logout']);
-        $group->post('/refresh', [AuthController::class, 'refresh']);
         $group->get('/me', [AuthController::class, 'me']);
     });
 
@@ -103,7 +115,6 @@ $app->group('/api', function (RouteCollectorProxy $group) {
     $group->group('/auth', function (RouteCollectorProxy $group) {
         $group->post('/login', [AuthController::class, 'login']);
         $group->post('/logout', [AuthController::class, 'logout']);
-        $group->post('/refresh', [AuthController::class, 'refresh']);
         $group->get('/me', [AuthController::class, 'me']);
         $group->get('/check', [AuthController::class, 'check']);
     });
@@ -228,6 +239,15 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->post('/fast-restart', [SystemController::class, 'fastRestart']);
         $group->post('/reboot', [SystemController::class, 'reboot']);
     });
+    
+    // WebSocket routes
+    $group->group('/websocket', function (RouteCollectorProxy $group) {
+        $group->get('/info', [WebSocketController::class, 'getConnectionInfo']);
+        $group->get('/stats', [WebSocketController::class, 'getStats']);
+        $group->post('/trigger-update', [WebSocketController::class, 'triggerNodeUpdate']);
+        $group->post('/test', [WebSocketController::class, 'testConnection']);
+    });
+    
 });
 
 // Legacy routes (for backward compatibility)

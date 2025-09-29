@@ -27,8 +27,11 @@ class CacheService
     public function cacheApiResponse(string $key, mixed $data, int $ttlSeconds = 300): mixed
     {
         try {
-            $this->cache->set($key, $data, $ttlSeconds);
-            return $data;
+            // For FilesystemAdapter, we need to use get() with callback
+            // This will cache the data if it doesn't exist, or return cached data if it does
+            return $this->cache->get($key, function () use ($data) {
+                return $data;
+            });
         } catch (\Exception $e) {
             $this->logger->warning('Failed to cache API response', [
                 'key' => $key,
@@ -62,7 +65,8 @@ class CacheService
     public function cacheMenuItems(string $username, array $menuItems): array
     {
         $key = "menu_items:$username";
-        return $this->cacheApiResponse($key, $menuItems, 1800); // 30 minutes
+        $result = $this->cacheApiResponse($key, $menuItems, 1800); // 30 minutes
+        return $result ?? $menuItems; // Return original data if caching fails
     }
     
     /**
@@ -80,7 +84,8 @@ class CacheService
     public function cacheNodeConfig(string $nodeId, array $config): array
     {
         $key = "node_config:$nodeId";
-        return $this->cacheApiResponse($key, $config, 600); // 10 minutes
+        $result = $this->cacheApiResponse($key, $config, 600); // 10 minutes
+        return $result ?? $config; // Return original data if caching fails
     }
     
     /**
@@ -98,7 +103,8 @@ class CacheService
     public function cacheSystemInfo(array $systemInfo): array
     {
         $key = "system_info";
-        return $this->cacheApiResponse($key, $systemInfo, 60); // 1 minute
+        $result = $this->cacheApiResponse($key, $systemInfo, 60); // 1 minute
+        return $result ?? $systemInfo; // Return original data if caching fails
     }
     
     /**
@@ -116,7 +122,8 @@ class CacheService
     public function cacheIniFile(string $filePath, array $data): array
     {
         $key = "ini_file:" . md5($filePath);
-        return $this->cacheApiResponse($key, $data, 900); // 15 minutes
+        $result = $this->cacheApiResponse($key, $data, 900); // 15 minutes
+        return $result ?? $data; // Return original data if caching fails
     }
     
     /**

@@ -159,7 +159,7 @@ $app->add(function (Request $request, RequestHandlerInterface $handler) use ($ap
     $statusCode = $response->getStatusCode();
     
     // Only log slow requests or errors in production
-    if ($_ENV['APP_ENV'] === 'production') {
+    if (($_ENV['APP_ENV'] ?? 'production') === 'production') {
         if ($statusCode >= 400 || $duration > 1000) { // Log errors or requests > 1 second
             $logger->warning("Slow/Error Request", [
                 'method' => $method,

@@ -37,68 +37,26 @@ class AuthController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
         
-        // Verify credentials
-        if ($this->verifyCredentials($username, $password)) {
-            // Start session if not already started
-            if (session_status() === PHP_SESSION_NONE) {
-                session_start();
-            }
-            
-            // Store user in session
-            $_SESSION['user'] = $username;
-            $_SESSION['authenticated'] = true;
-            $_SESSION['login_time'] = time();
-            
-            $this->logger->info('User logged in successfully', ['username' => $username]);
-            
-            $response->getBody()->write(json_encode([
-                'success' => true,
-                'message' => 'Login successful',
-                'data' => [
-                    'user' => ['name' => $username],
-                    'authenticated' => true,
-                    'permissions' => $this->getUserPermissions($username),
-                    'config_source' => $this->getUserIniFile($username)
-                ],
-                'timestamp' => date('c')
-            ]));
-        } else {
-            $this->logger->warning('Failed login attempt', ['username' => $username]);
-            
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => 'Invalid username or password',
-                'data' => null,
-                'timestamp' => date('c')
-            ]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(401);
-        }
-
-        return $response->withHeader('Content-Type', 'application/json');
+        // Use session-based authentication
+        return $this->sessionBasedLogin($username, $password, $response);
     }
 
     public function logout(Request $request, Response $response): Response
     {
         $this->logger->info('Logout attempt');
         
-        // Start session if not already started
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        // Get current user from session
+        $user = $this->getCurrentUser();
+        
+        if ($user) {
+            $this->logger->info('User logged out successfully', ['username' => $user]);
         }
         
         // Clear session data
-        $_SESSION = [];
-        
-        // Destroy the session
-        if (ini_get("session.use_cookies")) {
-            $params = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000,
-                $params["path"], $params["domain"],
-                $params["secure"], $params["httponly"]
-            );
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            $_SESSION = [];
+            session_destroy();
         }
-        
-        session_destroy();
         
         $response->getBody()->write(json_encode([
             'success' => true,
@@ -108,49 +66,10 @@ class AuthController
             ],
             'timestamp' => date('c')
         ]));
-
+        
         return $response->withHeader('Content-Type', 'application/json');
     }
 
-    public function refresh(Request $request, Response $response): Response
-    {
-        $this->logger->info('Token refresh attempt');
-        
-        // Check if user is still logged in
-        $user = $this->getCurrentUser();
-        
-        if ($user) {
-            // Regenerate session ID for security
-            if (session_status() === PHP_SESSION_NONE) {
-                session_start();
-            }
-            session_regenerate_id(true);
-            
-            $response->getBody()->write(json_encode([
-                'success' => true,
-                'message' => 'Session refreshed',
-                'data' => [
-                    'authenticated' => true,
-                    'user' => ['name' => $user],
-                    'permissions' => $this->getUserPermissions($user),
-                    'config_source' => $this->getUserIniFile($user)
-                ],
-                'timestamp' => date('c')
-            ]));
-        } else {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => 'Session expired',
-                'data' => [
-                    'authenticated' => false
-                ],
-                'timestamp' => date('c')
-            ]));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(401);
-        }
-
-        return $response->withHeader('Content-Type', 'application/json');
-    }
 
     public function me(Request $request, Response $response): Response
     {
@@ -605,5 +524,50 @@ class AuthController
         }
         
         return 'allmon.ini';
+    }
+    
+    /**
+     * Fallback session-based login when JWT service is not available
+     */
+    private function sessionBasedLogin(string $username, string $password, Response $response): Response
+    {
+        // Start session if not already started
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        
+        // Use .htpasswd authentication (same as verifyCredentials method)
+        if ($this->verifyCredentials($username, $password)) {
+            // Set session data
+            $_SESSION['user'] = $username;
+            $_SESSION['authenticated'] = true;
+            $_SESSION['login_time'] = time();
+            
+            $this->logger->info('User logged in successfully (session-based)', ['username' => $username]);
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'message' => 'Login successful',
+                'data' => [
+                    'user' => $username,
+                    'authenticated' => true,
+                    'session_id' => session_id()
+                ],
+                'timestamp' => date('c')
+            ]));
+            
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+        
+        $this->logger->warning('Login failed (session-based)', ['username' => $username]);
+        
+        $response->getBody()->write(json_encode([
+            'success' => false,
+            'message' => 'Invalid username or password',
+            'data' => null,
+            'timestamp' => date('c')
+        ]));
+        
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(401);
     }
 }

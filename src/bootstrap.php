@@ -9,14 +9,18 @@ use Dotenv\Dotenv;
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Initialize AMI connection pooling after autoloader is available
-require_once __DIR__ . '/../includes/amifunctions.inc';
-\SimpleAmiClient::initPool([
-    'max_size' => 5,         // Reduced pool size for better performance
-    'timeout' => 10          // Shorter timeout for faster failover
-]);
-
-// Register cleanup on shutdown
-register_shutdown_function([\SimpleAmiClient::class, 'cleanupPool']);
+if (file_exists(__DIR__ . '/../includes/amifunctions.inc')) {
+    require_once __DIR__ . '/../includes/amifunctions.inc';
+    if (class_exists('\SimpleAmiClient')) {
+        \SimpleAmiClient::initPool([
+            'max_size' => 5,         // Reduced pool size for better performance
+            'timeout' => 10          // Shorter timeout for faster failover
+        ]);
+        
+        // Register cleanup on shutdown
+        register_shutdown_function([\SimpleAmiClient::class, 'cleanupPool']);
+    }
+}
 
 // Load environment variables (optional)
 try {
