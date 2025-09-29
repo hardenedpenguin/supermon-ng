@@ -13,26 +13,36 @@ use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use SupermonNg\Services\DatabaseGenerationService;
 use SupermonNg\Services\AllStarConfigService;
+use SupermonNg\Services\CacheService;
+use SupermonNg\Services\AmiBatchService;
+use SupermonNg\Services\FileCacheService;
 
 return [
     // Logger
     LoggerInterface::class => function () {
         $logger = new Logger('supermon-ng');
         
-        // Add rotating file handler
+        // Set log level based on environment
+        $logLevel = $_ENV['APP_ENV'] === 'production' 
+            ? ($_ENV['LOG_LEVEL'] ?? Logger::WARNING)  // Only warnings and errors in production
+            : ($_ENV['LOG_LEVEL'] ?? Logger::INFO);    // Full logging in development
+        
+        // Add rotating file handler with optimized settings
         $logger->pushHandler(new RotatingFileHandler(
             $_ENV['LOG_PATH'] ?? 'logs/app.log',
-            $_ENV['LOG_MAX_FILES'] ?? 30,
-            $_ENV['LOG_LEVEL'] ?? Logger::INFO
+            $_ENV['LOG_MAX_FILES'] ?? ($_ENV['APP_ENV'] === 'production' ? 7 : 30), // Fewer files in production
+            $logLevel
         ));
         
-        // Add UID processor for request tracking
-        $logger->pushProcessor(new UidProcessor());
+        // Only add UID processor in development for performance
+        if ($_ENV['APP_ENV'] !== 'production') {
+            $logger->pushProcessor(new UidProcessor());
+        }
         
         return $logger;
     },
     
-    // Database connection
+    // Database connection with pooling optimization
     Connection::class => function () {
         $dbType = $_ENV['DB_TYPE'] ?? 'sqlite';
         $dbPath = $_ENV['DB_PATH'] ?? 'database/supermon-ng.db';
@@ -41,6 +51,12 @@ return [
             $connectionParams = [
                 'driver' => 'pdo_sqlite',
                 'path' => $dbPath,
+                // SQLite optimizations
+                'options' => [
+                    \PDO::ATTR_PERSISTENT => false, // Disable persistent connections for better performance
+                    \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                    \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                ],
             ];
         } else {
             $connectionParams = [
@@ -51,6 +67,17 @@ return [
                 'user' => $_ENV['DB_USER'] ?? 'root',
                 'password' => $_ENV['DB_PASSWORD'] ?? '',
                 'charset' => 'utf8mb4',
+                // MySQL optimizations
+                'options' => [
+                    \PDO::ATTR_PERSISTENT => true, // Enable persistent connections for MySQL
+                    \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                    \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
+                    \PDO::ATTR_EMULATE_PREPARES => false, // Use native prepared statements
+                    \PDO::MYSQL_ATTR_INIT_COMMAND => "SET sql_mode='STRICT_TRANS_TABLES,NO_ZERO_DATE,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO'",
+                ],
+                // Connection pooling settings
+                'pool_size' => $_ENV['DB_POOL_SIZE'] ?? 5,
+                'pool_timeout' => $_ENV['DB_POOL_TIMEOUT'] ?? 30,
             ];
         }
         
@@ -158,6 +185,29 @@ return [
         return new DatabaseGenerationService(
             $container->get(LoggerInterface::class),
             $container->get(CacheInterface::class)
+        );
+    },
+    
+    // Cache service
+    CacheService::class => function (ContainerInterface $c) {
+        return new CacheService(
+            $c->get(CacheInterface::class),
+            $c->get(LoggerInterface::class)
+        );
+    },
+    
+    // AMI Batch service
+    AmiBatchService::class => function (ContainerInterface $c) {
+        return new AmiBatchService(
+            $c->get(LoggerInterface::class)
+        );
+    },
+    
+    // File Cache service
+    FileCacheService::class => function (ContainerInterface $c) {
+        return new FileCacheService(
+            $c->get(CacheInterface::class),
+            $c->get(LoggerInterface::class)
         );
     },
 ];

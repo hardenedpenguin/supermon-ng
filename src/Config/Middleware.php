@@ -144,7 +144,7 @@ $errorMiddleware->setErrorHandler(
     }
 );
 
-// Add request logging middleware
+// Add request logging middleware (optimized for production)
 $app->add(function (Request $request, RequestHandlerInterface $handler) use ($app): Response {
     $container = $app->getContainer();
     $logger = $container->get(LoggerInterface::class);
@@ -158,13 +158,27 @@ $app->add(function (Request $request, RequestHandlerInterface $handler) use ($ap
     $uri = $request->getUri()->getPath();
     $statusCode = $response->getStatusCode();
     
-    $logger->info("HTTP Request", [
-        'method' => $method,
-        'uri' => $uri,
-        'status_code' => $statusCode,
-        'duration_ms' => $duration,
-        'ip' => $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown'
-    ]);
+    // Only log slow requests or errors in production
+    if ($_ENV['APP_ENV'] === 'production') {
+        if ($statusCode >= 400 || $duration > 1000) { // Log errors or requests > 1 second
+            $logger->warning("Slow/Error Request", [
+                'method' => $method,
+                'uri' => $uri,
+                'status_code' => $statusCode,
+                'duration_ms' => $duration,
+                'ip' => $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown'
+            ]);
+        }
+    } else {
+        // Full logging in development
+        $logger->info("HTTP Request", [
+            'method' => $method,
+            'uri' => $uri,
+            'status_code' => $statusCode,
+            'duration_ms' => $duration,
+            'ip' => $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown'
+        ]);
+    }
     
     return $response;
 });
@@ -208,6 +222,64 @@ $app->add(function (Request $request, RequestHandlerInterface $handler) use ($ap
         // If cache fails, allow the request to proceed
         return $handler->handle($request);
     }
+});
+
+// Add HTTP caching middleware
+$app->add(function (Request $request, RequestHandlerInterface $handler): Response {
+    $response = $handler->handle($request);
+    
+    $uri = $request->getUri()->getPath();
+    $method = $request->getMethod();
+    
+    // Only cache GET requests
+    if ($method !== 'GET') {
+        return $response;
+    }
+    
+    // Cache static assets for 1 year
+    if (strpos($uri, '/assets/') !== false || 
+        strpos($uri, '.css') !== false || 
+        strpos($uri, '.js') !== false || 
+        strpos($uri, '.png') !== false || 
+        strpos($uri, '.jpg') !== false || 
+        strpos($uri, '.ico') !== false) {
+        
+        $response = $response->withHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        $response = $response->withHeader('Expires', gmdate('D, d M Y H:i:s', time() + 31536000) . ' GMT');
+    }
+    // Cache API responses for different durations based on endpoint
+    elseif (strpos($uri, '/api/') !== false) {
+        if (strpos($uri, '/api/config/menu') !== false || 
+            strpos($uri, '/api/config/nodes') !== false) {
+            // Cache menu and node config for 5 minutes
+            $response = $response->withHeader('Cache-Control', 'private, max-age=300');
+            $response = $response->withHeader('ETag', '"' . md5($response->getBody()->getContents()) . '"');
+        } elseif (strpos($uri, '/api/nodes') !== false) {
+            // Cache node list for 1 minute
+            $response = $response->withHeader('Cache-Control', 'private, max-age=60');
+        } elseif (strpos($uri, '/api/config/system-info') !== false) {
+            // Cache system info for 30 seconds
+            $response = $response->withHeader('Cache-Control', 'private, max-age=30');
+        } else {
+            // Default: no cache for dynamic data
+            $response = $response->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
+    }
+    
+    // Add ETag support for conditional requests
+    if ($response->getStatusCode() === 200 && !$response->hasHeader('ETag')) {
+        $content = $response->getBody()->getContents();
+        $etag = '"' . md5($content) . '"';
+        $response = $response->withHeader('ETag', $etag);
+        
+        // Check if client has cached version
+        $ifNoneMatch = $request->getHeaderLine('If-None-Match');
+        if ($ifNoneMatch === $etag) {
+            return $response->withStatus(304)->withBody(new \Slim\Psr7\Stream(fopen('php://temp', 'r+')));
+        }
+    }
+    
+    return $response;
 });
 
 // Add JSON parsing middleware

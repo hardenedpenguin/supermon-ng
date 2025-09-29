@@ -7,6 +7,7 @@ namespace SupermonNg\Application\Controllers;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
+use SupermonNg\Services\CacheService;
 
 // Include required files for AMI functionality
 require_once __DIR__ . '/../../../includes/amifunctions.inc';
@@ -15,10 +16,12 @@ require_once __DIR__ . '/../../../includes/common.inc';
 class ConfigController
 {
     private LoggerInterface $logger;
+    private ?CacheService $cacheService;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, ?CacheService $cacheService = null)
     {
         $this->logger = $logger;
+        $this->cacheService = $cacheService;
     }
 
     public function list(Request $request, Response $response): Response
@@ -356,8 +359,22 @@ class ConfigController
     {
         $this->logger->info('System info request');
 
-        // Read system information from global.inc
-        $systemInfo = $this->loadSystemInfo();
+        // Try to get cached system info first
+        $cachedSystemInfo = null;
+        if ($this->cacheService !== null) {
+            $cachedSystemInfo = $this->cacheService->getCachedSystemInfo();
+        }
+        
+        if ($cachedSystemInfo !== null) {
+            $systemInfo = $cachedSystemInfo;
+        } else {
+            // Read system information from global.inc
+            $systemInfo = $this->loadSystemInfo();
+            // Cache the system info
+            if ($this->cacheService !== null) {
+                $this->cacheService->cacheSystemInfo($systemInfo);
+            }
+        }
 
         $response->getBody()->write(json_encode([
             'success' => true,
@@ -876,6 +893,17 @@ class ConfigController
 
     private function loadMenuItems(?string $username): array
     {
+        // Try to get cached menu items first
+        $cacheKey = $username ?? 'anonymous';
+        $cachedMenuItems = null;
+        if ($this->cacheService !== null) {
+            $cachedMenuItems = $this->cacheService->getCachedMenuItems($cacheKey);
+            if ($cachedMenuItems !== null) {
+                $this->logger->info("Using cached menu items", ['username' => $cacheKey]);
+                return $cachedMenuItems;
+            }
+        }
+        
         // Determine which INI file to use
         $iniFile = $this->getIniFileName($username);
         
@@ -891,7 +919,21 @@ class ConfigController
             return [];
         }
 
-        $config = parse_ini_file($iniFile, true);
+        // Try to get cached INI file data
+        $cachedConfig = null;
+        if ($this->cacheService !== null) {
+            $cachedConfig = $this->cacheService->getCachedIniFile($iniFile);
+        }
+        
+        if ($cachedConfig !== null) {
+            $config = $cachedConfig;
+        } else {
+            $config = parse_ini_file($iniFile, true);
+            // Cache the parsed INI file data
+            if ($this->cacheService !== null) {
+                $this->cacheService->cacheIniFile($iniFile, $config);
+            }
+        }
         
         $this->logger->info("Parsed INI config", ['sections' => array_keys($config)]);
         $this->logger->info("Sample config data", ['546050' => $config['546050'] ?? 'not found']);
@@ -958,6 +1000,11 @@ class ConfigController
                     'targetBlank' => $targetBlank
                 ];
             }
+        }
+
+        // Cache the processed menu items
+        if ($this->cacheService !== null) {
+            $this->cacheService->cacheMenuItems($cacheKey, $systems);
         }
 
         return $systems;

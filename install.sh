@@ -210,6 +210,12 @@ chmod -R 777 "$APP_DIR/logs"
 chmod -R 777 "$APP_DIR/database"
 chmod -R 777 "$APP_DIR/user_files"
 
+# Set specific permissions for config directory (performance optimization files)
+if [ -d "$APP_DIR/config" ]; then
+    chmod -R 644 "$APP_DIR/config"
+    echo "✅ Performance optimization configuration files installed"
+fi
+
 # Install PHP dependencies
 echo "📦 Installing PHP dependencies..."
 cd "$APP_DIR"
@@ -681,6 +687,11 @@ fi
 echo ""
 echo "🎉 Supermon-NG Installation Complete!"
 echo ""
+echo "🚀 Performance Optimizations Available:"
+echo "   • PHP OPcache configuration: $APP_DIR/config/php-opcache.ini"
+echo "   • Apache performance config: $APP_DIR/config/apache-performance.conf"
+echo "   • See PERFORMANCE_OPTIMIZATIONS.md for setup instructions"
+echo ""
 echo "📊 Status:"
 systemctl is-active supermon-ng-backend > /dev/null && echo "✅ Backend: Running" || echo "❌ Backend: Failed"
 systemctl is-active apache2 > /dev/null && echo "✅ Apache: Running" || echo "❌ Apache: Failed"
@@ -714,11 +725,13 @@ if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
     echo "   1. Configure your AMI settings in $APP_DIR/user_files/"
     echo "   2. Set up your node configurations"
     echo "   3. Access the web interface to complete setup"
+    echo "   4. (Optional) Configure performance optimizations (see PERFORMANCE_OPTIMIZATIONS.md)"
 else
     echo "   1. Complete Apache configuration (see instructions above)"
     echo "   2. Configure your AMI settings in $APP_DIR/user_files/"
     echo "   3. Set up your node configurations"
     echo "   4. Access the web interface to complete setup"
+    echo "   5. (Optional) Configure performance optimizations (see PERFORMANCE_OPTIMIZATIONS.md)"
 fi
 
 echo ""
@@ -742,6 +755,7 @@ echo "   ✅ PHP dependencies installed"
 echo "   ✅ Node.js dependencies installed"
 echo "   ✅ Frontend built"
 echo "   ✅ Backend service created and started"
+echo "   ✅ Performance optimization configurations installed"
 if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
     echo "   ✅ Node status service enabled and started"
 fi

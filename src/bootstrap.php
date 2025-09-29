@@ -32,8 +32,10 @@ try {
 
 // Set error reporting based on environment
 if ($_ENV['APP_ENV'] === 'production') {
-    error_reporting(0);
+    error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR);
     ini_set('display_errors', '0');
+    ini_set('log_errors', '1');
+    ini_set('error_log', '/var/log/php/error.log');
 } else {
     error_reporting(E_ALL);
     ini_set('display_errors', '1');

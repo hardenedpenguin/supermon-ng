@@ -223,6 +223,7 @@ update_application() {
         "public"             # Web-accessible files
         "cache"              # Application cache
         "logs"               # Log directory
+        "config"             # Performance optimization configurations
     )
     
     for file in "${PRODUCTION_FILES[@]}"; do
@@ -371,6 +372,9 @@ update_application() {
     chmod -R 777 "$APP_DIR/database" 2>/dev/null || true
     chmod -R 777 "$APP_DIR/cache" 2>/dev/null || true
     chmod -R 777 "$APP_DIR/user_files" 2>/dev/null || true
+    
+    # Set permissions for config directory
+    chmod -R 644 "$APP_DIR/config" 2>/dev/null || true
 }
 
 # Function to update system services
@@ -507,6 +511,7 @@ display_summary() {
     echo "   ✅ System services updated"
     echo "   ✅ Dependencies updated"
     echo "   ✅ Frontend updated"
+    echo "   ✅ Performance optimizations included"
     
     if [ "$CONFIG_CHANGED" = true ]; then
         echo "   ⚠️  Configuration changes detected"
@@ -546,6 +551,11 @@ display_summary() {
         echo "   2. Verify all functionality works as expected"
     fi
     echo "   3. Check logs if you encounter any issues"
+    echo ""
+    echo "🚀 Performance Optimizations Available:"
+    echo "   • PHP OPcache configuration: $APP_DIR/config/php-opcache.ini"
+    echo "   • Apache performance config: $APP_DIR/config/apache-performance.conf"
+    echo "   • See PERFORMANCE_OPTIMIZATIONS.md for setup instructions"
     echo ""
 }
 

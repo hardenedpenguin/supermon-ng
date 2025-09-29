@@ -208,6 +208,13 @@ MIT License - see LICENSE file for details
 - Enhanced user interface and responsiveness
 - Comprehensive testing suite
 - PWA support and offline capabilities
+- Performance optimizations including:
+  - PHP OPcache configuration
+  - HTTP caching headers and ETag support
+  - API response caching system
+  - AMI connection pooling and command batching
+  - File I/O caching for INI files and ASTDB
+  - Optimized logging for production environments
 EOF
 }
 
@@ -265,6 +272,17 @@ sudo ./supermon-ng-installer.sh
    # Set your callsign, name, location, etc.
    \`\`\`
 
+5. **Configure Performance Optimizations (Optional)**
+   \`\`\`bash
+   # Include Apache performance configuration
+   sudo nano /etc/apache2/sites-available/000-default.conf
+   # Add: Include /var/www/html/supermon-ng/config/apache-performance.conf
+   
+   # Include PHP OPcache optimization
+   sudo nano /etc/php/8.4/apache2/conf.d/99-supermon-ng.ini
+   # Add: include=/var/www/html/supermon-ng/config/php-opcache.ini
+   \`\`\`
+
 ## Configuration Files
 
 ### Essential Configuration
@@ -273,6 +291,11 @@ sudo ./supermon-ng-installer.sh
 - \`user_files/authusers.inc\` - User accounts and passwords
 - \`user_files/authini.inc\` - Authentication settings
 - \`user_files/favini.inc\` - Favorites configuration
+
+### Performance Optimization Configuration
+
+- \`config/php-opcache.ini\` - PHP OPcache optimization settings
+- \`config/apache-performance.conf\` - Apache performance and caching configuration
 
 ### Example global.inc
 
@@ -431,6 +454,7 @@ main() {
     cp -r src/ "$release_dir/"
     cp -r public/ "$release_dir/"
     cp -r frontend/dist/ "$release_dir/frontend/"
+    cp -r config/ "$release_dir/"
     
     # Configuration files
     cp composer.json "$release_dir/"
@@ -492,6 +516,7 @@ main() {
     echo "   - Core application (src/, includes/, public/)"
     echo "   - Built frontend (frontend/dist/)"
     echo "   - User configuration files (user_files/)"
+    echo "   - Performance optimization configs (config/)"
     echo "   - Installation script (install.sh)"
     echo "   - Update system (scripts/update.sh, scripts/migrate-config.php, scripts/version-check.sh)"
     echo "   - Security configurations (sudoers.d/, systemd/)"
