@@ -175,7 +175,6 @@ supermon-ng/
 ├── user_files/        # User configuration files
 ├── css/              # Stylesheets
 ├── js/               # JavaScript files
-├── docs/             # Documentation
 ├── scripts/          # Utility scripts
 ├── tests/            # Test suite
 ├── templates/        # Template files
@@ -192,7 +191,6 @@ supermon-ng/
 
 ## Support
 
-- **Documentation:** See \`docs/\` directory
 - **Issues:** GitHub Issues
 - **Contributions:** Pull requests welcome
 
@@ -359,7 +357,6 @@ sudo ./supermon-ng-installer.sh
 ## Support
 
 For additional help:
-- Check the documentation in \`docs/\` directory
 - Review the README.md file
 - Open an issue on GitHub
 EOF
@@ -472,7 +469,6 @@ cp -r systemd/ "$release_dir/"
     cp install.sh "$release_dir/"
     cp -r sudoers.d/ "$release_dir/" 2>/dev/null || true
     cp -r systemd/ "$release_dir/" 2>/dev/null || true
-    cp -r docs/ "$release_dir/" 2>/dev/null || true
     
     # Essential scripts only (exclude development scripts)
     mkdir -p "$release_dir/scripts"
