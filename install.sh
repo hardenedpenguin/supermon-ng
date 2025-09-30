@@ -129,7 +129,6 @@ fi
 
 # Create necessary directories
 mkdir -p "$APP_DIR/logs"
-mkdir -p "$APP_DIR/database"
 mkdir -p "$APP_DIR/user_files"
 
 # Store the original directory for accessing installer files
@@ -207,7 +206,6 @@ fi
 chown -R www-data:www-data "$APP_DIR"
 chmod -R 755 "$APP_DIR"
 chmod -R 755 "$APP_DIR/logs"
-chmod -R 755 "$APP_DIR/database"
 chmod -R 755 "$APP_DIR/user_files"
 
 # Install PHP dependencies
