@@ -9,7 +9,6 @@ use SupermonNg\Application\Controllers\DatabaseController;
 use SupermonNg\Application\Controllers\ConfigController;
 use SupermonNg\Application\Controllers\NodeStatusController;
 use SupermonNg\Application\Controllers\AdminController;
-use SupermonNg\Application\Controllers\WebSocketController;
 use SupermonNg\Application\Middleware\ApiAuthMiddleware;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
 
@@ -240,13 +239,6 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->post('/reboot', [SystemController::class, 'reboot']);
     });
     
-    // WebSocket routes
-    $group->group('/websocket', function (RouteCollectorProxy $group) {
-        $group->get('/info', [WebSocketController::class, 'getConnectionInfo']);
-        $group->get('/stats', [WebSocketController::class, 'getStats']);
-        $group->post('/trigger-update', [WebSocketController::class, 'triggerNodeUpdate']);
-        $group->post('/test', [WebSocketController::class, 'testConnection']);
-    });
     
 });
 

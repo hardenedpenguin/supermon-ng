@@ -12,7 +12,6 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use SupermonNg\Domain\Entities\Node;
 use SupermonNg\Services\AllStarConfigService;
-use SupermonNg\Services\RealtimeEventPublisher;
 use Ramsey\Uuid\Uuid;
 use Exception;
 
@@ -20,13 +19,10 @@ class NodeController
 {
     private LoggerInterface $logger;
     private AllStarConfigService $configService;
-    private ?RealtimeEventPublisher $eventPublisher;
-
-    public function __construct(LoggerInterface $logger, AllStarConfigService $configService, ?RealtimeEventPublisher $eventPublisher = null)
+    public function __construct(LoggerInterface $logger, AllStarConfigService $configService)
     {
         $this->logger = $logger;
         $this->configService = $configService;
-        $this->eventPublisher = $eventPublisher;
     }
 
     public function list(Request $request, Response $response): Response
@@ -121,10 +117,6 @@ class NodeController
                 ];
             }
 
-            // Publish real-time node list update
-            if ($this->eventPublisher !== null) {
-                $this->eventPublisher->publishNodeList($nodes);
-            }
 
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -378,10 +370,6 @@ class NodeController
             'timestamp' => date('c')
         ];
 
-        // Publish real-time node status update
-        if ($this->eventPublisher !== null) {
-            $this->eventPublisher->publishNodeStatus($nodeId, $status);
-        }
 
         $response->getBody()->write(json_encode([
             'success' => true,

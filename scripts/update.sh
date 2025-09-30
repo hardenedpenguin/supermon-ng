@@ -512,7 +512,6 @@ display_summary() {
     echo "   ✅ Dependencies updated"
     echo "   ✅ Frontend updated"
     echo "   ✅ Performance optimizations included"
-    echo "   ✅ WebSocket server support included"
     
     if [ "$CONFIG_CHANGED" = true ]; then
         echo "   ⚠️  Configuration changes detected"
@@ -556,7 +555,6 @@ display_summary() {
     echo "🚀 Performance Optimizations Available:"
     echo "   • PHP OPcache configuration: $APP_DIR/config/php-opcache.ini"
     echo "   • Apache performance config: $APP_DIR/config/apache-performance.conf"
-    echo "   • WebSocket server (port 9091): systemctl enable supermon-ng-websocket && systemctl start supermon-ng-websocket"
     echo "   • See PERFORMANCE_OPTIMIZATIONS.md for setup instructions"
     echo ""
 }

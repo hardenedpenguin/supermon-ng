@@ -17,8 +17,6 @@ use SupermonNg\Services\AllStarConfigService;
 use SupermonNg\Services\CacheService;
 use SupermonNg\Services\AmiBatchService;
 use SupermonNg\Services\FileCacheService;
-use SupermonNg\Services\WebSocketService;
-use SupermonNg\Services\RealtimeEventPublisher;
 use SupermonNg\Services\DatabaseOptimizationService;
 
 return [
@@ -215,20 +213,6 @@ return [
         );
     },
     
-    // WebSocket service
-    WebSocketService::class => function (ContainerInterface $c) {
-        return new WebSocketService(
-            $c->get(LoggerInterface::class)
-        );
-    },
-    
-    // Real-time event publisher
-    RealtimeEventPublisher::class => function (ContainerInterface $c) {
-        return new RealtimeEventPublisher(
-            $c->get(LoggerInterface::class),
-            $c->get(WebSocketService::class)
-        );
-    },
     
     // Database optimization service
     DatabaseOptimizationService::class => function (ContainerInterface $c) {
@@ -248,43 +232,16 @@ return [
             $cacheService = null;
         }
         
-        try {
-            $eventPublisher = $c->get(RealtimeEventPublisher::class);
-        } catch (\Exception $e) {
-            $eventPublisher = null;
-        }
-        
         return new \SupermonNg\Application\Controllers\ConfigController(
             $c->get(LoggerInterface::class),
-            $cacheService,
-            $eventPublisher
+            $cacheService
         );
     },
     
     \SupermonNg\Application\Controllers\NodeController::class => function (ContainerInterface $c) {
-        try {
-            $eventPublisher = $c->get(RealtimeEventPublisher::class);
-        } catch (\Exception $e) {
-            $eventPublisher = null;
-        }
-        
         return new \SupermonNg\Application\Controllers\NodeController(
             $c->get(LoggerInterface::class),
-            $c->get(\SupermonNg\Services\AllStarConfigService::class),
-            $eventPublisher
-        );
-    },
-    
-    \SupermonNg\Application\Controllers\WebSocketController::class => function (ContainerInterface $c) {
-        try {
-            $eventPublisher = $c->get(RealtimeEventPublisher::class);
-        } catch (\Exception $e) {
-            $eventPublisher = null;
-        }
-        
-        return new \SupermonNg\Application\Controllers\WebSocketController(
-            $c->get(LoggerInterface::class),
-            $eventPublisher
+            $c->get(\SupermonNg\Services\AllStarConfigService::class)
         );
     },
     

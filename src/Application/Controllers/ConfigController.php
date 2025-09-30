@@ -8,7 +8,6 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use SupermonNg\Services\CacheService;
-use SupermonNg\Services\RealtimeEventPublisher;
 
 // Include required files for AMI functionality
 require_once __DIR__ . '/../../../includes/amifunctions.inc';
@@ -18,13 +17,10 @@ class ConfigController
 {
     private LoggerInterface $logger;
     private ?CacheService $cacheService;
-    private ?RealtimeEventPublisher $eventPublisher;
-
-    public function __construct(LoggerInterface $logger, ?CacheService $cacheService = null, ?RealtimeEventPublisher $eventPublisher = null)
+    public function __construct(LoggerInterface $logger, ?CacheService $cacheService = null)
     {
         $this->logger = $logger;
         $this->cacheService = $cacheService;
-        $this->eventPublisher = $eventPublisher;
     }
 
     public function list(Request $request, Response $response): Response
@@ -380,10 +376,6 @@ class ConfigController
                 }
             }
 
-            // Publish real-time system info update
-            if ($this->eventPublisher !== null) {
-                $this->eventPublisher->publishSystemInfo($systemInfo);
-            }
 
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -415,10 +407,6 @@ class ConfigController
             // Get menu items from AllStar configuration
             $menuItems = $this->loadMenuItems($currentUser);
 
-            // Publish real-time menu update
-            if ($this->eventPublisher !== null && $currentUser) {
-                $this->eventPublisher->publishMenuUpdate($currentUser, $menuItems);
-            }
 
             $response->getBody()->write(json_encode([
                 'success' => true,

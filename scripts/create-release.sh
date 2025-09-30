@@ -481,7 +481,6 @@ cp -r systemd/ "$release_dir/"
     cp scripts/update.sh "$release_dir/scripts/"
     cp scripts/migrate-config.php "$release_dir/scripts/"
     cp scripts/version-check.sh "$release_dir/scripts/"
-    cp scripts/start-websocket.sh "$release_dir/scripts/"
     
     # Static assets
     cp *.jpg "$release_dir/" 2>/dev/null || true
@@ -520,10 +519,8 @@ cp -r systemd/ "$release_dir/"
     echo "   - Built frontend (frontend/dist/)"
     echo "   - User configuration files (user_files/)"
     echo "   - Performance optimization configs (config/)"
-    echo "   - WebSocket server configuration (systemd/)"
     echo "   - Installation script (install.sh)"
     echo "   - Update system (scripts/update.sh, scripts/migrate-config.php, scripts/version-check.sh)"
-    echo "   - WebSocket server script (scripts/start-websocket.sh)"
     echo "   - Security configurations (sudoers.d/, systemd/)"
     echo "   - Essential scripts (supermon_unified_file_editor.sh, manage_users.php)"
     echo "   - Documentation and checksums"

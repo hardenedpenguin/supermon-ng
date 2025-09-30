@@ -489,9 +489,6 @@ $SERVER_ALIASES    DocumentRoot /var/www/html
     # ProxyPass /hamclock/ http://10.0.0.41:8082/
     # ProxyPassReverse /hamclock/ http://10.0.0.41:8082/
     # 
-    # Proxy HamClock WebSocket connections for live updates
-    # ProxyPass /live-ws ws://10.0.0.41:8082/live-ws
-    # ProxyPassReverse /live-ws ws://10.0.0.41:8082/live-ws
     
     # Configure Supermon-NG directory
     <Directory "APP_DIR_PLACEHOLDER/public">
@@ -590,14 +587,6 @@ systemctl daemon-reload
 systemctl enable supermon-ng-backend
 systemctl start supermon-ng-backend
 
-# Enable and start WebSocket service (if it exists)
-if systemctl list-unit-files | grep -q "supermon-ng-websocket.service"; then
-    systemctl enable supermon-ng-websocket
-    systemctl start supermon-ng-websocket
-    echo "✅ WebSocket service enabled and started"
-else
-    echo "⚠️  WebSocket service not found, skipping"
-fi
 
 # Enable and start node status timer (if it exists)
 if systemctl list-unit-files | grep -q "supermon-ng-node-status.timer"; then
@@ -625,7 +614,6 @@ echo "🎉 Supermon-NG Installation Complete!"
 echo ""
 echo "📊 Status:"
 systemctl is-active supermon-ng-backend > /dev/null && echo "✅ Backend: Running" || echo "❌ Backend: Failed"
-systemctl is-active supermon-ng-websocket > /dev/null && echo "✅ WebSocket: Running" || echo "❌ WebSocket: Failed"
 systemctl is-active apache2 > /dev/null && echo "✅ Apache: Running" || echo "❌ Apache: Failed"
 echo ""
 echo "🌐 Access your Supermon-NG application at:"
