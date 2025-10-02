@@ -220,9 +220,6 @@ Access your dashboard at:
 Create user accounts using the included tools:
 
 ```bash
-# Interactive password setting
-sudo /var/www/html/supermon-ng/user_files/set_password.sh
-
 # Advanced user management
 sudo php /var/www/html/supermon-ng/scripts/manage_users.php --help
 ```
