@@ -585,9 +585,9 @@ class ConfigController
             'title2' => $globalConfig['TITLE2'] ?? null,
             'title3' => $globalConfig['TITLE3'] ?? null,
             'smServerName' => $globalConfig['SMSERVERNAME'] ?? 'Supermon-ng',
-            'titleLogged' => $versionInfo['titleLogged'] ?? 'Supermon-ng V4.0.6 AllStar Manager',
-            'titleNotLogged' => $versionInfo['titleNotLogged'] ?? 'Supermon-ng V4.0.6 AllStar Monitor',
-            'versionDate' => $versionInfo['versionDate'] ?? 'September 9, 2025',
+            'titleLogged' => $versionInfo['titleLogged'],
+            'titleNotLogged' => $versionInfo['titleNotLogged'],
+            'versionDate' => $versionInfo['versionDate'],
             'logoName' => $globalConfig['LOGO_NAME'] ?? null,
             'logoSize' => $globalConfig['LOGO_SIZE'] ?? null,
             'logoPositionRight' => $globalConfig['LOGO_POSITION_RIGHT'] ?? null,
@@ -619,9 +619,9 @@ class ConfigController
         include_once __DIR__ . '/../../../includes/common.inc';
         
         $versionInfo = [
-            'titleLogged' => $TITLE_LOGGED ?? 'Supermon-ng V4.0.6 AllStar Manager',
-            'titleNotLogged' => $TITLE_NOT_LOGGED ?? 'Supermon-ng V4.0.6 AllStar Monitor', 
-            'versionDate' => $VERSION_DATE ?? 'September 9, 2025'
+            'titleLogged' => $TITLE_LOGGED,
+            'titleNotLogged' => $TITLE_NOT_LOGGED, 
+            'versionDate' => $VERSION_DATE
         ];
         
         return $versionInfo;
