@@ -359,22 +359,9 @@ class ConfigController
         try {
             $this->logger->info('System info request');
 
-            // Try to get cached system info first
-            $cachedSystemInfo = null;
-            if ($this->cacheService !== null) {
-                $cachedSystemInfo = $this->cacheService->getCachedSystemInfo();
-            }
-            
-            if ($cachedSystemInfo !== null) {
-                $systemInfo = $cachedSystemInfo;
-            } else {
-                // Read system information from global.inc
-                $systemInfo = $this->loadSystemInfo();
-                // Cache the system info
-                if ($this->cacheService !== null) {
-                    $this->cacheService->cacheSystemInfo($systemInfo);
-                }
-            }
+            // Always load fresh system info to ensure version information is current
+            // This prevents caching issues when version information is updated
+            $systemInfo = $this->loadSystemInfo();
 
 
             $response->getBody()->write(json_encode([
@@ -382,7 +369,11 @@ class ConfigController
                 'data' => $systemInfo
             ]));
 
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate')
+                ->withHeader('Pragma', 'no-cache')
+                ->withHeader('Expires', '0');
         } catch (\Exception $e) {
             $this->logger->error('Error in getSystemInfo', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             
@@ -515,7 +506,7 @@ class ConfigController
         
         return $response
             ->withHeader('Content-Type', $contentType)
-            ->withHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+            ->withHeader('Cache-Control', 'public, max-age=300'); // Cache for 5 minutes to allow version updates
     }
     
     private function loadSystemInfo(): array
