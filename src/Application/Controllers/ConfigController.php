@@ -607,12 +607,18 @@ class ConfigController
         $versionInfo = [];
         
         // Include common.inc to get version variables
-        include_once __DIR__ . '/../../../includes/common.inc';
+        $commonIncPath = __DIR__ . '/../../../includes/common.inc';
+        if (file_exists($commonIncPath)) {
+            include_once $commonIncPath;
+        } else {
+            $this->logger->error('common.inc file not found', ['path' => $commonIncPath]);
+        }
         
+        // Check if variables are set, if not use fallback values
         $versionInfo = [
-            'titleLogged' => $TITLE_LOGGED,
-            'titleNotLogged' => $TITLE_NOT_LOGGED, 
-            'versionDate' => $VERSION_DATE
+            'titleLogged' => $TITLE_LOGGED ?? 'Supermon-ng V4.0.7 AllStar Manager',
+            'titleNotLogged' => $TITLE_NOT_LOGGED ?? 'Supermon-ng V4.0.7 AllStar Monitor', 
+            'versionDate' => $VERSION_DATE ?? 'October 2, 2025'
         ];
         
         return $versionInfo;
