@@ -196,7 +196,7 @@ class NodeController
 
         // Get node configuration
         try {
-            $nodeConfig = $this->configService->getNodeConfig($nodeId);
+            $nodeConfig = $this->configService->getNodeConfig($nodeId, $this->getCurrentUser());
             if (!$nodeConfig) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -318,7 +318,7 @@ class NodeController
 
         // Get node configuration
         try {
-            $nodeConfig = $this->configService->getNodeConfig($nodeId);
+            $nodeConfig = $this->configService->getNodeConfig($nodeId, $this->getCurrentUser());
             if (!$nodeConfig) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -752,7 +752,7 @@ class NodeController
             
             foreach ($requestedNodes as $node) {
                 $nodeId = (string)$node['id'];
-                $nodeConfig = $this->configService->getNodeConfig($nodeId);
+                $nodeConfig = $this->configService->getNodeConfig($nodeId, $currentUser);
                 
                 if (!$nodeConfig || !isset($nodeConfig['host'])) {
                     // Node not configured, return basic info
@@ -813,7 +813,7 @@ class NodeController
         
         // Load ASTDB
         require_once __DIR__ . '/../../../includes/common.inc';
-        global $ASTDB_TXT;
+        global $ASTDB_TXT, $astdb;
         $astdbFile = $ASTDB_TXT ?? __DIR__ . '/../../../astdb.txt';
         $astdb = [];
         if (file_exists($astdbFile)) {
@@ -1226,12 +1226,17 @@ class NodeController
     {
         // Start session if not already started
         if (session_status() === PHP_SESSION_NONE) {
+            session_name('supermon61');
             session_start();
         }
         
+        
         // Check if user is logged in via session
-        if (isset($_SESSION['user']) && !empty($_SESSION['user'])) {
-            return $_SESSION['user'];
+        if (isset($_SESSION['user']) && !empty($_SESSION['user']) && isset($_SESSION['authenticated']) && $_SESSION['authenticated']) {
+            // Check if session is not too old (24 hours)
+            if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) < 86400) {
+                return $_SESSION['user'];
+            }
         }
         
         // Check if user is logged in via HTTP Basic Auth
@@ -1274,7 +1279,7 @@ class NodeController
         $iniFile = null;
         if ($user) {
             // Try user-specific INI file
-            $userIniFile = __DIR__ . '/../../../user_files/' . $user . '.ini';
+            $userIniFile = __DIR__ . '/../../../user_files/' . $user . '-allmon.ini';
             if (file_exists($userIniFile)) {
                 $iniFile = $userIniFile;
             }
@@ -1383,7 +1388,7 @@ class NodeController
         $iniFile = null;
         if ($user) {
             // Try user-specific INI file
-            $userIniFile = __DIR__ . '/../../../user_files/' . $user . '.ini';
+            $userIniFile = __DIR__ . '/../../../user_files/' . $user . '-allmon.ini';
             if (file_exists($userIniFile)) {
                 $iniFile = $userIniFile;
             }
@@ -3187,7 +3192,7 @@ class NodeController
             }
 
             // Get node configuration
-            $nodeConfig = $this->configService->getNodeConfig($node);
+            $nodeConfig = $this->configService->getNodeConfig($node, $this->getCurrentUser());
             if (!$nodeConfig) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -3401,7 +3406,7 @@ class NodeController
     {
         // Get real Asterisk info from AMI
         try {
-            $nodeConfig = $this->configService->getNodeConfig($nodeNum);
+            $nodeConfig = $this->configService->getNodeConfig($nodeNum, $this->getCurrentUser());
             if (!$nodeConfig) {
                 return "Unknown Node";
             }
