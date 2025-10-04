@@ -371,75 +371,6 @@ else
     echo "⏭️  Skipping Apache installation (--skip-apache flag)"
 fi
 
-# Function to detect all IP addresses on the current machine
-detect_ip_addresses() {
-    echo "🔍 Detecting IP addresses on this machine..."
-    
-    # Get all IP addresses (excluding loopback and link-local)
-    IP_ADDRESSES=()
-    
-    # Method 1: Using ip command (preferred)
-    if command -v ip >/dev/null 2>&1; then
-        while IFS= read -r ip; do
-            # Skip loopback, link-local, and multicast addresses
-            if [[ ! "$ip" =~ ^127\. ]] && [[ ! "$ip" =~ ^169\.254\. ]] && [[ ! "$ip" =~ ^224\. ]] && [[ ! "$ip" =~ ^::1$ ]] && [[ ! "$ip" =~ ^fe80: ]]; then
-                IP_ADDRESSES+=("$ip")
-            fi
-        done < <(ip -o -4 addr show | awk '{print $4}' | cut -d'/' -f1)
-        
-        # Also get IPv6 addresses
-        while IFS= read -r ip; do
-            if [[ ! "$ip" =~ ^::1$ ]] && [[ ! "$ip" =~ ^fe80: ]]; then
-                IP_ADDRESSES+=("$ip")
-            fi
-        done < <(ip -o -6 addr show | awk '{print $4}' | cut -d'/' -f1)
-    fi
-    
-    # Method 2: Fallback to hostname command if ip command fails
-    if [ ${#IP_ADDRESSES[@]} -eq 0 ] && command -v hostname >/dev/null 2>&1; then
-        HOSTNAME_IPS=$(hostname -I 2>/dev/null || true)
-        if [ -n "$HOSTNAME_IPS" ]; then
-            while IFS= read -r ip; do
-                if [[ ! "$ip" =~ ^127\. ]] && [[ ! "$ip" =~ ^169\.254\. ]]; then
-                    IP_ADDRESSES+=("$ip")
-                fi
-            done <<< "$HOSTNAME_IPS"
-        fi
-    fi
-    
-    # Method 3: Fallback to ifconfig if available
-    if [ ${#IP_ADDRESSES[@]} -eq 0 ] && command -v ifconfig >/dev/null 2>&1; then
-        while IFS= read -r ip; do
-            if [[ ! "$ip" =~ ^127\. ]] && [[ ! "$ip" =~ ^169\.254\. ]]; then
-                IP_ADDRESSES+=("$ip")
-            fi
-        done < <(ifconfig 2>/dev/null | grep -oP 'inet \K[0-9.]+' || true)
-    fi
-    
-    # Remove duplicates and sort
-    if [ ${#IP_ADDRESSES[@]} -gt 0 ]; then
-        # Remove duplicates using associative array
-        declare -A unique_ips
-        for ip in "${IP_ADDRESSES[@]}"; do
-            unique_ips["$ip"]=1
-        done
-        IP_ADDRESSES=($(printf '%s\n' "${!unique_ips[@]}" | sort))
-    fi
-    
-    # Display detected IPs
-    if [ ${#IP_ADDRESSES[@]} -gt 0 ]; then
-        echo "✅ Detected IP addresses:"
-        for ip in "${IP_ADDRESSES[@]}"; do
-            echo "   - $ip"
-        done
-    else
-        echo "⚠️  No IP addresses detected, will use localhost only"
-        IP_ADDRESSES=("127.0.0.1")
-    fi
-    
-    echo ""
-}
-
 # Create Apache configuration template
 APACHE_TEMPLATE="$APP_DIR/apache-config-template.conf"
 if [ -f "$APACHE_TEMPLATE" ]; then
@@ -447,27 +378,14 @@ if [ -f "$APACHE_TEMPLATE" ]; then
     echo "   If you want to update the template, please remove it manually first:"
     echo "   sudo rm $APACHE_TEMPLATE"
 else
-    # Detect IP addresses
-    detect_ip_addresses
-    
-    echo "📝 Creating Apache configuration template with detected IP addresses..."
-    
-    # Generate ServerAlias entries
-    SERVER_ALIASES=""
-    if [ ${#IP_ADDRESSES[@]} -gt 0 ]; then
-        for ip in "${IP_ADDRESSES[@]}"; do
-            SERVER_ALIASES="${SERVER_ALIASES}    ServerAlias $ip"$'\n'
-        done
-    fi
+    echo "📝 Creating Apache configuration template..."
     
     cat > "$APACHE_TEMPLATE" << APACHE_EOF
 # Supermon-NG Apache Configuration Template
 # Copy this configuration to your Apache sites-available directory
-# Generated with detected IP addresses as ServerAlias entries
 
 <VirtualHost *:80>
-    ServerName localhost
-$SERVER_ALIASES    DocumentRoot /var/www/html
+    DocumentRoot /var/www/html
     
     # Proxy configurations (must come before Alias directives)
     ProxyPreserveHost On
@@ -617,9 +535,8 @@ echo ""
 echo "🌐 Access your Supermon-NG application at:"
 if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
     echo "   - http://localhost"
-    for ip in "${IP_ADDRESSES[@]}"; do
-        echo "   - http://$ip"
-    done
+    echo "   - http://your-server-ip"
+    echo "   - http://your-domain.com"
     echo ""
     echo "✅ Apache is automatically configured and ready to use!"
 elif [ "$SKIP_APACHE" = true ]; then
