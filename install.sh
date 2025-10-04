@@ -447,30 +447,24 @@ if [ -f "$APACHE_TEMPLATE" ]; then
     echo "   If you want to update the template, please remove it manually first:"
     echo "   sudo rm $APACHE_TEMPLATE"
 else
-    # Detect IP addresses
-    detect_ip_addresses
+    # Note: IP detection is available but not used in the simplified configuration
+    # detect_ip_addresses
     
-    echo "📝 Creating Apache configuration template with detected IP addresses..."
-    
-    # Generate ServerAlias entries
-    SERVER_ALIASES=""
-    if [ ${#IP_ADDRESSES[@]} -gt 0 ]; then
-        for ip in "${IP_ADDRESSES[@]}"; do
-            SERVER_ALIASES="${SERVER_ALIASES}    ServerAlias $ip"$'\n'
-        done
-    fi
+    echo "📝 Creating Apache configuration template..."
     
     cat > "$APACHE_TEMPLATE" << APACHE_EOF
 # Supermon-NG Apache Configuration Template
 # Copy this configuration to your Apache sites-available directory
-# Generated with detected IP addresses as ServerAlias entries
+# This configuration works with any domain name or IP address
+# Users can access via: http://your-domain.com/supermon-ng or http://your-ip/supermon-ng
 
 <VirtualHost *:80>
-    ServerName localhost
-$SERVER_ALIASES    DocumentRoot /var/www/html
+    DocumentRoot /var/www/html
     
     # Proxy configurations (must come before Alias directives)
     ProxyPreserveHost On
+    
+    # Access Supermon-NG at: http://your-domain.com/supermon-ng or http://your-ip/supermon-ng
     
     # Proxy supermon-ng API requests to backend (must come before Alias)
     ProxyPass /supermon-ng/api http://localhost:8000/api
@@ -616,12 +610,12 @@ systemctl is-active apache2 > /dev/null && echo "✅ Apache: Running" || echo "�
 echo ""
 echo "🌐 Access your Supermon-NG application at:"
 if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
-    echo "   - http://localhost"
-    for ip in "${IP_ADDRESSES[@]}"; do
-        echo "   - http://$ip"
-    done
+    echo "   - http://localhost/supermon-ng"
+    echo "   - http://your-domain.com/supermon-ng"
+    echo "   - http://your-ip-address/supermon-ng"
     echo ""
     echo "✅ Apache is automatically configured and ready to use!"
+    echo "   The configuration works with any domain name or IP address."
 elif [ "$SKIP_APACHE" = true ]; then
     echo "   Backend API: http://localhost:8000/api"
     echo "   (Configure your web server to proxy to this backend)"
