@@ -791,9 +791,16 @@ class NodeController
                 ];
             }
             
+            // Convert array to object with node IDs as keys for frontend compatibility
+            $amiDataObject = [];
+            foreach ($amiData as $nodeData) {
+                $nodeId = $nodeData['node'];
+                $amiDataObject[$nodeId] = $nodeData;
+            }
+            
             $response->getBody()->write(json_encode([
                 'success' => true,
-                'data' => $amiData,
+                'data' => $amiDataObject,
                 'timestamp' => date('c')
             ]));
             
