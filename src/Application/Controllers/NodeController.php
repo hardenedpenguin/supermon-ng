@@ -19,10 +19,19 @@ class NodeController
 {
     private LoggerInterface $logger;
     private AllStarConfigService $configService;
-    public function __construct(LoggerInterface $logger, AllStarConfigService $configService)
+    private array $amiConnectionCache = [];
+    private int $connectionCacheTimeout = 30; // seconds
+    private ?array $astdbCache = null;
+    private int $astdbLastModified = 0;
+    private array $configCache = [];
+    private array $configTimestamps = [];
+    private \Psr\Container\ContainerInterface $container;
+    
+    public function __construct(LoggerInterface $logger, AllStarConfigService $configService, \Psr\Container\ContainerInterface $container)
     {
         $this->logger = $logger;
         $this->configService = $configService;
+        $this->container = $container;
     }
 
     public function list(Request $request, Response $response): Response
@@ -45,7 +54,7 @@ class NodeController
                 // AMI data is fetched separately via getAmiStatus endpoint
                 $amiData = [
                     'node' => $nodeId,
-                    'info' => 'Node ' . $nodeId,
+                    'info' => $node['callsign'] ?? 'Node ' . $nodeId,
                     'status' => 'unknown',
                     'cos_keyed' => 0,
                     'tx_keyed' => 0,
@@ -444,7 +453,7 @@ class NodeController
 
         try {
             // Load node configuration
-            $nodeConfig = $this->loadNodeConfig($currentUser, (string)$localNode);
+            $nodeConfig = $this->getCachedNodeConfig($currentUser, (string)$localNode);
             if (!$nodeConfig) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -639,7 +648,7 @@ class NodeController
 
         try {
             // Load node configuration
-            $nodeConfig = $this->loadNodeConfig($currentUser, (string)$localNode);
+            $nodeConfig = $this->getCachedNodeConfig($currentUser, (string)$localNode);
             if (!$nodeConfig) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -750,32 +759,43 @@ class NodeController
             
             $amiData = [];
             
+            // Collect all node configurations first
+            $nodeConfigs = [];
+            $unconfiguredNodes = [];
+            
             foreach ($requestedNodes as $node) {
                 $nodeId = (string)$node['id'];
                 $nodeConfig = $this->configService->getNodeConfig($nodeId, $currentUser);
                 
                 if (!$nodeConfig || !isset($nodeConfig['host'])) {
-                    // Node not configured, return basic info
-                    $amiData[$nodeId] = [
-                        'node' => $nodeId,
-                        'info' => 'Node not configured',
-                        'status' => 'unknown',
-                        'cos_keyed' => 0,
-                        'tx_keyed' => 0,
-                        'cpu_temp' => null,
-                        'cpu_up' => null,
-                        'cpu_load' => null,
-                        'ALERT' => null,
-                        'WX' => null,
-                        'DISK' => null,
-                        'remote_nodes' => []
-                    ];
-                    continue;
+                    $unconfiguredNodes[] = $nodeId;
+                } else {
+                    $nodeConfigs[$nodeId] = $nodeConfig;
                 }
-                
-        // Try to get AMI data for this node
-        $nodeAmiData = $this->getNodeAmiData($nodeConfig, $nodeId);
-        $amiData[$nodeId] = $nodeAmiData;
+            }
+            
+            // Process configured nodes in batch
+            if (!empty($nodeConfigs)) {
+                $batchResults = $this->getBatchAmiData($nodeConfigs);
+                $amiData = array_merge($amiData, $batchResults);
+            }
+            
+            // Handle unconfigured nodes
+            foreach ($unconfiguredNodes as $nodeId) {
+                $amiData[$nodeId] = [
+                    'node' => $nodeId,
+                    'info' => 'Node not configured',
+                    'status' => 'unknown',
+                    'cos_keyed' => 0,
+                    'tx_keyed' => 0,
+                    'cpu_temp' => null,
+                    'cpu_up' => null,
+                    'cpu_load' => null,
+                    'ALERT' => null,
+                    'WX' => null,
+                    'DISK' => null,
+                    'remote_nodes' => []
+                ];
             }
             
             $response->getBody()->write(json_encode([
@@ -802,6 +822,121 @@ class NodeController
     }
     
     /**
+     * Get batch AMI data for multiple nodes
+     */
+    private function getBatchAmiData(array $nodeConfigs): array
+    {
+        $results = [];
+        $connections = [];
+        
+        // Establish connections in parallel
+        foreach ($nodeConfigs as $nodeId => $config) {
+            $connections[$nodeId] = $this->getCachedAmiConnection($config, $nodeId);
+        }
+        
+        // Fetch data from all connections
+        foreach ($connections as $nodeId => $connection) {
+            if ($connection !== false) {
+                $results[$nodeId] = $this->fetchNodeDataFromConnection($connection, $nodeId);
+            } else {
+                $results[$nodeId] = [
+                    'node' => $nodeId,
+                    'info' => 'AMI connection failed',
+                    'status' => 'offline',
+                    'cos_keyed' => 0,
+                    'tx_keyed' => 0,
+                    'cpu_temp' => null,
+                    'cpu_up' => null,
+                    'cpu_load' => null,
+                    'ALERT' => null,
+                    'WX' => null,
+                    'DISK' => null,
+                    'remote_nodes' => []
+                ];
+            }
+        }
+        
+        return $results;
+    }
+
+    /**
+     * Fetch node data from an existing connection
+     */
+    private function fetchNodeDataFromConnection($socket, string $nodeId): array
+    {
+        try {
+            // Get node info
+            $info = \getAstInfo($socket, $nodeId);
+            
+            // Get node status
+            $status = \getAstStatus($socket, $nodeId);
+            
+            // Get COS keyed status
+            $cosKeyed = \getAstCosKeyed($socket, $nodeId);
+            
+            // Get TX keyed status
+            $txKeyed = \getAstTxKeyed($socket, $nodeId);
+            
+            // Get CPU temperature
+            $cpuTemp = \getAstCpuTemp($socket, $nodeId);
+            
+            // Get CPU uptime
+            $cpuUp = \getAstCpuUp($socket, $nodeId);
+            
+            // Get CPU load
+            $cpuLoad = \getAstCpuLoad($socket, $nodeId);
+            
+            // Get ALERT status
+            $alert = \getAstAlert($socket, $nodeId);
+            
+            // Get WX status
+            $wx = \getAstWx($socket, $nodeId);
+            
+            // Get DISK status
+            $disk = \getAstDisk($socket, $nodeId);
+            
+            // Get remote nodes
+            $remoteNodes = \getAstRemoteNodes($socket, $nodeId);
+            
+            return [
+                'node' => $nodeId,
+                'info' => $info,
+                'status' => $status,
+                'cos_keyed' => $cosKeyed,
+                'tx_keyed' => $txKeyed,
+                'cpu_temp' => $cpuTemp,
+                'cpu_up' => $cpuUp,
+                'cpu_load' => $cpuLoad,
+                'ALERT' => $alert,
+                'WX' => $wx,
+                'DISK' => $disk,
+                'remote_nodes' => $remoteNodes
+            ];
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Error fetching node data from connection', [
+                'node_id' => $nodeId,
+                'error' => $e->getMessage()
+            ]);
+            
+            return [
+                'node' => $nodeId,
+                'info' => 'Error fetching data',
+                'status' => 'error',
+                'cos_keyed' => 0,
+                'tx_keyed' => 0,
+                'cpu_temp' => null,
+                'cpu_up' => null,
+                'cpu_load' => null,
+                'ALERT' => null,
+                'WX' => null,
+                'DISK' => null,
+                'remote_nodes' => []
+            ];
+        }
+    }
+
+    /**
      * Get AMI data for a specific node
      */
     private function getNodeAmiData(array $nodeConfig, string $nodeId): array
@@ -811,22 +946,18 @@ class NodeController
         require_once __DIR__ . '/../../../includes/nodeinfo.inc';
         // Helpers functionality now available as modern services
         
-        // Load ASTDB
+        // Load ASTDB with caching
         require_once __DIR__ . '/../../../includes/common.inc';
         global $ASTDB_TXT, $astdb;
-        $astdbFile = $ASTDB_TXT ?? __DIR__ . '/../../../astdb.txt';
-        $astdb = [];
-        if (file_exists($astdbFile)) {
-            $astdb = $this->loadAstDb($astdbFile);
-        }
+        $astdb = $this->getCachedAstDb();
         
         $host = $nodeConfig['host'];
         $user = $nodeConfig['user'] ?? '';
         $password = $nodeConfig['passwd'] ?? '';
         
-        // Try to connect to AMI using connection pooling
+        // Try to connect to AMI using cached connection
         $this->logger->info("Attempting AMI connection", ['host' => $host, 'node_id' => $nodeId]);
-        $socket = \SimpleAmiClient::getConnection($host, $user, $password);
+        $socket = $this->getCachedAmiConnection($nodeConfig, $nodeId);
         if ($socket === false) {
             $this->logger->warning("AMI connection failed", ['host' => $host, 'node_id' => $nodeId]);
             return [
@@ -1377,6 +1508,53 @@ class NodeController
     }
 
     /**
+     * Get cached node configuration
+     */
+    private function getCachedNodeConfig(?string $user, string $localNode): ?array
+    {
+        $cacheKey = $user ? "$user:$localNode" : "default:$localNode";
+        
+        // Check if config is cached and file hasn't changed
+        if (isset($this->configCache[$cacheKey])) {
+            $iniFile = $this->getIniFilePath($user);
+            if ($iniFile && file_exists($iniFile)) {
+                $fileTime = filemtime($iniFile);
+                if ($this->configTimestamps[$cacheKey] >= $fileTime) {
+                    $this->logger->debug('Using cached node config', ['node' => $localNode, 'user' => $user]);
+                    return $this->configCache[$cacheKey];
+                }
+            }
+        }
+        
+        // Load and cache config
+        $config = $this->loadNodeConfig($user, $localNode);
+        $this->configCache[$cacheKey] = $config;
+        $this->configTimestamps[$cacheKey] = time();
+        
+        return $config;
+    }
+
+    /**
+     * Get INI file path for user
+     */
+    private function getIniFilePath(?string $user): ?string
+    {
+        if ($user) {
+            $userIniFile = __DIR__ . '/../../../user_files/' . $user . '-allmon.ini';
+            if (file_exists($userIniFile)) {
+                return $userIniFile;
+            }
+        }
+        
+        $allmonIni = __DIR__ . '/../../../user_files/allmon.ini';
+        if (file_exists($allmonIni)) {
+            return $allmonIni;
+        }
+        
+        return null;
+    }
+
+    /**
      * Load node configuration from INI file
      */
     private function loadNodeConfig(?string $user, string $localNode): ?array
@@ -1442,19 +1620,90 @@ class NodeController
     }
 
     /**
-     * Connect to AMI using connection pooling
+     * Get cached response with TTL
      */
-    private function connectToAmi(array $nodeConfig, string $localNode): mixed
+    private function getCachedResponse(string $cacheKey, int $ttl, callable $dataFetcher): array
     {
-        // Include AMI functions
-        require_once __DIR__ . '/../../../includes/amifunctions.inc';
+        try {
+            $cache = $this->container->get(\Symfony\Contracts\Cache\CacheInterface::class);
+            
+            return $cache->get($cacheKey, function() use ($dataFetcher) {
+                return $dataFetcher();
+            }, $ttl);
+        } catch (\Exception $e) {
+            $this->logger->warning('Cache error, falling back to direct execution', ['error' => $e->getMessage()]);
+            return $dataFetcher();
+        }
+    }
+
+    /**
+     * Get cached ASTDB data
+     */
+    private function getCachedAstDb(): array
+    {
+        global $ASTDB_TXT;
+        $astdbFile = $ASTDB_TXT ?? __DIR__ . '/../../../astdb.txt';
         
-        // Use connection pooling instead of direct connect/login
-        return \SimpleAmiClient::getConnection(
+        if (!file_exists($astdbFile)) {
+            return [];
+        }
+        
+        $currentModified = filemtime($astdbFile);
+        
+        if ($this->astdbCache === null || $currentModified > $this->astdbLastModified) {
+            $this->logger->debug('Loading ASTDB from file', ['file' => $astdbFile]);
+            $this->astdbCache = $this->loadAstDb($astdbFile);
+            $this->astdbLastModified = $currentModified;
+        } else {
+            $this->logger->debug('Using cached ASTDB data');
+        }
+        
+        return $this->astdbCache;
+    }
+
+    /**
+     * Get cached AMI connection or create new one
+     */
+    private function getCachedAmiConnection(array $nodeConfig, string $nodeId): mixed
+    {
+        $cacheKey = md5($nodeConfig['host'] . $nodeConfig['user']);
+        $now = time();
+        
+        // Check if we have a valid cached connection
+        if (isset($this->amiConnectionCache[$cacheKey])) {
+            $cached = $this->amiConnectionCache[$cacheKey];
+            if (($now - $cached['timestamp']) < $this->connectionCacheTimeout) {
+                $this->logger->debug('Using cached AMI connection', ['host' => $nodeConfig['host'], 'node_id' => $nodeId]);
+                return $cached['connection'];
+            }
+            // Clean up expired connection
+            unset($this->amiConnectionCache[$cacheKey]);
+        }
+        
+        // Create new connection and cache it
+        $this->logger->debug('Creating new AMI connection', ['host' => $nodeConfig['host'], 'node_id' => $nodeId]);
+        $connection = \SimpleAmiClient::getConnection(
             $nodeConfig['host'], 
             $nodeConfig['user'], 
             $nodeConfig['passwd']
         );
+        
+        if ($connection !== false) {
+            $this->amiConnectionCache[$cacheKey] = [
+                'connection' => $connection,
+                'timestamp' => $now
+            ];
+        }
+        
+        return $connection;
+    }
+
+    /**
+     * Connect to AMI using connection pooling
+     */
+    private function connectToAmi(array $nodeConfig, string $localNode): mixed
+    {
+        return $this->getCachedAmiConnection($nodeConfig, $localNode);
     }
 
     /**
@@ -1805,7 +2054,7 @@ class NodeController
 
         try {
             // Get user configuration
-            $config = $this->loadNodeConfig($currentUser, $localnode);
+            $config = $this->getCachedNodeConfig($currentUser, $localnode);
             if (!$config) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Node configuration not found.']));
                 return $response->withHeader('Content-Type', 'application/json');
@@ -2046,7 +2295,7 @@ class NodeController
             }
 
             // Load configuration using modern system
-            $config = $this->loadNodeConfig($currentUser, $localnode);
+            $config = $this->getCachedNodeConfig($currentUser, $localnode);
             if (!$config) {
                 $this->logger->error('Node configuration not found', ['localnode' => $localnode, 'user' => $currentUser]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => "Node configuration not found for node $localnode."]));
@@ -2667,7 +2916,7 @@ class NodeController
             }
 
             // Get node configuration
-            $config = $this->loadNodeConfig($currentUser, $localnode);
+            $config = $this->getCachedNodeConfig($currentUser, $localnode);
             
             if (!$config) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => "Node $localnode configuration not found."]));
@@ -3779,7 +4028,7 @@ class NodeController
     {
         try {
             // Use the original supermon 1.0.6 approach with AMI commands
-            $nodeConfig = $this->loadNodeConfig($this->getCurrentUser(), $nodeId);
+            $nodeConfig = $this->getCachedNodeConfig($this->getCurrentUser(), $nodeId);
             if (!$nodeConfig) {
                 throw new \Exception("Configuration for node $nodeId not found");
             }
