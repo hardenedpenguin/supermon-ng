@@ -45,17 +45,25 @@ class NodeController
             // Get available nodes from AllStar configuration
             $availableNodes = $this->configService->getAvailableNodes($currentUser);
             
-            // Convert to the expected format with basic data (AMI data is expensive)
+            // Convert to the expected format with basic data from ASTDB
             $nodes = [];
+            $astdb = $this->getCachedAstDb();
+            
             foreach ($availableNodes as $node) {
                 $nodeId = $node['id'];
                 
-                // Skip AMI data for list view - it's too expensive
-                // AMI data is fetched separately via getAmiStatus endpoint
+                // Get basic node info from ASTDB (fast, no AMI calls)
+                $nodeInfo = $this->getNodeInfoFromAstdb($nodeId, $astdb);
+                $this->logger->debug('Node info from ASTDB', [
+                    'nodeId' => $nodeId,
+                    'nodeInfo' => $nodeInfo,
+                    'astdbCount' => count($astdb)
+                ]);
+                
                 $amiData = [
                     'node' => $nodeId,
-                    'info' => $node['callsign'] ?? 'Node ' . $nodeId,
-                    'status' => 'unknown',
+                    'info' => $nodeInfo['description'] ?? 'Node ' . $nodeId,
+                    'status' => 'unknown', // Will be updated by AMI status calls
                     'cos_keyed' => 0,
                     'tx_keyed' => 0,
                     'cpu_temp' => null,
@@ -67,24 +75,9 @@ class NodeController
                     'remote_nodes' => []
                 ];
                 
-                // Parse node info to extract callsign and location
-                $nodeInfo = $amiData['info'] ?? '';
-                $callsign = 'Unknown';
-                $location = 'Unknown';
-                
-                if (!empty($nodeInfo)) {
-                    // Parse info string format: "CALLSIGN [Node XXXXX] LOCATION"
-                    if (preg_match('/^([A-Z0-9\/]+)\s+\[Node\s+\d+\]\s+(.+)$/', $nodeInfo, $matches)) {
-                        $callsign = $matches[1];
-                        $location = $matches[2];
-                    } elseif (preg_match('/^([A-Z0-9\/]+)\s+(.+)$/', $nodeInfo, $matches)) {
-                        $callsign = $matches[1];
-                        $location = $matches[2];
-                    } else {
-                        // If no specific format, use the whole info as callsign
-                        $callsign = $nodeInfo;
-                    }
-                }
+                // Use actual ASTDB fields for callsign and location
+                $callsign = $nodeInfo['callsign'] ?? 'Unknown';
+                $location = $nodeInfo['location'] ?? 'Unknown';
                 
                 // Determine if node is online based on AMI data
                 $isOnline = ($amiData['status'] ?? 'offline') === 'online';
@@ -108,7 +101,7 @@ class NodeController
                     'id' => $nodeId,
                     'node_number' => $nodeId,
                     'callsign' => $callsign,
-                    'description' => $node['system'],
+                    'description' => $nodeInfo['description'] ?? $node['system'],
                     'location' => $location,
                     'status' => $amiData['status'] ?? 'offline',
                     'last_heard' => $isOnline ? date('Y-m-d H:i:s') : null,
@@ -4477,7 +4470,7 @@ class NodeController
     /**
      * Get node information from astdb
      */
-    private function getNodeInfoFromAstdb(string $nodeNum, array $astdb): array
+    private function getNodeInfoFromAstdb(string|int $nodeNum, array $astdb): array
     {
         $nodeNumInt = (int)$nodeNum;
         
@@ -4492,8 +4485,9 @@ class NodeController
         }
         
         // Look up in astdb (format: [nodeId, callsign, frequency, location])
-        if (isset($astdb[$nodeNum]) && is_array($astdb[$nodeNum]) && count($astdb[$nodeNum]) >= 4) {
-            $info = $astdb[$nodeNum];
+        $nodeKey = (string)$nodeNum;
+        if (isset($astdb[$nodeKey]) && is_array($astdb[$nodeKey]) && count($astdb[$nodeKey]) >= 4) {
+            $info = $astdb[$nodeKey];
             return [
                 'description' => $info[1] . ' - ' . $info[2],
                 'callsign' => $info[1],
