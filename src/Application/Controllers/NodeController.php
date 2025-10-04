@@ -868,6 +868,12 @@ class NodeController
         require_once __DIR__ . '/../../../includes/amifunctions.inc';
         require_once __DIR__ . '/../../../includes/nodeinfo.inc';
         
+        // Ensure ASTDB is loaded for legacy functions
+        global $astdb;
+        if (empty($astdb)) {
+            $astdb = $this->getCachedAstDb();
+        }
+        
         try {
             // Get node info
             $info = \getAstInfo($socket, $nodeId);

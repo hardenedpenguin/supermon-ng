@@ -148,6 +148,7 @@ function getAstInfo($fp, $nodeNum)
 {
     global $astdb;
 
+    // First check ASTDB for any node (this should take priority)
     if (isset($astdb[$nodeNum])) {
         $dbNode = $astdb[$nodeNum];
         $info = (isset($dbNode[1]) ? $dbNode[1] : '') .
@@ -156,6 +157,7 @@ function getAstInfo($fp, $nodeNum)
         return trim($info);
     }
 
+    // Only check IRLP/Echolink if not found in ASTDB
     if (is_numeric($nodeNum)) {
         $nodeNumNumeric = (int)$nodeNum;
         if ($nodeNumNumeric > 3000000) {
