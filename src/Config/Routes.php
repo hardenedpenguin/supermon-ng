@@ -121,6 +121,7 @@ $app->group('/api', function (RouteCollectorProxy $group) {
     // Node routes
     $group->group('/nodes', function (RouteCollectorProxy $group) {
         $group->get('', [NodeController::class, 'list']);
+        $group->get('/list', [NodeController::class, 'list']);
         $group->get('/available', [NodeController::class, 'available']);
         $group->get('/ami/status', [NodeController::class, 'getAmiStatus']);
         

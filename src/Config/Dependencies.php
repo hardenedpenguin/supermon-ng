@@ -241,7 +241,8 @@ return [
     \SupermonNg\Application\Controllers\NodeController::class => function (ContainerInterface $c) {
         return new \SupermonNg\Application\Controllers\NodeController(
             $c->get(LoggerInterface::class),
-            $c->get(\SupermonNg\Services\AllStarConfigService::class)
+            $c->get(\SupermonNg\Services\AllStarConfigService::class),
+            $c
         );
     },
     

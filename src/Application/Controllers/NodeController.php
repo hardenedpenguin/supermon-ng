@@ -862,55 +862,32 @@ class NodeController
     /**
      * Fetch node data from an existing connection
      */
-    private function fetchNodeDataFromConnection($socket, string $nodeId): array
+    private function fetchNodeDataFromConnection($socket, string|int $nodeId): array
     {
+        // Include the legacy AMI functions
+        require_once __DIR__ . '/../../../includes/amifunctions.inc';
+        require_once __DIR__ . '/../../../includes/nodeinfo.inc';
+        
         try {
             // Get node info
             $info = \getAstInfo($socket, $nodeId);
             
-            // Get node status
-            $status = \getAstStatus($socket, $nodeId);
-            
-            // Get COS keyed status
-            $cosKeyed = \getAstCosKeyed($socket, $nodeId);
-            
-            // Get TX keyed status
-            $txKeyed = \getAstTxKeyed($socket, $nodeId);
-            
-            // Get CPU temperature
-            $cpuTemp = \getAstCpuTemp($socket, $nodeId);
-            
-            // Get CPU uptime
-            $cpuUp = \getAstCpuUp($socket, $nodeId);
-            
-            // Get CPU load
-            $cpuLoad = \getAstCpuLoad($socket, $nodeId);
-            
-            // Get ALERT status
-            $alert = \getAstAlert($socket, $nodeId);
-            
-            // Get WX status
-            $wx = \getAstWx($socket, $nodeId);
-            
-            // Get DISK status
-            $disk = \getAstDisk($socket, $nodeId);
-            
-            // Get remote nodes
-            $remoteNodes = \getAstRemoteNodes($socket, $nodeId);
+            // Get complete node data using XStat and SawStat
+            $nodeData = $this->getNodeData($socket, $nodeId);
             
             return [
                 'node' => $nodeId,
                 'info' => $info,
-                'status' => $status,
-                'cos_keyed' => $cosKeyed,
-                'tx_keyed' => $txKeyed,
-                'cpu_temp' => $cpuTemp,
-                'cpu_up' => $cpuUp,
-                'cpu_load' => $cpuLoad,
-                'ALERT' => $alert,
-                'WX' => $wx,
-                'DISK' => $disk,
-                'remote_nodes' => $remoteNodes
+                'status' => 'online',
+                'cos_keyed' => $nodeData['cos_keyed'] ?? 0,
+                'tx_keyed' => $nodeData['tx_keyed'] ?? 0,
+                'cpu_temp' => $nodeData['cpu_temp'] ?? null,
+                'cpu_up' => $nodeData['cpu_up'] ?? null,
+                'cpu_load' => $nodeData['cpu_load'] ?? null,
+                'ALERT' => $nodeData['ALERT'] ?? null,
+                'WX' => $nodeData['WX'] ?? null,
+                'DISK' => $nodeData['DISK'] ?? null,
+                'remote_nodes' => $nodeData['remote_nodes'] ?? []
             ];
             
         } catch (\Exception $e) {
@@ -939,7 +916,7 @@ class NodeController
     /**
      * Get AMI data for a specific node
      */
-    private function getNodeAmiData(array $nodeConfig, string $nodeId): array
+    private function getNodeAmiData(array $nodeConfig, string|int $nodeId): array
     {
         // Include the legacy AMI functions
         require_once __DIR__ . '/../../../includes/amifunctions.inc';
@@ -1032,7 +1009,7 @@ class NodeController
     /**
      * Get node data using XStat and SawStat AMI commands (like the original system)
      */
-    private function getNodeData($socket, string $nodeId): array
+    private function getNodeData($socket, string|int $nodeId): array
     {
         // Include the necessary files for the original parsing logic
         require_once __DIR__ . '/../../../includes/amifunctions.inc';
@@ -1104,7 +1081,7 @@ class NodeController
     /**
      * Get node data via AMI (modernized from legacy getNode function)
      */
-    private function getNodeViaAmi($fp, string $node): array
+    private function getNodeViaAmi($fp, string|int $node): array
     {
         // Check if socket is still valid
         if (!is_resource($fp) || get_resource_type($fp) !== 'stream') {
@@ -1164,7 +1141,7 @@ class NodeController
     /**
      * Parse node data from AMI responses (modernized from legacy parseNode function)
      */
-    private function parseNodeAmiData($fp, string $queriedNode, string $rptStatus, string $sawStatus): array
+    private function parseNodeAmiData($fp, string|int $queriedNode, string $rptStatus, string $sawStatus): array
     {
         $curNodes = [];
         $parsedVars = [];
@@ -1664,7 +1641,7 @@ class NodeController
     /**
      * Get cached AMI connection or create new one
      */
-    private function getCachedAmiConnection(array $nodeConfig, string $nodeId): mixed
+    private function getCachedAmiConnection(array $nodeConfig, string|int $nodeId): mixed
     {
         $cacheKey = md5($nodeConfig['host'] . $nodeConfig['user']);
         $now = time();
