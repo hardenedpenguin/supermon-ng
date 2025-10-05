@@ -410,7 +410,6 @@ const displayedNodes = computed(() => {
   // If no node is selected, show empty array until default is loaded
   // This prevents showing all available nodes on initial page load
   if (!selectedNode.value) {
-    
     return []
   }
   
@@ -433,6 +432,33 @@ const displayedNodes = computed(() => {
     node.id.toString() === selectedNodeStr || 
     (node.node_number || node.id).toString() === selectedNodeStr
   )
+
+  // If no nodes found but we have a selected node, create a placeholder node
+  // This handles cases where the node exists in the menu but not yet loaded in availableNodes
+  if (filteredNodes.length === 0 && selectedNodeStr && availableNodes.value.length > 0) {
+    // Create a temporary node entry for the selected node
+    const tempNode = {
+      id: parseInt(selectedNodeStr),
+      node_number: parseInt(selectedNodeStr),
+      callsign: `Node ${selectedNodeStr}`,
+      description: 'Loading...',
+      location: 'Unknown',
+      status: 'unknown',
+      last_heard: null,
+      connected_nodes: [],
+      cos_keyed: 0,
+      tx_keyed: 0,
+      cpu_temp: null,
+      alert: null,
+      wx: null,
+      disk: null,
+      is_online: false,
+      is_keyed: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }
+    return [tempNode]
+  }
 
   return filteredNodes
 })
@@ -1192,8 +1218,13 @@ const openDonatePopup = () => {
 }
 
   // Handle menu node selection
-  const handleNodeSelection = (nodeId: string) => {
-      selectedNode.value = nodeId
+  const handleNodeSelection = async (nodeId: string) => {
+    // Ensure realTime store is initialized and nodes are loaded
+    if (realTimeStore.nodes.length === 0) {
+      await realTimeStore.initialize()
+    }
+    
+    selectedNode.value = nodeId
     onNodeChange()
   }
 
