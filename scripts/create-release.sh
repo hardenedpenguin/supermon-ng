@@ -121,8 +121,8 @@ Supermon-ng includes an intelligent update system that preserves your configurat
 \`\`\`bash
 # Download new version and extract
 cd /tmp
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.3/supermon-ng-V4.0.3.tar.xz
-tar -xJf supermon-ng-V4.0.3.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.7/supermon-ng-V4.0.7.tar.xz
+tar -xJf supermon-ng-V4.0.7.tar.xz
 cd supermon-ng
 
 # Run the update script
@@ -475,7 +475,6 @@ cp -r systemd/ "$release_dir/"
     cp scripts/supermon_unified_file_editor.sh "$release_dir/scripts/"
     cp scripts/manage_users.php "$release_dir/scripts/"
     cp scripts/update.sh "$release_dir/scripts/"
-    cp scripts/migrate-config.php "$release_dir/scripts/"
     cp scripts/version-check.sh "$release_dir/scripts/"
     
     # Static assets
@@ -516,7 +515,7 @@ cp -r systemd/ "$release_dir/"
     echo "   - User configuration files (user_files/)"
     echo "   - Performance optimization configs (config/)"
     echo "   - Installation script (install.sh)"
-    echo "   - Update system (scripts/update.sh, scripts/migrate-config.php, scripts/version-check.sh)"
+    echo "   - Update system (scripts/update.sh, scripts/version-check.sh)"
     echo "   - Security configurations (sudoers.d/, systemd/)"
     echo "   - Essential scripts (supermon_unified_file_editor.sh, manage_users.php)"
     echo "   - Documentation and checksums"
