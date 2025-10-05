@@ -1376,68 +1376,30 @@ class NodeController
     }
 
     /**
-     * Load node configuration from INI file
+     * Load node configuration from INI file using AllStarConfigService
      */
     private function loadNodeConfig(?string $user, string $localNode): ?array
     {
-        // Include necessary files
-        require_once __DIR__ . '/../../../includes/common.inc';
-        
-        // Determine INI file path
-        $iniFile = null;
-        if ($user) {
-            // Try user-specific INI file
-            $userIniFile = __DIR__ . '/../../../user_files/' . $user . '.ini';
-            if (file_exists($userIniFile)) {
-                $iniFile = $userIniFile;
-            }
-        }
-        
-        // Fallback to allmon.ini
-        if (!$iniFile) {
-            $allmonIni = __DIR__ . '/../../../user_files/allmon.ini';
-            if (file_exists($allmonIni)) {
-                $iniFile = $allmonIni;
-            }
-        }
-        
-        // Fallback to default user INI file
-        if (!$iniFile) {
-            $defaultIni = __DIR__ . '/../../../user_files/default-allmon.ini';
-            if (file_exists($defaultIni)) {
-                $iniFile = $defaultIni;
-            }
-        }
-        
-        // Debug logging
-        $this->logger->info('Loading node config', [
-            'user' => $user,
-            'localNode' => $localNode,
-            'iniFile' => $iniFile,
-            'fileExists' => $iniFile ? file_exists($iniFile) : false
-        ]);
-        
-        if (!$iniFile || !file_exists($iniFile)) {
-            $this->logger->error('No valid INI file found', [
-                'user' => $user,
-                'localNode' => $localNode
-            ]);
-            return null;
-        }
-        
-        $config = parse_ini_file($iniFile, true);
-        
-        if (!isset($config[$localNode])) {
-            $this->logger->error('Node not found in config', [
+        try {
+            // Use AllStarConfigService to get the correct node configuration
+            $nodeConfig = $this->configService->getNodeConfig($localNode, $user);
+            
+            // Debug logging
+            $this->logger->info('Loading node config via AllStarConfigService', [
                 'user' => $user,
                 'localNode' => $localNode,
-                'iniFile' => $iniFile,
-                'availableNodes' => array_keys($config)
+                'hasConfig' => !empty($nodeConfig)
+            ]);
+            
+            return $nodeConfig;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to load node config via AllStarConfigService', [
+                'user' => $user,
+                'localNode' => $localNode,
+                'error' => $e->getMessage()
             ]);
             return null;
         }
-        
-        return $config[$localNode];
     }
 
     /**
