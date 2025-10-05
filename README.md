@@ -1,4 +1,4 @@
-# Supermon-NG V4.0.6 - Modern AllStar Link Management Dashboard
+# Supermon-NG V4.0.7 - Modern AllStar Link Management Dashboard
 
 A modern, responsive web-based management interface for AllStar Link nodes, built with Vue.js 3 and PHP 8. This is a complete rewrite of the original Supermon with enhanced features, better security, and modern web technologies.
 
@@ -31,10 +31,10 @@ Download and extract the latest release tarball:
 ```bash
 # Download the release to your home directory (avoids /tmp permission issues)
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.6/supermon-ng-V4.0.6.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.7/supermon-ng-V4.0.7.tar.xz
 
 # Extract to your home directory
-tar -xJf supermon-ng-V4.0.6.tar.xz
+tar -xJf supermon-ng-V4.0.7.tar.xz
 
 # Run installation script
 cd $HOME/supermon-ng
@@ -217,15 +217,27 @@ Access your dashboard at:
 
 ### Authentication
 
-Create user accounts using the included tools:
+Create user accounts using the manage_users script:
 
 ```bash
-# Advanced user management
+# Create a new user account
+sudo php /var/www/html/supermon-ng/scripts/manage_users.php --add-user username password
+
+# List existing users
+sudo php /var/www/html/supermon-ng/scripts/manage_users.php --list-users
+
+# Change a user's password
+sudo php /var/www/html/supermon-ng/scripts/manage_users.php --change-password username newpassword
+
+# Delete a user account
+sudo php /var/www/html/supermon-ng/scripts/manage_users.php --delete-user username
+
+# Show help and all available options
 sudo php /var/www/html/supermon-ng/scripts/manage_users.php --help
 ```
 
 **Important Note:**
-The authentication system only manages the `.htaccess` file for user credentials. It does not modify any other system files, Apache configuration, or application settings.
+The authentication system only manages the `.htpasswd` file for user credentials. It does not modify any other system files, Apache configuration, or application settings.
 
 ### Role-Based Access Control
 
@@ -441,10 +453,10 @@ Supermon-NG includes an intelligent, conservative update system that **NEVER** r
 ```bash
 # 1. Download the latest release to your home directory
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.6/supermon-ng-V4.0.6.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.7/supermon-ng-V4.0.7.tar.xz
 
 # 2. Extract the new version
-tar -xJf supermon-ng-V4.0.6.tar.xz
+tar -xJf supermon-ng-V4.0.7.tar.xz
 cd $HOME/supermon-ng
 
 # 3. Run the update script
@@ -533,11 +545,11 @@ This shows:
 mkdir -p $HOME/supermon-ng-update
 cd $HOME/supermon-ng-update
 
-# Download latest release (replace V4.0.5 with actual version)
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.6/supermon-ng-V4.0.6.tar.xz
+# Download latest release (replace V4.0.7 with actual version)
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.7/supermon-ng-V4.0.7.tar.xz
 
 # Extract the package
-tar -xJf supermon-ng-V4.0.6.tar.xz
+tar -xJf supermon-ng-V4.0.7.tar.xz
 cd supermon-ng
 ```
 
@@ -844,8 +856,8 @@ sudo ./install.sh --help
 sudo /var/www/html/supermon-ng/scripts/version-check.sh
 
 # Quick update (download, extract, run update script)
-cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.6/supermon-ng-V4.0.6.tar.xz
-tar -xJf supermon-ng-V4.0.6.tar.xz && cd supermon-ng
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.7/supermon-ng-V4.0.7.tar.xz
+tar -xJf supermon-ng-V4.0.7.tar.xz && cd supermon-ng
 sudo ./scripts/update.sh
 
 # Update without Apache configuration changes
@@ -978,4 +990,4 @@ We welcome feature requests! Please:
 
 ---
 
-**Supermon-NG V4.0.6** - Bringing AllStar Link management into the modern era! 🚀📡
+**Supermon-NG V4.0.7** - Bringing AllStar Link management into the modern era! 🚀📡
