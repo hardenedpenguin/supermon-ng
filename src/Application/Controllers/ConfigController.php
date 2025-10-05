@@ -585,9 +585,9 @@ class ConfigController
             'title2' => $globalConfig['TITLE2'] ?? null,
             'title3' => $globalConfig['TITLE3'] ?? null,
             'smServerName' => $globalConfig['SMSERVERNAME'] ?? 'Supermon-ng',
-            'titleLogged' => $versionInfo['titleLogged'] ?? $GLOBALS['TITLE_LOGGED'] ?? 'Supermon-ng AllStar Manager',
-            'titleNotLogged' => $versionInfo['titleNotLogged'] ?? $GLOBALS['TITLE_NOT_LOGGED'] ?? 'Supermon-ng AllStar Monitor',
-            'versionDate' => $versionInfo['versionDate'] ?? 'September 9, 2025',
+            'titleLogged' => $versionInfo['titleLogged'],
+            'titleNotLogged' => $versionInfo['titleNotLogged'],
+            'versionDate' => $versionInfo['versionDate'],
             'logoName' => $globalConfig['LOGO_NAME'] ?? null,
             'logoSize' => $globalConfig['LOGO_SIZE'] ?? null,
             'logoPositionRight' => $globalConfig['LOGO_POSITION_RIGHT'] ?? null,
@@ -613,15 +613,16 @@ class ConfigController
      */
     private function loadVersionInfo(bool $isAuthenticated): array
     {
-        $versionInfo = [];
+        // common.inc is already included at the top of the file
+        // The variables should be available in the global scope
         
-        // Include common.inc to get version variables
-        include_once __DIR__ . '/../../../includes/common.inc';
+        // Make sure we can access the variables from common.inc
+        global $TITLE_LOGGED, $TITLE_NOT_LOGGED, $VERSION_DATE;
         
         $versionInfo = [
-            'titleLogged' => $TITLE_LOGGED ?? 'Supermon-ng AllStar Manager',
-            'titleNotLogged' => $TITLE_NOT_LOGGED ?? 'Supermon-ng AllStar Monitor', 
-            'versionDate' => $VERSION_DATE ?? 'September 9, 2025'
+            'titleLogged' => $TITLE_LOGGED,
+            'titleNotLogged' => $TITLE_NOT_LOGGED, 
+            'versionDate' => $VERSION_DATE
         ];
         
         return $versionInfo;
