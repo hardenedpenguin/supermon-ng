@@ -1263,45 +1263,49 @@ class NodeController
     }
 
     /**
-     * Get user configuration from INI file
+     * Get user configuration from INI file using AllStarConfigService
      */
     private function getUserConfig(?string $user): array
     {
-        // Include necessary files
-        require_once __DIR__ . '/../../../includes/common.inc';
-        
-        // Determine INI file path
-        $iniFile = null;
-        if ($user) {
-            // Try user-specific INI file
-            $userIniFile = __DIR__ . '/../../../user_files/' . $user . '.ini';
-            if (file_exists($userIniFile)) {
-                $iniFile = $userIniFile;
+        try {
+            // Use the injected AllStarConfigService to get the correct INI file path and load config
+            $availableNodes = $this->configService->getAvailableNodes($user);
+            
+            // Convert the available nodes format to the expected config format
+            $config = [];
+            foreach ($availableNodes as $node) {
+                $nodeId = $node['id'];
+                $config[$nodeId] = [
+                    'host' => $node['host'],
+                    'user' => $node['user'],
+                    'passwd' => '', // Password is not returned by getAvailableNodes for security
+                    'system' => $node['system'],
+                    'menu' => $node['menu'],
+                    'hideNodeURL' => $node['hideNodeURL']
+                ];
+                
+                // Get the full node config with password
+                try {
+                    $fullNodeConfig = $this->configService->getNodeConfig((string)$nodeId, $user);
+                    $config[$nodeId]['passwd'] = $fullNodeConfig['passwd'] ?? '';
+                } catch (\Exception $e) {
+                    // If we can't get the full config, continue without password
+                    $this->logger->warning('Could not get full node config', [
+                        'node_id' => $nodeId,
+                        'user' => $user,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
-        }
-        
-        // Fallback to allmon.ini
-        if (!$iniFile) {
-            $allmonIni = __DIR__ . '/../../../user_files/allmon.ini';
-            if (file_exists($allmonIni)) {
-                $iniFile = $allmonIni;
-            }
-        }
-        
-        // Fallback to default user INI file
-        if (!$iniFile) {
-            $defaultIni = __DIR__ . '/../../../user_files/default-allmon.ini';
-            if (file_exists($defaultIni)) {
-                $iniFile = $defaultIni;
-            }
-        }
-        
-        if (!$iniFile || !file_exists($iniFile)) {
+            
+            return $config;
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get user config via AllStarConfigService', [
+                'user' => $user,
+                'error' => $e->getMessage()
+            ]);
             return [];
         }
-        
-        $config = parse_ini_file($iniFile, true);
-        return $config ?: [];
     }
 
     /**
