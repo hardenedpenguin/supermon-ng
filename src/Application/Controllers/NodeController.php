@@ -752,7 +752,7 @@ class NodeController
             
             foreach ($requestedNodes as $node) {
                 $nodeId = (string)$node['id'];
-                $nodeConfig = $this->configService->getNodeConfig($nodeId);
+                $nodeConfig = $this->configService->getNodeConfig($nodeId, $currentUser);
                 
                 if (!$nodeConfig || !isset($nodeConfig['host'])) {
                     // Node not configured, return basic info
