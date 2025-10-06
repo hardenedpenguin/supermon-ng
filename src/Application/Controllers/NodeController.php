@@ -825,7 +825,7 @@ class NodeController
         $password = $nodeConfig['passwd'] ?? '';
         
         // Try to connect to AMI using connection pooling
-        $this->logger->info("Attempting AMI connection", ['host' => $host, 'node_id' => $nodeId]);
+        $this->logger->debug("Attempting AMI connection", ['host' => $host, 'node_id' => $nodeId]);
         $socket = \SimpleAmiClient::getConnection($host, $user, $password);
         if ($socket === false) {
             $this->logger->warning("AMI connection failed", ['host' => $host, 'node_id' => $nodeId]);

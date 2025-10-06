@@ -27,7 +27,7 @@ class AmiBatchService
         $user = $nodeConfig['user'] ?? '';
         $password = $nodeConfig['passwd'] ?? '';
         
-        $this->logger->info("Executing AMI batch", [
+        $this->logger->debug("Executing AMI batch", [
             'host' => $host,
             'command_count' => count($commands)
         ]);
@@ -67,7 +67,7 @@ class AmiBatchService
                 }
                 
                 // Small delay between commands to avoid overwhelming AMI
-                usleep(50000); // 50ms
+                usleep(15000); // 15ms
             }
             
             return $results;

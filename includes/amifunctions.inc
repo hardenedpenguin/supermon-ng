@@ -48,13 +48,13 @@ class SimpleAmiClient
 {
     private const AMI_EOL = "\r\n";
     private const VERY_LONG_TIMEOUT_SECONDS = 86400;
-    private const DEFAULT_CONNECTION_TIMEOUT = 5;
-    private const DEFAULT_COMMAND_TIMEOUT = 10;
+    private const DEFAULT_CONNECTION_TIMEOUT = 3;
+    private const DEFAULT_COMMAND_TIMEOUT = 8;
     
     // Connection pool
     private static $connectionPool = [];
-    private static $poolMaxSize = 10;
-    private static $poolTimeout = 30; // seconds
+    private static $poolMaxSize = 25;
+    private static $poolTimeout = 45; // seconds
     
     /**
      * Initialize connection pool
@@ -347,32 +347,38 @@ class SimpleAmiClient
             return false;
         }
 
-        $responseLines = preg_split('/\\r\\n|\\n|\\r/', $rawResponse);
+        // More efficient parsing - avoid preg_split and multiple string operations
+        $lines = explode("\n", str_replace(["\r\n", "\r"], "\n", $rawResponse));
         $commandOutput = [];
         $collectingOutput = false;
-        $endMarker = "--END COMMAND--";
         $outputLinePrefix = "Output: ";
+        $prefixLen = strlen($outputLinePrefix);
 
-        foreach ($responseLines as $line) {
-            $trimmedLine = rtrim($line, "\r\n");
+        foreach ($lines as $line) {
+            $trimmedLine = rtrim($line);
 
-            if (strcasecmp($trimmedLine, $endMarker) === 0) {
-                $collectingOutput = false;
+            if (strcasecmp($trimmedLine, "--END COMMAND--") === 0) {
                 break;
             }
 
-            if (!$collectingOutput && strncasecmp($trimmedLine, $outputLinePrefix, strlen($outputLinePrefix)) === 0) {
+            if (!$collectingOutput && strncasecmp($trimmedLine, $outputLinePrefix, $prefixLen) === 0) {
                 $collectingOutput = true;
-                $commandOutput[] = substr($trimmedLine, strlen($outputLinePrefix));
+                $commandOutput[] = substr($trimmedLine, $prefixLen);
             } elseif ($collectingOutput) {
                 $commandOutput[] = $trimmedLine;
             }
         }
         
+        // Clear large arrays immediately to free memory
+        unset($lines, $rawResponse);
+        
+        $result = implode("\n", $commandOutput);
+        unset($commandOutput);
+        
         $duration = microtime(true) - $startTime;
         self::logAMIOperation('command', 'unknown', $duration, true);
         
-        return implode("\n", $commandOutput);
+        return $result;
     }
 
     /**
