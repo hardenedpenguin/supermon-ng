@@ -5,6 +5,7 @@
  * to reduce redundant token requests and improve performance.
  */
 
+import { ref, computed, onUnmounted } from 'vue'
 import { api } from '@/utils/api'
 
 export interface TokenInfo {
