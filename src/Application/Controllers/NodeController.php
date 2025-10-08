@@ -12,6 +12,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use SupermonNg\Domain\Entities\Node;
 use SupermonNg\Services\AllStarConfigService;
+use SupermonNg\Services\AstdbCacheService;
 use Ramsey\Uuid\Uuid;
 use Exception;
 
@@ -19,10 +20,13 @@ class NodeController
 {
     private LoggerInterface $logger;
     private AllStarConfigService $configService;
-    public function __construct(LoggerInterface $logger, AllStarConfigService $configService)
+    private AstdbCacheService $astdbService;
+    
+    public function __construct(LoggerInterface $logger, AllStarConfigService $configService, AstdbCacheService $astdbService)
     {
         $this->logger = $logger;
         $this->configService = $configService;
+        $this->astdbService = $astdbService;
     }
 
     public function list(Request $request, Response $response): Response
@@ -36,16 +40,22 @@ class NodeController
             // Get available nodes from AllStar configuration
             $availableNodes = $this->configService->getAvailableNodes($currentUser);
             
+            // Load ASTDB for node information
+            $astdb = $this->astdbService->getAstdb();
+            
             // Convert to the expected format with basic data (AMI data is expensive)
             $nodes = [];
             foreach ($availableNodes as $node) {
                 $nodeId = $node['id'];
                 
+                // Get node info from ASTDB
+                $nodeInfo = $this->getNodeInfoFromAstdb((string)$nodeId, $astdb);
+                
                 // Skip AMI data for list view - it's too expensive
                 // AMI data is fetched separately via getAmiStatus endpoint
                 $amiData = [
                     'node' => $nodeId,
-                    'info' => 'Node ' . $nodeId,
+                    'info' => $nodeInfo['description'] ?? 'Node ' . $nodeId,
                     'status' => 'unknown',
                     'cos_keyed' => 0,
                     'tx_keyed' => 0,
@@ -58,24 +68,9 @@ class NodeController
                     'remote_nodes' => []
                 ];
                 
-                // Parse node info to extract callsign and location
-                $nodeInfo = $amiData['info'] ?? '';
-                $callsign = 'Unknown';
-                $location = 'Unknown';
-                
-                if (!empty($nodeInfo)) {
-                    // Parse info string format: "CALLSIGN [Node XXXXX] LOCATION"
-                    if (preg_match('/^([A-Z0-9\/]+)\s+\[Node\s+\d+\]\s+(.+)$/', $nodeInfo, $matches)) {
-                        $callsign = $matches[1];
-                        $location = $matches[2];
-                    } elseif (preg_match('/^([A-Z0-9\/]+)\s+(.+)$/', $nodeInfo, $matches)) {
-                        $callsign = $matches[1];
-                        $location = $matches[2];
-                    } else {
-                        // If no specific format, use the whole info as callsign
-                        $callsign = $nodeInfo;
-                    }
-                }
+                // Use ASTDB data for callsign and location
+                $callsign = $nodeInfo['callsign'] ?? 'Unknown';
+                $location = $nodeInfo['location'] ?? 'Unknown';
                 
                 // Determine if node is online based on AMI data
                 $isOnline = ($amiData['status'] ?? 'offline') === 'online';
@@ -217,6 +212,25 @@ class NodeController
                 ->withStatus(404)
                 ->withHeader('Content-Type', 'application/json');
         }
+        
+        // Use lazy loading for single node info (Phase 5 optimization)
+        $nodeInfo = $this->astdbService->getSingleNodeInfo((string)$nodeId);
+        if ($nodeInfo) {
+            // Convert to expected format
+            $nodeInfo = [
+                'description' => trim($nodeInfo['callsign'] . ' ' . $nodeInfo['description'] . ' ' . $nodeInfo['location']),
+                'callsign' => $nodeInfo['callsign'],
+                'frequency' => $nodeInfo['description'],
+                'location' => $nodeInfo['location']
+            ];
+        } else {
+            $nodeInfo = [
+                'description' => 'Node not in database',
+                'callsign' => 'Unknown',
+                'frequency' => 'Unknown',
+                'location' => 'Unknown'
+            ];
+        }
 
         // Get real node status using the existing lsnod command that works
         $lsnodData = $this->executeLsnodCommand($nodeId);
@@ -250,13 +264,37 @@ class NodeController
             $statusInfo['disk'] = $mainNode['disk'] ?? null;
         }
         
-        // Get connected nodes
+        // Get connected nodes using lazy loading (Phase 5 optimization)
         if (!empty($parsedData['nodes'])) {
             $connectedNodes = [];
+            $connectedNodeIds = [];
+            
+            // Collect all connected node IDs first
             foreach ($parsedData['nodes'] as $connectedNode) {
+                $connectedNodeId = $connectedNode['node_number'] ?? 'unknown';
+                if ($connectedNodeId !== 'unknown') {
+                    $connectedNodeIds[] = (string)$connectedNodeId;
+                }
+            }
+            
+            // Use lazy loading for multiple nodes
+            $connectedNodeInfoMap = [];
+            if (!empty($connectedNodeIds)) {
+                $connectedNodeInfoMap = $this->astdbService->getMultipleNodeInfo($connectedNodeIds);
+            }
+            
+            foreach ($parsedData['nodes'] as $connectedNode) {
+                $connectedNodeId = $connectedNode['node_number'] ?? 'unknown';
+                $connectedNodeInfo = $connectedNodeInfoMap[$connectedNodeId] ?? null;
+                
+                $info = 'unknown';
+                if ($connectedNodeInfo) {
+                    $info = trim($connectedNodeInfo['callsign'] . ' ' . $connectedNodeInfo['description'] . ' ' . $connectedNodeInfo['location']);
+                }
+                
                 $connectedNodes[] = [
-                    'node' => $connectedNode['node_number'] ?? 'unknown',
-                    'info' => $connectedNode['description'] ?? 'unknown',
+                    'node' => $connectedNodeId,
+                    'info' => $info,
                     'ip' => null,
                     'last_keyed' => date('Y-m-d H:i:s'),
                     'link' => 'IAX',
@@ -272,9 +310,9 @@ class NodeController
         $node = [
             'id' => Uuid::uuid4()->toString(),
             'node_number' => $nodeId,
-            'callsign' => $nodeConfig['callsign'] ?? 'Unknown',
-            'description' => $nodeConfig['description'] ?? 'Unknown',
-            'location' => $nodeConfig['location'] ?? 'Unknown',
+            'callsign' => $nodeInfo['callsign'] ?? 'Unknown',
+            'description' => $nodeInfo['frequency'] ?? 'Unknown',
+            'location' => $nodeInfo['location'] ?? 'Unknown',
             'status' => $statusInfo['status'] ?? 'unknown',
             'last_heard' => $statusInfo['last_heard'] ?? date('Y-m-d H:i:s'),
             'connected_nodes' => $statusInfo['connected_nodes'] ?? '',
@@ -811,15 +849,6 @@ class NodeController
         require_once __DIR__ . '/../../../includes/nodeinfo.inc';
         // Helpers functionality now available as modern services
         
-        // Load ASTDB
-        require_once __DIR__ . '/../../../includes/common.inc';
-        global $ASTDB_TXT;
-        $astdbFile = $ASTDB_TXT ?? __DIR__ . '/../../../astdb.txt';
-        $astdb = [];
-        if (file_exists($astdbFile)) {
-            $astdb = $this->loadAstDb($astdbFile);
-        }
-        
         $host = $nodeConfig['host'];
         $user = $nodeConfig['user'] ?? '';
         $password = $nodeConfig['passwd'] ?? '';
@@ -846,8 +875,12 @@ class NodeController
         }
         
         try {
-            // Get node info
-            $info = \getAstInfo($socket, $nodeId);
+            // Use lazy loading for single node info (Phase 5 optimization)
+            $nodeInfo = $this->astdbService->getSingleNodeInfo($nodeId);
+            $info = 'Node ' . $nodeId;
+            if ($nodeInfo) {
+                $info = trim($nodeInfo['callsign'] . ' ' . $nodeInfo['description'] . ' ' . $nodeInfo['location']);
+            }
             
             // Get complete node data using XStat and SawStat
             $nodeData = $this->getNodeData($socket, $nodeId);
@@ -915,7 +948,7 @@ class NodeController
         
         // Initialize global variables that the original functions expect
         global $astdb, $elnk_cache, $irlp_cache;
-        if (!isset($astdb)) $astdb = $this->loadAstDb();
+        if (!isset($astdb)) $astdb = []; // We'll use lazy loading instead
         if (!isset($elnk_cache)) $elnk_cache = [];
         if (!isset($irlp_cache)) $irlp_cache = [];
         
@@ -940,12 +973,37 @@ class NodeController
         $mainNodeData = $nodeData[1] ?? [];
         $remoteNodes = [];
         
+        // Collect all connected node IDs first for lazy loading
+        $connectedNodeIds = [];
+        foreach ($nodeData as $key => $nodeInfo) {
+            if ($key != 1 && is_array($nodeInfo)) {
+                $connectedNodeId = $nodeInfo['node'] ?? $key;
+                if ($connectedNodeId !== 'unknown') {
+                    $connectedNodeIds[] = (string)$connectedNodeId;
+                }
+            }
+        }
+        
+        // Use lazy loading for multiple nodes (Phase 5 optimization)
+        $connectedNodeInfoMap = [];
+        if (!empty($connectedNodeIds)) {
+            $connectedNodeInfoMap = $this->astdbService->getMultipleNodeInfo($connectedNodeIds);
+        }
+        
         // Extract remote nodes (all keys except 1)
         foreach ($nodeData as $key => $nodeInfo) {
             if ($key != 1 && is_array($nodeInfo)) {
+                $connectedNodeId = $nodeInfo['node'] ?? $key;
+                $connectedNodeInfo = $connectedNodeInfoMap[$connectedNodeId] ?? null;
+                
+                $info = 'Node ' . $connectedNodeId;
+                if ($connectedNodeInfo) {
+                    $info = trim($connectedNodeInfo['callsign'] . ' ' . $connectedNodeInfo['description'] . ' ' . $connectedNodeInfo['location']);
+                }
+                
                 $remoteNodes[] = [
-                    'node' => $nodeInfo['node'] ?? $key,
-                    'info' => $nodeInfo['info'] ?? null,
+                    'node' => $connectedNodeId,
+                    'info' => $info,
                     'link' => $nodeInfo['link'] ?? null,
                     'ip' => $nodeInfo['ip'] ?? null,
                     'direction' => $nodeInfo['direction'] ?? null,
@@ -1196,27 +1254,15 @@ class NodeController
     }
     
     /**
-     * Load ASTDB file
+     * Load ASTDB data using optimized caching service
+     * 
+     * Returns identical data structure as original loadAstDb() method
+     * but with request-level caching for improved performance.
      */
     private function loadAstDb(string $filename): array
     {
-        $astdb = [];
-        
-        if (!file_exists($filename)) {
-            return $astdb;
-        }
-        
-        $lines = file($filename, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        
-        foreach ($lines as $line) {
-            $parts = explode('|', $line);
-            if (count($parts) >= 4) {
-                $nodeId = trim($parts[0]);
-                $astdb[$nodeId] = $parts;
-            }
-        }
-        
-        return $astdb;
+        // Use the optimized AstdbCacheService for better performance
+        return $this->astdbService->getAstdb();
     }
 
     /**
@@ -4226,14 +4272,22 @@ class NodeController
             ];
         }
         
-        // Look up in astdb (format: [nodeId, callsign, frequency, location])
-        if (isset($astdb[$nodeNum]) && is_array($astdb[$nodeNum]) && count($astdb[$nodeNum]) >= 4) {
+        // Look up in astdb (new format: associative array)
+        if (isset($astdb[$nodeNum]) && is_array($astdb[$nodeNum])) {
             $info = $astdb[$nodeNum];
+            $callsign = $info['callsign'] ?? '';
+            $description = $info['description'] ?? '';
+            $location = $info['location'] ?? '';
+            
+            // Create the same format as original getAstInfo function
+            // Concatenate callsign, description, and location with spaces
+            $fullInfo = trim($callsign . ' ' . $description . ' ' . $location);
+            
             return [
-                'description' => $info[1] . ' - ' . $info[2],
-                'callsign' => $info[1],
-                'frequency' => $info[2],
-                'location' => $info[3]
+                'description' => $fullInfo,
+                'callsign' => $callsign,
+                'frequency' => $description,
+                'location' => $location
             ];
         }
         

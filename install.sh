@@ -130,6 +130,7 @@ fi
 # Create necessary directories
 mkdir -p "$APP_DIR/logs"
 mkdir -p "$APP_DIR/user_files"
+mkdir -p "$APP_DIR/cache"
 
 # Store the original directory for accessing installer files
 INSTALLER_DIR="$(pwd)"
@@ -207,6 +208,7 @@ chown -R www-data:www-data "$APP_DIR"
 chmod -R 755 "$APP_DIR"
 chmod -R 755 "$APP_DIR/logs"
 chmod -R 755 "$APP_DIR/user_files"
+chmod -R 755 "$APP_DIR/cache"
 
 # Install PHP dependencies
 echo "📦 Installing PHP dependencies..."
@@ -586,8 +588,9 @@ echo "   ✅ Unified file editor installed and validated"
 echo "   ✅ Sudoers configuration installed and validated"
 echo "   ✅ PHP dependencies installed"
 echo "   ✅ Node.js dependencies installed"
-echo "   ✅ Frontend built"
+echo "   ✅ Frontend built with ASTDB optimizations"
 echo "   ✅ Backend service created and started"
+echo "   ✅ ASTDB cache system configured"
 if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
     echo "   ✅ Apache configuration completed automatically with IP aliases"
 elif [ "$SKIP_APACHE" = true ]; then

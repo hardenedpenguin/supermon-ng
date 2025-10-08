@@ -1,13 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/utils/api'
+import { useAstdbStore } from './astdb'
 import type { Node, ConnectedNode, NodeConfig, AstDbEntry, NodeActionType } from '@/types'
 
 export const useRealTimeStore = defineStore('realTime', () => {
   // State
   const nodes = ref<Node[]>([])
   const nodeConfig = ref<NodeConfig>({})
-  const astdb = ref<AstDbEntry>({})
+  const astdbStore = useAstdbStore()
   const isConnected = ref(false)
   const error = ref<string | null>(null)
   const monitoringNodes = ref<string[]>([])
@@ -32,11 +33,8 @@ export const useRealTimeStore = defineStore('realTime', () => {
       const configResponse = await api.get('/config/nodes')
       nodeConfig.value = configResponse.data.data?.config || {}
       
-      // Load ASTDB
-      const astdbResponse = await api.get('/database/status')
-      if (astdbResponse.data.data?.astdb) {
-        astdb.value = astdbResponse.data.data.astdb
-      }
+      // Initialize ASTDB store (will use caching)
+      await astdbStore.initialize()
       
       error.value = null
     } catch (err) {
@@ -188,8 +186,8 @@ export const useRealTimeStore = defineStore('realTime', () => {
       return node.info
     }
     
-    // Fallback to ASTDB
-    const astdbEntry = astdb.value[nodeId]
+    // Fallback to ASTDB using the optimized store
+    const astdbEntry = astdbStore.fullAstdb[nodeId]
     if (astdbEntry && astdbEntry.length >= 4) {
       return `${astdbEntry[1]} ${astdbEntry[2]} ${astdbEntry[3]}`
     }
@@ -270,7 +268,8 @@ export const useRealTimeStore = defineStore('realTime', () => {
     // State
     nodes,
     nodeConfig,
-    astdb,
+    astdb: astdbStore.fullAstdb,
+    astdbStore,
     isConnected,
     error,
     monitoringNodes,

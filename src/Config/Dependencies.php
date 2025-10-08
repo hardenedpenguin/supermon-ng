@@ -18,6 +18,7 @@ use SupermonNg\Services\CacheService;
 use SupermonNg\Services\AmiBatchService;
 use SupermonNg\Services\FileCacheService;
 use SupermonNg\Services\DatabaseOptimizationService;
+use SupermonNg\Services\AstdbCacheService;
 
 return [
     // Logger
@@ -223,6 +224,13 @@ return [
         );
     },
     
+    // ASTDB Cache service
+    AstdbCacheService::class => function (ContainerInterface $c) {
+        return new AstdbCacheService(
+            $c->get(LoggerInterface::class)
+        );
+    },
+    
     
     // Controllers with dependency injection
     \SupermonNg\Application\Controllers\ConfigController::class => function (ContainerInterface $c) {
@@ -241,13 +249,29 @@ return [
     \SupermonNg\Application\Controllers\NodeController::class => function (ContainerInterface $c) {
         return new \SupermonNg\Application\Controllers\NodeController(
             $c->get(LoggerInterface::class),
-            $c->get(\SupermonNg\Services\AllStarConfigService::class)
+            $c->get(\SupermonNg\Services\AllStarConfigService::class),
+            $c->get(\SupermonNg\Services\AstdbCacheService::class)
         );
     },
     
     \SupermonNg\Application\Controllers\AuthController::class => function (ContainerInterface $c) {
         return new \SupermonNg\Application\Controllers\AuthController(
             $c->get(LoggerInterface::class)
+        );
+    },
+    
+    \SupermonNg\Application\Controllers\DatabaseController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\DatabaseController(
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\DatabaseGenerationService::class),
+            $c->get(\SupermonNg\Services\AstdbCacheService::class)
+        );
+    },
+    
+    \SupermonNg\Application\Controllers\AstdbController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\AstdbController(
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\AstdbCacheService::class)
         );
     },
     

@@ -148,6 +148,16 @@ export const endpoints = {
     get: (id: string) => `/database/${id}`
   },
   
+  // ASTDB optimized endpoints (Phase 8)
+  astdb: {
+    stats: '/astdb/stats',
+    health: '/astdb/health',
+    search: '/astdb/search',
+    nodes: '/astdb/nodes',
+    node: (id: string) => `/astdb/node/${id}`,
+    clearCache: '/astdb/clear-cache'
+  },
+  
   // Config
   config: {
     nodes: '/config/nodes',
@@ -234,6 +244,35 @@ export const apiHelpers = {
   
   async getNodeFromDatabase(nodeId: string) {
     return api.get(endpoints.database.get(nodeId))
+  },
+  
+  // ASTDB optimized operations (Phase 8)
+  async getAstdbStats() {
+    return api.get(endpoints.astdb.stats)
+  },
+  
+  async getAstdbHealth() {
+    return api.get(endpoints.astdb.health)
+  },
+  
+  async getAstdbNode(nodeId: string) {
+    return api.get(endpoints.astdb.node(nodeId))
+  },
+  
+  async getAstdbNodes(nodeIds: string[]) {
+    return api.get(endpoints.astdb.nodes, {
+      params: { nodes: nodeIds.join(',') }
+    })
+  },
+  
+  async searchAstdb(query: string, limit: number = 50) {
+    return api.get(endpoints.astdb.search, {
+      params: { q: query, limit }
+    })
+  },
+  
+  async clearAstdbCache() {
+    return api.post(endpoints.astdb.clearCache)
   }
 }
 

@@ -9,6 +9,7 @@ use SupermonNg\Application\Controllers\DatabaseController;
 use SupermonNg\Application\Controllers\ConfigController;
 use SupermonNg\Application\Controllers\NodeStatusController;
 use SupermonNg\Application\Controllers\AdminController;
+use SupermonNg\Application\Controllers\AstdbController;
 use SupermonNg\Application\Middleware\ApiAuthMiddleware;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
 
@@ -87,6 +88,16 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) {
         $group->post('/generate', [DatabaseController::class, 'generate']);
         $group->get('/search', [DatabaseController::class, 'search']);
         $group->get('/{id}', [DatabaseController::class, 'get']);
+    });
+
+    // ASTDB routes (Phase 7 optimization)
+    $group->group('/astdb', function (RouteCollectorProxy $group) {
+        $group->get('/stats', [AstdbController::class, 'getStats']);
+        $group->get('/health', [AstdbController::class, 'health']);
+        $group->get('/search', [AstdbController::class, 'search']);
+        $group->get('/nodes', [AstdbController::class, 'getNodes']);
+        $group->get('/node/{id}', [AstdbController::class, 'getNode']);
+        $group->post('/clear-cache', [AstdbController::class, 'clearCache']);
     });
 
     // Config routes
@@ -218,6 +229,16 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->post('/force-update', [DatabaseController::class, 'forceUpdate']);
         $group->get('/search', [DatabaseController::class, 'search']);
         $group->get('/{id}', [DatabaseController::class, 'get']);
+    });
+
+    // ASTDB routes (Phase 7 optimization)
+    $group->group('/astdb', function (RouteCollectorProxy $group) {
+        $group->get('/stats', [AstdbController::class, 'getStats']);
+        $group->get('/health', [AstdbController::class, 'health']);
+        $group->get('/search', [AstdbController::class, 'search']);
+        $group->get('/nodes', [AstdbController::class, 'getNodes']);
+        $group->get('/node/{id}', [AstdbController::class, 'getNode']);
+        $group->post('/clear-cache', [AstdbController::class, 'clearCache']);
     });
 
     // Node Status routes

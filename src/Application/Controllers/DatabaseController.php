@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use SupermonNg\Services\DatabaseGenerationService;
+use SupermonNg\Services\AstdbCacheService;
 
 /**
  * Controller for database-related API endpoints
@@ -14,13 +15,16 @@ class DatabaseController
 {
     private LoggerInterface $logger;
     private DatabaseGenerationService $databaseService;
+    private AstdbCacheService $astdbService;
     
     public function __construct(
         LoggerInterface $logger,
-        DatabaseGenerationService $databaseService
+        DatabaseGenerationService $databaseService,
+        AstdbCacheService $astdbService
     ) {
         $this->logger = $logger;
         $this->databaseService = $databaseService;
+        $this->astdbService = $astdbService;
     }
     
     /**
@@ -32,37 +36,8 @@ class DatabaseController
         
         $status = $this->databaseService->getDatabaseStatus();
         
-        // Add ASTDB data for frontend compatibility
-        // Load ASTDB path from common.inc
-        include_once __DIR__ . '/../../../includes/common.inc';
-        global $ASTDB_TXT;
-        
-        $astdb = [];
-        $astdbFile = $_ENV['ASTDB_FILE'] ?? $ASTDB_TXT ?? 'astdb.txt';
-        
-        if (file_exists($astdbFile)) {
-            $lines = @file($astdbFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-            if ($lines !== false) {
-                foreach ($lines as $line) {
-                    $parts = explode('|', $line);
-                    if (count($parts) >= 4) {
-                        $nodeId = trim($parts[0]);
-                        $callsign = trim($parts[1]);
-                        $description = trim($parts[2]);
-                        $location = trim($parts[3]);
-                        
-                        if (!empty($nodeId)) {
-                            $astdb[$nodeId] = [
-                                'node_id' => $nodeId,
-                                'callsign' => $callsign,
-                                'description' => $description,
-                                'location' => $location
-                            ];
-                        }
-                    }
-                }
-            }
-        }
+        // Add ASTDB data for frontend compatibility using optimized caching
+        $astdb = $this->astdbService->getAstdb();
         
         $response->getBody()->write(json_encode([
             'success' => true,
@@ -251,55 +226,12 @@ class DatabaseController
     }
     
     /**
-     * Search nodes in the database file
+     * Search nodes using optimized AstdbCacheService with indexed lookups
      */
     private function searchNodes(string $query, int $limit): array
     {
-        $results = [];
-        $astdbFile = $_ENV['ASTDB_FILE'] ?? 'astdb.txt';
-        
-        if (!file_exists($astdbFile)) {
-            $this->logger->warning('Database file not found for search', ['file' => $astdbFile]);
-            return $results;
-        }
-        
-        $lines = @file($astdbFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if ($lines === false) {
-            $this->logger->error('Could not read database file for search', ['file' => $astdbFile]);
-            return $results;
-        }
-        
-        $query = strtolower($query);
-        $count = 0;
-        
-        foreach ($lines as $line) {
-            if ($count >= $limit) break;
-            
-            $parts = explode('|', $line);
-            if (count($parts) >= 4) {
-                $nodeId = trim($parts[0]);
-                $callsign = trim($parts[1]);
-                $description = trim($parts[2]);
-                $location = trim($parts[3]);
-                
-                // Search in node ID, callsign, description, and location
-                if (strpos(strtolower($nodeId), $query) !== false ||
-                    strpos(strtolower($callsign), $query) !== false ||
-                    strpos(strtolower($description), $query) !== false ||
-                    strpos(strtolower($location), $query) !== false) {
-                    
-                    $results[] = [
-                        'node_id' => $nodeId,
-                        'callsign' => $callsign,
-                        'description' => $description,
-                        'location' => $location
-                    ];
-                    $count++;
-                }
-            }
-        }
-        
-        return $results;
+        // Use the optimized search method from AstdbCacheService
+        return $this->astdbService->searchNodes($query, $limit);
     }
     
     /**
