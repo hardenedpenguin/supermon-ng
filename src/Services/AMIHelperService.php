@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SupermonNg\Services;
 
 use Psr\Log\LoggerInterface;
+use SupermonNg\Services\IncludeManagerService;
 
 /**
  * AMI (Asterisk Manager Interface) Helper Service
@@ -16,10 +17,12 @@ class AMIHelperService
 {
     private array $connections = [];
     private LoggerInterface $logger;
+    private IncludeManagerService $includeService;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, IncludeManagerService $includeService)
     {
         $this->logger = $logger;
+        $this->includeService = $includeService;
     }
 
     /**
@@ -48,8 +51,8 @@ class AMIHelperService
             return $this->connections[$host];
         }
         
-        // Include AMI functions for connection
-        require_once __DIR__ . '/../../../includes/amifunctions.inc';
+        // Include AMI functions for connection using optimized service
+        $this->includeService->includeAmiFunctions();
         
         $fp = \SimpleAmiClient::connect($host);
         if ($fp === false) {
@@ -77,7 +80,7 @@ class AMIHelperService
             return false;
         }
         
-        require_once __DIR__ . '/../../../includes/amifunctions.inc';
+        $this->includeService->includeAmiFunctions();
         
         $result = \SimpleAmiClient::command($connection, $command);
         if ($result === false) {
@@ -93,7 +96,7 @@ class AMIHelperService
     public function disconnect($connection): void
     {
         if (is_resource($connection)) {
-            require_once __DIR__ . '/../../../includes/amifunctions.inc';
+            $this->includeService->includeAmiFunctions();
             \SimpleAmiClient::logoff($connection);
             
             // Remove from connection pool

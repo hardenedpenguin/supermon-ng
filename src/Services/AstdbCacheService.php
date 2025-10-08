@@ -34,11 +34,23 @@ class AstdbCacheService
     {
         $this->logger = $logger;
         
-        // Load ASTDB path from common.inc
-        require_once __DIR__ . '/../../includes/common.inc';
-        global $ASTDB_TXT;
+        // Use configuration cache service for optimized path loading
+        $this->initializePaths($astdbFile);
         
-        $this->astdbFile = $astdbFile ?? $_ENV['ASTDB_FILE'] ?? $ASTDB_TXT ?? 'astdb.txt';
+        $this->logger->debug('AstdbCacheService initialized', ['astdb_file' => $this->astdbFile]);
+    }
+    
+    /**
+     * Initialize configuration paths using cached configuration
+     */
+    private function initializePaths(?string $astdbFile): void
+    {
+        // Create configuration cache service instance
+        $configService = new \SupermonNg\Services\ConfigurationCacheService($this->logger);
+        
+        // Get ASTDB file path from cache
+        $astdbTxt = $configService->getConfig('ASTDB_TXT', 'astdb.txt');
+        $this->astdbFile = $astdbFile ?? $_ENV['ASTDB_FILE'] ?? $astdbTxt;
         
         // Set up cache file path
         $cacheDir = __DIR__ . '/../../cache';
@@ -46,8 +58,6 @@ class AstdbCacheService
             mkdir($cacheDir, 0755, true);
         }
         $this->cacheFile = $cacheDir . '/astdb_cache.php';
-        
-        $this->logger->debug('AstdbCacheService initialized', ['astdb_file' => $this->astdbFile]);
     }
     
     /**

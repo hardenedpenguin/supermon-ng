@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace SupermonNg\Application\Controllers;
 
-// Include common.inc for global variables
-require_once __DIR__ . '/../../../includes/common.inc';
-
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use SupermonNg\Domain\Entities\Node;
 use SupermonNg\Services\AllStarConfigService;
 use SupermonNg\Services\AstdbCacheService;
+use SupermonNg\Services\IncludeManagerService;
 use Ramsey\Uuid\Uuid;
 use Exception;
 
@@ -21,12 +19,18 @@ class NodeController
     private LoggerInterface $logger;
     private AllStarConfigService $configService;
     private AstdbCacheService $astdbService;
+    private IncludeManagerService $includeService;
     
-    public function __construct(LoggerInterface $logger, AllStarConfigService $configService, AstdbCacheService $astdbService)
-    {
+    public function __construct(
+        LoggerInterface $logger, 
+        AllStarConfigService $configService, 
+        AstdbCacheService $astdbService,
+        IncludeManagerService $includeService
+    ) {
         $this->logger = $logger;
         $this->configService = $configService;
         $this->astdbService = $astdbService;
+        $this->includeService = $includeService;
     }
 
     public function list(Request $request, Response $response): Response
@@ -844,9 +848,9 @@ class NodeController
      */
     private function getNodeAmiData(array $nodeConfig, string $nodeId): array
     {
-        // Include the legacy AMI functions
-        require_once __DIR__ . '/../../../includes/amifunctions.inc';
-        require_once __DIR__ . '/../../../includes/nodeinfo.inc';
+        // Include the legacy AMI functions using optimized service
+        $this->includeService->includeAmiFunctions();
+        $this->includeService->includeNodeInfo();
         // Helpers functionality now available as modern services
         
         $host = $nodeConfig['host'];
@@ -936,9 +940,9 @@ class NodeController
      */
     private function getNodeData($socket, string $nodeId): array
     {
-        // Include the necessary files for the original parsing logic
-        require_once __DIR__ . '/../../../includes/amifunctions.inc';
-        require_once __DIR__ . '/../../../includes/nodeinfo.inc';
+        // Include the necessary files for the original parsing logic using optimized service
+        $this->includeService->includeAmiFunctions();
+        $this->includeService->includeNodeInfo();
         // server-functions.inc functionality moved directly into this controller
         
         // Define the ECHOLINK_NODE_THRESHOLD constant if not defined
@@ -1999,12 +2003,11 @@ class NodeController
         $data = $request->getParsedBody();
         
         try {
-            // Include required dependencies for the ban/allow system
+            // Include required dependencies for the ban/allow system using optimized service
             // Session and CSRF now handled by middleware
-            require_once __DIR__ . '/../../../includes/amifunctions.inc';
-            require_once __DIR__ . '/../../../includes/common.inc';
-            require_once __DIR__ . '/../../../user_files/authusers.inc';
-            require_once __DIR__ . '/../../../user_files/authini.inc';
+            $this->includeService->includeAmiFunctions();
+            $this->includeService->includeCommonInc();
+            $this->includeService->includeAuthFiles();
 
             // Define get_user_auth function if it doesn't exist
             if (!function_exists('get_user_auth')) {
@@ -2229,8 +2232,8 @@ class NodeController
     private function getBanAllowList(array $amiConfig, string $listType, string $localnode): array
     {
         try {
-            // Include AMI functions
-            require_once __DIR__ . '/../../../includes/amifunctions.inc';
+            // Include AMI functions using optimized service
+            $this->includeService->includeAmiFunctions();
             
             $this->logger->info('Connecting to AMI for Ban/Allow', [
                 'host' => $amiConfig['host'],

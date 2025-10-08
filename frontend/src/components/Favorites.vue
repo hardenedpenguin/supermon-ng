@@ -131,7 +131,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
-import { api, fetchCsrfToken } from '@/utils/api'
+import { api } from '@/utils/api'
+import { getCsrfService } from '@/services/CsrfTokenService'
 import AddFavorite from './AddFavorite.vue'
 
 interface Props {
@@ -228,9 +229,7 @@ const executeFavoriteCommand = async (favorite: Favorite, node: string) => {
   error.value = ''
   
   try {
-    // Ensure CSRF token is available before making requests
-    await fetchCsrfToken()
-    
+    // CSRF token is automatically handled by the API interceptor
     const response = await api.post('/config/favorites/execute', {
       node: node,
       command: favorite.command

@@ -10,6 +10,11 @@ use SupermonNg\Application\Controllers\ConfigController;
 use SupermonNg\Application\Controllers\NodeStatusController;
 use SupermonNg\Application\Controllers\AdminController;
 use SupermonNg\Application\Controllers\AstdbController;
+use SupermonNg\Application\Controllers\PerformanceController;
+use SupermonNg\Application\Controllers\DatabasePerformanceController;
+use SupermonNg\Application\Controllers\HttpPerformanceController;
+use SupermonNg\Application\Controllers\SessionPerformanceController;
+use SupermonNg\Application\Controllers\FileIOPerformanceController;
 use SupermonNg\Application\Middleware\ApiAuthMiddleware;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
 
@@ -98,6 +103,62 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) {
         $group->get('/nodes', [AstdbController::class, 'getNodes']);
         $group->get('/node/{id}', [AstdbController::class, 'getNode']);
         $group->post('/clear-cache', [AstdbController::class, 'clearCache']);
+    });
+    
+    // Performance monitoring routes (Phase 3 optimization)
+    $group->group('/performance', function (RouteCollectorProxy $group) {
+        $group->get('/metrics', [PerformanceController::class, 'getMetrics']);
+        $group->get('/config-stats', [PerformanceController::class, 'getConfigStats']);
+        $group->get('/file-stats', [PerformanceController::class, 'getFileStats']);
+        $group->post('/clear-caches', [PerformanceController::class, 'clearCaches']);
+        $group->post('/cleanup-cache', [PerformanceController::class, 'cleanupCache']);
+    });
+    
+    // Database performance monitoring routes (Phase 6 optimization)
+    $group->group('/db-performance', function (RouteCollectorProxy $group) {
+        $group->get('/metrics', [DatabasePerformanceController::class, 'getMetrics']);
+        $group->get('/database-stats', [DatabasePerformanceController::class, 'getDatabaseStats']);
+        $group->get('/cache-stats', [DatabasePerformanceController::class, 'getCacheStats']);
+        $group->post('/clear-query-cache', [DatabasePerformanceController::class, 'clearQueryCache']);
+        $group->post('/clear-all-caches', [DatabasePerformanceController::class, 'clearAllCaches']);
+        $group->post('/optimize-tables', [DatabasePerformanceController::class, 'optimizeTables']);
+        $group->post('/cleanup-memory-cache', [DatabasePerformanceController::class, 'cleanupMemoryCache']);
+    });
+    
+    // HTTP performance monitoring routes (Phase 7 optimization)
+    $group->group('/http-performance', function (RouteCollectorProxy $group) {
+        $group->get('/metrics', [HttpPerformanceController::class, 'getMetrics']);
+        $group->get('/http-stats', [HttpPerformanceController::class, 'getHttpStats']);
+        $group->get('/middleware-stats', [HttpPerformanceController::class, 'getMiddlewareStats']);
+        $group->get('/slow-middleware', [HttpPerformanceController::class, 'getSlowMiddleware']);
+        $group->get('/middleware-optimization', [HttpPerformanceController::class, 'getMiddlewareOptimization']);
+        $group->post('/reset-http-stats', [HttpPerformanceController::class, 'resetHttpStats']);
+        $group->post('/reset-middleware-stats', [HttpPerformanceController::class, 'resetMiddlewareStats']);
+        $group->get('/test-optimization', [HttpPerformanceController::class, 'testOptimization']);
+    });
+    
+    // Session performance monitoring routes (Phase 8 optimization)
+    $group->group('/session-performance', function (RouteCollectorProxy $group) {
+        $group->get('/metrics', [SessionPerformanceController::class, 'getMetrics']);
+        $group->get('/session-stats', [SessionPerformanceController::class, 'getSessionStats']);
+        $group->get('/auth-stats', [SessionPerformanceController::class, 'getAuthStats']);
+        $group->get('/test-authentication', [SessionPerformanceController::class, 'testAuthentication']);
+        $group->post('/cleanup-expired-sessions', [SessionPerformanceController::class, 'cleanupExpiredSessions']);
+        $group->post('/clear-auth-cache', [SessionPerformanceController::class, 'clearAuthCache']);
+        $group->post('/reset-session-stats', [SessionPerformanceController::class, 'resetSessionStats']);
+        $group->post('/reset-auth-stats', [SessionPerformanceController::class, 'resetAuthStats']);
+    });
+    
+    // File I/O performance monitoring routes (Phase 9 optimization)
+    $group->group('/fileio-performance', function (RouteCollectorProxy $group) {
+        $group->get('/metrics', [FileIOPerformanceController::class, 'getMetrics']);
+        $group->get('/external-process-stats', [FileIOPerformanceController::class, 'getExternalProcessStats']);
+        $group->get('/file-io-stats', [FileIOPerformanceController::class, 'getFileIOStats']);
+        $group->post('/clear-irlp-cache', [FileIOPerformanceController::class, 'clearIrlpCache']);
+        $group->post('/clear-file-io-caches', [FileIOPerformanceController::class, 'clearFileIOCaches']);
+        $group->post('/reset-external-process-stats', [FileIOPerformanceController::class, 'resetExternalProcessStats']);
+        $group->post('/reset-file-io-stats', [FileIOPerformanceController::class, 'resetFileIOStats']);
+        $group->get('/test-irlp-lookup', [FileIOPerformanceController::class, 'testIrlpLookup']);
     });
 
     // Config routes
@@ -239,6 +300,62 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->get('/nodes', [AstdbController::class, 'getNodes']);
         $group->get('/node/{id}', [AstdbController::class, 'getNode']);
         $group->post('/clear-cache', [AstdbController::class, 'clearCache']);
+    });
+    
+    // Performance monitoring routes (Phase 3 optimization)
+    $group->group('/performance', function (RouteCollectorProxy $group) {
+        $group->get('/metrics', [PerformanceController::class, 'getMetrics']);
+        $group->get('/config-stats', [PerformanceController::class, 'getConfigStats']);
+        $group->get('/file-stats', [PerformanceController::class, 'getFileStats']);
+        $group->post('/clear-caches', [PerformanceController::class, 'clearCaches']);
+        $group->post('/cleanup-cache', [PerformanceController::class, 'cleanupCache']);
+    });
+    
+    // Database performance monitoring routes (Phase 6 optimization)
+    $group->group('/db-performance', function (RouteCollectorProxy $group) {
+        $group->get('/metrics', [DatabasePerformanceController::class, 'getMetrics']);
+        $group->get('/database-stats', [DatabasePerformanceController::class, 'getDatabaseStats']);
+        $group->get('/cache-stats', [DatabasePerformanceController::class, 'getCacheStats']);
+        $group->post('/clear-query-cache', [DatabasePerformanceController::class, 'clearQueryCache']);
+        $group->post('/clear-all-caches', [DatabasePerformanceController::class, 'clearAllCaches']);
+        $group->post('/optimize-tables', [DatabasePerformanceController::class, 'optimizeTables']);
+        $group->post('/cleanup-memory-cache', [DatabasePerformanceController::class, 'cleanupMemoryCache']);
+    });
+    
+    // HTTP performance monitoring routes (Phase 7 optimization)
+    $group->group('/http-performance', function (RouteCollectorProxy $group) {
+        $group->get('/metrics', [HttpPerformanceController::class, 'getMetrics']);
+        $group->get('/http-stats', [HttpPerformanceController::class, 'getHttpStats']);
+        $group->get('/middleware-stats', [HttpPerformanceController::class, 'getMiddlewareStats']);
+        $group->get('/slow-middleware', [HttpPerformanceController::class, 'getSlowMiddleware']);
+        $group->get('/middleware-optimization', [HttpPerformanceController::class, 'getMiddlewareOptimization']);
+        $group->post('/reset-http-stats', [HttpPerformanceController::class, 'resetHttpStats']);
+        $group->post('/reset-middleware-stats', [HttpPerformanceController::class, 'resetMiddlewareStats']);
+        $group->get('/test-optimization', [HttpPerformanceController::class, 'testOptimization']);
+    });
+    
+    // Session performance monitoring routes (Phase 8 optimization)
+    $group->group('/session-performance', function (RouteCollectorProxy $group) {
+        $group->get('/metrics', [SessionPerformanceController::class, 'getMetrics']);
+        $group->get('/session-stats', [SessionPerformanceController::class, 'getSessionStats']);
+        $group->get('/auth-stats', [SessionPerformanceController::class, 'getAuthStats']);
+        $group->get('/test-authentication', [SessionPerformanceController::class, 'testAuthentication']);
+        $group->post('/cleanup-expired-sessions', [SessionPerformanceController::class, 'cleanupExpiredSessions']);
+        $group->post('/clear-auth-cache', [SessionPerformanceController::class, 'clearAuthCache']);
+        $group->post('/reset-session-stats', [SessionPerformanceController::class, 'resetSessionStats']);
+        $group->post('/reset-auth-stats', [SessionPerformanceController::class, 'resetAuthStats']);
+    });
+    
+    // File I/O performance monitoring routes (Phase 9 optimization)
+    $group->group('/fileio-performance', function (RouteCollectorProxy $group) {
+        $group->get('/metrics', [FileIOPerformanceController::class, 'getMetrics']);
+        $group->get('/external-process-stats', [FileIOPerformanceController::class, 'getExternalProcessStats']);
+        $group->get('/file-io-stats', [FileIOPerformanceController::class, 'getFileIOStats']);
+        $group->post('/clear-irlp-cache', [FileIOPerformanceController::class, 'clearIrlpCache']);
+        $group->post('/clear-file-io-caches', [FileIOPerformanceController::class, 'clearFileIOCaches']);
+        $group->post('/reset-external-process-stats', [FileIOPerformanceController::class, 'resetExternalProcessStats']);
+        $group->post('/reset-file-io-stats', [FileIOPerformanceController::class, 'resetFileIOStats']);
+        $group->get('/test-irlp-lookup', [FileIOPerformanceController::class, 'testIrlpLookup']);
     });
 
     // Node Status routes

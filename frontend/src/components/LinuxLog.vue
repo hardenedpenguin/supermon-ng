@@ -40,7 +40,7 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import { api, fetchCsrfToken } from '@/utils/api'
+import { api } from '@/utils/api'
 
 const props = defineProps({
   isVisible: {
@@ -83,9 +83,7 @@ const loadLinuxLog = async () => {
   logData.value = null
 
   try {
-    // Ensure CSRF token is available before making requests
-    await fetchCsrfToken()
-    
+    // CSRF token is automatically handled by the API interceptor
     const response = await api.post('/nodes/linuxlog', {}, { timeout: 30000 })
 
     if (response.data.success) {

@@ -8,15 +8,18 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use SupermonNg\Services\IncludeManagerService;
 use Psr\Log\LoggerInterface;
 
 class AdminAuthMiddleware implements MiddlewareInterface
 {
     private LoggerInterface $logger;
+    private IncludeManagerService $includeService;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, IncludeManagerService $includeService)
     {
         $this->logger = $logger;
+        $this->includeService = $includeService;
     }
 
     public function process(Request $request, RequestHandlerInterface $handler): Response
@@ -42,8 +45,8 @@ class AdminAuthMiddleware implements MiddlewareInterface
 
     private function hasAdminPermissions(string $user): bool
     {
-        // Include necessary files
-        require_once __DIR__ . '/../../../includes/common.inc';
+        // Include necessary files using optimized service
+        $this->includeService->includeCommonInc();
         
         // Check admin permissions from configuration
         $adminUsers = [];

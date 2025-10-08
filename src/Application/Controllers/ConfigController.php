@@ -9,18 +9,19 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use SupermonNg\Services\CacheService;
 
-// Include required files for AMI functionality
-require_once __DIR__ . '/../../../includes/amifunctions.inc';
-require_once __DIR__ . '/../../../includes/common.inc';
+use SupermonNg\Services\IncludeManagerService;
 
 class ConfigController
 {
     private LoggerInterface $logger;
     private ?CacheService $cacheService;
-    public function __construct(LoggerInterface $logger, ?CacheService $cacheService = null)
+    private IncludeManagerService $includeService;
+    
+    public function __construct(LoggerInterface $logger, ?CacheService $cacheService = null, IncludeManagerService $includeService)
     {
         $this->logger = $logger;
         $this->cacheService = $cacheService;
+        $this->includeService = $includeService;
     }
 
     public function list(Request $request, Response $response): Response
@@ -1214,8 +1215,8 @@ class ConfigController
                 return $response->withStatus(500);
             }
 
-            // Include AMI functions
-            require_once 'includes/amifunctions.inc';
+            // Include AMI functions using optimized service
+            $this->includeService->includeAmiFunctions();
 
             // Get connection from pool
             $fp = \SimpleAmiClient::getConnection($amiHost, $amiUser, $amiPass);
@@ -1652,8 +1653,8 @@ class ConfigController
                 return $response->withStatus(500);
             }
 
-            // Include AMI functions
-            require_once 'includes/amifunctions.inc';
+            // Include AMI functions using optimized service
+            $this->includeService->includeAmiFunctions();
 
             // Connect to AMI
             $fp = \SimpleAmiClient::connect($amiHost);

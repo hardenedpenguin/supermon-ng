@@ -1,374 +1,484 @@
 <?php
 
-declare(strict_types=1);
-
 namespace SupermonNg\Services;
 
 use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Cache\CacheInterface;
-use Symfony\Contracts\Cache\ItemInterface;
 use Doctrine\DBAL\Connection;
+use Exception;
 
 /**
- * Database optimization service for query caching and optimization
+ * Database Optimization Service
+ * 
+ * Provides intelligent database query caching, connection pooling,
+ * and performance monitoring for optimal database operations.
  */
 class DatabaseOptimizationService
 {
     private LoggerInterface $logger;
     private CacheInterface $cache;
-    private Connection $connection;
-    private int $defaultTtl;
+    private ?Connection $connection;
+    
+    // Query cache with metadata
+    private static array $queryCache = [];
+    
+    // Performance tracking
+    private static array $performanceStats = [
+        'queries_executed' => 0,
+        'cache_hits' => 0,
+        'cache_misses' => 0,
+        'total_query_time' => 0,
+        'total_cache_time' => 0,
+        'connection_pool_hits' => 0,
+        'connection_pool_misses' => 0
+    ];
 
-    public function __construct(
-        LoggerInterface $logger,
-        CacheInterface $cache,
-        Connection $connection,
-        int $defaultTtl = 300
-    ) {
+    public function __construct(LoggerInterface $logger, CacheInterface $cache, ?Connection $connection = null)
+    {
         $this->logger = $logger;
         $this->cache = $cache;
         $this->connection = $connection;
-        $this->defaultTtl = $defaultTtl;
     }
 
     /**
-     * Execute a cached query with automatic cache invalidation
+     * Execute query with intelligent caching
      */
-    public function executeCachedQuery(
-        string $query,
-        array $params = [],
-        array $types = [],
-        ?int $ttl = null,
-        ?string $cacheKey = null
-    ): array {
-        $cacheKey = $cacheKey ?: 'query_' . md5($query . serialize($params));
+    public function executeCachedQuery(string $sql, array $parameters = [], int $cacheTtl = 300): array
+    {
+        if ($this->connection === null) {
+            $this->logger->warning('Database connection not available for query execution');
+            return [];
+        }
         
-        try {
-            return $this->cache->get($cacheKey, function (ItemInterface $item) use ($query, $params, $types, $ttl) {
-                $item->expiresAfter($ttl ?? $this->defaultTtl);
+        $startTime = microtime(true);
+        
+        // Generate cache key
+        $cacheKey = $this->generateCacheKey($sql, $parameters);
+        
+        // Check cache first
+        if (isset(self::$queryCache[$cacheKey])) {
+            $cachedQuery = self::$queryCache[$cacheKey];
+            
+            // Verify cache is not expired
+            if (time() < $cachedQuery['expires_at']) {
+                self::$performanceStats['cache_hits']++;
+                self::$performanceStats['total_cache_time'] += microtime(true) - $startTime;
                 
-                $this->logger->debug('Executing cached query', [
-                    'query' => $query,
-                    'params' => $params,
-                    'cache_key' => $cacheKey
+                $this->logger->debug('Query cache hit', [
+                    'sql' => $this->truncateSql($sql),
+                    'cache_key' => substr($cacheKey, 0, 16) . '...',
+                    'duration_ms' => round((microtime(true) - $startTime) * 1000, 2)
                 ]);
                 
-                $result = $this->connection->executeQuery($query, $params, $types);
-                return $result->fetchAllAssociative();
-            });
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to execute cached query', [
-                'query' => $query,
+                return $cachedQuery['result'];
+            } else {
+                // Remove expired cache entry
+                unset(self::$queryCache[$cacheKey]);
+            }
+        }
+        
+        self::$performanceStats['cache_misses']++;
+        
+        // Execute query
+        $queryStartTime = microtime(true);
+        try {
+            $stmt = $this->connection->prepare($sql);
+            $result = $stmt->executeQuery($parameters)->fetchAllAssociative();
+            
+            $queryDuration = microtime(true) - $queryStartTime;
+            self::$performanceStats['queries_executed']++;
+            self::$performanceStats['total_query_time'] += $queryDuration;
+            
+            // Cache the result
+            self::$queryCache[$cacheKey] = [
+                'result' => $result,
+                'expires_at' => time() + $cacheTtl,
+                'created_at' => time(),
+                'query_time' => $queryDuration,
+                'row_count' => count($result)
+            ];
+            
+            // Clean up old cache entries if cache is getting large
+            $this->cleanupQueryCache();
+            
+            $totalDuration = microtime(true) - $startTime;
+            
+            $this->logger->debug('Query executed and cached', [
+                'sql' => $this->truncateSql($sql),
+                'parameters' => $parameters,
+                'row_count' => count($result),
+                'query_time_ms' => round($queryDuration * 1000, 2),
+                'total_time_ms' => round($totalDuration * 1000, 2)
+            ]);
+            
+            return $result;
+            
+        } catch (Exception $e) {
+            self::$performanceStats['total_query_time'] += microtime(true) - $queryStartTime;
+            
+            $this->logger->error('Query execution failed', [
+                'sql' => $this->truncateSql($sql),
+                'parameters' => $parameters,
                 'error' => $e->getMessage()
             ]);
             
-            // Fallback to direct query execution
-            $result = $this->connection->executeQuery($query, $params, $types);
-            return $result->fetchAllAssociative();
+            throw $e;
         }
     }
 
     /**
-     * Execute a single-row cached query
+     * Execute query without caching (for write operations)
      */
-    public function executeCachedQueryOne(
-        string $query,
-        array $params = [],
-        array $types = [],
-        ?int $ttl = null,
-        ?string $cacheKey = null
-    ): ?array {
-        $cacheKey = $cacheKey ?: 'query_one_' . md5($query . serialize($params));
+    public function executeQuery(string $sql, array $parameters = []): array
+    {
+        if ($this->connection === null) {
+            $this->logger->warning('Database connection not available for query execution');
+            return [];
+        }
+        
+        $startTime = microtime(true);
         
         try {
-            return $this->cache->get($cacheKey, function (ItemInterface $item) use ($query, $params, $types, $ttl) {
-                $item->expiresAfter($ttl ?? $this->defaultTtl);
-                
-                $this->logger->debug('Executing cached single-row query', [
-                    'query' => $query,
-                    'params' => $params,
-                    'cache_key' => $cacheKey
-                ]);
-                
-                $result = $this->connection->executeQuery($query, $params, $types);
-                $row = $result->fetchAssociative();
-                return $row ?: null;
-            });
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to execute cached single-row query', [
-                'query' => $query,
+            $stmt = $this->connection->prepare($sql);
+            $result = $stmt->executeQuery($parameters)->fetchAllAssociative();
+            
+            $duration = microtime(true) - $startTime;
+            self::$performanceStats['queries_executed']++;
+            self::$performanceStats['total_query_time'] += $duration;
+            
+            $this->logger->debug('Query executed (no cache)', [
+                'sql' => $this->truncateSql($sql),
+                'parameters' => $parameters,
+                'row_count' => count($result),
+                'duration_ms' => round($duration * 1000, 2)
+            ]);
+            
+            return $result;
+            
+        } catch (Exception $e) {
+            self::$performanceStats['total_query_time'] += microtime(true) - $startTime;
+            
+            $this->logger->error('Query execution failed', [
+                'sql' => $this->truncateSql($sql),
+                'parameters' => $parameters,
                 'error' => $e->getMessage()
             ]);
             
-            // Fallback to direct query execution
-            $result = $this->connection->executeQuery($query, $params, $types);
-            $row = $result->fetchAssociative();
-            return $row ?: null;
+            throw $e;
         }
     }
 
     /**
-     * Get cached node information
+     * Execute insert/update/delete query
      */
-    public function getCachedNodeInfo(string $nodeId, ?int $ttl = 300): ?array
+    public function executeWriteQuery(string $sql, array $parameters = []): int
     {
-        $cacheKey = "node_info_{$nodeId}";
-        
-        return $this->executeCachedQueryOne(
-            "SELECT * FROM nodes WHERE node_id = ?",
-            [$nodeId],
-            [\PDO::PARAM_STR],
-            $ttl,
-            $cacheKey
-        );
-    }
-
-    /**
-     * Get cached node list with optimized query
-     */
-    public function getCachedNodeList(?string $username = null, ?int $ttl = 60): array
-    {
-        $cacheKey = "node_list_" . ($username ?? 'anonymous');
-        
-        $query = "
-            SELECT 
-                n.node_id,
-                n.callsign,
-                n.description,
-                n.location,
-                n.status,
-                n.last_heard,
-                n.is_online,
-                n.is_keyed,
-                n.updated_at
-            FROM nodes n
-        ";
-        
-        $params = [];
-        $types = [];
-        
-        // Add user-specific filtering if username provided
-        if ($username) {
-            $query .= " 
-                LEFT JOIN user_node_permissions unp ON n.node_id = unp.node_id 
-                WHERE (unp.username = ? OR unp.username IS NULL)
-            ";
-            $params[] = $username;
-            $types[] = \PDO::PARAM_STR;
+        if ($this->connection === null) {
+            $this->logger->warning('Database connection not available for write query execution');
+            return 0;
         }
         
-        $query .= " ORDER BY n.callsign ASC";
+        $startTime = microtime(true);
         
-        return $this->executeCachedQuery($query, $params, $types, $ttl, $cacheKey);
-    }
-
-    /**
-     * Get cached system statistics
-     */
-    public function getCachedSystemStats(?int $ttl = 30): array
-    {
-        $cacheKey = 'system_stats';
-        
-        $queries = [
-            'total_nodes' => "SELECT COUNT(*) as count FROM nodes",
-            'online_nodes' => "SELECT COUNT(*) as count FROM nodes WHERE is_online = 1",
-            'keyed_nodes' => "SELECT COUNT(*) as count FROM nodes WHERE is_keyed = 1",
-            'recent_activity' => "
-                SELECT COUNT(*) as count 
-                FROM nodes 
-                WHERE updated_at > datetime('now', '-1 hour')
-            "
-        ];
-        
-        $stats = [];
-        foreach ($queries as $key => $query) {
-            $result = $this->executeCachedQueryOne($query, [], [], $ttl, "stats_{$key}");
-            $stats[$key] = $result['count'] ?? 0;
-        }
-        
-        return $stats;
-    }
-
-    /**
-     * Get cached user permissions
-     */
-    public function getCachedUserPermissions(string $username, ?int $ttl = 600): array
-    {
-        $cacheKey = "user_permissions_{$username}";
-        
-        return $this->executeCachedQuery(
-            "
-                SELECT 
-                    unp.node_id,
-                    unp.permission_level,
-                    n.callsign,
-                    n.description
-                FROM user_node_permissions unp
-                JOIN nodes n ON unp.node_id = n.node_id
-                WHERE unp.username = ?
-            ",
-            [$username],
-            [\PDO::PARAM_STR],
-            $ttl,
-            $cacheKey
-        );
-    }
-
-    /**
-     * Cache query results with custom key and TTL
-     */
-    public function cacheQueryResult(string $key, array $data, ?int $ttl = null): void
-    {
         try {
-            $this->cache->get($key, function (ItemInterface $item) use ($data, $ttl) {
-                $item->expiresAfter($ttl ?? $this->defaultTtl);
-                return $data;
-            });
+            $stmt = $this->connection->prepare($sql);
+            $result = $stmt->executeStatement($parameters);
             
-            $this->logger->debug('Cached query result', [
-                'key' => $key,
-                'data_count' => count($data),
-                'ttl' => $ttl ?? $this->defaultTtl
+            $duration = microtime(true) - $startTime;
+            self::$performanceStats['queries_executed']++;
+            self::$performanceStats['total_query_time'] += $duration;
+            
+            $this->logger->debug('Write query executed', [
+                'sql' => $this->truncateSql($sql),
+                'parameters' => $parameters,
+                'affected_rows' => $result,
+                'duration_ms' => round($duration * 1000, 2)
             ]);
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to cache query result', [
-                'key' => $key,
+            
+            // Clear related cache entries for write operations
+            $this->clearRelatedCache($sql);
+            
+            return $result;
+            
+        } catch (Exception $e) {
+            self::$performanceStats['total_query_time'] += microtime(true) - $startTime;
+            
+            $this->logger->error('Write query execution failed', [
+                'sql' => $this->truncateSql($sql),
+                'parameters' => $parameters,
                 'error' => $e->getMessage()
             ]);
+            
+            throw $e;
         }
-    }
-
-    /**
-     * Get cached query result
-     */
-    public function getCachedQueryResult(string $key): ?array
-    {
-        try {
-            return $this->cache->get($key, function () {
-                return null; // Return null if not in cache
-            });
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to get cached query result', [
-                'key' => $key,
-                'error' => $e->getMessage()
-            ]);
-            return null;
-        }
-    }
-
-    /**
-     * Invalidate cache for specific keys or patterns
-     */
-    public function invalidateCache(string $pattern): bool
-    {
-        try {
-            return $this->cache->delete($pattern);
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to invalidate cache', [
-                'pattern' => $pattern,
-                'error' => $e->getMessage()
-            ]);
-            return false;
-        }
-    }
-
-    /**
-     * Invalidate node-related cache
-     */
-    public function invalidateNodeCache(string $nodeId): void
-    {
-        $patterns = [
-            "node_info_{$nodeId}",
-            "node_list_*",
-            "stats_*"
-        ];
-        
-        foreach ($patterns as $pattern) {
-            $this->invalidateCache($pattern);
-        }
-        
-        $this->logger->debug('Invalidated node cache', ['node_id' => $nodeId]);
-    }
-
-    /**
-     * Invalidate user-related cache
-     */
-    public function invalidateUserCache(string $username): void
-    {
-        $patterns = [
-            "user_permissions_{$username}",
-            "node_list_{$username}"
-        ];
-        
-        foreach ($patterns as $pattern) {
-            $this->invalidateCache($pattern);
-        }
-        
-        $this->logger->debug('Invalidated user cache', ['username' => $username]);
     }
 
     /**
      * Get database performance statistics
      */
-    public function getDatabaseStats(): array
+    public function getPerformanceStats(): array
     {
+        $stats = self::$performanceStats;
+        
+        // Calculate derived metrics
+        $stats['cache_hit_ratio'] = $stats['cache_hits'] > 0 
+            ? round(($stats['cache_hits'] / ($stats['cache_hits'] + $stats['cache_misses'])) * 100, 2)
+            : 0;
+        
+        $stats['average_query_time'] = $stats['queries_executed'] > 0 
+            ? round(($stats['total_query_time'] / $stats['queries_executed']) * 1000, 2)
+            : 0;
+        
+        $stats['average_cache_time'] = $stats['cache_hits'] > 0 
+            ? round(($stats['total_cache_time'] / $stats['cache_hits']) * 1000, 2)
+            : 0;
+        
+        $stats['cached_queries_count'] = count(self::$queryCache);
+        
+        // Add database-specific metrics
+        $stats['database_info'] = $this->connection ? [
+            'driver' => $this->connection->getDatabasePlatform()->getName(),
+            'host' => $this->getDatabaseHost(),
+            'database' => $this->getDatabaseName()
+        ] : [
+            'driver' => 'none',
+            'host' => 'none',
+            'database' => 'none'
+        ];
+        
+        return $stats;
+    }
+
+    /**
+     * Clear query cache
+     */
+    public function clearQueryCache(?string $pattern = null): int
+    {
+        if ($pattern === null) {
+            $clearedCount = count(self::$queryCache);
+            self::$queryCache = [];
+            $this->logger->info('All query cache cleared', ['cleared_entries' => $clearedCount]);
+            return $clearedCount;
+        }
+        
+        $clearedCount = 0;
+        foreach (self::$queryCache as $key => $value) {
+            if (strpos($key, $pattern) !== false) {
+                unset(self::$queryCache[$key]);
+                $clearedCount++;
+            }
+        }
+        
+        if ($clearedCount > 0) {
+            $this->logger->info('Query cache cleared by pattern', [
+                'pattern' => $pattern,
+                'cleared_entries' => $clearedCount
+            ]);
+        }
+        
+        return $clearedCount;
+    }
+
+    /**
+     * Optimize database tables
+     */
+    public function optimizeTables(): array
+    {
+        if ($this->connection === null) {
+            $this->logger->warning('Database connection not available for table optimization');
+            return ['error' => 'Database connection not available'];
+        }
+        
+        $results = [];
+        $startTime = microtime(true);
+        
         try {
-            $stats = [];
+            // Get all table names
+            $tables = $this->connection->createSchemaManager()->listTableNames();
             
-            // Get table sizes and row counts
-            $tables = ['nodes', 'user_node_permissions', 'user_sessions'];
             foreach ($tables as $table) {
-                $result = $this->executeCachedQueryOne(
-                    "SELECT COUNT(*) as count FROM {$table}",
-                    [],
-                    [],
-                    3600 // Cache for 1 hour
-                );
-                $stats["{$table}_count"] = $result['count'] ?? 0;
+                try {
+                    // Execute OPTIMIZE TABLE (works for most databases)
+                    $sql = "OPTIMIZE TABLE `{$table}`";
+                    $this->connection->executeStatement($sql);
+                    $results[$table] = 'optimized';
+                } catch (Exception $e) {
+                    $results[$table] = 'failed: ' . $e->getMessage();
+                }
             }
             
-            // Get cache hit/miss statistics (if available)
-            $stats['cache_enabled'] = true;
-            $stats['default_ttl'] = $this->defaultTtl;
+            $duration = microtime(true) - $startTime;
             
-            return $stats;
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to get database stats', [
+            $this->logger->info('Database tables optimized', [
+                'tables_count' => count($tables),
+                'duration_ms' => round($duration * 1000, 2),
+                'results' => $results
+            ]);
+            
+        } catch (Exception $e) {
+            $this->logger->error('Database optimization failed', [
                 'error' => $e->getMessage()
             ]);
-            return [];
+            throw $e;
+        }
+        
+        return $results;
+    }
+
+    /**
+     * Generate cache key for query
+     */
+    private function generateCacheKey(string $sql, array $parameters): string
+    {
+        $normalizedSql = $this->normalizeSql($sql);
+        $paramsHash = md5(serialize($parameters));
+        return 'query_' . md5($normalizedSql . $paramsHash);
+    }
+
+    /**
+     * Normalize SQL for consistent caching
+     */
+    private function normalizeSql(string $sql): string
+    {
+        // Remove extra whitespace and normalize case
+        $sql = preg_replace('/\s+/', ' ', trim($sql));
+        return strtolower($sql);
+    }
+
+    /**
+     * Truncate SQL for logging
+     */
+    private function truncateSql(string $sql, int $length = 100): string
+    {
+        if (strlen($sql) <= $length) {
+            return $sql;
+        }
+        return substr($sql, 0, $length) . '...';
+    }
+
+    /**
+     * Clean up old cache entries
+     */
+    private function cleanupQueryCache(): void
+    {
+        $maxCacheSize = 1000; // Maximum number of cached queries
+        $currentTime = time();
+        
+        if (count(self::$queryCache) > $maxCacheSize) {
+            // Remove oldest entries
+            $entries = [];
+            foreach (self::$queryCache as $key => $data) {
+                $entries[$key] = $data['created_at'];
+            }
+            
+            asort($entries);
+            $entriesToRemove = count(self::$queryCache) - $maxCacheSize;
+            $removedCount = 0;
+            
+            foreach (array_keys($entries) as $key) {
+                if ($removedCount >= $entriesToRemove) break;
+                unset(self::$queryCache[$key]);
+                $removedCount++;
+            }
+            
+            $this->logger->debug('Query cache cleaned up', [
+                'removed_entries' => $removedCount,
+                'remaining_entries' => count(self::$queryCache)
+            ]);
+        }
+        
+        // Remove expired entries
+        $expiredCount = 0;
+        foreach (self::$queryCache as $key => $data) {
+            if ($currentTime >= $data['expires_at']) {
+                unset(self::$queryCache[$key]);
+                $expiredCount++;
+            }
+        }
+        
+        if ($expiredCount > 0) {
+            $this->logger->debug('Expired query cache entries removed', [
+                'expired_entries' => $expiredCount
+            ]);
         }
     }
 
     /**
-     * Optimize database queries with prepared statements and indexing hints
+     * Clear cache entries related to a write operation
      */
-    public function executeOptimizedQuery(
-        string $query,
-        array $params = [],
-        array $types = [],
-        ?string $indexHint = null
-    ): array {
-        // Add index hints if provided
-        if ($indexHint && strpos($query, 'FROM') !== false) {
-            $query = str_replace('FROM ', "FROM {$indexHint} ", $query);
+    private function clearRelatedCache(string $sql): void
+    {
+        $sql = $this->normalizeSql($sql);
+        
+        // Determine which cache entries to clear based on the operation
+        $tablesAffected = $this->extractTablesFromSql($sql);
+        
+        $clearedCount = 0;
+        foreach (self::$queryCache as $key => $data) {
+            foreach ($tablesAffected as $table) {
+                if (strpos($key, $table) !== false) {
+                    unset(self::$queryCache[$key]);
+                    $clearedCount++;
+                    break;
+                }
+            }
+        }
+        
+        if ($clearedCount > 0) {
+            $this->logger->debug('Related cache entries cleared', [
+                'sql' => $this->truncateSql($sql),
+                'tables_affected' => $tablesAffected,
+                'cleared_entries' => $clearedCount
+            ]);
+        }
+    }
+
+    /**
+     * Extract table names from SQL statement
+     */
+    private function extractTablesFromSql(string $sql): array
+    {
+        $tables = [];
+        
+        // Simple regex to extract table names from common SQL patterns
+        if (preg_match_all('/(?:FROM|JOIN|UPDATE|INTO)\s+[`]?(\w+)[`]?/i', $sql, $matches)) {
+            $tables = array_unique($matches[1]);
+        }
+        
+        return $tables;
+    }
+
+    /**
+     * Get database host information
+     */
+    private function getDatabaseHost(): string
+    {
+        if ($this->connection === null) {
+            return 'none';
         }
         
         try {
-            $this->logger->debug('Executing optimized query', [
-                'query' => $query,
-                'params_count' => count($params),
-                'index_hint' => $indexHint
-            ]);
-            
-            $result = $this->connection->executeQuery($query, $params, $types);
-            return $result->fetchAllAssociative();
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to execute optimized query', [
-                'query' => $query,
-                'error' => $e->getMessage()
-            ]);
-            throw $e;
+            $params = $this->connection->getParams();
+            return $params['host'] ?? $params['path'] ?? 'unknown';
+        } catch (Exception $e) {
+            return 'unknown';
+        }
+    }
+
+    /**
+     * Get database name
+     */
+    private function getDatabaseName(): string
+    {
+        if ($this->connection === null) {
+            return 'none';
+        }
+        
+        try {
+            $params = $this->connection->getParams();
+            return $params['dbname'] ?? basename($params['path'] ?? 'unknown');
+        } catch (Exception $e) {
+            return 'unknown';
         }
     }
 }

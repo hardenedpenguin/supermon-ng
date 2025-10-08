@@ -103,7 +103,7 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { api, fetchCsrfToken } from '@/utils/api'
+import { api } from '@/utils/api'
 
 const props = defineProps({
   open: Boolean
@@ -136,9 +136,7 @@ const loadFiles = async () => {
   error.value = ''
   
   try {
-    // Ensure CSRF token is available before making requests
-    await fetchCsrfToken()
-    
+    // CSRF token is automatically handled by the API interceptor
     const response = await api.get('/config/configeditor/files')
     if (response.data.success) {
       fileCategories.value = response.data.files
@@ -159,9 +157,7 @@ const selectFile = async (file) => {
   saveResult.value = null
   
   try {
-    // Ensure CSRF token is available before making requests
-    await fetchCsrfToken()
-    
+    // CSRF token is automatically handled by the API interceptor
     const response = await api.post('/config/configeditor/content', {
       filePath: file.path
     })
@@ -190,9 +186,7 @@ const saveFile = async () => {
   saveResult.value = null
   
   try {
-    // Ensure CSRF token is available before making requests
-    await fetchCsrfToken()
-    
+    // CSRF token is automatically handled by the API interceptor
     const response = await api.post('/config/configeditor/save', {
       filePath: selectedFile.value.path,
       content: fileContent.value
