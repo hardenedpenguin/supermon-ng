@@ -614,16 +614,16 @@ class ConfigController
      */
     private function loadVersionInfo(bool $isAuthenticated): array
     {
-        // common.inc is already included at the top of the file
-        // The variables should be available in the global scope
+        // Include common.inc to get version variables
+        $this->includeService->includeCommonInc();
         
         // Make sure we can access the variables from common.inc
         global $TITLE_LOGGED, $TITLE_NOT_LOGGED, $VERSION_DATE;
         
         $versionInfo = [
-            'titleLogged' => $TITLE_LOGGED,
-            'titleNotLogged' => $TITLE_NOT_LOGGED, 
-            'versionDate' => $VERSION_DATE
+            'titleLogged' => $TITLE_LOGGED ?? null,
+            'titleNotLogged' => $TITLE_NOT_LOGGED ?? null, 
+            'versionDate' => $VERSION_DATE ?? null
         ];
         
         return $versionInfo;
