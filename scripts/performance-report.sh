@@ -50,36 +50,43 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${BLUE}  1. Configuration Cache Performance${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 config_data=$(curl -s "${BASE_URL}/api/performance/config-stats")
+echo "Include Calls: $(extract_metric "$config_data" '.data.include_calls')"
 echo "Cache Hits: $(extract_metric "$config_data" '.data.cache_hits')"
 echo "Cache Misses: $(extract_metric "$config_data" '.data.cache_misses')"
 echo "Hit Ratio: $(extract_metric "$config_data" '.data.cache_hit_ratio')%"
-echo "Entries Loaded: $(extract_metric "$config_data" '.data.entries_loaded')"
+echo "Avg Time: $(extract_metric "$config_data" '.data.average_time')ms"
 echo ""
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  2. File Loader Performance${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 file_data=$(curl -s "${BASE_URL}/api/performance/file-stats")
-echo "Files Loaded: $(extract_metric "$file_data" '.data.files_loaded')"
+echo "File Reads: $(extract_metric "$file_data" '.data.file_reads')"
 echo "Cache Hits: $(extract_metric "$file_data" '.data.cache_hits')"
+echo "Cache Misses: $(extract_metric "$file_data" '.data.cache_misses')"
 echo "Hit Ratio: $(extract_metric "$file_data" '.data.cache_hit_ratio')%"
-echo "Total Load Time: $(extract_metric "$file_data" '.data.total_load_time_ms')ms"
+echo "Total Bytes Read: $(extract_metric "$file_data" '.data.total_bytes_read')"
+echo "Cached Files: $(extract_metric "$file_data" '.data.cached_files_count')"
 echo ""
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  3. Database Performance${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-db_data=$(curl -s "${BASE_URL}/api/db-performance/database-stats")
-echo "Queries Executed: $(extract_metric "$db_data" '.data.queries_executed')"
-echo "Cached Queries: $(extract_metric "$db_data" '.data.cached_queries')"
-echo "Cache Hit Ratio: $(extract_metric "$db_data" '.data.query_cache_hit_ratio')%"
-echo "Avg Query Time: $(extract_metric "$db_data" '.data.average_query_time')ms"
+db_data=$(curl -s "${BASE_URL}/api/db-performance/database-stats" 2>/dev/null)
+if echo "$db_data" | grep -q '"success":true'; then
+    echo "Queries Executed: $(extract_metric "$db_data" '.data.queries_executed')"
+    echo "Cached Queries: $(extract_metric "$db_data" '.data.cached_queries')"
+    echo "Cache Hit Ratio: $(extract_metric "$db_data" '.data.query_cache_hit_ratio')%"
+    echo "Avg Query Time: $(extract_metric "$db_data" '.data.average_query_time')ms"
+else
+    echo -e "${YELLOW}Database monitoring not available (Doctrine DBAL not installed)${NC}"
+fi
 echo ""
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  4. HTTP Optimization${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-http_data=$(curl -s "${BASE_URL}/api/http-performance/http-stats")
+http_data=$(curl -s --compressed "${BASE_URL}/api/http-performance/http-stats")
 echo "Responses Optimized: $(extract_metric "$http_data" '.data.responses_optimized')"
 echo "Compression Ops: $(extract_metric "$http_data" '.data.compression_operations')"
 echo "Bytes Saved: $(extract_metric "$http_data" '.data.total_bytes_saved_mb')MB"
@@ -89,7 +96,7 @@ echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  5. Middleware Performance${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-mw_data=$(curl -s "${BASE_URL}/api/http-performance/middleware-stats")
+mw_data=$(curl -s --compressed "${BASE_URL}/api/http-performance/middleware-stats")
 echo "Total Requests: $(extract_metric "$mw_data" '.data.total_requests')"
 echo "Avg Response Time: $(extract_metric "$mw_data" '.data.average_response_time')ms"
 echo "Slow Requests: $(extract_metric "$mw_data" '.data.slow_request_percentage')%"
@@ -99,14 +106,14 @@ echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  6. Session & Authentication${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-session_data=$(curl -s "${BASE_URL}/api/session-performance/session-stats")
+session_data=$(curl -s --compressed "${BASE_URL}/api/session-performance/session-stats")
 echo "Sessions Created: $(extract_metric "$session_data" '.data.sessions_created')"
 echo "Cache Hit Ratio: $(extract_metric "$session_data" '.data.cache_hit_ratio')%"
 echo "Avg Session Time: $(extract_metric "$session_data" '.data.average_session_time')ms"
 echo "Active Sessions: $(extract_metric "$session_data" '.data.active_sessions_count')"
 echo ""
 
-auth_data=$(curl -s "${BASE_URL}/api/session-performance/auth-stats")
+auth_data=$(curl -s --compressed "${BASE_URL}/api/session-performance/auth-stats")
 echo "Login Attempts: $(extract_metric "$auth_data" '.data.login_attempts')"
 echo "Success Rate: $(extract_metric "$auth_data" '.data.success_rate')%"
 echo "Avg Auth Time: $(extract_metric "$auth_data" '.data.average_auth_time')ms"
@@ -116,7 +123,7 @@ echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  7. File I/O Performance${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-fileio_data=$(curl -s "${BASE_URL}/api/fileio-performance/file-io-stats")
+fileio_data=$(curl -s --compressed "${BASE_URL}/api/fileio-performance/file-io-stats")
 echo "File Reads: $(extract_metric "$fileio_data" '.data.file_reads')"
 echo "Cache Hit Ratio: $(extract_metric "$fileio_data" '.data.cache_hit_ratio')%"
 echo "Disk I/O Avoided: $(extract_metric "$fileio_data" '.data.disk_io_savings')%"
@@ -126,7 +133,7 @@ echo ""
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  8. External Process Optimization${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-ext_data=$(curl -s "${BASE_URL}/api/fileio-performance/external-process-stats")
+ext_data=$(curl -s --compressed "${BASE_URL}/api/fileio-performance/external-process-stats")
 echo "IRLP Lookups: $(extract_metric "$ext_data" '.data.irlp_lookups')"
 echo "IRLP Cache Hit Ratio: $(extract_metric "$ext_data" '.data.irlp_cache_hit_ratio')%"
 echo "Shell Commands Avoided: $(extract_metric "$ext_data" '.data.shell_commands_avoided')"
