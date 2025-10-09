@@ -140,10 +140,10 @@ onMounted(() => {
 .lsnod-table th {
   background-color: #f8f9fa;
   color: #495057;
+  border-bottom: 1px solid #000000;
   font-weight: 600;
   padding: 12px;
   text-align: left;
-  border-bottom: 2px solid #dee2e6;
 }
 
 .lsnod-table td {

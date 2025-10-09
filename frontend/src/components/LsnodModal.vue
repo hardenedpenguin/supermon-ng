@@ -638,6 +638,7 @@ const getRegistrationRowClass = (index: number) => {
 .info-table th {
   background: #add8e6; /* lightblue - matching original */
   color: #000;
+  border-bottom: 1px solid #000000;
   padding: 8px 12px;
   text-align: left;
   font-weight: bold;

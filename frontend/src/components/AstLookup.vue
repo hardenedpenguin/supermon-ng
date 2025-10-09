@@ -396,10 +396,10 @@ watch(() => props.open, (newOpen) => {
 .results-table th {
   background-color: #1f2937;
   color: #f9fafb;
+  border-bottom: 1px solid #000000;
   padding: 12px 8px;
   text-align: left;
   font-weight: 600;
-  border-bottom: 1px solid #374151;
 }
 
 .results-table td {

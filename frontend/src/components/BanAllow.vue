@@ -613,6 +613,7 @@ const refreshLists = () => {
 .list-table th {
   background-color: var(--border-color);
   color: var(--text-color);
+  border-bottom: 1px solid #000000;
   font-weight: bold;
 }
 

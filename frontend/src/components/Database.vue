@@ -491,6 +491,7 @@ const formatFileSize = (bytes) => {
 .database-table th {
   background-color: #111111;
   color: #00ff00;
+  border-bottom: 1px solid #000000;
   font-weight: bold;
   font-size: 0.95em;
 }

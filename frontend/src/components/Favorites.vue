@@ -451,10 +451,10 @@ onMounted(() => {
 .favorites-table th {
   background-color: #374151;
   color: #f9fafb;
+  border-bottom: 1px solid #000000;
   padding: 12px;
   text-align: left;
   font-weight: 600;
-  border-bottom: 1px solid #4b5563;
 }
 
 .favorites-table td {

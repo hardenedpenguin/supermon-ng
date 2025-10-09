@@ -25,7 +25,7 @@ export const useRealTimeStore = defineStore('realTime', () => {
     inactiveThreshold: 30000   // 30 seconds to become inactive
   }
   
-  const { state: pollingState, start: startPolling, stop: stopPolling, makeRequest } = usePolling(pollingConfig)
+  const { state: pollingState, start: startPolling, stop: stopPolling, makeRequest, onVisibilityChange } = usePolling(pollingConfig)
   const { batchInitialization, batchRealTimeUpdate, clearCache } = useBatchRequests({
     maxBatchSize: 5,
     batchDelay: 25, // Faster batching
@@ -36,6 +36,17 @@ export const useRealTimeStore = defineStore('realTime', () => {
     tokenLifetime: 3600000,    // 1 hour
     refreshThreshold: 300000,  // Refresh 5 minutes before expiry
     requestTimeout: 3000       // Faster timeout
+  })
+
+  // Setup visibility change handler once when store is created
+  onVisibilityChange(() => {
+    console.log('🔄 Tab visibility changed - isConnected:', isConnected.value, 'monitoring:', monitoringNodes.value.length)
+    // Only refresh if we're actively monitoring nodes
+    if (isConnected.value && monitoringNodes.value.length > 0) {
+      console.log('✅ Clearing cache and fetching fresh data')
+      clearCache()
+      fetchNodeDataOptimized()
+    }
   })
 
   // Computed
@@ -111,16 +122,35 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const startIntelligentPolling = () => {
     isConnected.value = true
     
+    // Clear cache to ensure fresh data
+    clearCache()
+    
     // Initial data fetch
     fetchNodeDataOptimized()
     
     // Start the intelligent polling service
     startPolling()
+    
+    // Set up simple interval to fetch data every second (matching active polling rate)
+    const pollInterval = setInterval(() => {
+      if (isConnected.value && monitoringNodes.value.length > 0) {
+        fetchNodeDataOptimized()
+      }
+    }, 1000) // Fixed 1 second interval for real-time updates
+    
+    // Store interval ID for cleanup
+    ;(window as any).__supermonPollInterval = pollInterval
   }
 
   const stopIntelligentPolling = () => {
     stopPolling()
     isConnected.value = false
+    
+    // Clear the polling interval
+    if ((window as any).__supermonPollInterval) {
+      clearInterval((window as any).__supermonPollInterval)
+      ;(window as any).__supermonPollInterval = null
+    }
   }
 
   const fetchNodeData = async () => {

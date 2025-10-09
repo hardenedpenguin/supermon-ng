@@ -295,9 +295,9 @@ const getLevelClass = (level) => {
 .log-table th {
   background-color: var(--container-bg);
   color: var(--text-color);
+  border-bottom: 1px solid #000000;
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid var(--border-color);
   font-weight: bold;
   white-space: nowrap;
 }

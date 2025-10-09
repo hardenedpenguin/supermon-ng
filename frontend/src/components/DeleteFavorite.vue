@@ -372,6 +372,7 @@ watch(() => props.open, (newOpen) => {
 .favorites-table th {
   background-color: #2A2A2A;
   font-weight: bold;
+  border-bottom: 1px solid #000000;
   color: #4A90E2;
 }
 

@@ -146,7 +146,7 @@ export class BatchRequestService {
           method: 'GET',
           params: {},
           priority: 'high',
-          ttl: 2000 // Very short cache for real-time data
+          ttl: 500 // Very short 500ms cache to allow near real-time updates
         })
       ])
 

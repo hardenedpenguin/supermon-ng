@@ -35,6 +35,7 @@ export class PollingService {
   private activityTimeout: NodeJS.Timeout | null = null
   private listeners: Set<(state: PollingState) => void> = new Set()
   private requestQueue: Map<string, Promise<any>> = new Map()
+  private visibilityCallbacks: Set<() => void> = new Set()
   
   // Activity tracking
   private activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click']
@@ -109,6 +110,18 @@ export class PollingService {
     // Return unsubscribe function
     return () => {
       this.listeners.delete(listener)
+    }
+  }
+
+  /**
+   * Subscribe to visibility change events
+   */
+  public onVisibilityChange(callback: () => void): () => void {
+    this.visibilityCallbacks.add(callback)
+    
+    // Return unsubscribe function
+    return () => {
+      this.visibilityCallbacks.delete(callback)
     }
   }
 
@@ -285,6 +298,15 @@ export class PollingService {
         // Resume normal activity when tab becomes visible
         this.state.isActive = true
         this.state.lastActivity = Date.now()
+        
+        // Notify visibility callbacks to trigger fresh data fetch
+        this.visibilityCallbacks.forEach(callback => {
+          try {
+            callback()
+          } catch (error) {
+            console.error('PollingService: Error in visibility callback', error)
+          }
+        })
       }
       
       this.updateInterval()
@@ -383,6 +405,7 @@ export function usePolling(config?: Partial<PollingConfig>) {
     stop: () => pollingService.stop(),
     makeRequest: <T>(key: string, requestFn: () => Promise<T>, ttl?: number) => 
       pollingService.makeRequest(key, requestFn, ttl),
-    updateConfig: (newConfig: Partial<PollingConfig>) => pollingService.updateConfig(newConfig)
+    updateConfig: (newConfig: Partial<PollingConfig>) => pollingService.updateConfig(newConfig),
+    onVisibilityChange: (callback: () => void) => pollingService.onVisibilityChange(callback)
   }
 }

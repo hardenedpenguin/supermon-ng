@@ -18,9 +18,11 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--background-color);
-  color: var(--text-color);
-  line-height: 1.6;
+}
+
+/* Global table header separator lines */
+table th {
+  border-bottom: 1px solid #000000;
 }
 
 /* Typography */

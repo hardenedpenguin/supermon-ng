@@ -529,7 +529,7 @@ watch(searchQuery, () => {
   padding: 0.75rem;
   text-align: left;
   font-weight: 600;
-  border-bottom: 2px solid var(--border-color);
+  border-bottom: 1px solid #000000;
 }
 
 .table-header.sortable {
