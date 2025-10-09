@@ -586,11 +586,12 @@ echo "   ✅ System dependencies installed (including ACL support)"
 echo "   ✅ Log access configured with ACLs"
 echo "   ✅ Unified file editor installed and validated"
 echo "   ✅ Sudoers configuration installed and validated"
-echo "   ✅ PHP dependencies installed"
+echo "   ✅ PHP dependencies installed (including Doctrine DBAL)"
 echo "   ✅ Node.js dependencies installed"
 echo "   ✅ Frontend built with ASTDB optimizations"
 echo "   ✅ Backend service created and started"
 echo "   ✅ ASTDB cache system configured"
+echo "   ✅ Database optimization layer ready"
 if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
     echo "   ✅ Apache configuration completed automatically with IP aliases"
 elif [ "$SKIP_APACHE" = true ]; then
