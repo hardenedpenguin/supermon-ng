@@ -46,18 +46,15 @@ export class CsrfTokenService {
   public async getToken(): Promise<string> {
     // Check if we have a valid token
     if (this.isTokenValid()) {
-      console.log('CsrfTokenService: Using cached token')
       return this.tokenInfo!.token
     }
 
     // Check if token needs refresh
     if (this.shouldRefreshToken()) {
-      console.log('CsrfTokenService: Token needs refresh')
       return this.refreshToken()
     }
 
     // No token or expired - fetch new one
-    console.log('CsrfTokenService: Fetching new token')
     return this.fetchNewToken()
   }
 
@@ -74,7 +71,6 @@ export class CsrfTokenService {
   public async refreshToken(): Promise<string> {
     // If already refreshing, wait for that promise
     if (this.refreshPromise) {
-      console.log('CsrfTokenService: Waiting for existing refresh')
       return this.refreshPromise
     }
 
@@ -95,7 +91,6 @@ export class CsrfTokenService {
   public clearToken(): void {
     this.tokenInfo = null
     this.refreshPromise = null
-    console.log('CsrfTokenService: Token cleared')
   }
 
   /**
@@ -140,12 +135,10 @@ export class CsrfTokenService {
       this.storeToken(token)
       
       const duration = Date.now() - startTime
-      console.log(`CsrfTokenService: New token fetched in ${duration}ms`)
       
       return token
     } catch (error) {
       const duration = Date.now() - startTime
-      console.error(`CsrfTokenService: Failed to fetch token after ${duration}ms`, error)
       throw error
     }
   }
@@ -154,21 +147,17 @@ export class CsrfTokenService {
    * Perform token refresh
    */
   private async performTokenRefresh(): Promise<string> {
-    console.log('CsrfTokenService: Performing token refresh')
     
     // Clear existing token info but keep the old token as fallback
     const oldToken = this.tokenInfo?.token
     
     try {
       const newToken = await this.fetchNewToken()
-      console.log('CsrfTokenService: Token refresh successful')
       return newToken
     } catch (error) {
-      console.error('CsrfTokenService: Token refresh failed', error)
       
       // If refresh failed but we have an old token, extend its lifetime temporarily
       if (oldToken && this.tokenInfo) {
-        console.log('CsrfTokenService: Extending old token lifetime')
         this.tokenInfo.expiresAt = Date.now() + 60000 // Extend by 1 minute
         return oldToken
       }
@@ -185,7 +174,6 @@ export class CsrfTokenService {
     
     for (let attempt = 1; attempt <= this.config.maxRetries; attempt++) {
       try {
-        console.log(`CsrfTokenService: Token request attempt ${attempt}/${this.config.maxRetries}`)
         
         const response = await api.get('/csrf-token', {
           timeout: this.config.requestTimeout,
@@ -198,7 +186,6 @@ export class CsrfTokenService {
         return response
       } catch (error) {
         lastError = error
-        console.warn(`CsrfTokenService: Attempt ${attempt} failed`, error)
         
         // Don't retry on certain errors
         if (this.isNonRetryableError(error)) {
@@ -235,7 +222,6 @@ export class CsrfTokenService {
       expiresAt: now + this.config.tokenLifetime
     }
     
-    console.log(`CsrfTokenService: Token stored, expires at ${new Date(this.tokenInfo.expiresAt).toISOString()}`)
   }
 
   /**
@@ -277,7 +263,6 @@ export class CsrfTokenService {
    */
   public updateConfig(newConfig: Partial<CsrfConfig>): void {
     this.config = { ...this.config, ...newConfig }
-    console.log('CsrfTokenService: Configuration updated', this.config)
   }
 }
 

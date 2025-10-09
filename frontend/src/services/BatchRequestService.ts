@@ -59,14 +59,12 @@ export class BatchRequestService {
     if (this.config.cacheEnabled) {
       const cached = this.getCachedResponse(id)
       if (cached) {
-        console.log(`BatchRequestService: Cache hit for ${id}`)
         return cached.data
       }
     }
 
     // Check if request is already pending
     if (this.pendingRequests.has(id)) {
-      console.log(`BatchRequestService: Request ${id} already pending, waiting...`)
       return new Promise((resolve, reject) => {
         // Reuse existing promise
         this.pendingRequests.get(id)!.resolve = resolve
@@ -98,8 +96,6 @@ export class BatchRequestService {
     config: any
     astdbHealth: any
   }> {
-    console.log('BatchRequestService: Creating initialization batch')
-    
     const batchId = `init_${Date.now()}`
     
     try {
@@ -131,7 +127,6 @@ export class BatchRequestService {
         astdbHealth: astdbResponse.status === 'fulfilled' ? astdbResponse.value : null
       }
     } catch (error) {
-      console.error('BatchRequestService: Initialization batch failed', error)
       throw error
     }
   }
@@ -141,35 +136,24 @@ export class BatchRequestService {
    */
   public async batchRealTimeUpdate(nodeIds: string[]): Promise<{
     amiStatus: any
-    nodeStatus: any
   }> {
-    console.log(`BatchRequestService: Creating real-time update batch for ${nodeIds.length} nodes`)
-    
     try {
-      // For real-time data, we want fresh data so use shorter TTL
-      const [amiResponse, statusResponse] = await Promise.allSettled([
+      // Use GET method with query parameters - only use working AMI endpoint
+      const nodeParams = nodeIds.join(',')
+      const [amiResponse] = await Promise.allSettled([
         this.addRequest({
-          endpoint: '/nodes/ami/status',
-          method: 'POST',
-          params: { nodes: nodeIds },
-          priority: 'high',
-          ttl: 2000 // Very short cache for real-time data
-        }),
-        this.addRequest({
-          endpoint: '/nodes/status',
-          method: 'POST',
-          params: { nodes: nodeIds },
+          endpoint: `/nodes/ami/status?nodes=${encodeURIComponent(nodeParams)}`,
+          method: 'GET',
+          params: {},
           priority: 'high',
           ttl: 2000 // Very short cache for real-time data
         })
       ])
 
       return {
-        amiStatus: amiResponse.status === 'fulfilled' ? amiResponse.value : null,
-        nodeStatus: statusResponse.status === 'fulfilled' ? statusResponse.value : null
+        amiStatus: amiResponse.status === 'fulfilled' ? amiResponse.value : null
       }
     } catch (error) {
-      console.error('BatchRequestService: Real-time update batch failed', error)
       throw error
     }
   }
@@ -199,8 +183,6 @@ export class BatchRequestService {
     if (this.requestQueue.size === 0) {
       return
     }
-
-    console.log(`BatchRequestService: Processing batch of ${this.requestQueue.size} requests`)
     
     const requests = Array.from(this.requestQueue.values())
     this.requestQueue.clear()
@@ -242,7 +224,6 @@ export class BatchRequestService {
    */
   private async executeSingleRequest(request: BatchRequest): Promise<void> {
     try {
-      console.log(`BatchRequestService: Executing single request ${request.id}`)
       
       let response: any
       if (request.method === 'GET') {
@@ -265,7 +246,6 @@ export class BatchRequestService {
    * Execute a group of similar requests
    */
   private async executeRequestGroup(requests: BatchRequest[]): Promise<void> {
-    console.log(`BatchRequestService: Executing group of ${requests.length} requests`)
     
     // For now, execute in parallel - could be optimized further
     const promises = requests.map(request => this.executeSingleRequest(request))
@@ -305,7 +285,6 @@ export class BatchRequestService {
    * Handle failed request
    */
   private handleRequestError(request: BatchRequest, error: any): void {
-    console.error(`BatchRequestService: Request ${request.id} failed`, error)
     
     // Reject pending promises
     const pending = this.pendingRequests.get(request.id)
@@ -376,7 +355,6 @@ export class BatchRequestService {
    */
   public clearCache(): void {
     this.responseCache.clear()
-    console.log('BatchRequestService: Cache cleared')
   }
 
   /**

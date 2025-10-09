@@ -50,7 +50,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
   // Actions
   const initialize = async () => {
     try {
-      console.log('RealTime Store: Starting optimized initialization')
       const startTime = Date.now()
       
       // Use batch initialization for better performance
@@ -63,21 +62,17 @@ export const useRealTimeStore = defineStore('realTime', () => {
           ...node,
           info: `${node.node_number || node.id} - ${node.description || 'Unknown'}`
         }))
-        console.log(`RealTime Store: Loaded ${nodes.value.length} nodes`)
       }
       
       // Process configuration data
       if (batchResult.config?.data?.config) {
         nodeConfig.value = batchResult.config.data.config
-        console.log('RealTime Store: Loaded node configuration')
       }
       
       // Initialize ASTDB store (will use caching)
       await astdbStore.initialize()
-      console.log('RealTime Store: ASTDB store initialized')
       
       const duration = Date.now() - startTime
-      console.log(`RealTime Store: Initialization completed in ${duration}ms`)
       
       error.value = null
       lastUpdateTime.value = Date.now()
@@ -90,7 +85,11 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const startMonitoring = (nodeId: string) => {
     if (!monitoringNodes.value.includes(nodeId)) {
       monitoringNodes.value.push(nodeId)
-      console.log(`RealTime Store: Started monitoring node ${nodeId}`)
+      
+      // If polling is already active, fetch data for the new node
+      if (isConnected.value) {
+        fetchNodeDataOptimized()
+      }
     }
     
     if (!isConnected.value) {
@@ -102,7 +101,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
     const index = monitoringNodes.value.indexOf(nodeId)
     if (index > -1) {
       monitoringNodes.value.splice(index, 1)
-      console.log(`RealTime Store: Stopped monitoring node ${nodeId}`)
     }
     
     if (monitoringNodes.value.length === 0) {
@@ -111,7 +109,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
   }
 
   const startIntelligentPolling = () => {
-    console.log('RealTime Store: Starting intelligent polling')
     isConnected.value = true
     
     // Initial data fetch
@@ -122,7 +119,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
   }
 
   const stopIntelligentPolling = () => {
-    console.log('RealTime Store: Stopping intelligent polling')
     stopPolling()
     isConnected.value = false
   }
@@ -218,7 +214,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
         return // No nodes to monitor
       }
 
-      console.log(`RealTime Store: Fetching optimized data for ${monitoringNodes.value.length} nodes`)
       const startTime = Date.now()
       
       // Use batch real-time update for better performance
@@ -278,7 +273,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
         })
         
         const duration = Date.now() - startTime
-        console.log(`RealTime Store: Updated ${monitoringNodes.value.length} nodes in ${duration}ms`)
       }
       
       error.value = null

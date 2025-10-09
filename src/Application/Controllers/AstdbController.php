@@ -350,7 +350,10 @@ class AstdbController
         try {
             $cacheStats = $this->astdbService->getCacheStats();
             
-            $isHealthy = $cacheStats['application_cache_exists'] ?? false;
+            // Consider healthy if cache file exists, regardless of whether it's loaded in memory
+            $cacheFileExists = $cacheStats['cache_file_exists'] ?? false;
+            $hasEntries = ($cacheStats['entries_count'] ?? 0) > 0;
+            $isHealthy = $cacheFileExists || $hasEntries;
             
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -358,7 +361,7 @@ class AstdbController
                 'data' => [
                     'cache_status' => $isHealthy ? 'ready' : 'not_loaded',
                     'entries_count' => $cacheStats['entries_count'] ?? 0,
-                    'cache_file_exists' => $cacheStats['cache_file_exists'] ?? false,
+                    'cache_file_exists' => $cacheFileExists,
                     'is_compressed' => $cacheStats['is_compressed'] ?? false
                 ],
                 'timestamp' => date('c')

@@ -75,7 +75,6 @@ export class PollingService {
       return // Already running
     }
 
-    console.log('PollingService: Starting adaptive polling')
     this.state.isConnected = true
     this.scheduleNextPoll()
     this.notifyListeners()
@@ -95,7 +94,6 @@ export class PollingService {
       this.activityTimeout = null
     }
 
-    console.log('PollingService: Stopped polling')
     this.state.isConnected = false
     this.state.retryCount = 0
     this.state.errorCount = 0
@@ -139,7 +137,6 @@ export class PollingService {
   ): Promise<T> {
     // Check if request is already in progress
     if (this.requestQueue.has(key)) {
-      console.log(`PollingService: Deduplicating request for ${key}`)
       return this.requestQueue.get(key)!
     }
 
@@ -190,12 +187,6 @@ export class PollingService {
   private onRequestError(error: any): void {
     this.state.retryCount++
     this.state.errorCount++
-    
-    console.warn('PollingService: Request failed', {
-      retryCount: this.state.retryCount,
-      errorCount: this.state.errorCount,
-      error: error.message
-    })
 
     // Apply exponential backoff
     if (this.state.retryCount <= this.config.maxRetries) {
@@ -204,7 +195,6 @@ export class PollingService {
         this.config.maxBackoffInterval
       )
       
-      console.log(`PollingService: Applying backoff of ${backoffInterval}ms`)
       this.state.currentInterval = backoffInterval
     } else {
       // Reset to normal interval after max retries
@@ -235,7 +225,6 @@ export class PollingService {
     }
 
     if (newInterval !== this.state.currentInterval) {
-      console.log(`PollingService: Updating interval from ${this.state.currentInterval}ms to ${newInterval}ms`)
       this.state.currentInterval = newInterval
       
       // Reschedule if currently running
@@ -291,7 +280,6 @@ export class PollingService {
   private setupVisibilityTracking(): void {
     this.visibilityChangeHandler = () => {
       this.state.isVisible = !document.hidden
-      console.log(`PollingService: Tab visibility changed - ${this.state.isVisible ? 'visible' : 'hidden'}`)
       
       if (this.state.isVisible) {
         // Resume normal activity when tab becomes visible
@@ -317,7 +305,6 @@ export class PollingService {
     this.state.lastActivity = now
 
     if (wasInactive) {
-      console.log('PollingService: User became active')
       this.updateInterval()
       this.notifyListeners()
     }
@@ -330,7 +317,6 @@ export class PollingService {
     // Set timeout to mark user as inactive
     this.activityTimeout = setTimeout(() => {
       if (Date.now() - this.state.lastActivity >= this.config.inactiveThreshold) {
-        console.log('PollingService: User became inactive')
         this.state.isActive = false
         this.updateInterval()
         this.notifyListeners()
