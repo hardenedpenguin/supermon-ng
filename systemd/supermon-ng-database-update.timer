@@ -1,0 +1,12 @@
+[Unit]
+Description=Run Supermon-NG Database Update every 3 hours
+Requires=supermon-ng-database-update.service
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=3h
+AccuracySec=5min
+
+[Install]
+WantedBy=timers.target
+

@@ -515,6 +515,15 @@ else
     echo "⚠️  Node status timer not found, skipping"
 fi
 
+# Enable and start database auto-update timer (if it exists)
+if systemctl list-unit-files | grep -q "supermon-ng-database-update.timer"; then
+    systemctl enable supermon-ng-database-update.timer
+    systemctl start supermon-ng-database-update.timer
+    echo "✅ Database auto-update timer enabled and started"
+else
+    echo "⚠️  Database auto-update timer not found, skipping"
+fi
+
 # Make user management scripts executable
 echo "🔧 Setting script permissions..."
 if [ -f "$APP_DIR/user_files/set_password.sh" ]; then
@@ -525,6 +534,11 @@ fi
 if [ -f "$APP_DIR/scripts/manage_users.php" ]; then
     chmod +x "$APP_DIR/scripts/manage_users.php"
     echo "✅ Made executable: scripts/manage_users.php"
+fi
+
+if [ -f "$APP_DIR/scripts/database-auto-update.php" ]; then
+    chmod +x "$APP_DIR/scripts/database-auto-update.php"
+    echo "✅ Made executable: scripts/database-auto-update.php"
 fi
 
 echo ""
@@ -556,6 +570,10 @@ echo "🔧 Service Management:"
 echo "   Start:  sudo systemctl start supermon-ng-backend"
 echo "   Stop:   sudo systemctl stop supermon-ng-backend"
 echo "   Status: sudo systemctl status supermon-ng-backend"
+echo ""
+echo "⏰ Scheduled Tasks:"
+systemctl is-active supermon-ng-node-status.timer > /dev/null 2>&1 && echo "   ✅ Node Status Updates: Every 3 minutes" || echo "   ⚠️  Node Status Updates: Not configured"
+systemctl is-active supermon-ng-database-update.timer > /dev/null 2>&1 && echo "   ✅ Database Updates: Every 3 hours" || echo "   ⚠️  Database Updates: Not configured"
 echo ""
 echo "📝 Next steps:"
 if [ "$APACHE_AUTO_CONFIGURED" = true ]; then

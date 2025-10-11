@@ -390,6 +390,15 @@ update_services() {
         cp "$PROJECT_ROOT/systemd/supermon-ng-node-status.timer" "/etc/systemd/system/"
     fi
     
+    # Update database auto-update service
+    if [ -f "$PROJECT_ROOT/systemd/supermon-ng-database-update.service" ]; then
+        sed "s|WorkingDirectory=.*|WorkingDirectory=$APP_DIR|g; s|ExecStart=.*|ExecStart=/usr/bin/php $APP_DIR/scripts/database-auto-update.php|g; s|StandardOutput=.*|StandardOutput=append:$APP_DIR/logs/database-update.log|g; s|StandardError=.*|StandardError=append:$APP_DIR/logs/database-update.log|g" "$PROJECT_ROOT/systemd/supermon-ng-database-update.service" > "/etc/systemd/system/supermon-ng-database-update.service"
+    fi
+    
+    if [ -f "$PROJECT_ROOT/systemd/supermon-ng-database-update.timer" ]; then
+        cp "$PROJECT_ROOT/systemd/supermon-ng-database-update.timer" "/etc/systemd/system/"
+    fi
+    
     # Update backend service
     cat > "/etc/systemd/system/supermon-ng-backend.service" << EOF
 [Unit]
@@ -417,6 +426,13 @@ EOF
     if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
         systemctl enable supermon-ng-node-status.timer
         systemctl start supermon-ng-node-status.timer
+    fi
+    
+    # Enable and start database auto-update timer
+    if systemctl list-unit-files | grep -q "supermon-ng-database-update.timer"; then
+        systemctl enable supermon-ng-database-update.timer
+        systemctl restart supermon-ng-database-update.timer
+        print_status "Database auto-update timer enabled and started"
     fi
 }
 
@@ -499,6 +515,7 @@ post_update_tasks() {
     chmod +x "$APP_DIR/scripts"/*.sh 2>/dev/null || true
     chmod +x "$APP_DIR/user_files/set_password.sh" 2>/dev/null || true
     chmod +x "$APP_DIR/scripts/manage_users.php" 2>/dev/null || true
+    chmod +x "$APP_DIR/scripts/database-auto-update.php" 2>/dev/null || true
 }
 
 # Function to display update summary
@@ -540,6 +557,11 @@ display_summary() {
     echo "🔧 Service Status:"
     systemctl is-active supermon-ng-backend > /dev/null && echo "   ✅ Backend: Running" || echo "   ❌ Backend: Failed"
     systemctl is-active apache2 > /dev/null && echo "   ✅ Apache: Running" || echo "   ❌ Apache: Failed"
+    
+    echo ""
+    echo "⏰ Scheduled Tasks:"
+    systemctl is-active supermon-ng-node-status.timer > /dev/null 2>&1 && echo "   ✅ Node Status Updates: Every 3 minutes" || echo "   ⚠️  Node Status Updates: Not configured"
+    systemctl is-active supermon-ng-database-update.timer > /dev/null 2>&1 && echo "   ✅ Database Updates: Every 3 hours" || echo "   ⚠️  Database Updates: Not configured"
     
     echo ""
     echo "📝 Next Steps:"

@@ -1,0 +1,15 @@
+[Unit]
+Description=Supermon-NG Database Auto-Update Service
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/var/www/html/supermon-ng
+ExecStart=/usr/bin/php /var/www/html/supermon-ng/scripts/database-auto-update.php
+StandardOutput=append:/var/www/html/supermon-ng/logs/database-update.log
+StandardError=append:/var/www/html/supermon-ng/logs/database-update.log
+
+[Install]
+WantedBy=multi-user.target
+
