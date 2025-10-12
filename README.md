@@ -231,20 +231,23 @@ Access your dashboard at:
 Create user accounts using the manage_users script:
 
 ```bash
+# Change to the supermon-ng directory first
+cd /var/www/html/supermon-ng
+
 # Create a new user account
-sudo php /var/www/html/supermon-ng/scripts/manage_users.php --add-user username password
+sudo ./scripts/manage_users.php --add-user username password
 
 # List existing users
-sudo php /var/www/html/supermon-ng/scripts/manage_users.php --list-users
+sudo ./scripts/manage_users.php --list-users
 
 # Change a user's password
-sudo php /var/www/html/supermon-ng/scripts/manage_users.php --change-password username newpassword
+sudo ./scripts/manage_users.php --change-password username newpassword
 
 # Delete a user account
-sudo php /var/www/html/supermon-ng/scripts/manage_users.php --delete-user username
+sudo ./scripts/manage_users.php --delete-user username
 
 # Show help and all available options
-sudo php /var/www/html/supermon-ng/scripts/manage_users.php --help
+sudo ./scripts/manage_users.php --help
 ```
 
 **Important Note:**
