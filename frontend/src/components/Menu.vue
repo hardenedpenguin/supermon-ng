@@ -256,46 +256,7 @@ watch(() => appStore.isAuthenticated, () => {
   display: block;
 }
 
-/* Responsive Menu Styles */
-@media (max-width: 768px) {
-  #menu {
-    width: calc(100% + 20px); /* Adjust for mobile padding (10px each side) */
-    margin-left: -10px; /* Offset mobile padding */
-    margin-right: -10px; /* Offset mobile padding */
-  }
-  
-  #menu ul {
-    flex-direction: column;
-  }
-  
-  #menu .dropdown-content {
-    position: static;
-    display: none;
-  }
-  
-  #menu .dropdown:hover .dropdown-content {
-    display: block;
-  }
-}
-
-/* Extra small screens */
-@media (max-width: 480px) {
-  #menu {
-    width: calc(100% + 10px); /* Adjust for extra small padding */
-    margin-left: -5px;
-    margin-right: -5px;
-  }
-  
-  #menu li a {
-    padding: 6px 10px; /* Reduce padding on small screens */
-    font-size: 0.9em;
-  }
-  
-  #menu .dropdown-content a {
-    padding: 10px 14px;
-    font-size: 0.9em;
-  }
-}
+/* No responsive design - mobile displays exactly like desktop */
 
 /* Print Menu Styles */
 @media print {

@@ -1440,6 +1440,7 @@ watch(displayedNodes, (newDisplayedNodes) => {
   box-sizing: border-box;
 }
 
+
 /* Original Supermon-ng table container styling */
 .fxwidth {
   width: auto;
@@ -1763,9 +1764,8 @@ watch(displayedNodes, (newDisplayedNodes) => {
   font-weight: bold;
   transition: all 0.3s ease;
   font-size: 14px;
-  display: inline-block;
-  white-space: nowrap;
 }
+
 
 .submit:hover, .submit-large:hover, .submit2:hover {
   background-color: var(--primary-color);

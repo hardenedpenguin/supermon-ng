@@ -712,16 +712,14 @@ defineExpose({
 }
 
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .gridtable,
-  .gridtable-large {
-    font-size: 11px;
-  }
-  
-  .node-table th,
-  .node-table td {
-    padding: 2px;
-  }
+/* Enable horizontal scrolling for tables on mobile to show all content */
+.node-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gridtable,
+.gridtable-large {
+  min-width: 100%;
 }
 </style>
