@@ -148,7 +148,7 @@ class NodeStatusController
                 }
             } else {
                 // Fallback to direct script execution
-                $command = "cd " . escapeshellarg(dirname($scriptPath)) . " && /usr/bin/sudo -n /usr/bin/python3 " . escapeshellarg($scriptPath) . " 2>&1";
+                $command = "/usr/bin/sudo -n " . escapeshellarg($scriptPath) . " 2>&1";
                 $output = shell_exec($command);
             }
             

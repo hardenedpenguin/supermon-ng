@@ -381,24 +381,6 @@ update_application() {
 update_services() {
     print_status "Updating system services..."
     
-    # Update systemd service files
-    if [ -f "$PROJECT_ROOT/systemd/supermon-ng-node-status.service" ]; then
-        sed "s|WorkingDirectory=.*|WorkingDirectory=$APP_DIR/user_files/sbin|g; s|ExecStart=.*|ExecStart=/usr/bin/python3 $APP_DIR/user_files/sbin/ast_node_status_update.py|g; s|StandardOutput=.*|StandardOutput=append:$APP_DIR/logs/node-status-update.log|g; s|StandardError=.*|StandardError=append:$APP_DIR/logs/node-status-update.log|g" "$PROJECT_ROOT/systemd/supermon-ng-node-status.service" > "/etc/systemd/system/supermon-ng-node-status.service"
-    fi
-    
-    if [ -f "$PROJECT_ROOT/systemd/supermon-ng-node-status.timer" ]; then
-        cp "$PROJECT_ROOT/systemd/supermon-ng-node-status.timer" "/etc/systemd/system/"
-    fi
-    
-    # Update database auto-update service
-    if [ -f "$PROJECT_ROOT/systemd/supermon-ng-database-update.service" ]; then
-        sed "s|WorkingDirectory=.*|WorkingDirectory=$APP_DIR|g; s|ExecStart=.*|ExecStart=/usr/bin/php $APP_DIR/scripts/database-auto-update.php|g; s|StandardOutput=.*|StandardOutput=append:$APP_DIR/logs/database-update.log|g; s|StandardError=.*|StandardError=append:$APP_DIR/logs/database-update.log|g" "$PROJECT_ROOT/systemd/supermon-ng-database-update.service" > "/etc/systemd/system/supermon-ng-database-update.service"
-    fi
-    
-    if [ -f "$PROJECT_ROOT/systemd/supermon-ng-database-update.timer" ]; then
-        cp "$PROJECT_ROOT/systemd/supermon-ng-database-update.timer" "/etc/systemd/system/"
-    fi
-    
     # Update backend service
     cat > "/etc/systemd/system/supermon-ng-backend.service" << EOF
 [Unit]
@@ -417,22 +399,114 @@ RestartSec=10
 WantedBy=multi-user.target
 EOF
     
+    # Update database auto-update service
+    cat > "/etc/systemd/system/supermon-ng-database-update.service" << EOF
+[Unit]
+Description=Supermon-NG Database Auto-Update Service
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=$APP_DIR
+ExecStart=/usr/bin/php $APP_DIR/scripts/database-auto-update.php
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    # Update database auto-update timer
+    cat > "/etc/systemd/system/supermon-ng-database-update.timer" << EOF
+[Unit]
+Description=Supermon-NG Database Auto-Update Timer
+Requires=supermon-ng-database-update.service
+
+[Timer]
+OnCalendar=03:47
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+    
+    # Update node status service
+    cat > "/etc/systemd/system/supermon-ng-node-status.service" << EOF
+[Unit]
+Description=Supermon-NG Node Status Update Service
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=$APP_DIR/user_files/sbin
+ExecStart=/usr/bin/python3 $APP_DIR/user_files/sbin/ast_node_status_update.py
+
+[Install]
+WantedBy=multi-user.target
+EOF
+    
+    # Update node status timer
+    cat > "/etc/systemd/system/supermon-ng-node-status.timer" << EOF
+[Unit]
+Description=Run Supermon-NG Node Status Update every 3 minutes
+Requires=supermon-ng-node-status.service
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=3min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target
+EOF
+    
     # Reload systemd and restart services
     systemctl daemon-reload
     systemctl enable supermon-ng-backend
-    systemctl start supermon-ng-backend
+    systemctl restart supermon-ng-backend
     
-    # Enable node status service if configured
-    if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
-        systemctl enable supermon-ng-node-status.timer
-        systemctl start supermon-ng-node-status.timer
-    fi
+    # Enable and start node status timer
+    systemctl enable supermon-ng-node-status.timer
+    systemctl restart supermon-ng-node-status.timer
     
     # Enable and start database auto-update timer
-    if systemctl list-unit-files | grep -q "supermon-ng-database-update.timer"; then
-        systemctl enable supermon-ng-database-update.timer
-        systemctl restart supermon-ng-database-update.timer
-        print_status "Database auto-update timer enabled and started"
+    systemctl enable supermon-ng-database-update.timer
+    systemctl restart supermon-ng-database-update.timer
+    
+    print_status "All services updated, enabled, and started"
+}
+
+# Function to update sudoers configuration
+update_sudoers() {
+    print_status "Updating sudoers configuration..."
+    
+    SUDOERS_FILE="/etc/sudoers.d/011_www-nopasswd"
+    SUDOERS_SOURCE="$PROJECT_ROOT/sudoers.d/011_www-nopasswd"
+    
+    if [ -f "$SUDOERS_SOURCE" ]; then
+        # Backup existing sudoers file
+        if [ -f "$SUDOERS_FILE" ]; then
+            cp "$SUDOERS_FILE" "$SUDOERS_FILE.backup"
+        fi
+        
+        # Copy new sudoers file
+        cp "$SUDOERS_SOURCE" "$SUDOERS_FILE"
+        chmod 0440 "$SUDOERS_FILE"
+        chown root:root "$SUDOERS_FILE"
+        
+        # Validate sudoers syntax
+        if visudo -c -f "$SUDOERS_FILE"; then
+            print_status "Sudoers configuration updated successfully"
+        else
+            print_warning "Invalid sudoers syntax, restoring backup"
+            if [ -f "$SUDOERS_FILE.backup" ]; then
+                mv "$SUDOERS_FILE.backup" "$SUDOERS_FILE"
+            else
+                rm -f "$SUDOERS_FILE"
+            fi
+        fi
+    else
+        print_warning "Sudoers source file not found at $SUDOERS_SOURCE"
     fi
 }
 
@@ -488,6 +562,18 @@ update_apache_config() {
         # Update Apache site configuration
         # Note: No backup of system files - Apache config is managed by installation
         cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
+        
+        # Disable the default site to avoid conflicts
+        print_status "Disabling default Apache site..."
+        a2dissite -q 000-default 2>/dev/null || {
+            print_warning "Failed to disable default site (may not exist)"
+        }
+        
+        # Enable the supermon-ng site
+        print_status "Enabling supermon-ng Apache site..."
+        a2ensite -q supermon-ng 2>/dev/null || {
+            print_warning "Failed to enable Apache site automatically"
+        }
         
         # Test and restart Apache
         if apache2ctl configtest >/dev/null 2>&1; then
@@ -596,6 +682,7 @@ main() {
     create_backup
     update_application
     update_services
+    update_sudoers
     update_dependencies
     update_frontend
     update_apache_config

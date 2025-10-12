@@ -1,6 +1,9 @@
 # Used for buttons
 www-data ALL=(root) NOPASSWD: /bin/journalctl, /usr/bin/astup.sh, /usr/bin/astdn.sh, /usr/sbin/reboot
 www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/ssinfo
+www-data ALL=(root) NOPASSWD: /bin/systemctl start supermon-ng-node-status.service
+www-data ALL=(root) NOPASSWD: /bin/systemctl is-active supermon-ng-node-status.service
+www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/ast_node_status_update.py
 
 # Asterisk commands for lsnod
 www-data ALL=(root) NOPASSWD: /usr/sbin/asterisk

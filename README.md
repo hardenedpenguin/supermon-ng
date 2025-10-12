@@ -1,4 +1,4 @@
-# Supermon-NG V4.0.7 - Modern AllStar Link Management Dashboard
+# Supermon-NG V4.0.8 - Modern AllStar Link Management Dashboard
 
 A modern, responsive web-based management interface for AllStar Link nodes, built with Vue.js 3 and PHP 8. This is a complete rewrite of the original Supermon with enhanced features, better security, and modern web technologies.
 
@@ -31,10 +31,10 @@ Download and extract the latest release tarball:
 ```bash
 # Download the release to your home directory (avoids /tmp permission issues)
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.7/supermon-ng-V4.0.7.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.8/supermon-ng-V4.0.8.tar.xz
 
 # Extract to your home directory
-tar -xJf supermon-ng-V4.0.7.tar.xz
+tar -xJf supermon-ng-V4.0.8.tar.xz
 
 # Run installation script
 cd $HOME/supermon-ng
@@ -196,6 +196,17 @@ CUSTOM_LINK = https://alerts.weather.gov/cap/wwaatmget.php?x=TXC039&y=1
 
 **Dashboard Configuration:**
 Users with `SYSINFUSER` permissions can configure node status settings directly through the web dashboard using the "Node Status" button.
+
+**Important:** After configuring the node status settings via the dashboard button, you must enable and start the systemd timer service:
+
+```bash
+# Enable and start the node status timer (runs every 3 minutes)
+sudo systemctl enable supermon-ng-node-status.timer
+sudo systemctl start supermon-ng-node-status.timer
+
+# Verify the timer is active
+sudo systemctl status supermon-ng-node-status.timer
+```
 
 This enables the systemd service that updates Asterisk variables every 3 minutes.
 
@@ -453,10 +464,10 @@ Supermon-NG includes an intelligent, conservative update system that **NEVER** r
 ```bash
 # 1. Download the latest release to your home directory
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.7/supermon-ng-V4.0.7.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.8/supermon-ng-V4.0.8.tar.xz
 
 # 2. Extract the new version
-tar -xJf supermon-ng-V4.0.7.tar.xz
+tar -xJf supermon-ng-V4.0.8.tar.xz
 cd $HOME/supermon-ng
 
 # 3. Run the update script
@@ -545,11 +556,11 @@ This shows:
 mkdir -p $HOME/supermon-ng-update
 cd $HOME/supermon-ng-update
 
-# Download latest release (replace V4.0.7 with actual version)
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.7/supermon-ng-V4.0.7.tar.xz
+# Download latest release (replace V4.0.8 with actual version)
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.8/supermon-ng-V4.0.8.tar.xz
 
 # Extract the package
-tar -xJf supermon-ng-V4.0.7.tar.xz
+tar -xJf supermon-ng-V4.0.8.tar.xz
 cd supermon-ng
 ```
 
@@ -856,8 +867,8 @@ sudo ./install.sh --help
 sudo /var/www/html/supermon-ng/scripts/version-check.sh
 
 # Quick update (download, extract, run update script)
-cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.7/supermon-ng-V4.0.7.tar.xz
-tar -xJf supermon-ng-V4.0.7.tar.xz && cd supermon-ng
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.8/supermon-ng-V4.0.8.tar.xz
+tar -xJf supermon-ng-V4.0.8.tar.xz && cd supermon-ng
 sudo ./scripts/update.sh
 
 # Update without Apache configuration changes
@@ -990,4 +1001,4 @@ We welcome feature requests! Please:
 
 ---
 
-**Supermon-NG V4.0.7** - Bringing AllStar Link management into the modern era! 🚀📡
+**Supermon-NG V4.0.8** - Bringing AllStar Link management into the modern era! 🚀📡

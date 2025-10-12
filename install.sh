@@ -326,41 +326,95 @@ SERVICE_EOF
     echo "✅ Backend service file created"
 fi
 
-# Install systemd service files from systemd directory
-echo "📝 Installing systemd service files..."
-if [ -d "$APP_DIR/systemd" ]; then
-    for service_file in "$APP_DIR/systemd"/*.service; do
-        if [ -f "$service_file" ]; then
-            service_name=$(basename "$service_file")
-            target_file="/etc/systemd/system/$service_name"
-            
-            if [ -f "$target_file" ]; then
-                echo "⚠️  Service file $target_file already exists. Skipping."
-            else
-                echo "📋 Installing $service_name..."
-                cp "$service_file" "$target_file"
-                echo "✅ $service_name installed"
-            fi
-        fi
-    done
-    
-    # Install timer files if they exist
-    for timer_file in "$APP_DIR/systemd"/*.timer; do
-        if [ -f "$timer_file" ]; then
-            timer_name=$(basename "$timer_file")
-            target_file="/etc/systemd/system/$timer_name"
-            
-            if [ -f "$target_file" ]; then
-                echo "⚠️  Timer file $target_file already exists. Skipping."
-            else
-                echo "📋 Installing $timer_name..."
-                cp "$timer_file" "$target_file"
-                echo "✅ $timer_name installed"
-            fi
-        fi
-    done
+# Database update service
+SERVICE_FILE="/etc/systemd/system/supermon-ng-database-update.service"
+if [ -f "$SERVICE_FILE" ]; then
+    echo "⚠️  Service file $SERVICE_FILE already exists. Skipping creation."
 else
-    echo "⚠️  No systemd directory found at $APP_DIR/systemd"
+    echo "📝 Creating database update service file..."
+    cat > "$SERVICE_FILE" << 'SERVICE_EOF'
+[Unit]
+Description=Supermon-NG Database Auto-Update Service
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=APP_DIR_PLACEHOLDER
+ExecStart=/usr/bin/php APP_DIR_PLACEHOLDER/scripts/database-auto-update.php
+
+[Install]
+WantedBy=multi-user.target
+SERVICE_EOF
+    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$SERVICE_FILE"
+    echo "✅ Database update service file created"
+fi
+
+# Database update timer
+TIMER_FILE="/etc/systemd/system/supermon-ng-database-update.timer"
+if [ -f "$TIMER_FILE" ]; then
+    echo "⚠️  Timer file $TIMER_FILE already exists. Skipping creation."
+else
+    echo "📝 Creating database update timer file..."
+    cat > "$TIMER_FILE" << 'TIMER_EOF'
+[Unit]
+Description=Supermon-NG Database Auto-Update Timer
+Requires=supermon-ng-database-update.service
+
+[Timer]
+OnCalendar=03:47
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+TIMER_EOF
+    echo "✅ Database update timer file created"
+fi
+
+# Node status update service
+SERVICE_FILE="/etc/systemd/system/supermon-ng-node-status.service"
+if [ -f "$SERVICE_FILE" ]; then
+    echo "⚠️  Service file $SERVICE_FILE already exists. Skipping creation."
+else
+    echo "📝 Creating node status service file..."
+    cat > "$SERVICE_FILE" << 'SERVICE_EOF'
+[Unit]
+Description=Supermon-NG Node Status Update Service
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=APP_DIR_PLACEHOLDER/user_files/sbin
+ExecStart=/usr/bin/python3 APP_DIR_PLACEHOLDER/user_files/sbin/ast_node_status_update.py
+
+[Install]
+WantedBy=multi-user.target
+SERVICE_EOF
+    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$SERVICE_FILE"
+    echo "✅ Node status service file created"
+fi
+
+# Node status update timer
+TIMER_FILE="/etc/systemd/system/supermon-ng-node-status.timer"
+if [ -f "$TIMER_FILE" ]; then
+    echo "⚠️  Timer file $TIMER_FILE already exists. Skipping creation."
+else
+    echo "📝 Creating node status timer file..."
+    cat > "$TIMER_FILE" << 'TIMER_EOF'
+[Unit]
+Description=Run Supermon-NG Node Status Update every 3 minutes
+Requires=supermon-ng-node-status.service
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=3min
+AccuracySec=30s
+
+[Install]
+WantedBy=timers.target
+TIMER_EOF
+    echo "✅ Node status timer file created"
 fi
 
 # Install Apache if not present (unless skipping Apache configuration)
@@ -464,8 +518,14 @@ if [ "$SKIP_APACHE" = false ]; then
     echo "📝 Installing Apache site configuration..."
     cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
 
-    # Enable the site
-    echo "🔗 Enabling Apache site..."
+    # Disable the default site to avoid conflicts
+    echo "🔗 Disabling default Apache site..."
+    a2dissite -q 000-default 2>/dev/null || {
+        echo "⚠️  Warning: Failed to disable default site (may not exist)"
+    }
+    
+    # Enable the supermon-ng site
+    echo "🔗 Enabling supermon-ng Apache site..."
     a2ensite -q supermon-ng 2>/dev/null || {
         echo "⚠️  Warning: Failed to enable Apache site automatically"
     }
