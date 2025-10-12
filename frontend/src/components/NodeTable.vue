@@ -717,9 +717,4 @@ defineExpose({
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
-
-.gridtable,
-.gridtable-large {
-  min-width: 100%;
-}
 </style>
