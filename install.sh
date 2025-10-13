@@ -358,12 +358,13 @@ else
     echo "📝 Creating database update timer file..."
     cat > "$TIMER_FILE" << 'TIMER_EOF'
 [Unit]
-Description=Supermon-NG Database Auto-Update Timer
+Description=Run Supermon-NG Database Update every 3 hours
 Requires=supermon-ng-database-update.service
 
 [Timer]
-OnCalendar=03:47
-Persistent=true
+OnBootSec=5min
+OnUnitActiveSec=3h
+AccuracySec=5min
 
 [Install]
 WantedBy=timers.target
