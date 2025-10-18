@@ -143,8 +143,11 @@ class DatabaseGenerationService
         $lastUpdate = $this->getLastGenerationTime();
         $currentTime = time();
         
+        // Check if file exists - if not, always update
+        $fileExists = file_exists($this->astdbFile);
+        
         // Check if enough time has passed since last update
-        if ($lastUpdate && ($currentTime - $lastUpdate) < self::AUTO_UPDATE_INTERVAL) {
+        if ($fileExists && $lastUpdate && ($currentTime - $lastUpdate) < self::AUTO_UPDATE_INTERVAL) {
             $this->logger->debug('Automatic update not needed yet', [
                 'last_update' => $lastUpdate,
                 'current_time' => $currentTime,
@@ -154,7 +157,12 @@ class DatabaseGenerationService
             return false;
         }
         
-        $this->logger->info('Performing automatic database update');
+        if (!$fileExists) {
+            $this->logger->info('ASTDB file does not exist, forcing update');
+        } else {
+            $this->logger->info('Performing automatic database update');
+        }
+        
         return $this->generateDatabase(false, true);
     }
     
