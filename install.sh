@@ -459,6 +459,11 @@ else
     
     # Proxy HamClock requests (adjust IP and port as needed)
     # Uncomment and modify the following lines if you have HamClock running:
+    # WebSocket proxy for HamClock (must come before general proxy)
+    # ProxyPass /hamclock/live-ws ws://10.0.0.41:8082/live-ws upgrade=websocket
+    # ProxyPassReverse /hamclock/live-ws ws://10.0.0.41:8082/live-ws
+    # 
+    # General HamClock proxy
     # ProxyPass /hamclock/ http://10.0.0.41:8082/
     # ProxyPassReverse /hamclock/ http://10.0.0.41:8082/
     # 
@@ -507,7 +512,7 @@ if [ "$SKIP_APACHE" = false ]; then
 
     # Enable required Apache modules
     echo "📦 Enabling required Apache modules..."
-    a2enmod -q proxy proxy_http proxy_wstunnel rewrite headers 2>/dev/null || {
+    a2enmod -q proxy proxy_http proxy_wstunnel rewrite headers substitute 2>/dev/null || {
         echo "⚠️  Warning: Some Apache modules may not be available"
     }
 

@@ -144,6 +144,7 @@ $HAMCLOCK_URL_EXTERNAL = "https://your-domain.com/hamclock/live.html";
 - Replace `your-domain.com` with your external domain name
 - The `/hamclock/live.html` path should remain as shown
 - You must also uncomment and configure the HamClock proxy lines in your Apache configuration
+- **WebSocket Support**: The Apache configuration includes WebSocket proxy support for HamClock's live updates. Make sure to uncomment both the WebSocket proxy lines (for `/hamclock/live-ws`) and the general proxy lines (for `/hamclock/`)
 
 ### 4. Optional: Custom Header Background
 
@@ -370,7 +371,7 @@ sudo apache2ctl configtest
 # Common issues and fixes:
 
 # 1. Missing modules (should be enabled automatically during installation)
-sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers
+sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers substitute
 
 # 2. Permission issues
 sudo chown -R www-data:www-data /var/www/html/supermon-ng/
