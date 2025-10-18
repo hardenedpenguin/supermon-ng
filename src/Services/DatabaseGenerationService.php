@@ -57,7 +57,7 @@ class DatabaseGenerationService
         // Set file paths with fallbacks
         $this->astdbFile = $astdbFile ?? $_ENV['ASTDB_FILE'] ?? $astdbTxt;
         $this->privateNodesFile = $privateNodesFile ?? $_ENV['PRIVATE_NODES_FILE'] ?? $userFilesPath . '/' . $privateNodes;
-        $this->allstarDbUrl = $allstarDbUrl ?? $_ENV['ALLSTAR_DB_URL'] ?? 'http://allmondb.allstarlink.org/';
+        $this->allstarDbUrl = $allstarDbUrl ?? $_ENV['ALLSTAR_DB_URL'] ?? 'https://allmondb.allstarlink.org/allmondb.php';
         
         $this->logger->debug('Database service paths initialized', [
             'astdb_file' => $this->astdbFile,
