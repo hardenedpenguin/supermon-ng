@@ -114,7 +114,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import axios from 'axios'
+import { api } from '@/utils/api'
 
 interface Props {
   open: boolean
@@ -157,11 +157,9 @@ const performLookup = async () => {
   hasSearched.value = true
   
   try {
-    const response = await axios.post('/supermon-ng/api/config/astlookup', {
+    const response = await api.post('/config/astlookup', {
       lookupNode: lookupNode.value.trim(),
       localNode: props.localNode || '546051' // Default local node if not provided
-    }, { 
-      withCredentials: true 
     })
     
     if (response.data.success) {
