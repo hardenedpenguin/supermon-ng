@@ -255,43 +255,11 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
     }
     // Cache API responses for different durations based on endpoint
     elseif (strpos($uri, '/api/') !== false) {
-        if (strpos($uri, '/api/config/menu') !== false || 
-            strpos($uri, '/api/config/nodes') !== false) {
-            // Cache menu and node config for 5 minutes
-            $content = $response->getBody()->getContents();
-            $etag = '"' . md5($content) . '"';
-            // Restore the response body (getContents() consumes the stream)
-            $response = $response->withBody(new \Slim\Psr7\Stream(fopen('php://temp', 'r+')));
-            $response->getBody()->write($content);
-            $response = $response->withHeader('Cache-Control', 'private, max-age=300');
-            $response = $response->withHeader('ETag', $etag);
-        } elseif (strpos($uri, '/api/nodes') !== false) {
-            // Cache node list for 1 minute
-            $response = $response->withHeader('Cache-Control', 'private, max-age=60');
-        } elseif (strpos($uri, '/api/config/system-info') !== false) {
-            // Cache system info for 30 seconds
-            $response = $response->withHeader('Cache-Control', 'private, max-age=30');
-        } else {
-            // Default: no cache for dynamic data
-            $response = $response->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        }
-    }
-    
-    // Add ETag support for conditional requests
-    if ($response->getStatusCode() === 200 && !$response->hasHeader('ETag')) {
-        $content = $response->getBody()->getContents();
-        $etag = '"' . md5($content) . '"';
-        
-        // Restore the response body (getContents() consumes the stream)
-        $response = $response->withBody(new \Slim\Psr7\Stream(fopen('php://temp', 'r+')));
-        $response->getBody()->write($content);
-        $response = $response->withHeader('ETag', $etag);
-        
-        // Check if client has cached version
-        $ifNoneMatch = $request->getHeaderLine('If-None-Match');
-        if ($ifNoneMatch === $etag) {
-            return $response->withStatus(304)->withBody(new \Slim\Psr7\Stream(fopen('php://temp', 'r+')));
-        }
+        // Skip ETag generation for API endpoints to avoid consuming response body
+        // API responses are dynamic and shouldn't be cached anyway
+        $response = $response->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        $response = $response->withHeader('Pragma', 'no-cache');
+        $response = $response->withHeader('Expires', '0');
     }
     
     return $response;
