@@ -109,8 +109,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import axios from 'axios'
+import { ref, computed, watch } from 'vue'
+import { api } from '@/utils/api'
+import type { AxiosErrorResponse } from '@/types/api'
 
 interface Props {
   open: boolean
@@ -163,9 +164,7 @@ const loadFavorites = async () => {
   result.value = null
   
   try {
-    const response = await axios.get('/supermon-ng/api/config/favorites', { 
-      withCredentials: true 
-    })
+    const response = await api.get('/config/favorites')
     
     if (response.data.success) {
       favorites.value = response.data.data
@@ -175,8 +174,9 @@ const loadFavorites = async () => {
     } else {
       error.value = response.data.message || 'Failed to load favorites'
     }
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Failed to load favorites'
+  } catch (err: unknown) {
+    const axiosError = err as AxiosErrorResponse
+    error.value = axiosError.response?.data?.message || 'Failed to load favorites'
   } finally {
     loading.value = false
   }
@@ -195,12 +195,11 @@ const deleteFavorite = async (favorite: Favorite) => {
   error.value = ''
   
   try {
-    const response = await axios.delete('/supermon-ng/api/config/favorites', {
+    const response = await api.delete('/config/favorites', {
       data: {
         section: favorite.section,
         index: favorite.index
-      },
-      withCredentials: true
+      }
     })
     
     if (response.data.success) {
@@ -211,8 +210,9 @@ const deleteFavorite = async (favorite: Favorite) => {
     } else {
       error.value = response.data.message || 'Failed to delete favorite'
     }
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Failed to delete favorite'
+  } catch (err: unknown) {
+    const axiosError = err as AxiosErrorResponse
+    error.value = axiosError.response?.data?.message || 'Failed to delete favorite'
   } finally {
     saving.value = false
   }

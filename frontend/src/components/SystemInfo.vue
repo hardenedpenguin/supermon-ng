@@ -80,6 +80,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { api } from '@/utils/api'
+import type { AxiosErrorResponse } from '@/types/api'
 
 interface Props {
   open: boolean
@@ -130,8 +131,9 @@ const loadSystemInfo = async () => {
     } else {
       error.value = response.data.message || 'Failed to load system information'
     }
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Failed to load system information'
+  } catch (err: unknown) {
+    const axiosError = err as AxiosErrorResponse
+    error.value = axiosError.response?.data?.message || 'Failed to load system information'
   } finally {
     loading.value = false
   }

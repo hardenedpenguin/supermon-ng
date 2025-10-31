@@ -50,7 +50,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onUnmounted, watch } from 'vue'
 import { api } from '@/utils/api'
 
 const props = defineProps({
@@ -68,6 +68,7 @@ const eventSources = ref({})
 const spinners = ref({})
 const spinnerChars = ['*', '|', '/', '-', '\\']
 let spinnerInterval = null
+const pollingTimeouts = ref<Map<string, NodeJS.Timeout>>(new Map())
 
 const closeModal = () => {
   stopVoter()
@@ -101,6 +102,12 @@ const stopVoter = () => {
     spinnerInterval = null
   }
   
+  // Clear all polling timeouts to prevent memory leaks
+  pollingTimeouts.value.forEach((timeout, node) => {
+    clearTimeout(timeout)
+  })
+  pollingTimeouts.value.clear()
+  
   // Reset state
   nodes.value = []
   spinners.value = {}
@@ -130,6 +137,11 @@ const initializeEventSources = () => {
 }
 
 const pollVoterStatus = async (node) => {
+  // Check if node is still being monitored (prevents polling after stopVoter is called)
+  if (!nodes.value.includes(node)) {
+    return
+  }
+  
   try {
     const response = await api.get(`/nodes/voter/status?node=${encodeURIComponent(node)}`)
     
@@ -144,8 +156,11 @@ const pollVoterStatus = async (node) => {
       spinners.value[node] = response.data.spinner
     }
     
-    // Continue polling
-    setTimeout(() => pollVoterStatus(node), 1000)
+    // Continue polling only if node is still being monitored
+    if (nodes.value.includes(node)) {
+      const timeoutId = setTimeout(() => pollVoterStatus(node), 1000)
+      pollingTimeouts.value.set(node, timeoutId)
+    }
     
   } catch (error) {
     console.error(`Error polling voter status for node ${node}:`, error)
@@ -154,6 +169,13 @@ const pollVoterStatus = async (node) => {
       element.innerHTML = `<div class='error-message'>Error receiving updates for node ${node}. The connection was lost.</div>`
     }
     spinners.value[node] = 'X'
+    
+    // Clear timeout for this node on error
+    const timeoutId = pollingTimeouts.value.get(node)
+    if (timeoutId) {
+      clearTimeout(timeoutId)
+      pollingTimeouts.value.delete(node)
+    }
   }
 }
 

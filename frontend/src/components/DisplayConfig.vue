@@ -6,6 +6,11 @@
         <button class="close-button" @click="closeModal">&times;</button>
       </div>
       
+      <!-- Error Message -->
+      <div v-if="error" class="error-message">
+        <p>{{ error }}</p>
+      </div>
+
       <form @submit.prevent="saveSettings" class="display-config-form">
         <table class="display-config-table">
           <tbody>
@@ -94,15 +99,23 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import axios from 'axios'
+import { api } from '@/utils/api'
+import type { AxiosErrorResponse } from '@/types/api'
 
 interface Props {
   open: boolean
 }
 
+interface DisplaySettings {
+  'show-detailed'?: string
+  'show-number'?: string
+  'show-all'?: string
+  'number-displayed'?: string
+}
+
 interface Emits {
   (e: 'update:open', value: boolean): void
-  (e: 'settings-updated', settings: any): void
+  (e: 'settings-updated', settings: DisplaySettings): void
 }
 
 const props = defineProps<Props>()
@@ -116,15 +129,18 @@ const settings = ref({
 })
 
 const loading = ref(false)
+const error = ref('')
 
 const closeModal = () => {
   emit('update:open', false)
+  error.value = ''
 }
 
 const loadSettings = async () => {
   try {
     loading.value = true
-    const response = await axios.get('/supermon-ng/api/config/display', { withCredentials: true })
+    error.value = ''
+    const response = await api.get('/config/display')
     if (response.data.success) {
       const data = response.data.data
       settings.value = {
@@ -133,9 +149,13 @@ const loadSettings = async () => {
         show_all: data['show-all'] || '1',
         number_displayed: data['number-displayed'] || '0'
       }
+    } else {
+      error.value = response.data.message || 'Failed to load display settings'
     }
-  } catch (error) {
-    console.error('Failed to load display settings:', error)
+  } catch (err: unknown) {
+    const axiosError = err as AxiosErrorResponse
+    error.value = axiosError.response?.data?.message || 'Failed to load display settings. Please try again.'
+    console.error('Failed to load display settings:', err)
   } finally {
     loading.value = false
   }
@@ -144,20 +164,25 @@ const loadSettings = async () => {
 const saveSettings = async () => {
   try {
     loading.value = true
-    const response = await axios.put('/supermon-ng/api/config/display', {
+    error.value = ''
+    const response = await api.put('/config/display', {
       show_detailed: settings.value.show_detailed,
       show_number: settings.value.show_number,
       show_all: settings.value.show_all,
       number_displayed: settings.value.number_displayed
-    }, { withCredentials: true })
+    })
     
     if (response.data.success) {
       // Emit the updated settings to parent
       emit('settings-updated', response.data.data)
       closeModal()
+    } else {
+      error.value = response.data.message || 'Failed to save display settings'
     }
-  } catch (error) {
-    console.error('Failed to save display settings:', error)
+  } catch (err: unknown) {
+    const axiosError = err as AxiosErrorResponse
+    error.value = axiosError.response?.data?.message || 'Failed to save display settings. Please try again.'
+    console.error('Failed to save display settings:', err)
   } finally {
     loading.value = false
   }
@@ -296,5 +321,19 @@ onMounted(() => {
 
 .submit-large:active {
   background-color: #004085;
+}
+
+.error-message {
+  background-color: rgba(244, 67, 54, 0.1);
+  border: 1px solid #f44336;
+  color: #f44336;
+  padding: 12px;
+  margin-bottom: 15px;
+  border-radius: 4px;
+}
+
+.error-message p {
+  margin: 0;
+  font-size: 0.9rem;
 }
 </style>

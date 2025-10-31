@@ -55,3 +55,15 @@ export type ApiEndpoint =
   | 'logs'
   | 'stats'
   | 'database'
+
+// Axios error type helper
+export interface AxiosErrorResponse {
+  response?: {
+    data?: {
+      message?: string
+      error?: string
+    }
+    status?: number
+  }
+  message?: string
+}

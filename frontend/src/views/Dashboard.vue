@@ -1152,11 +1152,9 @@ const handleLoginSuccess = async () => {
   
   // Refetch configuration data after login to get user's personal default node
   try {
-    const nodesResponse = await fetch('/supermon-ng/api/config/nodes')
-    if (nodesResponse.ok) {
-      const nodesData = await nodesResponse.json()
-      if (nodesData.data?.default_node) {
-        const defaultNode = nodesData.data.default_node
+    const nodesResponse = await api.get('/config/nodes')
+    if (nodesResponse.data.success && nodesResponse.data.data?.default_node) {
+      const defaultNode = nodesResponse.data.data.default_node
     
         
         // Set the default node as selected
@@ -1173,7 +1171,6 @@ const handleLoginSuccess = async () => {
           // Single node mode
           await realTimeStore.startMonitoring(defaultNode)
         }
-      }
     }
   } catch (error) {
     // Configuration refetch error handled
@@ -1185,11 +1182,9 @@ const handleLogout = async () => {
   
   // Refetch configuration data after logout to get new default node
   try {
-    const nodesResponse = await fetch('/supermon-ng/api/config/nodes')
-    if (nodesResponse.ok) {
-      const nodesData = await nodesResponse.json()
-      if (nodesData.data?.default_node) {
-        const defaultNode = nodesData.data.default_node
+    const nodesResponse = await api.get('/config/nodes')
+    if (nodesResponse.data.success && nodesResponse.data.data?.default_node) {
+      const defaultNode = nodesResponse.data.data.default_node
     
         
         // Set the default node as selected
@@ -1206,7 +1201,6 @@ const handleLogout = async () => {
           // Single node mode
           await realTimeStore.startMonitoring(defaultNode)
         }
-      }
     }
   } catch (error) {
     // Configuration refetch error handled
@@ -1280,14 +1274,13 @@ onMounted(async () => {
   // Load system info, database status, and check for default node
   try {
     const [systemResponse, databaseResponse, nodesResponse] = await Promise.all([
-      fetch('/supermon-ng/api/config/system-info'),
-      fetch('/supermon-ng/api/database/status'),
-      fetch('/supermon-ng/api/config/nodes')
+      api.get('/config/system-info'),
+      api.get('/database/status'),
+      api.get('/config/nodes')
     ])
     
-    if (systemResponse.ok) {
-      const systemData = await systemResponse.json()
-      systemInfo.value = systemData.data || systemData
+    if (systemResponse.data.success) {
+      systemInfo.value = systemResponse.data.data || systemResponse.data
       
       // Set dynamic page title based on SMSERVERNAME from global.inc
       if (systemInfo.value?.smServerName) {
@@ -1295,16 +1288,13 @@ onMounted(async () => {
       }
     }
     
-    if (databaseResponse.ok) {
-      const databaseData = await databaseResponse.json()
-      databaseStatus.value = databaseData.data || databaseData
+    if (databaseResponse.data.success) {
+      databaseStatus.value = databaseResponse.data.data || databaseResponse.data
     }
 
     // Check for default node configuration
-    if (nodesResponse.ok) {
-      const nodesData = await nodesResponse.json()
-      if (nodesData.data?.default_node) {
-        const defaultNode = nodesData.data.default_node
+    if (nodesResponse.data.success && nodesResponse.data.data?.default_node) {
+      const defaultNode = nodesResponse.data.data.default_node
     
         
         // Set the default node as selected

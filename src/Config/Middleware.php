@@ -65,21 +65,23 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
         }
     }
     
-    // CSRF validation for POST requests
-    if ($request->getMethod() === 'POST') {
+    // CSRF validation for POST, PUT, DELETE, and PATCH requests (all state-changing methods)
+    $method = $request->getMethod();
+    if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'], true)) {
         $uri = $request->getUri()->getPath();
         
         // Skip CSRF validation for auth endpoints (login, etc.) and bubble chart
         $skipPaths = ['/api/auth/login', '/api/auth/logout', '/api/auth/me', '/api/config/bubblechart'];
         if (!in_array($uri, $skipPaths)) {
             $parsedBody = $request->getParsedBody();
-            $token = $parsedBody['csrf_token'] ?? $request->getHeaderLine('X-CSRF-Token') ?? '';
+            // For DELETE requests, body might be empty, so check header first
+            $token = $request->getHeaderLine('X-CSRF-Token') ?? ($parsedBody['csrf_token'] ?? '');
             
             if (empty($token) || !isset($_SESSION['csrf_token']) || 
                 !hash_equals($_SESSION['csrf_token'], $token)) {
                 
                 // Debug logging
-                error_log("CSRF validation failed: token='$token', session_token='" . ($_SESSION['csrf_token'] ?? 'null') . "', uri='$uri', session_id='" . session_id() . "'");
+                error_log("CSRF validation failed: method=$method, token='$token', session_token='" . ($_SESSION['csrf_token'] ?? 'null') . "', uri='$uri', session_id='" . session_id() . "'");
                 
                 $response = new \Slim\Psr7\Response();
                 $response->getBody()->write(json_encode([
@@ -195,6 +197,7 @@ $app->add(function (Request $request, RequestHandlerInterface $handler) use ($ap
     $cacheKey = "rate_limit:$clientIp";
     
     try {
+        // Get current request count, defaulting to 0 if not set
         $requests = $cache->get($cacheKey, function () {
             return 0;
         });
@@ -212,9 +215,12 @@ $app->add(function (Request $request, RequestHandlerInterface $handler) use ($ap
                 ->withHeader('Retry-After', $rateLimitWindow);
         }
         
+        // Increment request count and set with TTL
+        // Delete old entry and create new one with incremented value and expiration
+        $cache->delete($cacheKey);
         $cache->get($cacheKey, function () use ($requests) {
             return $requests + 1;
-        });
+        }, $rateLimitWindow);
         
         return $handler->handle($request);
         
@@ -252,8 +258,13 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
         if (strpos($uri, '/api/config/menu') !== false || 
             strpos($uri, '/api/config/nodes') !== false) {
             // Cache menu and node config for 5 minutes
+            $content = $response->getBody()->getContents();
+            $etag = '"' . md5($content) . '"';
+            // Restore the response body (getContents() consumes the stream)
+            $response = $response->withBody(new \Slim\Psr7\Stream(fopen('php://temp', 'r+')));
+            $response->getBody()->write($content);
             $response = $response->withHeader('Cache-Control', 'private, max-age=300');
-            $response = $response->withHeader('ETag', '"' . md5($response->getBody()->getContents()) . '"');
+            $response = $response->withHeader('ETag', $etag);
         } elseif (strpos($uri, '/api/nodes') !== false) {
             // Cache node list for 1 minute
             $response = $response->withHeader('Cache-Control', 'private, max-age=60');
@@ -270,6 +281,10 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
     if ($response->getStatusCode() === 200 && !$response->hasHeader('ETag')) {
         $content = $response->getBody()->getContents();
         $etag = '"' . md5($content) . '"';
+        
+        // Restore the response body (getContents() consumes the stream)
+        $response = $response->withBody(new \Slim\Psr7\Stream(fopen('php://temp', 'r+')));
+        $response->getBody()->write($content);
         $response = $response->withHeader('ETag', $etag);
         
         // Check if client has cached version
@@ -291,7 +306,15 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
         $parsed = json_decode($contents, true);
         
         if (json_last_error() === JSON_ERROR_NONE) {
+            // Restore the request body stream (getContents() consumes it)
+            // This ensures the body is still available if needed elsewhere
+            $request = $request->withBody(new \Slim\Psr7\Stream(fopen('php://temp', 'r+')));
+            $request->getBody()->write($contents);
             $request = $request->withParsedBody($parsed);
+        } else {
+            // If JSON parsing failed, restore the body anyway
+            $request = $request->withBody(new \Slim\Psr7\Stream(fopen('php://temp', 'r+')));
+            $request->getBody()->write($contents);
         }
     }
     

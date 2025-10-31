@@ -61,11 +61,15 @@ api.interceptors.response.use(
           // Check if it's a CSRF token error
           if (error.response.data?.message?.includes('CSRF token validation failed')) {
             // Refresh CSRF token and retry the request
-            csrfToken = null
-            const newToken = await fetchCsrfToken()
-            if (newToken && error.config) {
-              error.config.headers['X-CSRF-Token'] = newToken
-              return api.request(error.config)
+            try {
+              csrfService.clearToken()
+              const newToken = await csrfService.refreshToken()
+              if (newToken && error.config) {
+                error.config.headers['X-CSRF-Token'] = newToken
+                return api.request(error.config)
+              }
+            } catch (refreshError) {
+              console.error('Failed to refresh CSRF token:', refreshError)
             }
           }
           console.error('Access forbidden')
@@ -266,8 +270,8 @@ export const apiHelpers = {
 
 // Initialize CSRF token
 export const initializeCsrfToken = async (): Promise<void> => {
-  await fetchCsrfToken()
+  await csrfService.getToken()
 }
 
-export { api, fetchCsrfToken }
+export { api }
 export default api

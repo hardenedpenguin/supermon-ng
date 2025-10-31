@@ -132,6 +132,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 import { api } from '@/utils/api'
+import type { AxiosErrorResponse } from '@/types/api'
 import { getCsrfService } from '@/services/CsrfTokenService'
 import AddFavorite from './AddFavorite.vue'
 
@@ -199,8 +200,9 @@ const loadFavorites = async () => {
     } else {
       error.value = response.data.message || 'Failed to load favorites'
     }
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Failed to load favorites'
+  } catch (err: unknown) {
+    const axiosError = err as AxiosErrorResponse
+    error.value = axiosError.response?.data?.message || 'Failed to load favorites'
   } finally {
     loading.value = false
   }
@@ -242,10 +244,11 @@ const executeFavoriteCommand = async (favorite: Favorite, node: string) => {
     }
     
     emit('command-executed', result.value)
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const axiosError = err as AxiosErrorResponse
     result.value = {
       success: false,
-      message: err.response?.data?.message || 'Failed to execute command',
+      message: axiosError.response?.data?.message || 'Failed to execute command',
       executed_label: favorite.label
     }
   } finally {
@@ -257,7 +260,13 @@ const refreshParent = () => {
   window.location.reload()
 }
 
-const handleFavoriteAdded = (favoriteResult: any) => {
+interface FavoriteResult {
+  success: boolean
+  message?: string
+  executed_label?: string
+}
+
+const handleFavoriteAdded = (favoriteResult: FavoriteResult) => {
   if (favoriteResult.success) {
     // Reload favorites after adding
     loadFavorites()

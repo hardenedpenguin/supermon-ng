@@ -656,19 +656,7 @@ class NodeController
             return $response->withHeader('Content-Type', 'application/json');
         }
 
-        // Validate CSRF token (check both body and header)
-        $csrfToken = $data['csrf_token'] ?? $request->getHeaderLine('X-CSRF-Token') ?? '';
-        if (empty($csrfToken) || !isset($_SESSION['csrf_token']) || 
-            !hash_equals($_SESSION['csrf_token'], $csrfToken)) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => 'CSRF token validation failed. Please refresh the page and try again.'
-            ]));
-            return $response
-                ->withStatus(403)
-                ->withHeader('Content-Type', 'application/json');
-        }
-
+        // CSRF token validation is handled by middleware
         // Check user permissions
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, $this->getActionPermission($action))) {

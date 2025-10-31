@@ -218,11 +218,11 @@ class ConfigController
         
         $currentUser = $this->getCurrentUser();
         if (!$currentUser) {
-            return $response->withStatus(401)->withHeader('Content-Type', 'application/json')
-                ->withBody($response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => 'User must be authenticated to update preferences'
-                ])));
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'User must be authenticated to update preferences'
+            ]));
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
         
         $body = $request->getParsedBody() ?? [];

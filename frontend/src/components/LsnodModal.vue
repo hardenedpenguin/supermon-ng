@@ -259,6 +259,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import { api } from '@/utils/api'
+import type { AxiosErrorResponse } from '@/types/api'
 
 interface LsnodData {
   selected_system_state?: string
@@ -332,9 +333,10 @@ const loadLsnodData = async () => {
     } else {
       error.value = response.data.message || 'Failed to load lsnod data'
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const axiosError = err as AxiosErrorResponse
     console.error('Error loading lsnod data:', err)
-    error.value = err.response?.data?.message || 'Failed to load lsnod data'
+    error.value = axiosError.response?.data?.message || 'Failed to load lsnod data'
   } finally {
     loading.value = false
   }

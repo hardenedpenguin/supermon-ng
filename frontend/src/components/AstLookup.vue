@@ -113,8 +113,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { api } from '@/utils/api'
+import type { AxiosErrorResponse } from '@/types/api'
 
 interface Props {
   open: boolean
@@ -167,8 +168,9 @@ const performLookup = async () => {
     } else {
       error.value = response.data.message || 'Lookup failed'
     }
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Lookup failed'
+  } catch (err: unknown) {
+    const axiosError = err as AxiosErrorResponse
+    error.value = axiosError.response?.data?.message || 'Lookup failed'
   } finally {
     loading.value = false
   }

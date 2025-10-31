@@ -247,8 +247,9 @@ const toggleDemo = async () => {
       })
       demoActive.value = false
     }
-  } catch (err: any) {
-    error.value = err.message || 'Failed to toggle demo'
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to toggle demo'
+    error.value = errorMessage
   } finally {
     loading.value = false
   }

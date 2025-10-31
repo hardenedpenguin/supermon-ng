@@ -59,7 +59,8 @@ class NodeStatusController
     public function updateConfig(Request $request, Response $response): Response
     {
         try {
-            $data = json_decode($request->getBody()->getContents(), true);
+            // Use getParsedBody() instead of reading raw body (middleware handles JSON parsing)
+            $data = $request->getParsedBody() ?? [];
             $configFile = __DIR__ . '/../../../user_files/sbin/node_info.ini';
             
             // Validate required fields

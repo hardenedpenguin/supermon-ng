@@ -101,6 +101,7 @@ import { computed, ref, watchEffect, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import BubbleChart from './BubbleChart.vue'
 import LsnodModal from './LsnodModal.vue'
+import type { ConnectedNode, Node } from '@/types/node'
 
 // Emits
 const emit = defineEmits<{
@@ -336,7 +337,7 @@ const showNodeCount = computed(() => {
 })
 
 // Methods
-const getConnectedNodeClass = (node: any, index: number): string => {
+const getConnectedNodeClass = (node: ConnectedNode, index: number): string => {
   // First connected node gets lighter header color, others get darker gColor
   let className = ''
   
@@ -389,7 +390,7 @@ const openLsnodModal = () => {
 }
 
 // Update node data from real-time store
-const updateNodeData = (data: any) => {
+const updateNodeData = (data: Node | null) => {
   nodeData.value = data
   
   if (data && data.remote_nodes) {
@@ -416,7 +417,7 @@ watchEffect(() => {
 })
 
 // Format last keyed time
-const formatLastKeyed = (lastKeyed: any): string => {
+const formatLastKeyed = (lastKeyed: string | null | undefined): string => {
   if (!lastKeyed || lastKeyed === 'N/A' || lastKeyed === 'n/a') {
     return 'N/A'
   }

@@ -65,7 +65,8 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import axios from 'axios'
+import { api } from '@/utils/api'
+import type { AxiosErrorResponse } from '@/types/api'
 
 interface Props {
   open: boolean
@@ -87,9 +88,7 @@ const loadAstLog = async () => {
   error.value = ''
   
   try {
-    const response = await axios.get('/supermon-ng/api/config/astlog', { 
-      withCredentials: true 
-    })
+    const response = await api.get('/config/astlog')
     
     if (response.data.success) {
       logContent.value = response.data.content
@@ -98,8 +97,9 @@ const loadAstLog = async () => {
     } else {
       error.value = response.data.message || 'Failed to load Asterisk log'
     }
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Failed to load Asterisk log'
+  } catch (err: unknown) {
+    const axiosError = err as AxiosErrorResponse
+    error.value = axiosError.response?.data?.message || 'Failed to load Asterisk log'
   } finally {
     loading.value = false
   }
