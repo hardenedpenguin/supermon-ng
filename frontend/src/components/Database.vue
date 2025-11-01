@@ -218,7 +218,10 @@ const loadDatabase = async () => {
 
 const loadDatabaseStatus = async () => {
   try {
-    const response = await api.get('/database/status')
+    // Use longer timeout for database status (ASTDB can be large)
+    const response = await api.get('/database/status', {
+      timeout: 30000 // 30 seconds for large ASTDB files
+    })
     if (response.data.success) {
       databaseStatus.value = response.data.data
     }

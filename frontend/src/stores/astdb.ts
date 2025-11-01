@@ -78,7 +78,10 @@ export const useAstdbStore = defineStore('astdb', () => {
   const loadFullAstdb = async (): Promise<void> => {
     try {
       // Try to get from database status endpoint (includes ASTDB)
-      const response = await api.get('/database/status')
+      // Use longer timeout for large ASTDB files
+      const response = await api.get('/database/status', {
+        timeout: 30000 // 30 seconds for large ASTDB files
+      })
       
       // Debug: Log the full response structure
       console.log('Database status response:', {

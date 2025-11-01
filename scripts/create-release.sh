@@ -450,18 +450,53 @@ main() {
     cp -r user_files/ "$release_dir/"
     cp -r src/ "$release_dir/"
     
+    # Rebuild frontend to ensure fresh build with no stale files
+    if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
+        log "Rebuilding frontend to ensure fresh build..."
+        cd frontend
+        
+        # Clean old build files and dependencies
+        log "Cleaning old frontend build files..."
+        rm -rf dist node_modules/.vite 2>/dev/null || true
+        
+        # Install dependencies if needed
+        if [ ! -d "node_modules" ]; then
+            log "Installing frontend dependencies..."
+            npm install
+        fi
+        
+        # Build frontend
+        log "Building frontend..."
+        npm run build
+        
+        cd ..
+        success "Frontend rebuilt successfully"
+    elif [ -d "frontend/dist" ]; then
+        log "Using existing frontend build from frontend/dist/"
+    else
+        warning "No frontend build found. Skipping frontend files."
+    fi
+    
     # Copy public directory, but clean old assets first
     log "Cleaning old build assets from public directory..."
     rm -rf "$release_dir/public/assets" 2>/dev/null || true
+    rm -rf "$release_dir/public"/*.js "$release_dir/public"/*.js.map "$release_dir/public"/*.css 2>/dev/null || true
     mkdir -p "$release_dir/public"
-    cp -r public/* "$release_dir/public/" 2>/dev/null || true
+    
+    # Copy non-frontend public files first
+    if [ -d "public" ]; then
+        find public -type f ! -name "*.js" ! -name "*.js.map" ! -name "*.css" -exec cp --parents {} "$release_dir/" \; 2>/dev/null || true
+    fi
     
     # Copy fresh frontend build (overwrites any old assets)
-    cp -r frontend/dist/* "$release_dir/public/" 2>/dev/null || true
-    
-    # Ensure frontend/dist structure exists for documentation
-    mkdir -p "$release_dir/frontend"
-    cp -r frontend/dist/* "$release_dir/frontend/" 2>/dev/null || true
+    if [ -d "frontend/dist" ]; then
+        log "Copying fresh frontend build to release..."
+        cp -r frontend/dist/* "$release_dir/public/" 2>/dev/null || true
+        
+        # Ensure frontend/dist structure exists for documentation
+        mkdir -p "$release_dir/frontend"
+        cp -r frontend/dist/* "$release_dir/frontend/" 2>/dev/null || true
+    fi
     
     cp -r config/ "$release_dir/"
     cp -r systemd/ "$release_dir/"
