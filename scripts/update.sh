@@ -45,11 +45,16 @@ print_error() {
 
 # Check for command line options
 SKIP_APACHE=false
+FORCE_UPDATE=false
 for arg in "$@"; do
     case $arg in
         --skip-apache)
             SKIP_APACHE=true
             print_status "Apache configuration will be skipped (--skip-apache flag detected)"
+            ;;
+        --force|-f)
+            FORCE_UPDATE=true
+            print_status "Force update enabled - will update even if versions match (--force flag detected)"
             ;;
         --help|-h)
             echo "Supermon-NG Update Script"
@@ -58,16 +63,24 @@ for arg in "$@"; do
             echo ""
             echo "Options:"
             echo "  --skip-apache    Skip automatic Apache configuration updates"
+            echo "  --force, -f      Force update even if already on current version"
             echo "  --help, -h       Show this help message"
             echo ""
             echo "Examples:"
             echo "  $0                    # Normal update with Apache configuration"
             echo "  $0 --skip-apache      # Update without Apache configuration changes"
+            echo "  $0 --force            # Force update even if versions match"
+            echo "  $0 --force --skip-apache  # Force update without Apache changes"
             echo ""
             echo "When using --skip-apache:"
             echo "  - Apache configuration will not be modified"
             echo "  - The backend service will still be updated and restarted"
             echo "  - You must manually update your web server configuration if needed"
+            echo ""
+            echo "When using --force:"
+            echo "  - Update will proceed even if current version matches new version"
+            echo "  - Useful for reapplying fixes or refreshing files without version change"
+            echo "  - All files will be updated regardless of version comparison"
             exit 0
             ;;
     esac
@@ -120,8 +133,15 @@ compare_versions() {
     fi
     
     if [ "$CURRENT_VERSION" = "$NEW_VERSION" ]; then
-        print_warning "You are already running version $CURRENT_VERSION. No update needed."
-        exit 0
+        if [ "$FORCE_UPDATE" = true ]; then
+            print_warning "Current version ($CURRENT_VERSION) matches new version ($NEW_VERSION), but --force flag is set."
+            print_status "Proceeding with forced update..."
+            return 0
+        else
+            print_warning "You are already running version $CURRENT_VERSION. No update needed."
+            print_status "Use --force flag to update anyway (e.g., $0 --force)"
+            exit 0
+        fi
     fi
     
     print_status "Updating from $CURRENT_VERSION to $NEW_VERSION"

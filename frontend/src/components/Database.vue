@@ -191,9 +191,16 @@ const loadDatabase = async () => {
   error.value = ''
   databaseData.value = null
 
+  // Validate localnode prop
+  if (!props.localnode || props.localnode.trim() === '') {
+    error.value = 'Local node number is required'
+    loading.value = false
+    return
+  }
+
   try {
     const response = await api.post('/nodes/database', {
-      localnode: props.localnode
+      localnode: props.localnode.trim()
     })
 
     if (response.data.success) {

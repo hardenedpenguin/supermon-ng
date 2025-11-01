@@ -225,7 +225,7 @@
           <!-- Database Modal -->
           <Database 
             v-model:isVisible="showDatabaseModal" 
-            :localnode="selectedLocalNode || selectedNode" 
+            :localnode="selectedLocalNode || selectedNode || displayedNodes[0]?.id || ''" 
           />
           
           <!-- Donate Modal -->
