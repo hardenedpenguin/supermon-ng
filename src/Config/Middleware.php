@@ -71,8 +71,10 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
         $uri = $request->getUri()->getPath();
         
         // Skip CSRF validation for auth endpoints (login, etc.) and bubble chart
+        // Also handle paths with /supermon-ng prefix
+        $normalizedUri = str_replace('/supermon-ng', '', $uri);
         $skipPaths = ['/api/auth/login', '/api/auth/logout', '/api/auth/me', '/api/config/bubblechart'];
-        if (!in_array($uri, $skipPaths)) {
+        if (!in_array($uri, $skipPaths) && !in_array($normalizedUri, $skipPaths)) {
             $parsedBody = $request->getParsedBody();
             // For DELETE requests, body might be empty, so check header first
             $token = $request->getHeaderLine('X-CSRF-Token') ?? ($parsedBody['csrf_token'] ?? '');
@@ -190,42 +192,57 @@ $app->add(function (Request $request, RequestHandlerInterface $handler) use ($ap
     $container = $app->getContainer();
     $cache = $container->get(\Symfony\Contracts\Cache\CacheInterface::class);
     
-    $rateLimit = (int)($_ENV['API_RATE_LIMIT'] ?? 100);
+    // Reasonable rate limits: 200 requests per 60 seconds (per IP)
+    $rateLimit = (int)($_ENV['API_RATE_LIMIT'] ?? 200);
     $rateLimitWindow = (int)($_ENV['API_RATE_LIMIT_WINDOW'] ?? 60);
     
     $clientIp = $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown';
     $cacheKey = "rate_limit:$clientIp";
     
     try {
-        // Get current request count, defaulting to 0 if not set
+        // Get current request count
         $requests = $cache->get($cacheKey, function () {
             return 0;
         });
         
+        // Check if limit exceeded
         if ($requests >= $rateLimit) {
             $response = new \Slim\Psr7\Response();
             $response->getBody()->write(json_encode([
+                'success' => false,
                 'error' => 'Rate limit exceeded',
-                'message' => 'Too many requests. Please try again later.'
+                'message' => 'Too many requests. Please try again later.',
+                'retry_after' => $rateLimitWindow
             ]));
             
             return $response
                 ->withStatus(429)
                 ->withHeader('Content-Type', 'application/json')
-                ->withHeader('Retry-After', $rateLimitWindow);
+                ->withHeader('Retry-After', (string)$rateLimitWindow)
+                ->withHeader('X-RateLimit-Limit', (string)$rateLimit)
+                ->withHeader('X-RateLimit-Remaining', '0');
         }
         
-        // Increment request count and set with TTL
-        // Delete old entry and create new one with incremented value and expiration
+        // Increment request count
+        // Delete old entry and create new one with incremented value
         $cache->delete($cacheKey);
-        $cache->get($cacheKey, function () use ($requests) {
-            return $requests + 1;
+        $newCount = $requests + 1;
+        $cache->get($cacheKey, function () use ($newCount) {
+            return $newCount;
         }, $rateLimitWindow);
         
-        return $handler->handle($request);
+        // Continue with request
+        $response = $handler->handle($request);
         
-    } catch (Exception $e) {
-        // If cache fails, allow the request to proceed
+        // Add rate limit headers to response
+        $remaining = max(0, $rateLimit - $newCount);
+        return $response
+            ->withHeader('X-RateLimit-Limit', (string)$rateLimit)
+            ->withHeader('X-RateLimit-Remaining', (string)$remaining)
+            ->withHeader('X-RateLimit-Reset', (string)(time() + $rateLimitWindow));
+        
+    } catch (\Exception $e) {
+        // If cache fails, allow the request to proceed (fail open)
         return $handler->handle($request);
     }
 });

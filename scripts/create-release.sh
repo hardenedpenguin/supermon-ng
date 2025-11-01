@@ -57,7 +57,7 @@ extract_version_date() {
     fi
     
     # Extract date from VERSION_DATE line
-    local date=$(grep 'VERSION_DATE' "$version_file" | sed "s/.*VERSION_DATE = \"\(.*\)\";.*/\1/")
+    local date=$(grep 'VERSION_DATE' "$version_file" | grep -o '"[^"]*"' | tr -d '"')
     
     if [[ -z "$date" ]]; then
         error "Could not extract version date from $version_file"
@@ -449,14 +449,26 @@ main() {
     cp -r includes/ "$release_dir/"
     cp -r user_files/ "$release_dir/"
     cp -r src/ "$release_dir/"
-    cp -r public/ "$release_dir/"
-    cp -r frontend/dist/ "$release_dir/frontend/"
+    
+    # Copy public directory, but clean old assets first
+    log "Cleaning old build assets from public directory..."
+    rm -rf "$release_dir/public/assets" 2>/dev/null || true
+    mkdir -p "$release_dir/public"
+    cp -r public/* "$release_dir/public/" 2>/dev/null || true
+    
+    # Copy fresh frontend build (overwrites any old assets)
+    cp -r frontend/dist/* "$release_dir/public/" 2>/dev/null || true
+    
+    # Ensure frontend/dist structure exists for documentation
+    mkdir -p "$release_dir/frontend"
+    cp -r frontend/dist/* "$release_dir/frontend/" 2>/dev/null || true
+    
     cp -r config/ "$release_dir/"
-cp -r systemd/ "$release_dir/"
+    cp -r systemd/ "$release_dir/"
     
     # Configuration files
     cp composer.json "$release_dir/"
-    cp composer.lock "$release_dir/"
+    cp composer.lock "$release_dir/" 2>/dev/null || true
     cp .htaccess "$release_dir/"
     cp public/.htaccess "$release_dir/public/" 2>/dev/null || true
     

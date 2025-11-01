@@ -19,21 +19,39 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   async (config) => {
-    // Add CSRF token for POST, PUT, DELETE requests
-    if (config.method && ['post', 'put', 'delete'].includes(config.method.toLowerCase())) {
+    // Add CSRF token for POST, PUT, DELETE, PATCH requests
+    if (config.method && ['post', 'put', 'delete', 'patch'].includes(config.method.toLowerCase())) {
       // Skip CSRF token for bubble chart endpoint since it's disabled on backend
       if (config.url === '/config/bubblechart') {
         return config
       }
       
       try {
+        // Always get a fresh token - don't rely on cached value
         const token = await csrfService.getToken()
         if (token) {
+          config.headers = config.headers || {}
           config.headers['X-CSRF-Token'] = token
+        } else {
+          console.warn('CSRF token is empty, attempting refresh')
+          const refreshedToken = await csrfService.refreshToken()
+          if (refreshedToken) {
+            config.headers = config.headers || {}
+            config.headers['X-CSRF-Token'] = refreshedToken
+          }
         }
       } catch (error) {
-        console.warn('Failed to get CSRF token:', error)
-        // Continue without CSRF token
+        console.error('Failed to get CSRF token:', error)
+        // Try one more time to refresh
+        try {
+          const refreshedToken = await csrfService.refreshToken()
+          if (refreshedToken) {
+            config.headers = config.headers || {}
+            config.headers['X-CSRF-Token'] = refreshedToken
+          }
+        } catch (refreshError) {
+          console.error('Failed to refresh CSRF token:', refreshError)
+        }
       }
     }
     return config

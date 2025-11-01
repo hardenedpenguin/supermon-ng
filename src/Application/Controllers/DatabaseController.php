@@ -32,21 +32,56 @@ class DatabaseController
      */
     public function status(Request $request, Response $response): Response
     {
-        $this->logger->info('Fetching database status');
-        
-        $status = $this->databaseService->getDatabaseStatus();
-        
-        // Add ASTDB data for frontend compatibility using optimized caching
-        $astdb = $this->astdbService->getAstdb();
-        
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'data' => array_merge($status, ['astdb' => $astdb])
-        ]));
-        
-        return $response
-            ->withStatus(200)
-            ->withHeader('Content-Type', 'application/json');
+        try {
+            $this->logger->info('Fetching database status');
+            
+            // Get database status - handle errors gracefully
+            try {
+                $status = $this->databaseService->getDatabaseStatus();
+                if (!is_array($status)) {
+                    $status = [];
+                }
+            } catch (\Exception $e) {
+                $this->logger->error('Failed to get database status', ['error' => $e->getMessage()]);
+                $status = [];
+            }
+            
+            // Add ASTDB data for frontend compatibility using optimized caching
+            // Ensure astdb is always an array, even if empty
+            try {
+                $astdb = $this->astdbService->getAstdb();
+                if (!is_array($astdb)) {
+                    $astdb = [];
+                }
+            } catch (\Exception $e) {
+                $this->logger->warning('Failed to load ASTDB data', ['error' => $e->getMessage()]);
+                $astdb = [];
+            }
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => array_merge($status, ['astdb' => $astdb])
+            ]));
+            
+            return $response
+                ->withStatus(200)
+                ->withHeader('Content-Type', 'application/json');
+                
+        } catch (\Exception $e) {
+            $this->logger->error('Database status endpoint error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => ['astdb' => []]
+            ]));
+            
+            return $response
+                ->withStatus(200)
+                ->withHeader('Content-Type', 'application/json');
+        }
     }
     
     /**

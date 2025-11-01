@@ -68,7 +68,7 @@ const eventSources = ref({})
 const spinners = ref({})
 const spinnerChars = ['*', '|', '/', '-', '\\']
 let spinnerInterval = null
-const pollingTimeouts = ref<Map<string, NodeJS.Timeout>>(new Map())
+const pollingTimeouts = ref(new Map())
 
 const closeModal = () => {
   stopVoter()

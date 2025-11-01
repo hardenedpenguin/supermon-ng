@@ -1331,9 +1331,8 @@ onMounted(async () => {
       
       // Mark default nodes as loaded
       isLoadingDefaultNodes.value = false
-    }
   } catch (error) {
-    // System info loading error handled
+    console.error('Error loading system info and default nodes:', error)
     isLoadingDefaultNodes.value = false
   }
 })

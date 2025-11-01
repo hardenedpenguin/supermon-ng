@@ -43,18 +43,79 @@ $app->get('/api/test', function ($request, $response) {
     return $response->withHeader('Content-Type', 'application/json');
 });
 
-// CSRF token endpoint
+// CSRF token endpoint - MUST be before middleware that might interfere
 $app->get('/api/csrf-token', function ($request, $response) {
-    // Ensure session is started
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
+    try {
+        // Session should already be started by middleware, but ensure it's active
+        if (session_status() === PHP_SESSION_NONE) {
+            // Use same session configuration as middleware
+            session_name('supermon61');
+            
+            // Detect HTTPS for secure cookies
+            $isSecure = false;
+            $serverParams = $request->getServerParams();
+            if (($serverParams['HTTPS'] ?? '') === 'on' ||
+                ($serverParams['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ||
+                ($serverParams['HTTP_X_FORWARDED_SSL'] ?? '') === 'on' ||
+                ($serverParams['SERVER_PORT'] ?? '') == '443') {
+                $isSecure = true;
+            }
+            
+            session_set_cookie_params([
+                'lifetime' => 86400,
+                'path' => '/supermon-ng',
+                'domain' => '',
+                'secure' => $isSecure,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]);
+            
+            session_start();
+        }
+        
+        // Ensure session is active
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            error_log('CSRF token endpoint: Session not active after start attempt');
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Session initialization failed',
+                'csrf_token' => ''
+            ]));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+        
+        // Generate CSRF token if it doesn't exist
+        if (!isset($_SESSION['csrf_token']) || empty($_SESSION['csrf_token'])) {
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+        }
+        
+        $token = $_SESSION['csrf_token'] ?? '';
+        
+        if (empty($token)) {
+            error_log('CSRF token endpoint: Generated token is empty');
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Failed to generate CSRF token',
+                'csrf_token' => ''
+            ]));
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+        
+        $response->getBody()->write(json_encode([
+            'success' => true,
+            'csrf_token' => $token
+        ]));
+        return $response->withHeader('Content-Type', 'application/json');
+        
+    } catch (\Exception $e) {
+        error_log('CSRF token endpoint error: ' . $e->getMessage());
+        $response->getBody()->write(json_encode([
+            'success' => false,
+            'message' => 'Server error: ' . $e->getMessage(),
+            'csrf_token' => ''
+        ]));
+        return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
     }
-    
-    $response->getBody()->write(json_encode([
-        'success' => true,
-        'csrf_token' => $_SESSION['csrf_token'] ?? ''
-    ]));
-    return $response->withHeader('Content-Type', 'application/json');
 });
 
 // API v1 routes
@@ -87,13 +148,7 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) {
         $group->get('/client-ip', [SystemController::class, 'getClientIP']);
     });
 
-    // Database routes
-    $group->group('/database', function (RouteCollectorProxy $group) {
-        $group->get('/status', [DatabaseController::class, 'status']);
-        $group->post('/generate', [DatabaseController::class, 'generate']);
-        $group->get('/search', [DatabaseController::class, 'search']);
-        $group->get('/{id}', [DatabaseController::class, 'get']);
-    });
+    // Database routes (removed - using non-versioned routes in /api group instead)
 
     // ASTDB routes (Phase 7 optimization)
     $group->group('/astdb', function (RouteCollectorProxy $group) {

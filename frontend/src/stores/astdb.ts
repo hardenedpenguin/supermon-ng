@@ -79,14 +79,44 @@ export const useAstdbStore = defineStore('astdb', () => {
     try {
       // Try to get from database status endpoint (includes ASTDB)
       const response = await api.get('/database/status')
-      if (response.data.success && response.data.data?.astdb) {
-        fullAstdb.value = response.data.data.astdb
-        lastRefresh.value = Date.now()
-        
-        console.log(`ASTDB: Loaded ${Object.keys(fullAstdb.value).length} entries`)
-      } else {
+      
+      // Debug: Log the full response structure
+      console.log('Database status response:', {
+        status: response.status,
+        success: response.data?.success,
+        hasData: !!response.data?.data,
+        hasAstdb: !!response.data?.data?.astdb
+      })
+      
+      // Check if response is valid
+      if (!response.data) {
+        console.error('Empty response from database status endpoint')
+        throw new Error('Invalid response from database status endpoint: empty response')
+      }
+      
+      if (!response.data.success) {
+        console.error('Database status endpoint returned success=false:', response.data)
+        throw new Error('Invalid response from database status endpoint: ' + (response.data.message || 'Unknown error'))
+      }
+      
+      // Ensure astdb exists in response (may be empty array)
+      const astdbData = response.data.data?.astdb
+      if (astdbData === undefined || astdbData === null) {
+        console.error('ASTDB data missing in response:', response.data)
         throw new Error('No ASTDB data in response')
       }
+      
+      // Ensure it's an array or object (should always be from backend, but double-check)
+      if (!Array.isArray(astdbData) && typeof astdbData !== 'object') {
+        console.error('ASTDB data has wrong type:', typeof astdbData, astdbData)
+        throw new Error('ASTDB data is not in expected format')
+      }
+      
+      fullAstdb.value = astdbData
+      lastRefresh.value = Date.now()
+      
+      const entryCount = Array.isArray(astdbData) ? astdbData.length : Object.keys(astdbData).length
+      console.log(`ASTDB: Loaded ${entryCount} entries`)
     } catch (err) {
       console.error('Failed to load full ASTDB:', err)
       throw err

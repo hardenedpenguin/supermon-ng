@@ -126,10 +126,24 @@ export class CsrfTokenService {
     
     try {
       const response = await this.makeTokenRequest()
+      
+      // Debug: Log the full response structure
+      console.log('CSRF token response:', {
+        status: response.status,
+        data: response.data,
+        hasToken: !!response.data?.csrf_token
+      })
+      
+      // Check if response has data
+      if (!response.data) {
+        throw new Error('Empty response from CSRF token endpoint')
+      }
+      
       const token = response.data.csrf_token || ''
       
       if (!token) {
-        throw new Error('No CSRF token in response')
+        console.error('CSRF token response:', response.data)
+        throw new Error('No CSRF token in response. Response: ' + JSON.stringify(response.data))
       }
 
       this.storeToken(token)
@@ -139,6 +153,7 @@ export class CsrfTokenService {
       return token
     } catch (error) {
       const duration = Date.now() - startTime
+      console.error('CSRF token fetch error:', error)
       throw error
     }
   }
