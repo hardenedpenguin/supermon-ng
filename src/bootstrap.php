@@ -28,14 +28,16 @@ try {
     $dotenv->load();
 } catch (Exception $e) {
     // .env file not found, use default values
-    $_ENV['APP_ENV'] = $_ENV['APP_ENV'] ?? 'production';
-    $_ENV['APP_DEBUG'] = $_ENV['APP_DEBUG'] ?? 'false';
-    $_ENV['JWT_SECRET'] = $_ENV['JWT_SECRET'] ?? 'your-secret-key';
-    $_ENV['USER_FILES_PATH'] = $_ENV['USER_FILES_PATH'] ?? __DIR__ . '/../user_files/';
 }
 
-// Set error reporting based on environment
-if ($_ENV['APP_ENV'] === 'production') {
+// Ensure default values are set (use null coalescing to avoid PHP 8+ warnings)
+$_ENV['APP_ENV'] = $_ENV['APP_ENV'] ?? 'production';
+$_ENV['APP_DEBUG'] = $_ENV['APP_DEBUG'] ?? 'false';
+$_ENV['JWT_SECRET'] = $_ENV['JWT_SECRET'] ?? 'your-secret-key';
+$_ENV['USER_FILES_PATH'] = $_ENV['USER_FILES_PATH'] ?? __DIR__ . '/../user_files/';
+
+// Set error reporting based on environment (use null coalescing to avoid warnings)
+if (($_ENV['APP_ENV'] ?? 'production') === 'production') {
     error_reporting(E_ERROR | E_PARSE | E_CORE_ERROR | E_COMPILE_ERROR);
     ini_set('display_errors', '0');
     ini_set('log_errors', '1');

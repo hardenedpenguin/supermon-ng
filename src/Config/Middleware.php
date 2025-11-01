@@ -200,10 +200,29 @@ $app->add(function (Request $request, RequestHandlerInterface $handler) use ($ap
     $cacheKey = "rate_limit:$clientIp";
     
     try {
-        // Get current request count
-        $requests = $cache->get($cacheKey, function () {
-            return 0;
+        // Get rate limit data (count and window start time)
+        $rateLimitData = $cache->get($cacheKey, function () {
+            return ['count' => 0, 'window_start' => time()];
         });
+        
+        // Parse rate limit data
+        if (is_array($rateLimitData)) {
+            $requests = (int)($rateLimitData['count'] ?? 0);
+            $windowStart = (int)($rateLimitData['window_start'] ?? time());
+        } else {
+            // Fallback for old format
+            $requests = (int)$rateLimitData;
+            $windowStart = time();
+        }
+        
+        $currentTime = time();
+        $timeSinceWindowStart = $currentTime - $windowStart;
+        
+        // Reset window if TTL has expired
+        if ($timeSinceWindowStart >= $rateLimitWindow) {
+            $requests = 0;
+            $windowStart = $currentTime;
+        }
         
         // Check if limit exceeded
         if ($requests >= $rateLimit) {
@@ -212,24 +231,25 @@ $app->add(function (Request $request, RequestHandlerInterface $handler) use ($ap
                 'success' => false,
                 'error' => 'Rate limit exceeded',
                 'message' => 'Too many requests. Please try again later.',
-                'retry_after' => $rateLimitWindow
+                'retry_after' => $rateLimitWindow - $timeSinceWindowStart
             ]));
             
             return $response
                 ->withStatus(429)
                 ->withHeader('Content-Type', 'application/json')
-                ->withHeader('Retry-After', (string)$rateLimitWindow)
+                ->withHeader('Retry-After', (string)max(1, $rateLimitWindow - $timeSinceWindowStart))
                 ->withHeader('X-RateLimit-Limit', (string)$rateLimit)
                 ->withHeader('X-RateLimit-Remaining', '0');
         }
         
-        // Increment request count
-        // Delete old entry and create new one with incremented value
-        $cache->delete($cacheKey);
+        // Increment request count and store with updated window start
         $newCount = $requests + 1;
-        $cache->get($cacheKey, function () use ($newCount) {
-            return $newCount;
-        }, $rateLimitWindow);
+        $cache->delete($cacheKey);
+        // Store with data structure including count and window start time
+        // Use default cache TTL (should be longer than rate limit window)
+        $cache->get($cacheKey, function () use ($newCount, $windowStart) {
+            return ['count' => $newCount, 'window_start' => $windowStart];
+        });
         
         // Continue with request
         $response = $handler->handle($request);
