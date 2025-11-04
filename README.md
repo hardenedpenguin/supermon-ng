@@ -63,7 +63,7 @@ The installer automatically handles:
 2. **Create User Account**:
    ```bash
    cd /var/www/html/supermon-ng
-   sudo ./scripts/manage_users.php --add-user username password
+   sudo ./scripts/manage_users.php add username password
    ```
 
 3. **Set Permissions**: Edit `/var/www/html/supermon-ng/user_files/authusers.inc` to grant permissions to your user
@@ -233,7 +233,7 @@ tar -xJf supermon-ng-V4.0.9.tar.xz && cd supermon-ng && sudo ./scripts/update.sh
 sudo /var/www/html/supermon-ng/scripts/version-check.sh
 
 # User management
-cd /var/www/html/supermon-ng && sudo ./scripts/manage_users.php --help
+cd /var/www/html/supermon-ng && sudo ./scripts/manage_users.php list
 
 # Service status
 sudo systemctl status supermon-ng-backend apache2
