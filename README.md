@@ -68,7 +68,7 @@ The installer automatically handles:
 
 3. **Set Permissions**: Edit `/var/www/html/supermon-ng/user_files/authusers.inc` to grant permissions to your user
 
-4. **Access Dashboard**: Open `http://your-server-ip` in your browser
+4. **Access Dashboard**: Open `http://your-server-ip/supermon-ng` in your browser
 
 ## ⚙️ Configuration
 
