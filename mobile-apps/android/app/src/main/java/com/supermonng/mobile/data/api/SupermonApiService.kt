@@ -114,9 +114,17 @@ data class NodeStatusResponse(
 )
 
 data class NodeStatusData(
-    val node: Node,
-    val connected_nodes: List<ConnectedNode>?,
-    val system_state: Map<String, Any>?
+    val node_id: String?,
+    val status: String?,
+    val last_heard: String?,
+    val connected_nodes: String?,  // Backend returns as string, not list
+    val cos_keyed: String?,
+    val tx_keyed: String?,
+    val cpu_temp: String?,
+    val alert: String?,
+    val wx: String?,
+    val disk: String?,
+    val timestamp: String?
 )
 
 data class ConnectedNode(
