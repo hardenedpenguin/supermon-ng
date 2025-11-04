@@ -98,16 +98,16 @@ Edit `/var/www/html/supermon-ng/user_files/allmon.ini` to add your AllStar nodes
 cd /var/www/html/supermon-ng
 
 # Create user
-sudo ./scripts/manage_users.php --add-user username password
+sudo ./scripts/manage_users.php add username password
 
 # List users
-sudo ./scripts/manage_users.php --list-users
+sudo ./scripts/manage_users.php list
 
 # Change password
-sudo ./scripts/manage_users.php --change-password username newpassword
+sudo ./scripts/manage_users.php change username newpassword
 
 # Delete user
-sudo ./scripts/manage_users.php --delete-user username
+sudo ./scripts/manage_users.php remove username
 ```
 
 ### Role-Based Permissions
