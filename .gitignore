@@ -86,3 +86,6 @@ mobile-apps/android/.cxx/
 mobile-apps/android/captures/
 mobile-apps/android/*.hprof
 mobile-apps/android/*.hprof.index
+
+# Android development setup script
+setup-android-env.sh
