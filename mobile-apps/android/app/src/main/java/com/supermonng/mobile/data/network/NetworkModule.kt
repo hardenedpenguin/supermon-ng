@@ -16,14 +16,51 @@ import java.util.concurrent.TimeUnit
 
 object NetworkModule {
     
-    private var baseUrl: String = "https://sm.w5gle.us/"
+    // Default base URL - should include /supermon-ng/api prefix
+    private var baseUrl: String = "https://sm.w5gle.us/supermon-ng/api/"
     private var apiService: SupermonApiService? = null
     private var cookieManager: CookieManager? = null
+    private var csrfToken: String? = null
     
+    /**
+     * Set the base URL for API calls
+     * @param url Can be:
+     *   - Full URL with path: "https://example.com/supermon-ng/api"
+     *   - Full URL without path: "https://example.com" (will append /supermon-ng/api)
+     *   - Relative path: "/supermon-ng/api" (will use current host)
+     */
     fun setBaseUrl(url: String) {
-        baseUrl = if (url.endsWith("/")) url else "$url/"
+        var normalizedUrl = url.trim()
+        
+        // If URL doesn't end with /api or /api/, append the path
+        if (!normalizedUrl.contains("/api")) {
+            // Remove trailing slash if present
+            normalizedUrl = normalizedUrl.removeSuffix("/")
+            // Append API path
+            normalizedUrl = "$normalizedUrl/supermon-ng/api"
+        }
+        
+        // Ensure URL ends with /
+        baseUrl = if (normalizedUrl.endsWith("/")) normalizedUrl else "$normalizedUrl/"
+        
         // Reset API service to force recreation with new URL
         apiService = null
+    }
+    
+    fun getBaseUrl(): String {
+        return baseUrl
+    }
+    
+    fun setCsrfToken(token: String?) {
+        csrfToken = token
+    }
+    
+    fun getCsrfToken(): String? {
+        return csrfToken
+    }
+    
+    fun clearCsrfToken() {
+        csrfToken = null
     }
     
     fun getApiService(): SupermonApiService {
@@ -35,10 +72,7 @@ object NetworkModule {
     
     fun clearCookies() {
         if (cookieManager != null) {
-            val cookiesBefore = cookieManager!!.cookieStore.cookies
-            println("DEBUG: Cookies before clearing: $cookiesBefore")
             cookieManager!!.cookieStore.removeAll()
-            println("DEBUG: Cleared all cookies from cookie jar")
         }
     }
     
@@ -54,7 +88,6 @@ object NetworkModule {
     
     fun setSessionToken(token: String) {
         sessionToken = token
-        println("DEBUG: Set session token: $token")
     }
     
     fun getSessionToken(): String? {
@@ -63,7 +96,6 @@ object NetworkModule {
     
     fun clearSessionToken() {
         sessionToken = null
-        println("DEBUG: Cleared session token")
     }
     
     
@@ -72,69 +104,62 @@ object NetworkModule {
             level = HttpLoggingInterceptor.Level.NONE
         }
         
-            // Use singleton cookie manager to maintain session across requests
-            if (cookieManager == null) {
-                cookieManager = CookieManager()
-                cookieManager!!.setCookiePolicy(CookiePolicy.ACCEPT_ALL)
-            }
-            
-            // Use standard JavaNetCookieJar
-            val cookieJar: CookieJar = JavaNetCookieJar(cookieManager!!)
+        // Use singleton cookie manager to maintain session across requests
+        if (cookieManager == null) {
+            cookieManager = CookieManager()
+            cookieManager!!.setCookiePolicy(CookiePolicy.ACCEPT_ALL)
+        }
+        
+        // Use standard JavaNetCookieJar for automatic cookie handling
+        val cookieJar: CookieJar = JavaNetCookieJar(cookieManager!!)
         
         val client = OkHttpClient.Builder()
             // Force HTTP/1.1 to match curl behavior
             .protocols(listOf(okhttp3.Protocol.HTTP_1_1))
-            // Disable cookie jar and use manual session handling
+            .cookieJar(cookieJar)
             .addInterceptor { chain ->
-                val request = chain.request()
-                val sessionToken = sessionToken
-                println("DEBUG: Request to ${request.url}")
-                println("DEBUG: Current session token: $sessionToken")
+                val originalRequest = chain.request()
+                val requestBuilder = originalRequest.newBuilder()
                 
-                val newRequest = if (sessionToken != null) {
-                    request.newBuilder()
-                        .addHeader("Cookie", "supermon61=$sessionToken")
-                        .addHeader("Accept", "*/*")
-                        .addHeader("Accept-Encoding", "gzip, deflate")
-                        .addHeader("Connection", "keep-alive")
-                        .build()
-                } else {
-                    request.newBuilder()
-                        .addHeader("Accept", "*/*")
-                        .addHeader("Accept-Encoding", "gzip, deflate")
-                        .addHeader("Connection", "keep-alive")
-                        .build()
+                // Add session cookie if available (use module-level sessionToken)
+                val currentSessionToken = sessionToken
+                if (currentSessionToken != null) {
+                    requestBuilder.addHeader("Cookie", "supermon61=$currentSessionToken; Path=/supermon-ng")
                 }
                 
-                println("DEBUG: Request headers: ${newRequest.headers}")
-                println("DEBUG: Request method: ${newRequest.method}")
-                println("DEBUG: Request URL: ${newRequest.url}")
-                if (newRequest.body != null) {
-                    println("DEBUG: Request body content type: ${newRequest.body!!.contentType()}")
-                    println("DEBUG: Request body size: ${newRequest.body!!.contentLength()}")
-                } else {
-                    println("DEBUG: Request body: null")
+                // Add CSRF token to headers for state-changing requests
+                val method = originalRequest.method
+                val currentCsrfToken = csrfToken
+                if (currentCsrfToken != null && method in listOf("POST", "PUT", "DELETE", "PATCH")) {
+                    requestBuilder.addHeader("X-CSRF-Token", currentCsrfToken)
                 }
+                
+                // Add standard headers
+                requestBuilder
+                    .addHeader("Accept", "application/json")
+                    .addHeader("Accept-Encoding", "gzip, deflate")
+                    .addHeader("Connection", "keep-alive")
+                
+                val newRequest = requestBuilder.build()
                 val response = chain.proceed(newRequest)
-                println("DEBUG: Response code: ${response.code}")
-                println("DEBUG: Response headers: ${response.headers}")
-                println("DEBUG: Set-Cookie headers: ${response.headers.values("Set-Cookie")}")
+                
+                // Extract CSRF token from response if present
+                response.header("X-CSRF-Token")?.let { token ->
+                    csrfToken = token
+                }
+                
+                // Extract session cookie from Set-Cookie header if present
+                response.headers("Set-Cookie").forEach { cookieHeader ->
+                    if (cookieHeader.startsWith("supermon61=")) {
+                        val cookieValue = cookieHeader.substringAfter("supermon61=")
+                            .substringBefore(";")
+                        sessionToken = cookieValue
+                    }
+                }
                 
                 response
             }
             .addInterceptor(loggingInterceptor)
-            .addInterceptor { chain ->
-                val request = chain.request()
-                println("DEBUG: Making request to ${request.url}")
-                println("DEBUG: Request headers: ${request.headers}")
-                println("DEBUG: Request cookies: ${request.header("Cookie")}")
-                val response = chain.proceed(request)
-                println("DEBUG: Response code: ${response.code}")
-                println("DEBUG: Response headers: ${response.headers}")
-                println("DEBUG: Set-Cookie headers: ${response.headers("Set-Cookie")}")
-                println("DEBUG: Expires header: ${response.header("Expires")}")
-                response
-            }
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)

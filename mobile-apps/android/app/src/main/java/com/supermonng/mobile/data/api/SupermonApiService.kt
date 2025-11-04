@@ -7,62 +7,62 @@ import retrofit2.http.*
 interface SupermonApiService {
     
     // Authentication endpoints
-    @POST("api/auth/login")
+    @POST("auth/login")
     suspend fun login(@Body credentials: LoginRequest): Response<LoginResponse>
     
-    @GET("api/auth/check")
+    @GET("auth/check")
     suspend fun checkAuth(): Response<AuthCheckResponse>
     
-    @POST("api/auth/logout")
+    @POST("auth/logout")
     suspend fun logout(): Response<LogoutResponse>
     
     // Node endpoints
-    @GET("api/nodes")
+    @GET("nodes")
     suspend fun getNodes(): Response<NodesResponse>
     
-    @GET("api/nodes/{id}")
+    @GET("nodes/{id}")
     suspend fun getNode(@Path("id") nodeId: String): Response<NodeResponse>
     
-    @GET("api/nodes/{id}/status")
+    @GET("nodes/{id}/status")
     suspend fun getNodeStatus(@Path("id") nodeId: String): Response<NodeStatusResponse>
     
-    @GET("api/nodes/ami/status")
+    @GET("nodes/ami/status")
     suspend fun getAmiStatus(@Query("nodes") nodes: String): Response<AmiStatusResponse>
     
-    @POST("api/nodes/connect")
+    @POST("nodes/connect")
     @Headers("Content-Type: application/json")
     suspend fun connectNodeRaw(@Body jsonBody: okhttp3.RequestBody): Response<NodeActionResponse>
     
-    @POST("api/nodes/disconnect")
+    @POST("nodes/disconnect")
     @Headers("Content-Type: application/json")
     suspend fun disconnectNodeRaw(@Body jsonBody: okhttp3.RequestBody): Response<NodeActionResponse>
     
-    @POST("api/nodes/monitor")
+    @POST("nodes/monitor")
     @Headers("Content-Type: application/json")
     suspend fun monitorNodeRaw(@Body jsonBody: okhttp3.RequestBody): Response<NodeActionResponse>
     
-    @POST("api/nodes/local-monitor")
+    @POST("nodes/local-monitor")
     suspend fun localMonitorNode(@Body request: NodeActionRequest): Response<NodeActionResponse>
     
-    @POST("api/nodes/dtmf")
+    @POST("nodes/dtmf")
     suspend fun sendDtmf(@Body request: DtmfRequest): Response<NodeActionResponse>
     
     // System endpoints
-    @GET("api/system/info")
+    @GET("system/info")
     suspend fun getSystemInfo(): Response<SystemInfoResponse>
     
-    @GET("api/system/stats")
+    @GET("system/stats")
     suspend fun getSystemStats(): Response<SystemStatsResponse>
     
     // Config endpoints
-    @GET("api/config/nodes")
+    @GET("config/nodes")
     suspend fun getNodeConfig(): Response<NodeConfigResponse>
     
-    @GET("api/config/system-info")
+    @GET("config/system-info")
     suspend fun getConfigSystemInfo(): Response<SystemInfoResponse>
     
     // CSRF token endpoint
-    @GET("api/csrf-token")
+    @GET("csrf-token")
     suspend fun getCsrfToken(): Response<CsrfTokenResponse>
 }
 
