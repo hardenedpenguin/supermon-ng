@@ -13,6 +13,7 @@ import java.net.CookieManager
 import java.net.CookiePolicy
 import java.net.HttpCookie
 import java.util.concurrent.TimeUnit
+import kotlin.math.pow
 
 object NetworkModule {
     
@@ -21,6 +22,17 @@ object NetworkModule {
     private var apiService: SupermonApiService? = null
     private var cookieManager: CookieManager? = null
     private var csrfToken: String? = null
+    
+    // Rate limiting info
+    data class RateLimitInfo(
+        val limit: Int?,
+        val remaining: Int?,
+        val reset: Long?  // Unix timestamp
+    )
+    
+    private var lastRateLimitInfo: RateLimitInfo? = null
+    
+    fun getRateLimitInfo(): RateLimitInfo? = lastRateLimitInfo
     
     /**
      * Set the base URL for API calls
@@ -117,6 +129,48 @@ object NetworkModule {
             // Force HTTP/1.1 to match curl behavior
             .protocols(listOf(okhttp3.Protocol.HTTP_1_1))
             .cookieJar(cookieJar)
+            // Rate limiting interceptor - handles 429 responses and parses rate limit headers
+            .addInterceptor { chain ->
+                var request = chain.request()
+                var response = chain.proceed(request)
+                var retryCount = 0
+                val maxRetries = 3
+                
+                // Handle 429 Too Many Requests with exponential backoff
+                while (response.code == 429 && retryCount < maxRetries) {
+                    // Parse Retry-After header if present
+                    val retryAfter = response.header("Retry-After")?.toLongOrNull()
+                    
+                    // Calculate wait time: use Retry-After header if available, otherwise exponential backoff
+                    val waitTime = if (retryAfter != null) {
+                        retryAfter * 1000 // Convert seconds to milliseconds
+                    } else {
+                        // Exponential backoff: 1s, 2s, 4s
+                        (2.0.pow(retryCount) * 1000).toLong()
+                    }
+                    
+                    // Close the response before waiting
+                    response.close()
+                    
+                    // Wait before retrying
+                    Thread.sleep(waitTime)
+                    
+                    // Retry the request
+                    response = chain.proceed(request)
+                    retryCount++
+                }
+                
+                // Parse rate limit headers if present
+                val rateLimit = response.header("X-RateLimit-Limit")?.toIntOrNull()
+                val rateLimitRemaining = response.header("X-RateLimit-Remaining")?.toIntOrNull()
+                val rateLimitReset = response.header("X-RateLimit-Reset")?.toLongOrNull()
+                
+                if (rateLimit != null || rateLimitRemaining != null || rateLimitReset != null) {
+                    lastRateLimitInfo = RateLimitInfo(rateLimit, rateLimitRemaining, rateLimitReset)
+                }
+                
+                response
+            }
             .addInterceptor { chain ->
                 val originalRequest = chain.request()
                 val requestBuilder = originalRequest.newBuilder()
