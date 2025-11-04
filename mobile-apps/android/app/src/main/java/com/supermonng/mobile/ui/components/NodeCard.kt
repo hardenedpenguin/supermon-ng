@@ -22,7 +22,8 @@ fun NodeCard(
     onConnect: (targetNodeId: String) -> Unit,
     onDisconnect: (targetNodeId: String) -> Unit,
     onMonitor: (targetNodeId: String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enableActions: Boolean = true  // New parameter to control action visibility
 ) {
     var showConnectDialog by remember { mutableStateOf(false) }
     var showMonitorDialog by remember { mutableStateOf(false) }
@@ -117,16 +118,18 @@ fun NodeCard(
                                     )
                                 }
                                 Spacer(modifier = Modifier.width(8.dp))
-                                IconButton(
-                                    onClick = { onDisconnect(connectedNode.node) },
-                                    modifier = Modifier.size(24.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = "Disconnect",
-                                        tint = MaterialTheme.colors.error,
-                                        modifier = Modifier.size(16.dp)
-                                    )
+                                if (enableActions) {
+                                    IconButton(
+                                        onClick = { onDisconnect(connectedNode.node) },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Disconnect",
+                                            tint = MaterialTheme.colors.error,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -143,23 +146,25 @@ fun NodeCard(
                 Spacer(modifier = Modifier.height(8.dp))
             }
             
-            // Action buttons
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                OutlinedButton(
-                    onClick = { showConnectDialog = true },
-                    modifier = Modifier.weight(1f)
+            // Action buttons (only show if actions are enabled)
+            if (enableActions) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Connect")
-                }
-                
-                OutlinedButton(
-                    onClick = { showMonitorDialog = true },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Monitor")
+                    OutlinedButton(
+                        onClick = { showConnectDialog = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Connect")
+                    }
+                    
+                    OutlinedButton(
+                        onClick = { showMonitorDialog = true },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Monitor")
+                    }
                 }
             }
         }

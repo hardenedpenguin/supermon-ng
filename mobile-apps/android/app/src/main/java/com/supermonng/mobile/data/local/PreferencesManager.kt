@@ -24,6 +24,8 @@ class PreferencesManager(private val context: Context) {
         private const val KEY_USERNAME = "username"
         private const val KEY_PASSWORD = "password"
         private const val KEY_REMEMBER_ME = "remember_me"
+        private const val KEY_SERVER_URL = "server_url"
+        private const val DEFAULT_SERVER_URL = "https://sm.w5gle.us"
     }
     
     fun saveCredentials(username: String, password: String, rememberMe: Boolean) {
@@ -58,6 +60,28 @@ class PreferencesManager(private val context: Context) {
             remove(KEY_USERNAME)
             remove(KEY_PASSWORD)
             remove(KEY_REMEMBER_ME)
+            apply()
+        }
+    }
+    
+    fun saveServerUrl(url: String) {
+        with(sharedPreferences.edit()) {
+            putString(KEY_SERVER_URL, url.trim())
+            apply()
+        }
+    }
+    
+    fun getServerUrl(): String {
+        return sharedPreferences.getString(KEY_SERVER_URL, DEFAULT_SERVER_URL) ?: DEFAULT_SERVER_URL
+    }
+    
+    fun hasServerUrlConfigured(): Boolean {
+        return sharedPreferences.contains(KEY_SERVER_URL)
+    }
+    
+    fun clearServerUrl() {
+        with(sharedPreferences.edit()) {
+            remove(KEY_SERVER_URL)
             apply()
         }
     }

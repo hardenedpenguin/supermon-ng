@@ -73,7 +73,7 @@ class LoginViewModel(private val context: Context) : ViewModel() {
         }
         
         viewModelScope.launch {
-            _uiState.value = currentState.copy(isLoading = true, errorMessage = null)
+            _uiState.value = currentState.copy(isLoading = true, errorMessage = null, isLoginSuccessful = false)
             
             try {
                 val result = repository.login(currentState.username, currentState.password)
@@ -106,6 +106,14 @@ class LoginViewModel(private val context: Context) : ViewModel() {
                 )
             }
         }
+    }
+    
+    fun resetLoginState() {
+        _uiState.value = _uiState.value.copy(
+            isLoginSuccessful = false,
+            errorMessage = null,
+            isLoading = false
+        )
     }
 }
 

@@ -4,7 +4,6 @@ import com.supermonng.mobile.data.api.SupermonApiService
 import okhttp3.Cookie
 import okhttp3.CookieJar
 import okhttp3.HttpUrl
-import okhttp3.JavaNetCookieJar
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -122,8 +121,38 @@ object NetworkModule {
             cookieManager!!.setCookiePolicy(CookiePolicy.ACCEPT_ALL)
         }
         
-        // Use standard JavaNetCookieJar for automatic cookie handling
-        val cookieJar: CookieJar = JavaNetCookieJar(cookieManager!!)
+        // Custom CookieJar implementation
+        val cookieJar: CookieJar = object : CookieJar {
+            private val cookieStore = mutableMapOf<String, MutableList<Cookie>>()
+            
+            override fun saveFromResponse(url: HttpUrl, cookies: List<Cookie>) {
+                val key = url.host
+                val existingCookies = cookieStore.getOrPut(key) { mutableListOf() }
+                
+                // Remove expired cookies and update existing ones
+                existingCookies.removeIf { existingCookie ->
+                    cookies.any { it.name == existingCookie.name && it.domain == existingCookie.domain && it.path == existingCookie.path } ||
+                    existingCookie.expiresAt < System.currentTimeMillis()
+                }
+                
+                // Add new cookies and update existing ones
+                cookies.forEach { cookie ->
+                    if (cookie.expiresAt >= System.currentTimeMillis()) {
+                        existingCookies.removeAll { it.name == cookie.name && it.domain == cookie.domain && it.path == cookie.path }
+                        existingCookies.add(cookie)
+                    }
+                }
+            }
+            
+            override fun loadForRequest(url: HttpUrl): List<Cookie> {
+                val now = System.currentTimeMillis()
+                return cookieStore.flatMap { (_, cookies) ->
+                    cookies.filter { cookie ->
+                        cookie.matches(url) && cookie.expiresAt > now
+                    }
+                }
+            }
+        }
         
         val client = OkHttpClient.Builder()
             // Force HTTP/1.1 to match curl behavior

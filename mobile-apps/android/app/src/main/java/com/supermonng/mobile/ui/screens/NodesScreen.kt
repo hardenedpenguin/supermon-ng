@@ -22,7 +22,8 @@ import com.supermonng.mobile.ui.viewmodel.NodesViewModel
 fun NodesScreen(
     onLogout: () -> Unit,
     onSettings: () -> Unit,
-    viewModel: NodesViewModel = viewModel()
+    viewModel: NodesViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    enableActions: Boolean = true  // Control whether action buttons are shown
 ) {
     val uiState by viewModel.uiState.collectAsState()
     
@@ -125,7 +126,8 @@ fun NodesScreen(
                             node = node,
                             onConnect = { targetNodeId -> viewModel.connectNode(node.id.toString(), targetNodeId) },
                             onDisconnect = { targetNodeId -> viewModel.disconnectNode(node.id.toString(), targetNodeId) },
-                            onMonitor = { targetNodeId -> viewModel.monitorNode(node.id.toString(), targetNodeId) }
+                            onMonitor = { targetNodeId -> viewModel.monitorNode(node.id.toString(), targetNodeId) },
+                            enableActions = enableActions  // Pass enableActions parameter
                         )
                     }
                 }

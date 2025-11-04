@@ -59,6 +59,11 @@ class NodesViewModel : ViewModel() {
                                                     mode = apiNode.mode,
                                                     keyed = apiNode.keyed
                                                 )
+                                            } ?: emptyList()
+                                            
+                                            println("DEBUG: Node ${node.id} - remote_nodes count: ${remoteNodes.size}")
+                                            if (remoteNodes.isNotEmpty()) {
+                                                println("DEBUG: Node ${node.id} - connected nodes: ${remoteNodes.map { it.node }}")
                                             }
                                             
                                             // Parse callsign and description from info field
@@ -93,7 +98,10 @@ class NodesViewModel : ViewModel() {
                                                 description = description,
                                                 // Don't set location to avoid duplicate display
                                                 info = amiNode.info,
-                                                remote_nodes = remoteNodes,
+                                                // Set both connected_nodes and remote_nodes for compatibility
+                                                // Only set if not empty (null means no connections, NodeCard will show "No connected nodes")
+                                                connected_nodes = remoteNodes.takeIf { it.isNotEmpty() },
+                                                remote_nodes = remoteNodes.takeIf { it.isNotEmpty() },
                                                 status = amiNode.status,
                                                 is_online = amiNode.status == "online",
                                                 is_keyed = amiNode.cos_keyed > 0 || amiNode.tx_keyed > 0,
@@ -263,7 +271,7 @@ class NodesViewModel : ViewModel() {
                                                         mode = apiNode.mode,
                                                         keyed = apiNode.keyed
                                                     )
-                                                }
+                                                } ?: emptyList()
                                                 
                                                 // Parse callsign and description from info field
                                                 val infoText = amiNode.info ?: ""
@@ -297,7 +305,10 @@ class NodesViewModel : ViewModel() {
                                                     description = description,
                                                     // Don't set location to avoid duplicate display
                                                     info = amiNode.info,
-                                                    remote_nodes = remoteNodes,
+                                                    // Set both connected_nodes and remote_nodes for compatibility
+                                                    // Only set if not empty (null means no connections, NodeCard will show "No connected nodes")
+                                                    connected_nodes = remoteNodes.takeIf { it.isNotEmpty() },
+                                                    remote_nodes = remoteNodes.takeIf { it.isNotEmpty() },
                                                     status = amiNode.status,
                                                     is_online = amiNode.status == "online",
                                                     is_keyed = amiNode.cos_keyed > 0 || amiNode.tx_keyed > 0,
