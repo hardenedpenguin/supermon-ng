@@ -209,7 +209,7 @@ sudo setfacl -R -m u:www-data:r /var/log/asterisk/
 **Apache configuration test:**
 ```bash
 sudo apache2ctl configtest
-sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers
+sudo a2enmod proxy proxy_http proxy_wstunnel rewrite headers substitute
 ```
 
 **AMI connection failures:**
