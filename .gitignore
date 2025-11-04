@@ -70,3 +70,19 @@ yarn-error.log*
 user_files/custom_*
 user_files/local_*
 cookies.txt
+
+# Android / Gradle build files
+mobile-apps/android/.gradle/
+mobile-apps/android/build/
+mobile-apps/android/app/build/
+mobile-apps/android/local.properties
+mobile-apps/android/*.iml
+mobile-apps/android/.idea/
+mobile-apps/android/app/*.apk
+mobile-apps/android/app/*.ap_
+mobile-apps/android/app/*.aab
+mobile-apps/android/.externalNativeBuild/
+mobile-apps/android/.cxx/
+mobile-apps/android/captures/
+mobile-apps/android/*.hprof
+mobile-apps/android/*.hprof.index
