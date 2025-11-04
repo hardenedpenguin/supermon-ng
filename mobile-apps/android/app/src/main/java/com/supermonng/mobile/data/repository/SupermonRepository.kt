@@ -17,54 +17,39 @@ class SupermonRepository {
             // Clear any existing cookies and session token before login
             NetworkModule.clearCookies()
             NetworkModule.clearSessionToken()
+            NetworkModule.clearCsrfToken()
             
             val response = apiService.login(
                 com.supermonng.mobile.data.api.LoginRequest(username, password)
             )
             
-            // Debug login response - concise version
-            val setCookieHeaders = response.headers().values("Set-Cookie")
-            val headerNames = response.headers().names()
-            
-            println("DEBUG: Login response code: ${response.code()}")
-            println("DEBUG: Set-Cookie headers: $setCookieHeaders")
-            println("DEBUG: All header names: $headerNames")
-            
-            // Check for any cookie-related headers
-            headerNames.forEach { name ->
-                if (name.lowercase().contains("cookie") || name.lowercase().contains("set")) {
-                    println("DEBUG: Cookie header '$name': ${response.headers().values(name)}")
-                }
-            }
-            
             if (response.isSuccessful && response.body()?.success == true) {
-                // Store the session token from the response
-                val setCookieHeaders = response.headers().values("Set-Cookie")
-                var debugInfo = "DEBUG: Login successful\n"
-                debugInfo += "DEBUG: Set-Cookie headers: $setCookieHeaders\n"
-                debugInfo += "DEBUG: All header names: ${response.headers().names()}\n"
+                val loginData = response.body()?.data
                 
+                // Extract session cookie from Set-Cookie header
+                val setCookieHeaders = response.headers().values("Set-Cookie")
                 if (setCookieHeaders.isNotEmpty()) {
                     val fullCookie = setCookieHeaders.first()
-                    debugInfo += "DEBUG: Full cookie string: $fullCookie\n"
-                    
-                    // Extract and store session token manually
-                    val sessionToken = fullCookie.split(";")[0].split("=")[1]
-                    debugInfo += "DEBUG: Extracted session token: $sessionToken\n"
-                    NetworkModule.setSessionToken(sessionToken)
-                    debugInfo += "DEBUG: Stored session token manually\n"
-                } else {
-                    debugInfo += "DEBUG: No Set-Cookie headers received - this is the problem!\n"
-                    return Result.failure(Exception("$debugInfo\nLogin successful but no session token received!"))
+                    // Extract session token from cookie (format: supermon61=TOKEN; Path=/supermon-ng; ...)
+                    val sessionToken = fullCookie.split(";")[0].substringAfter("supermon61=")
+                    if (sessionToken.isNotEmpty()) {
+                        NetworkModule.setSessionToken(sessionToken)
+                    }
+                } else if (loginData?.session_id != null) {
+                    // Fallback to session_id from response if no Set-Cookie header
+                    NetworkModule.setSessionToken(loginData.session_id)
                 }
                 
-                // Login successful - session token stored and tested
+                // Fetch and store CSRF token after successful login
+                val csrfResult = getCsrfToken()
+                csrfResult.getOrElse {
+                    // Log warning but don't fail login - CSRF token can be fetched on first use
+                }
+                
                 return Result.success(true)
             } else {
-                val errorInfo = "DEBUG: Login failed\n"
-                val errorInfo2 = "DEBUG: Response code: ${response.code()}\n"
-                val errorInfo3 = "DEBUG: Response body: ${response.body()}\n"
-                Result.failure(Exception("$errorInfo$errorInfo2$errorInfo3\nLogin failed: ${response.body()?.message ?: "Unknown error"}"))
+                val errorMessage = response.body()?.message ?: "Login failed with code ${response.code()}"
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -87,6 +72,10 @@ class SupermonRepository {
     suspend fun logout(): Result<Boolean> {
         return try {
             val response = apiService.logout()
+            // Clear session and CSRF token on logout
+            NetworkModule.clearSessionToken()
+            NetworkModule.clearCsrfToken()
+            NetworkModule.clearCookies()
             Result.success(response.isSuccessful)
         } catch (e: Exception) {
             Result.failure(e)
@@ -133,17 +122,12 @@ class SupermonRepository {
     
     suspend fun connectNode(nodeId: String, targetNodeId: String? = null, permanent: Boolean = false): Result<Boolean> {
         return try {
-            println("DEBUG: Attempting to connect node $nodeId to $targetNodeId")
-            
-            // Test auth check first
-            println("DEBUG: Testing auth check before connect")
-            val authResult = apiService.checkAuth()
-            println("DEBUG: Auth check response: ${authResult.code()}, authenticated: ${authResult.body()?.data?.authenticated}")
-            
+            // Ensure we have a CSRF token before making the request
             val csrfResult = getCsrfToken()
             val csrfToken = csrfResult.getOrElse { return Result.failure(it) }
             
-            // Use raw JSON to avoid data class serialization issues
+            // Build request body - CSRF token will be added to header by NetworkModule
+            // But we also include it in body as fallback for backend compatibility
             val jsonString = if (permanent) {
                 """{"localnode":"$nodeId","remotenode":"$targetNodeId","perm":"$permanent","csrf_token":"$csrfToken"}"""
             } else {
@@ -155,18 +139,15 @@ class SupermonRepository {
             )
             
             val response = apiService.connectNodeRaw(requestBody)
-            println("DEBUG: Connect response: ${response.code()}, success: ${response.body()?.success}")
             
             if (response.isSuccessful && response.body()?.success == true) {
                 Result.success(true)
             } else {
                 val errorBody = response.errorBody()?.string() ?: "No error body"
                 val responseBody = response.body()?.message ?: "No response message"
-                println("DEBUG: Connect failed - Code: ${response.code()}, Message: $responseBody, Error: $errorBody")
-                Result.failure(Exception("Connect failed: $responseBody. Error body: $errorBody. Code: ${response.code()}"))
+                Result.failure(Exception("Connect failed: $responseBody. Code: ${response.code()}"))
             }
         } catch (e: Exception) {
-            println("DEBUG: Connect exception: ${e.message}")
             Result.failure(e)
         }
     }
@@ -185,7 +166,7 @@ class SupermonRepository {
                 return Result.failure(Exception("CSRF token failed: ${it.message}"))
             }
 
-            // Use raw JSON to avoid data class serialization issues
+            // Build request body with CSRF token (also in header via NetworkModule)
             val jsonString = """{"localnode":"$nodeId","remotenode":"$targetNodeId","csrf_token":"$csrfToken"}"""
             val requestBody = okhttp3.RequestBody.create(
                 "application/json; charset=utf-8".toMediaTypeOrNull(),
@@ -210,7 +191,7 @@ class SupermonRepository {
             val csrfResult = getCsrfToken()
             val csrfToken = csrfResult.getOrElse { return Result.failure(it) }
             
-            // Use raw JSON to avoid data class serialization issues
+            // Build request body with CSRF token (also in header via NetworkModule)
             val jsonString = """{"localnode":"$nodeId","remotenode":"$targetNodeId","csrf_token":"$csrfToken"}"""
             val requestBody = okhttp3.RequestBody.create(
                 "application/json; charset=utf-8".toMediaTypeOrNull(),
@@ -231,13 +212,23 @@ class SupermonRepository {
     
     suspend fun localMonitorNode(nodeId: String): Result<Boolean> {
         return try {
-            val response = apiService.localMonitorNode(
-                com.supermonng.mobile.data.api.NodeActionRequest(nodeId)
+            // Ensure CSRF token is available
+            val csrfResult = getCsrfToken()
+            val csrfToken = csrfResult.getOrElse { return Result.failure(it) }
+            
+            // Build request body with CSRF token (also in header via NetworkModule)
+            val jsonString = """{"localnode":"$nodeId","csrf_token":"$csrfToken"}"""
+            val requestBody = okhttp3.RequestBody.create(
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
+                jsonString
             )
+            
+            val response = apiService.localMonitorNodeRaw(requestBody)
             if (response.isSuccessful && response.body()?.success == true) {
                 Result.success(true)
             } else {
-                Result.failure(Exception(response.body()?.message ?: "Local monitor failed"))
+                val responseBody = response.body()?.message ?: "No response message"
+                Result.failure(Exception("Local monitor failed: $responseBody. Code: ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -246,13 +237,18 @@ class SupermonRepository {
     
     suspend fun sendDtmf(nodeId: String, dtmf: String): Result<Boolean> {
         return try {
+            // Ensure CSRF token is available (NetworkModule will add to header)
+            getCsrfToken().getOrElse { return Result.failure(it) }
+            
+            // Use DtmfRequest data class - NetworkModule handles CSRF token in header
             val response = apiService.sendDtmf(
                 com.supermonng.mobile.data.api.DtmfRequest(nodeId, dtmf)
             )
             if (response.isSuccessful && response.body()?.success == true) {
                 Result.success(true)
             } else {
-                Result.failure(Exception(response.body()?.message ?: "DTMF failed"))
+                val responseBody = response.body()?.message ?: "No response message"
+                Result.failure(Exception("DTMF failed: $responseBody. Code: ${response.code()}"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -298,23 +294,28 @@ class SupermonRepository {
     
     private suspend fun getCsrfToken(): Result<String> {
         return try {
-            println("DEBUG: Getting CSRF token with session: ${NetworkModule.getSessionToken()}")
+            // Check if we already have a token
+            val existingToken = NetworkModule.getCsrfToken()
+            if (!existingToken.isNullOrEmpty()) {
+                return Result.success(existingToken)
+            }
+            
+            // Fetch new token
             val response = apiService.getCsrfToken()
             if (response.isSuccessful && response.body()?.success == true) {
                 val token = response.body()?.csrf_token
-                if (token != null) {
-                    println("DEBUG: Got CSRF token: $token")
+                if (token != null && token.isNotEmpty()) {
+                    // Store token in NetworkModule
+                    NetworkModule.setCsrfToken(token)
                     Result.success(token)
                 } else {
-                    Result.failure(Exception("CSRF token not available"))
+                    Result.failure(Exception("CSRF token not available in response"))
                 }
             } else {
                 val errorBody = response.errorBody()?.string() ?: "No error body"
-                println("DEBUG: CSRF token failed: ${response.code()} - $errorBody")
                 Result.failure(Exception("Failed to fetch CSRF token: ${response.code()} - $errorBody"))
             }
         } catch (e: Exception) {
-            println("DEBUG: CSRF token exception: ${e.message}")
             Result.failure(e)
         }
     }

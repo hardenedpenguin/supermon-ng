@@ -42,7 +42,8 @@ interface SupermonApiService {
     suspend fun monitorNodeRaw(@Body jsonBody: okhttp3.RequestBody): Response<NodeActionResponse>
     
     @POST("nodes/local-monitor")
-    suspend fun localMonitorNode(@Body request: NodeActionRequest): Response<NodeActionResponse>
+    @Headers("Content-Type: application/json")
+    suspend fun localMonitorNodeRaw(@Body jsonBody: okhttp3.RequestBody): Response<NodeActionResponse>
     
     @POST("nodes/dtmf")
     suspend fun sendDtmf(@Body request: DtmfRequest): Response<NodeActionResponse>
@@ -79,8 +80,9 @@ data class LoginResponse(
 )
 
 data class LoginData(
-    val user: User?,
-    val token: String?
+    val user: String?,  // Backend returns username as string, not User object
+    val authenticated: Boolean?,
+    val session_id: String?  // Backend returns session_id, not token
 )
 
 data class User(
@@ -96,7 +98,7 @@ data class AuthCheckResponse(
 
 data class AuthCheckData(
     val authenticated: Boolean,
-    val user: User?,
+    val user: Map<String, String>?,  // Backend returns {"name": "username"}
     val permissions: Map<String, Boolean>?,
     val config_source: String?
 )
@@ -143,7 +145,7 @@ data class NodeActionResponse(
 )
 
 data class DtmfRequest(
-    val node: String,
+    val localnode: String,  // Backend expects 'localnode', not 'node'
     val dtmf: String
 )
 
