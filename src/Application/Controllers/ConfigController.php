@@ -67,122 +67,149 @@ class ConfigController
 
     public function getNodes(Request $request, Response $response): Response
     {
-        $this->logger->info('Config nodes request');
-        
-        // Return node configuration from AllStar INI files
-        $config = [];
-        
-        // Get the current user's INI file
-        $iniFile = $this->getCurrentUserIniFile();
-        
-        // Add user_files prefix if not already present
-        if (!str_starts_with($iniFile, 'user_files/') && !str_starts_with($iniFile, '/')) {
-            $iniFile = 'user_files/' . $iniFile;
-        }
-        
-        $this->logger->info("Loading nodes from INI file: $iniFile");
-        
-        // Read from user-specific INI file
-        $allmonIni = $iniFile;
-        if (file_exists($allmonIni)) {
-            $iniConfig = parse_ini_file($allmonIni, true);
-            if ($iniConfig) {
-                foreach ($iniConfig as $nodeId => $nodeConfig) {
-                    if (is_array($nodeConfig) && isset($nodeConfig['host'])) {
-                        $config[$nodeId] = $nodeConfig;
+        try {
+            $this->logger->info('Config nodes request');
+            
+            // Return node configuration from AllStar INI files
+            $config = [];
+            $iniConfig = null;
+            
+            // Get the current user's INI file
+            $iniFile = $this->getCurrentUserIniFile();
+            
+            // Resolve to absolute path
+            $userFilesDir = __DIR__ . '/../../../user_files/';
+            if (!str_starts_with($iniFile, '/') && !str_starts_with($iniFile, 'user_files/')) {
+                $iniFile = 'user_files/' . $iniFile;
+            }
+            
+            // Convert to absolute path for file operations
+            $absoluteIniFile = $iniFile;
+            if (!str_starts_with($absoluteIniFile, '/')) {
+                $absoluteIniFile = $userFilesDir . str_replace('user_files/', '', $absoluteIniFile);
+            }
+            
+            $this->logger->info("Loading nodes from INI file: $absoluteIniFile");
+            
+            // Read from user-specific INI file
+            if (file_exists($absoluteIniFile)) {
+                $iniConfig = parse_ini_file($absoluteIniFile, true);
+                if ($iniConfig) {
+                    foreach ($iniConfig as $nodeId => $nodeConfig) {
+                        if (is_array($nodeConfig) && isset($nodeConfig['host'])) {
+                            $config[$nodeId] = $nodeConfig;
+                        }
                     }
                 }
             }
-        }
-        
-        // Get default node from INI file
-        $defaultNode = null;
-        if (file_exists($iniFile)) {
-            // Debug: Log what we're trying to read
-            $this->logger->info("Reading INI file for default node: $iniFile");
             
-            // Try parse_ini_file first - parse both with and without sections
-            $iniConfig = parse_ini_file($iniFile, true);
-            $iniConfigGlobal = parse_ini_file($iniFile, false);
-            
-            if ($iniConfig === false || $iniConfigGlobal === false) {
-                $this->logger->error("Failed to parse INI file: $iniFile");
-            } else {
-                $this->logger->info("Parsed INI sections: " . implode(', ', array_keys($iniConfig)));
-                $this->logger->info("Global INI keys: " . implode(', ', array_keys($iniConfigGlobal)));
-
+            // Get default node from INI file
+            $defaultNode = null;
+            if (file_exists($absoluteIniFile)) {
+                // Debug: Log what we're trying to read
+                $this->logger->info("Reading INI file for default node: $absoluteIniFile");
                 
-                // Check for default_node in global scope first
-                if (isset($iniConfigGlobal['default_node'])) {
-                    $defaultNodeRaw = $iniConfigGlobal['default_node'];
-                    $this->logger->info("Found default_node in global scope: $defaultNodeRaw");
+                // Try parse_ini_file first - parse both with and without sections
+                $iniConfig = parse_ini_file($absoluteIniFile, true);
+                $iniConfigGlobal = parse_ini_file($absoluteIniFile, false);
+                
+                if ($iniConfig === false || $iniConfigGlobal === false) {
+                    $this->logger->error("Failed to parse INI file: $absoluteIniFile");
+                } else {
+                    $this->logger->info("Parsed INI sections: " . implode(', ', array_keys($iniConfig)));
+                    $this->logger->info("Global INI keys: " . implode(', ', array_keys($iniConfigGlobal)));
+
                     
-                    // Return the full default_node value (including comma-separated nodes)
-                    $defaultNode = $defaultNodeRaw;
-                    $this->logger->info("Using default node(s): $defaultNode");
-                } elseif (isset($iniConfig['ASL3+'])) {
-                    $this->logger->info("ASL3+ section found with keys: " . implode(', ', array_keys($iniConfig['ASL3+'])));
-                    if (isset($iniConfig['ASL3+']['default_node'])) {
-                        $defaultNodeRaw = $iniConfig['ASL3+']['default_node'];
-                        $this->logger->info("Found default_node in ASL3+ section: $defaultNodeRaw");
+                    // Check for default_node in global scope first
+                    if (isset($iniConfigGlobal['default_node'])) {
+                        $defaultNodeRaw = $iniConfigGlobal['default_node'];
+                        $this->logger->info("Found default_node in global scope: $defaultNodeRaw");
                         
                         // Return the full default_node value (including comma-separated nodes)
                         $defaultNode = $defaultNodeRaw;
-                        $this->logger->info("Using default node(s) from ASL3+ section: $defaultNode");
+                        $this->logger->info("Using default node(s): $defaultNode");
+                    } elseif (isset($iniConfig['ASL3+'])) {
+                        $this->logger->info("ASL3+ section found with keys: " . implode(', ', array_keys($iniConfig['ASL3+'])));
+                        if (isset($iniConfig['ASL3+']['default_node'])) {
+                            $defaultNodeRaw = $iniConfig['ASL3+']['default_node'];
+                            $this->logger->info("Found default_node in ASL3+ section: $defaultNodeRaw");
+                            
+                            // Return the full default_node value (including comma-separated nodes)
+                            $defaultNode = $defaultNodeRaw;
+                            $this->logger->info("Using default node(s) from ASL3+ section: $defaultNode");
+                        } else {
+                            $this->logger->info("default_node not found in ASL3+ section");
+                        }
                     } else {
-                        $this->logger->info("default_node not found in ASL3+ section");
+                        $this->logger->info("ASL3+ section not found in INI file");
                     }
-                } else {
-                    $this->logger->info("ASL3+ section not found in INI file");
                 }
+                
+                // If parse_ini_file didn't work, try manual parsing
+                if (!$defaultNode) {
+                    $this->logger->info("Trying manual parsing...");
+                    $iniContent = file_get_contents($absoluteIniFile);
+                    if ($iniContent !== false) {
+                        $lines = explode("\n", $iniContent);
+                        
+                        foreach ($lines as $lineNum => $line) {
+                            $line = trim($line);
+                            if (strpos($line, 'default_node=') === 0) {
+                                $defaultNode = trim(substr($line, strlen('default_node=')));
+                                $this->logger->info("Found default_node via manual parsing at line " . ($lineNum + 1) . ": $defaultNode");
+                                break;
+                            }
+                        }
+                    }
+                }
+            } else {
+                $this->logger->error("INI file does not exist: $absoluteIniFile");
             }
             
-            // If parse_ini_file didn't work, try manual parsing
-            if (!$defaultNode) {
-                $this->logger->info("Trying manual parsing...");
-                $iniContent = file_get_contents($iniFile);
-                $lines = explode("\n", $iniContent);
-                
-                foreach ($lines as $lineNum => $line) {
-                    $line = trim($line);
-                    if (strpos($line, 'default_node=') === 0) {
-                        $defaultNode = trim(substr($line, strlen('default_node=')));
-                        $this->logger->info("Found default_node via manual parsing at line " . ($lineNum + 1) . ": $defaultNode");
-                        break;
-                    }
+            // If still no default node, use the first available node as fallback
+            if (!$defaultNode && !empty($config)) {
+                $firstNodeId = array_keys($config)[0];
+                $defaultNode = $firstNodeId;
+                $this->logger->info("Using first available node as fallback: $defaultNode");
+            }
+            
+            // Resolve group names to actual node IDs
+            if ($defaultNode && $iniConfig !== null) {
+                $resolvedDefaultNode = $this->resolveGroupToNodes($defaultNode, $iniConfig);
+                if ($resolvedDefaultNode !== $defaultNode) {
+                    $this->logger->info("Resolved group '$defaultNode' to nodes: $resolvedDefaultNode");
+                    $defaultNode = $resolvedDefaultNode;
                 }
             }
-        } else {
-            $this->logger->error("INI file does not exist: $iniFile");
-        }
-        
-        // If still no default node, use the first available node as fallback
-        if (!$defaultNode && !empty($config)) {
-            $firstNodeId = array_keys($config)[0];
-            $defaultNode = $firstNodeId;
-            $this->logger->info("Using first available node as fallback: $defaultNode");
-        }
-        
-        // Resolve group names to actual node IDs
-        if ($defaultNode && isset($iniConfig)) {
-            $resolvedDefaultNode = $this->resolveGroupToNodes($defaultNode, $iniConfig);
-            if ($resolvedDefaultNode !== $defaultNode) {
-                $this->logger->info("Resolved group '$defaultNode' to nodes: $resolvedDefaultNode");
-                $defaultNode = $resolvedDefaultNode;
-            }
-        }
 
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'data' => [
-                'config' => $config,
-                'ini_file' => $iniFile,
-                'default_node' => $defaultNode
-            ],
-            'timestamp' => date('c')
-        ]));
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => [
+                    'config' => $config,
+                    'ini_file' => $iniFile,
+                    'default_node' => $defaultNode
+                ],
+                'timestamp' => date('c')
+            ]));
 
-        return $response->withHeader('Content-Type', 'application/json');
+            return $response->withHeader('Content-Type', 'application/json');
+            
+        } catch (\Exception $e) {
+            $this->logger->error('Error in getNodes', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Failed to load node configuration',
+                'message' => $e->getMessage()
+            ]));
+            
+            return $response
+                ->withStatus(500)
+                ->withHeader('Content-Type', 'application/json');
+        }
     }
 
     public function getUserPreferences(Request $request, Response $response): Response
