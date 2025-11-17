@@ -481,7 +481,11 @@ else
     # WebSocket proxy for Supermon-NG nodes
     # All WebSocket connections route to the single router server on port 8105
     # The router extracts the node ID from the path and routes internally
-    ProxyPass /supermon-ng/ws/ ws://localhost:8105/supermon-ng/ws/ upgrade=websocket
+    # MUST use RewriteRule with [P] flag for WebSocket proxying to work correctly
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteCond %{HTTP:Connection} =Upgrade [NC]
+    RewriteRule ^/supermon-ng/ws/(.+)$ ws://localhost:8105/supermon-ng/ws/$1 [P,L]
     ProxyPassReverse /supermon-ng/ws/ ws://localhost:8105/supermon-ng/ws/
     
     # Proxy HamClock requests (adjust IP and port as needed)
