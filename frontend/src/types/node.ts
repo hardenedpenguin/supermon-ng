@@ -1,7 +1,7 @@
 // Node and AllStar system types
 
 export interface Node {
-  id: string
+  id: string | number  // Allow both for compatibility
   node_number?: number
   callsign?: string
   description?: string

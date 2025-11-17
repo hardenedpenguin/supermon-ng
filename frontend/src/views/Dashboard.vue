@@ -60,8 +60,8 @@
       <div v-if="displayedNodes.length > 0">
         <!-- Local node dropdown (only show if multiple nodes) -->
         <select v-if="displayedNodes.length > 1" v-model="selectedLocalNode" class="submit">
-          <option v-for="node in displayedNodes" :key="node.id" :value="node.id" class="submit">
-            {{ node.id }} => {{ node.info || 'Node not in database' }}
+          <option v-for="node in displayedNodes" :key="String(node.id)" :value="String(node.id)" class="submit">
+            {{ node.id }} => {{ (node as NodeType).info || (node as NodeType).description || 'Node not in database' }}
           </option>
         </select>
         
@@ -147,8 +147,8 @@
       <div v-else class="node-tables-container">
         <NodeTable 
           v-for="(node, index) in displayedNodes"
-          :key="node.id"
-          :node="node"
+          :key="String(node.id)"
+          :node="{ id: String(node.id), info: (node as NodeType).info }"
           :show-detail="true"
           :astdb="realTimeStore.astdb"
           :config="realTimeStore.nodeConfig"
@@ -225,7 +225,7 @@
           <!-- Database Modal -->
           <Database 
             v-model:isVisible="showDatabaseModal" 
-            :localnode="selectedLocalNode || selectedNode || displayedNodes[0]?.id || ''" 
+            :localnode="selectedLocalNode || selectedNode || String(displayedNodes[0]?.id || '')" 
           />
           
           <!-- Donate Modal -->
@@ -308,6 +308,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useRealTimeStore } from '@/stores/realTime'
 import { api } from '@/utils/api'
+import type { Node as NodeType } from '@/types'
 import NodeTable from '@/components/NodeTable.vue'
 import LoginForm from '@/components/LoginForm.vue'
 import Menu from '@/components/Menu.vue'
@@ -406,7 +407,7 @@ const availableNodes = computed(() => {
 
 
 
-const displayedNodes = computed(() => {
+const displayedNodes = computed((): NodeType[] => {
   // If no node is selected, show empty array until default is loaded
   // This prevents showing all available nodes on initial page load
   if (!selectedNode.value) {
@@ -420,47 +421,56 @@ const displayedNodes = computed(() => {
     const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
 
     const filteredNodes = availableNodes.value.filter(node => 
-      nodeIds.includes(node.id.toString()) || 
-      nodeIds.includes((node.node_number || node.id).toString())
+      nodeIds.includes(String(node.id)) || 
+      nodeIds.includes(String(node.node_number || node.id))
     )
     
-    return filteredNodes
+    // Convert node IDs to strings for consistency
+    return filteredNodes.map(node => ({
+      ...node,
+      id: String(node.id)
+    }))
   }
   
   // Handle single node ID
   const filteredNodes = availableNodes.value.filter(node => 
-    node.id.toString() === selectedNodeStr || 
-    (node.node_number || node.id).toString() === selectedNodeStr
+    String(node.id) === selectedNodeStr || 
+    String(node.node_number || node.id) === selectedNodeStr
   )
 
   // If no nodes found but we have a selected node, create a placeholder node
   // This handles cases where the node exists in the menu but not yet loaded in availableNodes
   if (filteredNodes.length === 0 && selectedNodeStr && availableNodes.value.length > 0) {
     // Create a temporary node entry for the selected node
-    const tempNode = {
-      id: parseInt(selectedNodeStr),
+    const tempNode: NodeType = {
+      id: selectedNodeStr, // Keep as string to match Node type
       node_number: parseInt(selectedNodeStr),
       callsign: `Node ${selectedNodeStr}`,
       description: 'Loading...',
       location: 'Unknown',
       status: 'unknown',
-      last_heard: null,
+      last_heard: undefined,
       connected_nodes: [],
       cos_keyed: 0,
       tx_keyed: 0,
-      cpu_temp: null,
-      alert: null,
-      wx: null,
-      disk: null,
+      cpu_temp: undefined,
+      alert: undefined,
+      wx: undefined,
+      disk: undefined,
       is_online: false,
       is_keyed: false,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      info: `Node ${selectedNodeStr}`
     }
     return [tempNode]
   }
 
-  return filteredNodes
+  // Convert node IDs to strings for consistency
+  return filteredNodes.map(node => ({
+    ...node,
+    id: String(node.id)
+  }))
 })
 
 const headerBackgroundUrl = computed(() => {
@@ -661,26 +671,6 @@ const monitor = async () => {
   }
 }
 
-const permconnect = async () => {
-  if (!targetNode.value || !selectedLocalNode.value) return
-  
-  try {
-    const response = await api.post('/nodes/connect', {
-      localnode: selectedLocalNode.value,
-      remotenode: targetNode.value,
-      perm: 'on'
-    })
-    
-    if (response.data.success) {
-
-      // Refresh node data after successful connection
-      await realTimeStore.fetchNodeData()
-    }
-  } catch (error) {
-    // Permanent connect error handled
-  }
-}
-
 const localmonitor = async () => {
   if (!targetNode.value || !selectedLocalNode.value) return
   try {
@@ -698,26 +688,6 @@ const localmonitor = async () => {
   } catch (error) {
     // Local monitor error handled
   }
-}
-
-const monitorcmd = async () => {
-  if (!targetNode.value) return
-  try {
-    await realTimeStore.monitorCmdNode(targetNode.value)
-  } catch (error) {
-    // Monitor CMD error handled
-  }
-}
-
-const refreshData = () => {
-  realTimeStore.fetchNodeData()
-}
-
-// Manual data clearing function - only use for explicit reset actions
-const clearData = () => {
-  selectedNode.value = ''
-  targetNode.value = ''
-  permConnect.value = false
 }
 
 // Additional button methods to match link.php
@@ -778,49 +748,6 @@ const bubble = async () => {
   }
 }
 
-const extnodes = async () => {
-  try {
-    showExtNodesModal.value = true
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    alert(`Failed to open ExtNodes: ${errorMessage}`)
-  }
-}
-
-
-
-const controlpanel = async () => {
-  try {
-
-    
-    // Use selectedLocalNode if available, otherwise use selectedNode
-    if (selectedLocalNode.value) {
-      targetNode.value = String(selectedLocalNode.value)
-    } else if (selectedNode.value) {
-      targetNode.value = String(selectedNode.value)
-    } else {
-      alert('Please select a node first')
-      return
-    }
-    
-
-    showControlPanelModal.value = true
-  } catch (error) {
-    // Control Panel error handled
-  }
-}
-
-const favorites = async () => {
-  try {
-    // Implement favorites functionality
-
-  } catch (error) {
-    // Favorites error handled
-  }
-}
-
-
-
 
 
 
@@ -857,26 +784,6 @@ const openNodeStatus = async () => {
   }
 }
 
-
-// Helper function to check if user is accessing site internally
-const isInternalAccess = (): boolean => {
-  const hostname = window.location.hostname
-  
-  // Check if accessing via localhost, IP address, or internal domain patterns
-  const internalPatterns = [
-    /^localhost$/i,
-    /^127\./,                    // 127.0.0.0/8 (localhost)
-    /^10\./,                     // 10.0.0.0/8
-    /^172\.(1[6-9]|2[0-9]|3[0-1])\./, // 172.16.0.0/12
-    /^192\.168\./,               // 192.168.0.0/16
-    /^169\.254\./,               // 169.254.0.0/16 (link-local)
-    /\.local$/i,                 // .local domains
-    /\.lan$/i,                   // .lan domains
-    /\.internal$/i               // .internal domains
-  ]
-  
-  return internalPatterns.some(pattern => pattern.test(hostname))
-}
 
 // Additional button methods to match original Supermon-ng
 const configeditor = async () => {
@@ -975,16 +882,6 @@ const astaroff = async () => {
     }
   }
 
-  const irlplog = async () => {
-    try {
-  
-      showIrlpLogModal.value = true
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      alert(`Failed to open IRLP Log: ${errorMessage}`)
-    }
-  }
-
 const reboot = async () => {
   try {
 
@@ -992,16 +889,6 @@ const reboot = async () => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     alert(`Failed to open Server Reboot: ${errorMessage}`)
-  }
-}
-
-const smlog = async () => {
-  try {
-
-    showSMLogModal.value = true
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    alert(`Failed to open SMLog: ${errorMessage}`)
   }
 }
 
@@ -1240,25 +1127,25 @@ const openDonatePopup = () => {
   }
 
   // Handle display settings updated
-  const handleDisplaySettingsUpdated = (settings: any) => {
+  const handleDisplaySettingsUpdated = (_settings: any) => {
     // Refresh the page to apply new display settings
     window.location.reload()
   }
 
   // Handle favorite added
-  const handleFavoriteAdded = (result: any) => {
+  const handleFavoriteAdded = (_result: any) => {
     // Could show a notification or refresh the page
     
   }
 
   // Handle favorite deleted
-  const handleFavoriteDeleted = (result: any) => {
+  const handleFavoriteDeleted = (_result: any) => {
     // Could show a notification or refresh the page
     
   }
 
   // Handle command executed
-  const handleCommandExecuted = (result: any) => {
+  const handleCommandExecuted = (_result: any) => {
     // Could show a notification or refresh the page
     
   }
@@ -1359,7 +1246,7 @@ watch(() => realTimeStore.nodes, (newNodes) => {
   nextTick(() => {
     nodeTableRefs.value.forEach((ref, index) => {
       if (ref && typeof ref.updateNodeData === 'function') {
-        const nodeId = displayedNodes.value[index]?.id
+        const nodeId = displayedNodes.value[index] ? String(displayedNodes.value[index].id) : undefined
         if (nodeId) {
           const nodeData = newNodes.find(n => String(n.id) === String(nodeId))
           if (nodeData) {
