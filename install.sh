@@ -478,13 +478,11 @@ else
     # Alias for user files
     Alias /supermon-ng/user_files APP_DIR_PLACEHOLDER/user_files
     
-    # WebSocket proxy for Supermon-NG nodes (dynamic port mapping)
-    # Format: /supermon-ng/ws/{nodeId} -> ws://localhost:{basePort + nodeIndex}
-    # Base port is 8105, ports increment per node
-    RewriteEngine On
-    RewriteCond %{HTTP:Upgrade} =websocket [NC]
-    RewriteRule ^/supermon-ng/ws/(\d+)$ ws://localhost:81$1 [P,L]
-    ProxyPassReverse /supermon-ng/ws/ ws://localhost:8105
+    # WebSocket proxy for Supermon-NG nodes
+    # All WebSocket connections route to the single router server on port 8105
+    # The router extracts the node ID from the path and routes internally
+    ProxyPass /supermon-ng/ws/ ws://localhost:8105/supermon-ng/ws/ upgrade=websocket
+    ProxyPassReverse /supermon-ng/ws/ ws://localhost:8105/supermon-ng/ws/
     
     # Proxy HamClock requests (adjust IP and port as needed)
     # Uncomment and modify the following lines if you have HamClock running:
