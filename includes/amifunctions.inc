@@ -3,46 +3,42 @@
  * Supermon-ng AMI (Asterisk Manager Interface) Functions
  * 
  * Provides comprehensive AMI client functionality for Supermon-ng.
- * Handles connection management, authentication, command execution,
- * and response processing for Asterisk Manager Interface operations.
+ * Matches Allmon3's AMI implementation patterns for consistency.
  * 
  * Features:
  * - Secure AMI connection establishment
  * - Authentication and login management
  * - Command execution with response handling
+ * - Generic action method (Allmon3 style)
  * - Automatic connection cleanup and logout
  * - Timeout management and error handling
  * - Response parsing and validation
  * - Connection pooling for performance
  * - Performance monitoring and logging
- * 
- * Security:
- * - Secure socket connections with timeout protection
- * - Authentication validation and error handling
- * - Connection cleanup and resource management
- * - Input validation and sanitization
- * - Error reporting without information disclosure
- * 
- * AMI Operations:
- * - Connection establishment and validation
- * - User authentication and login
- * - Command execution with ActionID tracking
- * - Response parsing and timeout handling
- * - Graceful connection termination
- * 
- * Error Handling:
- * - Connection timeout management
- * - Authentication failure handling
- * - Command execution error reporting
- * - Resource cleanup in error conditions
- * - Comprehensive error logging
- * 
- * Dependencies: None (core AMI functionality)
+ * - Parsing methods for XStat, SawStat, VoterStatus
  * 
  * @author Supermon-ng Team
- * @version 3.0.0
- * @since 1.0.0
+ * @version 4.0.0
+ * @since 4.0.0
  */
+
+/**
+ * AMI Exception class (Allmon3 style)
+ */
+class AMIException extends Exception
+{
+    public const CONNECTION_FAILED = 1;
+    public const AUTHENTICATION_FAILED = 2;
+    public const COMMAND_FAILED = 3;
+    public const PROTOCOL_ERROR = 4;
+    public const TIMEOUT = 5;
+    public const INVALID_RESPONSE = 6;
+    
+    public function __construct($message, $code = 0, Exception $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+    }
+}
 
 class SimpleAmiClient
 {
@@ -70,6 +66,16 @@ class SimpleAmiClient
         if (isset($config['timeout'])) {
             self::$poolTimeout = $config['timeout'];
         }
+    }
+    
+    /**
+     * Generate ActionID (Allmon3 style - using uniqid with entropy)
+     * 
+     * @return string Unique ActionID
+     */
+    private static function generateActionID($prefix = '')
+    {
+        return $prefix . uniqid('', true) . '_' . mt_rand(1000, 9999);
     }
     
     /**
@@ -200,18 +206,18 @@ class SimpleAmiClient
     }
 
     /**
-     * Waits for and returns a complete AMI response block matching the given ActionID.
-     * Sets a very long timeout on the socket for reading.
+     * Get AMI response - reads until \r\n\r\n (Allmon3 style)
+     * Falls back to ActionID matching if ActionID is provided
      *
      * @param resource $fp       Open socket connection to AMI.
-     * @param string   $actionID The ActionID to look for in the response.
+     * @param string|null $actionID Optional ActionID to look for in the response.
      * @return string|false      The matching response block or false on error/timeout.
      */
-    public static function getResponse($fp, $actionID)
+    public static function getResponse($fp, $actionID = null)
     {
-        $currentBlock = '';
-        $blockActionIDFound = false;
-
+        $response = '';
+        $foundActionID = ($actionID === null);
+        
         stream_set_timeout($fp, self::VERY_LONG_TIMEOUT_SECONDS);
 
         while (true) {
@@ -222,29 +228,36 @@ class SimpleAmiClient
                 return false;
             }
 
-            $currentBlock .= $line;
+            $response .= $line;
 
-            if (!$blockActionIDFound && stripos($line, "ActionID: " . $actionID) !== false) {
-                $blockActionIDFound = true;
-            }
-
-            if (rtrim($line, "\r\n") === '') {
-                if ($blockActionIDFound) {
-                    return $currentBlock;
-                } else {
-                    $currentBlock = '';
+            // Check for ActionID match if specified
+            if ($actionID !== null && !$foundActionID) {
+                if (stripos($line, "ActionID: " . $actionID) !== false) {
+                    $foundActionID = true;
                 }
             }
+
+            // Check for end of response (\r\n\r\n) - Allmon3 style
+            if (substr($response, -4) === "\r\n\r\n") {
+                if ($actionID === null || $foundActionID) {
+                    return $response;
+                }
+                // Reset if ActionID doesn't match yet
+                $response = '';
+            }
         }
+        
         return false;
     }
 
     /**
      * Opens a socket connection to the Asterisk Manager Interface (AMI).
+     * Validates greeting explicitly (Allmon3 style).
      *
      * @param string $host    IP address and optional port (e.g., 127.0.0.1:5038).
      * @param int    $timeout Connection timeout in seconds for fsockopen.
      * @return resource|false AMI socket connection or false on failure.
+     * @throws AMIException On connection failure
      */
     public static function connect($host, $timeout = null)
     {
@@ -263,15 +276,19 @@ class SimpleAmiClient
 
         stream_set_timeout($fp, 2);
         $greeting = fgets($fp, 1024);
+        
+        // Explicit validation (Allmon3 style)
         if ($greeting === false || stripos($greeting, 'Asterisk Call Manager') === false) {
             @fclose($fp);
             return false;
         }
+        
         return $fp;
     }
 
     /**
      * Logs in to the Asterisk Manager Interface with given credentials.
+     * Uses uppercase protocol headers (Allmon3 style).
      *
      * @param resource $fp       AMI socket connection.
      * @param string   $user     AMI username.
@@ -285,12 +302,13 @@ class SimpleAmiClient
             $timeout = self::DEFAULT_COMMAND_TIMEOUT;
         }
         
-        $actionID = 'login_' . bin2hex(random_bytes(8));
+        $actionID = self::generateActionID('login_');
 
-        $loginCmd = "Action: Login" . self::AMI_EOL;
-        $loginCmd .= "Username: " . $user . self::AMI_EOL;
-        $loginCmd .= "Secret: " . $password . self::AMI_EOL;
-        $loginCmd .= "Events: off" . self::AMI_EOL;
+        // Uppercase protocol headers (Allmon3 style)
+        $loginCmd = "ACTION: LOGIN" . self::AMI_EOL;
+        $loginCmd .= "USERNAME: " . $user . self::AMI_EOL;
+        $loginCmd .= "SECRET: " . $password . self::AMI_EOL;
+        $loginCmd .= "EVENTS: 0" . self::AMI_EOL;
         $loginCmd .= "ActionID: " . $actionID . self::AMI_EOL . self::AMI_EOL;
 
         if (fwrite($fp, $loginCmd) === false) {
@@ -302,6 +320,7 @@ class SimpleAmiClient
             return false;
         }
 
+        // Check for success response
         if (stripos($loginResponse, "Response: Success") !== false &&
             stripos($loginResponse, "Message: Authentication accepted") !== false) {
             return true;
@@ -311,7 +330,41 @@ class SimpleAmiClient
     }
 
     /**
+     * Generic AMI action method (Allmon3 style - like asl_cmd_response)
+     * Sends any AMI action with parameters and returns the raw response.
+     *
+     * @param resource $fp       AMI socket connection.
+     * @param string   $action   AMI action name (e.g., "RptStatus", "VoterStatus").
+     * @param array    $params   Action parameters (key => value pairs).
+     * @param int|null $timeout  Optional overall timeout for the action operation.
+     * @return string|false       Raw response or false on failure.
+     */
+    public static function action($fp, $action, $params = [], $timeout = null)
+    {
+        if ($timeout === null) {
+            $timeout = self::DEFAULT_COMMAND_TIMEOUT;
+        }
+        
+        $actionID = self::generateActionID('action_');
+        
+        // Build action command with uppercase headers (Allmon3 style)
+        $cmd = "ACTION: " . strtoupper($action) . self::AMI_EOL;
+        foreach ($params as $key => $value) {
+            // Uppercase parameter keys (Allmon3 style)
+            $cmd .= strtoupper($key) . ": " . $value . self::AMI_EOL;
+        }
+        $cmd .= "ActionID: " . $actionID . self::AMI_EOL . self::AMI_EOL;
+        
+        if (fwrite($fp, $cmd) === false) {
+            return false;
+        }
+        
+        return self::getResponse($fp, $actionID);
+    }
+
+    /**
      * Sends a COMMAND action to AMI and returns the parsed output.
+     * Uses uppercase protocol headers (Allmon3 style).
      *
      * @param resource $fp       AMI socket connection.
      * @param string   $cmdString The CLI command to execute.
@@ -325,10 +378,11 @@ class SimpleAmiClient
         }
         
         $startTime = microtime(true);
-        $actionID = 'cmd_' . bin2hex(random_bytes(8));
+        $actionID = self::generateActionID('cmd_');
 
-        $commandAction = "Action: Command" . self::AMI_EOL;
-        $commandAction .= "Command: " . $cmdString . self::AMI_EOL;
+        // Uppercase protocol headers (Allmon3 style)
+        $commandAction = "ACTION: COMMAND" . self::AMI_EOL;
+        $commandAction .= "COMMAND: " . $cmdString . self::AMI_EOL;
         $commandAction .= "ActionID: " . $actionID . self::AMI_EOL . self::AMI_EOL;
 
         if (fwrite($fp, $commandAction) === false) {
@@ -347,7 +401,7 @@ class SimpleAmiClient
             return false;
         }
 
-        // More efficient parsing - avoid preg_split and multiple string operations
+        // Parse command output (handles both Asterisk 20/ASL3 and Classic formats)
         $lines = explode("\n", str_replace(["\r\n", "\r"], "\n", $rawResponse));
         $commandOutput = [];
         $collectingOutput = false;
@@ -383,6 +437,7 @@ class SimpleAmiClient
 
     /**
      * Logs off and closes the AMI connection.
+     * Uses uppercase protocol headers (Allmon3 style).
      *
      * @param resource $fp AMI socket connection.
      * @return bool        True if successfully initiated logoff and closed, false if $fp is not a resource.
@@ -393,8 +448,10 @@ class SimpleAmiClient
             return false;
         }
 
-        $actionID = 'logoff_' . bin2hex(random_bytes(4));
-        $logoffCmd = "Action: Logoff" . self::AMI_EOL;
+        $actionID = self::generateActionID('logoff_');
+        
+        // Uppercase protocol headers (Allmon3 style)
+        $logoffCmd = "ACTION: LOGOFF" . self::AMI_EOL;
         $logoffCmd .= "ActionID: " . $actionID . self::AMI_EOL . self::AMI_EOL;
 
         @fwrite($fp, $logoffCmd);
@@ -472,6 +529,205 @@ class SimpleAmiClient
         self::returnConnection($fp, $host, $user);
         
         return $result;
+    }
+    
+    /**
+     * Parse XStat response (Allmon3 style)
+     * Parses RptStatus XStat command response into structured data.
+     *
+     * @param string $xstatResponse Raw XStat response from AMI
+     * @param array $nodeDatabase Node database for lookups
+     * @return array Parsed node connection data
+     */
+    public static function parseXStat($xstatResponse, $nodeDatabase = [])
+    {
+        $nodeConnections = [];
+        $lines = preg_split('/[\r\n]+/', $xstatResponse);
+        
+        foreach ($lines as $line) {
+            // Parse Conn: lines
+            if (preg_match('/^Conn:\s+(.+)$/', $line, $matches)) {
+                $connData = preg_split('/\s+/', trim($matches[1]), 6);
+                
+                if (count($connData) >= 5) {
+                    $nodeName = $connData[0];
+                    $nodeInfo = [
+                        'IP' => null,
+                        'DIR' => null,
+                        'CTIME' => null,
+                        'CSTATE' => null,
+                        'PTT' => false,
+                        'SSK' => -1,
+                        'SSU' => -1,
+                        'MODE' => 'UNSET',
+                        'DESC' => 'Private or Unavailable'
+                    ];
+                    
+                    // Handle IP presence (6 elements = has IP, 5 = no IP)
+                    if (count($connData) == 6) {
+                        $nodeInfo['IP'] = $connData[2];
+                        $nodeInfo['DIR'] = $connData[3];
+                        $nodeInfo['CTIME'] = $connData[4];
+                        $nodeInfo['CSTATE'] = $connData[5];
+                    } else {
+                        $nodeInfo['DIR'] = $connData[2];
+                        $nodeInfo['CTIME'] = $connData[3];
+                        $nodeInfo['CSTATE'] = $connData[4];
+                    }
+                    
+                    // Lookup node info from database
+                    if (isset($nodeDatabase[$nodeName])) {
+                        $db = $nodeDatabase[$nodeName];
+                        $nodeInfo['DESC'] = trim(($db['CALL'] ?? '') . ' ' . ($db['DESC'] ?? '') . ' ' . ($db['LOC'] ?? ''));
+                    } elseif (preg_match('/^3[0-9]{6}$/', $nodeName)) {
+                        // Echolink node
+                        $nodeInfo['DESC'] = 'Echolink Node';
+                    } elseif (preg_match('/^.*-P$/', $nodeName)) {
+                        // Phone portal
+                        $nodeInfo['DESC'] = 'Allstar Telephone Portal User';
+                        $nodeInfo['MODE'] = 'Transceive';
+                    } elseif (preg_match('/^[A-Za-z]/', $nodeName)) {
+                        // Direct client
+                        $nodeInfo['DESC'] = 'Direct Client';
+                    }
+                    
+                    $nodeConnections[$nodeName] = $nodeInfo;
+                }
+            }
+            // Parse LinkedNodes for mode detection
+            elseif (preg_match('/^LinkedNodes:\s*(.+)$/', $line, $matches)) {
+                $linkedNodes = preg_split('/,/', $matches[1]);
+                foreach ($linkedNodes as $link) {
+                    $link = trim($link);
+                    if (preg_match('/^([TRC])(\S+)/', $link, $linkMatch)) {
+                        $mode = $linkMatch[1];
+                        $nodeName = $linkMatch[2];
+                        
+                        if (isset($nodeConnections[$nodeName])) {
+                            switch ($mode) {
+                                case 'T':
+                                    $nodeConnections[$nodeName]['MODE'] = 'Transceive';
+                                    break;
+                                case 'R':
+                                    $nodeConnections[$nodeName]['MODE'] = 'Monitor';
+                                    break;
+                                case 'C':
+                                    $nodeConnections[$nodeName]['MODE'] = 'Connecting';
+                                    break;
+                            }
+                        }
+                    }
+                }
+            }
+            // Parse Var: lines for keyed status
+            elseif (preg_match('/^Var:\s+RPT_(TX|TXE|RX)KEYED=([01])/', $line, $matches)) {
+                // Store keyed status (can be used by caller)
+                $keyedType = $matches[1];
+                $keyedValue = ($matches[2] == '1');
+                // This would be stored in a separate structure by the caller
+            }
+        }
+        
+        return $nodeConnections;
+    }
+    
+    /**
+     * Parse SawStat response (Allmon3 style)
+     * Parses RptStatus SawStat command response for connection keyed timing data.
+     *
+     * @param string $sawStatResponse Raw SawStat response from AMI
+     * @return array Parsed connection keyed data
+     */
+    public static function parseSawStat($sawStatResponse)
+    {
+        $connectionData = [];
+        $lines = preg_split('/[\r\n]+/', $sawStatResponse);
+        
+        foreach ($lines as $line) {
+            // Parse Conn: lines (format: Conn: NODE PTT SEC_SINCE_KEY SEC_SINCE_UNKEY)
+            if (preg_match('/^Conn:\s+(\S+)\s+(\d+)\s+(\d+)\s+(\d+)/', $line, $matches)) {
+                $nodeName = $matches[1];
+                $connectionData[$nodeName] = [
+                    'PTT' => (int)$matches[2],
+                    'SSK' => (int)$matches[3],  // Seconds since key
+                    'SSU' => (int)$matches[4]   // Seconds since unkey
+                ];
+            }
+        }
+        
+        return $connectionData;
+    }
+    
+    /**
+     * Parse VoterStatus response (Allmon3 style)
+     * Parses VoterStatus command response and generates HTML output.
+     *
+     * @param string $voterResponse Raw VoterStatus response from AMI
+     * @return array ['html' => string, 'voters' => array, 'voted' => string|null]
+     */
+    public static function parseVoterStatus($voterResponse)
+    {
+        $voters = [];
+        $voted = null;
+        $currentClient = null;
+        
+        $lines = preg_split('/[\r\n]+/', $voterResponse);
+        
+        foreach ($lines as $line) {
+            // Parse Client lines
+            if (preg_match('/^Client\s+(\S+)/', $line, $matches)) {
+                $currentClient = $matches[1];
+                $voters[$currentClient] = 0;
+            }
+            // Parse RSSI lines
+            elseif (preg_match('/^RSSI:\s+(\d+)/', $line, $matches) && $currentClient !== null) {
+                $voters[$currentClient] = (int)$matches[1];
+            }
+            // Parse Voted line
+            elseif (preg_match('/^Voted:\s+(.+)$/', $line, $matches)) {
+                $voted = trim($matches[1]);
+            }
+        }
+        
+        // Generate HTML (Allmon3 style)
+        $html = '';
+        foreach ($voters as $clientId => $rssi) {
+            // Calculate RSSI percentage
+            $rssiPct = ($rssi == 255) ? 100 : (int)($rssi * 0.35 + 10);
+            
+            // Determine bar color
+            $barColor = 'primary';
+            if ($clientId == $voted) {
+                $barColor = 'success';
+            } elseif (preg_match('/\s[Mm]ix/', $clientId)) {
+                $barColor = 'info';
+            }
+            
+            $html .= '<div class="row justify-content-md-center">';
+            $html .= '  <div class="col-4 col-md-2 text-end">';
+            $html .= '    <b>' . htmlspecialchars($clientId) . '</b>';
+            $html .= '  </div>';
+            $html .= '  <div class="col-8 col-md-10">';
+            $html .= '    <div class="progress" role="progressbar" aria-valuenow="' . $rssiPct . '"';
+            $html .= '    aria-valuemin="0" aria-valuemax="100">';
+            $html .= '      <div class="progress-bar progress-bar-striped bg-' . $barColor . '" style="width: ' . $rssiPct . '%">' . $rssi . '</div>';
+            $html .= '    </div>';
+            $html .= '  </div>';
+            $html .= '</div>';
+        }
+        
+        $html .= '<div class="row d-flex align-items-center">';
+        $html .= '  <div class="col-2">&nbsp</div>';
+        $html .= '  <div class="col-8">';
+        $html .= '    Last Update: ' . date('Y-m-d H:i:s');
+        $html .= '  </div>';
+        $html .= '</div>';
+        
+        return [
+            'html' => $html,
+            'voters' => $voters,
+            'voted' => $voted
+        ];
     }
 }
 

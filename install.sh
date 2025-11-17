@@ -478,6 +478,14 @@ else
     # Alias for user files
     Alias /supermon-ng/user_files APP_DIR_PLACEHOLDER/user_files
     
+    # WebSocket proxy for Supermon-NG nodes (dynamic port mapping)
+    # Format: /supermon-ng/ws/{nodeId} -> ws://localhost:{basePort + nodeIndex}
+    # Base port is 8105, ports increment per node
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteRule ^/supermon-ng/ws/(\d+)$ ws://localhost:81$1 [P,L]
+    ProxyPassReverse /supermon-ng/ws/ ws://localhost:8105
+    
     # Proxy HamClock requests (adjust IP and port as needed)
     # Uncomment and modify the following lines if you have HamClock running:
     # WebSocket proxy for HamClock (must come before general proxy)
@@ -591,6 +599,18 @@ systemctl daemon-reload
 # Enable and start backend service
 systemctl enable supermon-ng-backend
 systemctl start supermon-ng-backend
+
+# Copy and enable WebSocket service
+if [ -f "$APP_DIR/systemd/supermon-ng-websocket.service" ]; then
+    echo "📦 Installing WebSocket service..."
+    cp "$APP_DIR/systemd/supermon-ng-websocket.service" /etc/systemd/system/
+    systemctl daemon-reload
+    systemctl enable supermon-ng-websocket
+    systemctl start supermon-ng-websocket
+    echo "✅ WebSocket service installed and started"
+else
+    echo "⚠️  WebSocket service file not found, skipping"
+fi
 
 
 # Enable and start node status timer (if it exists)

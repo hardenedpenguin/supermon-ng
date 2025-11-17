@@ -1,0 +1,66 @@
+#!/usr/bin/env php
+<?php
+/**
+ * WebSocket Server Entry Point
+ * 
+ * Single entry point that manages all WebSocket servers (one per node).
+ * Matches Allmon3's architecture: one service, one process, multiple WebSocket servers.
+ * 
+ * Usage: php bin/websocket-server.php
+ */
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
+use SupermonNg\Services\WebSocketServerManager;
+use SupermonNg\Services\AllStarConfigService;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
+use Monolog\Handler\SyslogHandler;
+
+// Set up error handling
+error_reporting(E_ALL);
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
+// Create logger
+$logger = new Logger('supermon-ng-websocket');
+$logger->pushHandler(new StreamHandler('php://stderr', Logger::INFO));
+$logger->pushHandler(new SyslogHandler('supermon-ng-websocket', LOG_USER, Logger::INFO));
+
+try {
+    // Get base port from environment or use default
+    $basePort = (int)($_ENV['WEBSOCKET_BASE_PORT'] ?? getenv('WEBSOCKET_BASE_PORT') ?: 8105);
+    
+    // Create configuration service
+    $userFilesPath = __DIR__ . '/../user_files/';
+    $configService = new AllStarConfigService($logger, $userFilesPath);
+    
+    // Create WebSocket server manager
+    $manager = new WebSocketServerManager($logger, $configService, $basePort);
+    
+    // Set up signal handlers for graceful shutdown
+    $manager->setupSignalHandlers();
+    
+    // Start all WebSocket servers
+    $manager->start();
+    
+    $logger->info("WebSocket server started", [
+        'base_port' => $basePort,
+        'node_ports' => $manager->getAllNodePorts()
+    ]);
+    
+    // Run the event loop (blocks until stopped)
+    $manager->run();
+    
+} catch (Exception $e) {
+    if (isset($logger)) {
+        $logger->error("Fatal error in WebSocket server", [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    } else {
+        error_log("Fatal error in WebSocket server: " . $e->getMessage());
+    }
+    exit(1);
+}
+

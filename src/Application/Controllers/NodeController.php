@@ -1038,44 +1038,27 @@ class NodeController
             return [];
         }
         
-        $actionRand = mt_rand();
-        $rptStatus = '';
-        $sawStatus = '';
-        $eol = "\r\n";
-
-        // Execute XStat command
-        $actionID_xstat = 'xstat' . $actionRand;
-        $xstatCommand = "Action: RptStatus{$eol}COMMAND: XStat{$eol}NODE: {$node}{$eol}ActionID: {$actionID_xstat}{$eol}{$eol}";
+        // Execute XStat command using action() method (Allmon3 style)
+        $rptStatus = \SimpleAmiClient::action($fp, "RptStatus", [
+            "COMMAND" => "XStat",
+            "NODE" => $node
+        ]);
         
-        $xstatBytesWritten = @fwrite($fp, $xstatCommand);
-        if ($xstatBytesWritten === false || $xstatBytesWritten === 0) {
-            error_log("getNodeViaAmi: XStat fwrite FAILED for node $node");
-            return [];
-        }
-        
-        $rptStatus = \SimpleAmiClient::getResponse($fp, $actionID_xstat);
         if ($rptStatus === false) {
-            error_log("getNodeViaAmi: XStat getResponse FAILED for node $node");
+            error_log("getNodeViaAmi: XStat action FAILED for node $node");
             $rptStatus = '';
         }
-        
 
-        // Execute SawStat command
-        $actionID_sawstat = 'sawstat' . $actionRand;
-        $sawStatCommand = "Action: RptStatus{$eol}COMMAND: SawStat{$eol}NODE: {$node}{$eol}ActionID: {$actionID_sawstat}{$eol}{$eol}";
+        // Execute SawStat command using action() method (Allmon3 style)
+        $sawStatus = \SimpleAmiClient::action($fp, "RptStatus", [
+            "COMMAND" => "SawStat",
+            "NODE" => $node
+        ]);
         
-        $sawStatBytesWritten = @fwrite($fp, $sawStatCommand);
-        if ($sawStatBytesWritten === false || $sawStatBytesWritten === 0) {
-            error_log("getNodeViaAmi: SawStat fwrite FAILED for node $node");
-            return $this->parseNodeAmiData($fp, $node, $rptStatus, '');
-        }
-        
-        $sawStatus = \SimpleAmiClient::getResponse($fp, $actionID_sawstat);
         if ($sawStatus === false) {
-            error_log("getNodeViaAmi: SawStat getResponse FAILED for node $node");
+            error_log("getNodeViaAmi: SawStat action FAILED for node $node");
             $sawStatus = '';
         }
-        
         
         return $this->parseNodeAmiData($fp, $node, $rptStatus, $sawStatus);
     }
@@ -1257,6 +1240,119 @@ class NodeController
         return $this->astdbService->getAstdb();
     }
 
+    /**
+     * Get WebSocket port configuration for a node
+     * Ports are assigned incrementally: basePort (8105) + node index
+     */
+    public function getWebSocketPort(Request $request, Response $response, array $args): Response
+    {
+        $nodeId = $args['id'] ?? null;
+        
+        if (!$nodeId) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Node ID required'
+            ]));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+        
+        try {
+            $currentUser = $this->getCurrentUser();
+            $basePort = 8105; // Base port for WebSocket servers
+            
+            // Get all available nodes to determine index
+            $nodes = $this->configService->getAvailableNodes($currentUser);
+            
+            // Find node index
+            $nodeIndex = null;
+            foreach ($nodes as $index => $node) {
+                if ($node['id'] == $nodeId) {
+                    $nodeIndex = $index;
+                    break;
+                }
+            }
+            
+            if ($nodeIndex === null) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Node not found'
+                ]));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+            
+            // Calculate port: basePort + index
+            $port = $basePort + $nodeIndex;
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'node' => $nodeId,
+                'port' => $port,
+                'ws_url' => "ws://" . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "/supermon-ng/ws/{$nodeId}"
+            ]));
+            
+            return $response->withHeader('Content-Type', 'application/json');
+            
+        } catch (Exception $e) {
+            $this->logger->error("Error getting WebSocket port", [
+                'node_id' => $nodeId,
+                'error' => $e->getMessage()
+            ]);
+            
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Internal server error'
+            ]));
+            
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
+    
+    /**
+     * Get WebSocket port configuration for all nodes
+     */
+    public function getAllWebSocketPorts(Request $request, Response $response): Response
+    {
+        try {
+            $currentUser = $this->getCurrentUser();
+            $basePort = 8105; // Base port for WebSocket servers
+            
+            // Get all available nodes
+            $nodes = $this->configService->getAvailableNodes($currentUser);
+            
+            $portConfig = [];
+            foreach ($nodes as $index => $node) {
+                $nodeId = $node['id'];
+                $port = $basePort + $index;
+                
+                $portConfig[$nodeId] = [
+                    'node' => $nodeId,
+                    'port' => $port,
+                    'ws_url' => "ws://" . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "/supermon-ng/ws/{$nodeId}"
+                ];
+            }
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'base_port' => $basePort,
+                'nodes' => $portConfig
+            ]));
+            
+            return $response->withHeader('Content-Type', 'application/json');
+            
+        } catch (Exception $e) {
+            $this->logger->error("Error getting all WebSocket ports", [
+                'error' => $e->getMessage()
+            ]);
+            
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Internal server error'
+            ]));
+            
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
+    
     /**
      * Get the currently logged in user from session
      */
@@ -3215,9 +3311,8 @@ class NodeController
                     ->withHeader('Content-Type', 'application/json');
             }
 
-            // Get voter status
-            $actionID = 'voter' . preg_replace('/[^a-zA-Z0-9]/', '', $node) . mt_rand(1000, 9999);
-            $voterResponse = $this->getVoterStatus($ami, $actionID);
+            // Get voter status using action() method (Allmon3 style)
+            $voterResponse = $this->getVoterStatus($ami, $node);
             
             if ($voterResponse === false) {
                 $response->getBody()->write(json_encode([
@@ -3259,17 +3354,15 @@ class NodeController
     }
 
     /**
-     * Get voter status via AMI
+     * Get voter status via AMI using action() method (Allmon3 style)
      */
-    private function getVoterStatus($ami, $actionID): string|false
+    private function getVoterStatus($ami, $node): string|false
     {
-        $result = \SimpleAmiClient::command($ami, "VoterStatus");
+        $result = \SimpleAmiClient::action($ami, "VoterStatus", [
+            "NODE" => $node
+        ]);
         
-        if ($result !== false) {
-            return $result;
-        }
-        
-        return false;
+        return $result;
     }
 
     /**

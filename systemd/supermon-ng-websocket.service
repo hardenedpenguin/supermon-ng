@@ -1,0 +1,27 @@
+[Unit]
+Description=Supermon-NG WebSocket Server
+After=network.target asterisk.service
+Wants=asterisk.service
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/html/supermon-ng
+ExecStart=/usr/bin/php /var/www/html/supermon-ng/bin/websocket-server.php
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=supermon-ng-websocket
+
+# Security settings
+NoNewPrivileges=true
+PrivateTmp=true
+
+# Resource limits
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target
+

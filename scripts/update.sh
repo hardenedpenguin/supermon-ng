@@ -223,6 +223,7 @@ update_application() {
     # Stop services
     print_status "Stopping services..."
     systemctl stop supermon-ng-backend 2>/dev/null || true
+    systemctl stop supermon-ng-websocket 2>/dev/null || true
     systemctl stop supermon-ng-node-status.timer 2>/dev/null || true
     
     # Create temporary directory for new files
@@ -481,10 +482,22 @@ AccuracySec=30s
 WantedBy=timers.target
 EOF
     
+    # Update WebSocket service
+    if [ -f "$APP_DIR/systemd/supermon-ng-websocket.service" ]; then
+        cp "$APP_DIR/systemd/supermon-ng-websocket.service" /etc/systemd/system/
+        print_status "WebSocket service file updated"
+    fi
+    
     # Reload systemd and restart services
     systemctl daemon-reload
     systemctl enable supermon-ng-backend
     systemctl restart supermon-ng-backend
+    
+    if [ -f "/etc/systemd/system/supermon-ng-websocket.service" ]; then
+        systemctl enable supermon-ng-websocket
+        systemctl restart supermon-ng-websocket
+        print_status "WebSocket service restarted"
+    fi
     
     # Enable and start node status timer
     systemctl enable supermon-ng-node-status.timer
@@ -663,6 +676,7 @@ display_summary() {
     echo ""
     echo "🔧 Service Status:"
     systemctl is-active supermon-ng-backend > /dev/null && echo "   ✅ Backend: Running" || echo "   ❌ Backend: Failed"
+    systemctl is-active supermon-ng-websocket > /dev/null && echo "   ✅ WebSocket: Running" || echo "   ❌ WebSocket: Failed"
     systemctl is-active apache2 > /dev/null && echo "   ✅ Apache: Running" || echo "   ❌ Apache: Failed"
     
     echo ""

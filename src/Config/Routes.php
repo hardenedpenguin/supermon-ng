@@ -250,12 +250,14 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->get('', [NodeController::class, 'list']);
         $group->get('/available', [NodeController::class, 'available']);
         $group->get('/ami/status', [NodeController::class, 'getAmiStatus']);
+        $group->get('/websocket/ports', [NodeController::class, 'getAllWebSocketPorts']);
         
         // Voter Route (must come before variable routes)
         $group->get('/voter/status', [NodeController::class, 'voterStatus']);
         
         $group->get('/{id}', [NodeController::class, 'get']);
         $group->get('/{id}/status', [NodeController::class, 'status']);
+        $group->get('/{id}/websocket/port', [NodeController::class, 'getWebSocketPort']);
         $group->post('/connect', [NodeController::class, 'connect']);
         $group->post('/disconnect', [NodeController::class, 'disconnect']);
         $group->post('/monitor', [NodeController::class, 'monitor']);
