@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { api } from '@/utils/api'
+import { api, endpoints } from '@/utils/api'
 import { useAstdbStore } from './astdb'
-import { usePolling, type PollingConfig } from '@/services/PollingService'
 import { useBatchRequests } from '@/services/BatchRequestService'
-import { useCsrfToken } from '@/services/CsrfTokenService'
+import { webSocketService, type WebSocketMessage } from '@/services/WebSocketService'
 import type { Node, ConnectedNode, NodeConfig, AstDbEntry, NodeActionType } from '@/types'
 
 export const useRealTimeStore = defineStore('realTime', () => {
@@ -16,38 +15,19 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const error = ref<string | null>(null)
   const monitoringNodes = ref<string[]>([])
   const lastUpdateTime = ref<number>(0)
+  const websocketPorts = ref<Record<string, number>>({})
 
   // Services
-  const pollingConfig: PollingConfig = {
-    activeInterval: 1000,      // 1 second when active
-    inactiveInterval: 5000,    // 5 seconds when inactive  
-    backgroundInterval: 10000, // 10 seconds when tab hidden
-    inactiveThreshold: 30000   // 30 seconds to become inactive
-  }
-  
-  const { state: pollingState, start: startPolling, stop: stopPolling, makeRequest, onVisibilityChange } = usePolling(pollingConfig)
-  const { batchInitialization, batchRealTimeUpdate, clearCache } = useBatchRequests({
+  const { batchInitialization, clearCache } = useBatchRequests({
     maxBatchSize: 5,
-    batchDelay: 25, // Faster batching
+    batchDelay: 25,
     cacheEnabled: true,
-    defaultCacheTTL: 5000 // 5 second default cache
-  })
-  const { getToken } = useCsrfToken({
-    tokenLifetime: 3600000,    // 1 hour
-    refreshThreshold: 300000,  // Refresh 5 minutes before expiry
-    requestTimeout: 3000       // Faster timeout
+    defaultCacheTTL: 5000
   })
 
-  // Setup visibility change handler once when store is created
-  onVisibilityChange(() => {
-    console.log('🔄 Tab visibility changed - isConnected:', isConnected.value, 'monitoring:', monitoringNodes.value.length)
-    // Only refresh if we're actively monitoring nodes
-    if (isConnected.value && monitoringNodes.value.length > 0) {
-      console.log('✅ Clearing cache and fetching fresh data')
-      clearCache()
-      fetchNodeDataOptimized()
-    }
-  })
+  // WebSocket message handlers per node
+  const messageHandlers = new Map<string, () => void>()
+  const stateHandlers = new Map<string, () => void>()
 
   // Computed
   const isMonitoring = computed(() => monitoringNodes.value.length > 0)
@@ -77,6 +57,9 @@ export const useRealTimeStore = defineStore('realTime', () => {
       // Initialize ASTDB store (will use caching)
       await astdbStore.initialize()
       
+      // Fetch WebSocket port configuration for all nodes
+      await fetchWebSocketPorts()
+      
       const duration = Date.now() - startTime
       
       error.value = null
@@ -87,66 +70,179 @@ export const useRealTimeStore = defineStore('realTime', () => {
     }
   }
 
-  const startMonitoring = (nodeId: string) => {
-    if (!monitoringNodes.value.includes(nodeId)) {
-      monitoringNodes.value.push(nodeId)
-      
-      // If polling is already active, fetch data for the new node
-      if (isConnected.value) {
-        fetchNodeDataOptimized()
+  /**
+   * Fetch WebSocket port configuration for all nodes
+   */
+  const fetchWebSocketPorts = async () => {
+    try {
+      const response = await api.get(endpoints.nodes.websocketPorts)
+      if (response.data.success && response.data.nodes) {
+        Object.keys(response.data.nodes).forEach(nodeId => {
+          websocketPorts.value[nodeId] = response.data.nodes[nodeId].port
+        })
       }
-    }
-    
-    if (!isConnected.value) {
-      startIntelligentPolling()
+    } catch (err) {
+      console.error('Error fetching WebSocket ports:', err)
     }
   }
 
+  /**
+   * Get WebSocket URL for a node
+   */
+  const getWebSocketUrl = (nodeId: string): string => {
+    // Use the port from configuration or construct URL
+    const port = websocketPorts.value[nodeId]
+    if (port) {
+      // Construct WebSocket URL - Apache will proxy /supermon-ng/ws/{nodeId} to ws://localhost:{port}
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      const host = window.location.host
+      return `${protocol}//${host}/supermon-ng/ws/${nodeId}`
+    }
+    
+    // Fallback: construct URL based on node index (if ports not loaded yet)
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const host = window.location.host
+    return `${protocol}//${host}/supermon-ng/ws/${nodeId}`
+  }
+
+  /**
+   * Start monitoring a node via WebSocket
+   */
+  const startMonitoring = async (nodeId: string) => {
+    if (!monitoringNodes.value.includes(nodeId)) {
+      monitoringNodes.value.push(nodeId)
+    }
+    
+    // If WebSocket ports not loaded, fetch them
+    if (Object.keys(websocketPorts.value).length === 0) {
+      await fetchWebSocketPorts()
+    }
+    
+    // Connect to node's WebSocket
+    try {
+      const wsUrl = getWebSocketUrl(nodeId)
+      
+      // Set up message handler
+      const unsubscribeMessage = webSocketService.onNodeMessage(nodeId, (data: WebSocketMessage) => {
+        updateNodeFromWebSocket(data)
+      })
+      messageHandlers.set(nodeId, unsubscribeMessage)
+      
+      // Set up state change handler
+      const unsubscribeState = webSocketService.onNodeStateChange(nodeId, (state) => {
+        if (state.connected) {
+          isConnected.value = true
+          error.value = null
+        } else if (state.error) {
+          error.value = `WebSocket error for node ${nodeId}: ${state.error}`
+        }
+      })
+      stateHandlers.set(nodeId, unsubscribeState)
+      
+      // Connect to WebSocket
+      await webSocketService.connectToNode(nodeId, wsUrl)
+      
+      isConnected.value = true
+      error.value = null
+    } catch (err) {
+      console.error(`Error connecting to WebSocket for node ${nodeId}:`, err)
+      error.value = `Failed to connect to node ${nodeId}`
+      
+      // Remove from monitoring if connection failed
+      const index = monitoringNodes.value.indexOf(nodeId)
+      if (index > -1) {
+        monitoringNodes.value.splice(index, 1)
+      }
+    }
+  }
+
+  /**
+   * Stop monitoring a node
+   */
   const stopMonitoring = (nodeId: string) => {
     const index = monitoringNodes.value.indexOf(nodeId)
     if (index > -1) {
       monitoringNodes.value.splice(index, 1)
     }
     
+    // Disconnect WebSocket
+    webSocketService.disconnectFromNode(nodeId)
+    
+    // Clean up handlers
+    const messageUnsubscribe = messageHandlers.get(nodeId)
+    if (messageUnsubscribe) {
+      messageUnsubscribe()
+      messageHandlers.delete(nodeId)
+    }
+    
+    const stateUnsubscribe = stateHandlers.get(nodeId)
+    if (stateUnsubscribe) {
+      stateUnsubscribe()
+      stateHandlers.delete(nodeId)
+    }
+    
+    // Update connection status
     if (monitoringNodes.value.length === 0) {
-      stopIntelligentPolling()
+      isConnected.value = false
     }
   }
 
-  const startIntelligentPolling = () => {
-    isConnected.value = true
-    
-    // Clear cache to ensure fresh data
-    clearCache()
-    
-    // Initial data fetch
-    fetchNodeDataOptimized()
-    
-    // Start the intelligent polling service
-    startPolling()
-    
-    // Set up simple interval to fetch data every second (matching active polling rate)
-    const pollInterval = setInterval(() => {
-      if (isConnected.value && monitoringNodes.value.length > 0) {
-        fetchNodeDataOptimized()
+  /**
+   * Update node data from WebSocket message
+   */
+  const updateNodeFromWebSocket = (data: WebSocketMessage) => {
+    try {
+      const nodeId = data.node
+      const existingNodeIndex = nodes.value.findIndex(n => String(n.id) === String(nodeId))
+      
+      // Parse XStat and SawStat data if available
+      // For now, we'll update basic node info
+      // Full parsing can be done on the backend or here
+      
+      if (existingNodeIndex > -1) {
+        // Update existing node
+        const existingNode = nodes.value[existingNodeIndex]
+        nodes.value[existingNodeIndex] = {
+          ...existingNode,
+          last_updated: Date.now(),
+          updated_at: new Date().toISOString()
+        }
+      } else {
+        // Add new node if it doesn't exist
+        nodes.value.push({
+          id: parseInt(nodeId),
+          node_number: parseInt(nodeId),
+          callsign: 'N/A',
+          description: `Node ${nodeId}`,
+          location: 'N/A',
+          status: 'online',
+          last_heard: null,
+          connected_nodes: [],
+          cos_keyed: 0,
+          tx_keyed: 0,
+          cpu_temp: null,
+          ALERT: null,
+          WX: null,
+          DISK: null,
+          is_online: true,
+          is_keyed: false,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          info: `Node ${nodeId}`,
+          remote_nodes: [],
+          last_updated: Date.now()
+        })
       }
-    }, 1000) // Fixed 1 second interval for real-time updates
-    
-    // Store interval ID for cleanup
-    ;(window as any).__supermonPollInterval = pollInterval
-  }
-
-  const stopIntelligentPolling = () => {
-    stopPolling()
-    isConnected.value = false
-    
-    // Clear the polling interval
-    if ((window as any).__supermonPollInterval) {
-      clearInterval((window as any).__supermonPollInterval)
-      ;(window as any).__supermonPollInterval = null
+      
+      lastUpdateTime.value = Date.now()
+    } catch (err) {
+      console.error('Error updating node from WebSocket:', err)
     }
   }
 
+  /**
+   * Fetch node data (for initial load or fallback)
+   */
   const fetchNodeData = async () => {
     try {
       // If we're monitoring specific nodes, get AMI data for them
@@ -160,7 +256,7 @@ export const useRealTimeStore = defineStore('realTime', () => {
           // Update nodes with AMI data
           Object.keys(amiData).forEach(nodeId => {
             const amiNode = amiData[nodeId]
-            const existingNodeIndex = nodes.value.findIndex(n => n.id === parseInt(nodeId))
+            const existingNodeIndex = nodes.value.findIndex(n => String(n.id) === String(nodeId))
             
             if (existingNodeIndex > -1) {
               // Update existing node with AMI data
@@ -228,87 +324,8 @@ export const useRealTimeStore = defineStore('realTime', () => {
     }
   }
 
-
-
-
-
-  const fetchNodeDataOptimized = async () => {
-    try {
-      if (monitoringNodes.value.length === 0) {
-        return // No nodes to monitor
-      }
-
-      const startTime = Date.now()
-      
-      // Use batch real-time update for better performance
-      const batchResult = await batchRealTimeUpdate(monitoringNodes.value)
-      
-      if (batchResult.amiStatus?.success && batchResult.amiStatus?.data) {
-        const amiData = batchResult.amiStatus.data
-        
-        // Update nodes with AMI data (same logic as original but more efficient)
-        Object.keys(amiData).forEach(nodeId => {
-          const amiNode = amiData[nodeId]
-          const existingNodeIndex = nodes.value.findIndex(n => n.id === parseInt(nodeId))
-          
-          if (existingNodeIndex > -1) {
-            // Update existing node with AMI data
-            nodes.value[existingNodeIndex] = {
-              ...nodes.value[existingNodeIndex],
-              status: amiNode.status,
-              cos_keyed: amiNode.cos_keyed,
-              tx_keyed: amiNode.tx_keyed,
-              cpu_temp: amiNode.cpu_temp,
-              cpu_up: amiNode.cpu_up,
-              cpu_load: amiNode.cpu_load,
-              ALERT: amiNode.ALERT,
-              WX: amiNode.WX,
-              DISK: amiNode.DISK,
-              remote_nodes: amiNode.remote_nodes,
-              info: amiNode.info,
-              last_updated: Date.now()
-            }
-          } else {
-            // Add new node with AMI data
-            nodes.value.push({
-              id: parseInt(nodeId),
-              node_number: parseInt(nodeId),
-              callsign: 'N/A',
-              description: amiNode.info,
-              location: 'N/A',
-              status: amiNode.status,
-              last_heard: null,
-              connected_nodes: amiNode.remote_nodes,
-              cos_keyed: amiNode.cos_keyed,
-              tx_keyed: amiNode.tx_keyed,
-              cpu_temp: amiNode.cpu_temp,
-              ALERT: amiNode.ALERT,
-              WX: amiNode.WX,
-              DISK: amiNode.DISK,
-              is_online: amiNode.status === 'online',
-              is_keyed: amiNode.cos_keyed > 0 || amiNode.tx_keyed > 0,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-              info: amiNode.info,
-              remote_nodes: amiNode.remote_nodes,
-              last_updated: Date.now()
-            })
-          }
-        })
-        
-        const duration = Date.now() - startTime
-      }
-      
-      error.value = null
-      lastUpdateTime.value = Date.now()
-    } catch (err) {
-      console.error('RealTime Store: Error fetching optimized node data:', err)
-      error.value = 'Failed to fetch node data'
-    }
-  }
-
   const getNodeById = (nodeId: string): Node | undefined => {
-    return nodes.value.find(n => n.id === nodeId)
+    return nodes.value.find(n => String(n.id) === String(nodeId))
   }
 
   const getNodeInfo = (nodeId: string): string => {
@@ -333,7 +350,11 @@ export const useRealTimeStore = defineStore('realTime', () => {
   // Control functions
   const connectNode = async (nodeId: string, perm: boolean = false) => {
     try {
-      await api.connectNode(nodeId, nodeId, perm)
+      await api.post(endpoints.nodes.connect(nodeId), {
+        localnode: nodeId,
+        remotenode: nodeId,
+        perm
+      })
     } catch (error) {
       console.error('Connect error:', error)
       throw error
@@ -342,7 +363,10 @@ export const useRealTimeStore = defineStore('realTime', () => {
 
   const disconnectNode = async (nodeId: string) => {
     try {
-      await api.disconnectNode(nodeId, nodeId)
+      await api.post(endpoints.nodes.disconnect(nodeId), {
+        localnode: nodeId,
+        remotenode: nodeId
+      })
     } catch (error) {
       console.error('Disconnect error:', error)
       throw error
@@ -351,7 +375,10 @@ export const useRealTimeStore = defineStore('realTime', () => {
 
   const monitorNode = async (nodeId: string) => {
     try {
-      await api.monitorNode(nodeId, nodeId)
+      await api.post(endpoints.nodes.monitor(nodeId), {
+        localnode: nodeId,
+        remotenode: nodeId
+      })
     } catch (error) {
       console.error('Monitor error:', error)
       throw error
@@ -360,7 +387,11 @@ export const useRealTimeStore = defineStore('realTime', () => {
 
   const permConnectNode = async (nodeId: string) => {
     try {
-      await api.connectNode(nodeId, nodeId, true)
+      await api.post(endpoints.nodes.connect(nodeId), {
+        localnode: nodeId,
+        remotenode: nodeId,
+        perm: true
+      })
     } catch (error) {
       console.error('Perm connect error:', error)
       throw error
@@ -369,7 +400,10 @@ export const useRealTimeStore = defineStore('realTime', () => {
 
   const localMonitorNode = async (nodeId: string) => {
     try {
-      await api.localMonitorNode(nodeId, nodeId)
+      await api.post(endpoints.nodes.localMonitor(nodeId), {
+        localnode: nodeId,
+        remotenode: nodeId
+      })
     } catch (error) {
       console.error('Local monitor error:', error)
       throw error
@@ -378,7 +412,10 @@ export const useRealTimeStore = defineStore('realTime', () => {
 
   const monitorCmdNode = async (nodeId: string) => {
     try {
-      await api.monitorNode(nodeId, nodeId)
+      await api.post(endpoints.nodes.monitor(nodeId), {
+        localnode: nodeId,
+        remotenode: nodeId
+      })
     } catch (error) {
       console.error('Monitor CMD error:', error)
       throw error
@@ -386,13 +423,17 @@ export const useRealTimeStore = defineStore('realTime', () => {
   }
 
   const reset = () => {
+    // Disconnect all WebSocket connections
+    monitoringNodes.value.forEach(nodeId => {
+      stopMonitoring(nodeId)
+    })
+    
     nodes.value = []
     nodeConfig.value = {}
-    astdb.value = {}
     isConnected.value = false
     error.value = null
     monitoringNodes.value = []
-    stopPolling()
+    websocketPorts.value = {}
   }
 
   return {
@@ -405,6 +446,7 @@ export const useRealTimeStore = defineStore('realTime', () => {
     error,
     monitoringNodes,
     lastUpdateTime,
+    websocketPorts,
     
     // Computed
     isMonitoring,
@@ -413,10 +455,8 @@ export const useRealTimeStore = defineStore('realTime', () => {
     initialize,
     startMonitoring,
     stopMonitoring,
-    startPolling,
-    stopPolling,
     fetchNodeData,
-    fetchNodeDataOptimized,
+    updateNodeFromWebSocket,
     getNodeById,
     getNodeInfo,
     clearError,
@@ -429,7 +469,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
     reset,
     
     // Optimization features
-    clearCache,
-    pollingState
+    clearCache
   }
 })

@@ -1156,7 +1156,7 @@ onMounted(async () => {
   
   // Initialize realTime store
   await realTimeStore.initialize()
-  realTimeStore.startPolling()
+  // WebSocket connections are established automatically when startMonitoring() is called
   
   // Load system info, database status, and check for default node
   try {
@@ -1225,7 +1225,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  realTimeStore.stopPolling()
+  // WebSocket connections are cleaned up automatically when stopMonitoring() is called
 })
 
 // Watch for node table refs updates

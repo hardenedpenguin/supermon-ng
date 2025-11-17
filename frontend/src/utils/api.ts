@@ -136,7 +136,9 @@ export const endpoints = {
     disconnect: (id: string) => `/nodes/${id}/disconnect`,
     monitor: (id: string) => `/nodes/${id}/monitor`,
     localMonitor: (id: string) => `/nodes/${id}/local-monitor`,
-    dtmf: (id: string) => `/nodes/${id}/dtmf`
+    dtmf: (id: string) => `/nodes/${id}/dtmf`,
+    websocketPorts: '/nodes/websocket/ports',
+    websocketPort: (id: string) => `/nodes/${id}/websocket/port`
   },
   
   // System
