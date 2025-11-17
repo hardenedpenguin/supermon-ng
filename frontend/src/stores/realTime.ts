@@ -51,12 +51,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
 
   // Computed
   const isMonitoring = computed(() => monitoringNodes.value.length > 0)
-  const pollingEfficiency = computed(() => ({
-    currentInterval: pollingState.value.currentInterval,
-    isActive: pollingState.value.isActive,
-    isVisible: pollingState.value.isVisible,
-    errorCount: pollingState.value.errorCount
-  }))
 
   // Actions
   const initialize = async () => {
@@ -414,7 +408,6 @@ export const useRealTimeStore = defineStore('realTime', () => {
     
     // Computed
     isMonitoring,
-    pollingEfficiency,
     
     // Actions
     initialize,

@@ -434,14 +434,3 @@ $app->group('/api', function (RouteCollectorProxy $group) {
     
     
 });
-
-// Legacy routes (for backward compatibility)
-$app->group('/legacy', function (RouteCollectorProxy $group) {
-    $group->get('/nodes', function ($request, $response) {
-        $response->getBody()->write(json_encode([
-            'message' => 'Legacy endpoint - use /api/v1/nodes instead',
-            'timestamp' => date('c')
-        ]));
-        return $response->withHeader('Content-Type', 'application/json');
-    });
-});
