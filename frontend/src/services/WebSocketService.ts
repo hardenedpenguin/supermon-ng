@@ -8,6 +8,27 @@
 export interface WebSocketMessage {
   node: string
   timestamp: number
+  status?: string
+  cos_keyed?: number
+  tx_keyed?: number
+  cpu_temp?: string | null
+  cpu_up?: string | null
+  cpu_load?: string | null
+  ALERT?: string | null
+  WX?: string | null
+  DISK?: string | null
+  remote_nodes?: Array<{
+    node: string
+    info: string
+    ip: string
+    direction: string
+    elapsed: string
+    link: string
+    keyed: string
+    last_keyed: string
+    mode: string
+  }>
+  // Legacy fields for backward compatibility
   xstat?: string
   sawstat?: string
   [key: string]: any

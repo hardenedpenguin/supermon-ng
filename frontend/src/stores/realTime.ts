@@ -189,49 +189,82 @@ export const useRealTimeStore = defineStore('realTime', () => {
 
   /**
    * Update node data from WebSocket message
+   * Handles structured JSON data from backend
    */
   const updateNodeFromWebSocket = (data: WebSocketMessage) => {
     try {
-      const nodeId = data.node
+      const nodeId = String(data.node)
       const existingNodeIndex = nodes.value.findIndex(n => String(n.id) === String(nodeId))
       
-      // Parse XStat and SawStat data if available
-      // For now, we'll update basic node info
-      // Full parsing can be done on the backend or here
+      // Map WebSocket data to Node structure
+      const nodeUpdate: Partial<Node> = {
+        status: data.status || 'online',
+        cos_keyed: data.cos_keyed ?? 0,
+        tx_keyed: data.tx_keyed ?? 0,
+        cpu_temp: data.cpu_temp ?? null,
+        cpu_up: data.cpu_up ?? null,
+        cpu_load: data.cpu_load ?? null,
+        ALERT: data.ALERT ?? null,
+        WX: data.WX ?? null,
+        DISK: data.DISK ?? null,
+        is_online: (data.status || 'online') === 'online',
+        is_keyed: (data.cos_keyed ?? 0) > 0 || (data.tx_keyed ?? 0) > 0,
+        last_updated: Date.now(),
+        updated_at: new Date().toISOString()
+      }
+      
+      // Process remote nodes if available
+      if (data.remote_nodes && Array.isArray(data.remote_nodes)) {
+        // Convert remote nodes to connected_nodes format
+        const connectedNodes: ConnectedNode[] = data.remote_nodes.map((remote: any) => ({
+          node: String(remote.node || ''),
+          info: remote.info || `Node ${remote.node}`,
+          ip: remote.ip || '',
+          direction: remote.direction || '',
+          elapsed: remote.elapsed || '',
+          link: remote.link || 'UNKNOWN',
+          keyed: remote.keyed || 'n/a',
+          last_keyed: remote.last_keyed || '-1',
+          mode: remote.mode || 'Allstar'
+        }))
+        
+        nodeUpdate.connected_nodes = connectedNodes
+        nodeUpdate.remote_nodes = connectedNodes
+      }
       
       if (existingNodeIndex > -1) {
         // Update existing node
-        const existingNode = nodes.value[existingNodeIndex]
         nodes.value[existingNodeIndex] = {
-          ...existingNode,
-          last_updated: Date.now(),
-          updated_at: new Date().toISOString()
+          ...nodes.value[existingNodeIndex],
+          ...nodeUpdate
         }
       } else {
         // Add new node if it doesn't exist
+        // Try to get info from ASTDB
+        const astdbEntry = astdbStore.fullAstdb[nodeId]
+        let info = `Node ${nodeId}`
+        let callsign = 'N/A'
+        let description = 'Unknown'
+        let location = 'N/A'
+        
+        if (astdbEntry && Array.isArray(astdbEntry) && astdbEntry.length >= 4) {
+          callsign = astdbEntry[1] || 'N/A'
+          description = astdbEntry[2] || 'Unknown'
+          location = astdbEntry[3] || 'N/A'
+          info = `${callsign} ${description} ${location}`.trim()
+        }
+        
         nodes.value.push({
           id: parseInt(nodeId),
           node_number: parseInt(nodeId),
-          callsign: 'N/A',
-          description: `Node ${nodeId}`,
-          location: 'N/A',
-          status: 'online',
+          callsign,
+          description,
+          location,
           last_heard: null,
-          connected_nodes: [],
-          cos_keyed: 0,
-          tx_keyed: 0,
-          cpu_temp: null,
-          ALERT: null,
-          WX: null,
-          DISK: null,
-          is_online: true,
-          is_keyed: false,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          info: `Node ${nodeId}`,
-          remote_nodes: [],
-          last_updated: Date.now()
-        })
+          info,
+          ...nodeUpdate
+        } as Node)
       }
       
       lastUpdateTime.value = Date.now()

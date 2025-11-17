@@ -8,6 +8,8 @@ use Ratchet\WebSocket\WsServer;
 use React\EventLoop\LoopInterface;
 use React\EventLoop\Factory as LoopFactory;
 use Psr\Log\LoggerInterface;
+use SupermonNg\Services\AstdbCacheService;
+use SupermonNg\Services\WebSocketRouterService;
 use Exception;
 
 /**
@@ -20,6 +22,7 @@ class WebSocketServerManager
 {
     private LoggerInterface $logger;
     private AllStarConfigService $configService;
+    private AstdbCacheService $astdbService;
     private LoopInterface $loop;
     
     /** @var NodeWebSocketService[] */
@@ -30,14 +33,17 @@ class WebSocketServerManager
     
     private int $basePort;
     private array $nodePorts = []; // Maps nodeId => port
+    private ?IoServer $routerServer = null; // Single router server on basePort
     
     public function __construct(
         LoggerInterface $logger,
         AllStarConfigService $configService,
+        AstdbCacheService $astdbService,
         int $basePort = 8105
     ) {
         $this->logger = $logger;
         $this->configService = $configService;
+        $this->astdbService = $astdbService;
         $this->basePort = $basePort;
         $this->loop = LoopFactory::create();
     }
@@ -67,6 +73,14 @@ class WebSocketServerManager
     }
     
     /**
+     * Get node service by node ID
+     */
+    public function getNodeService(string $nodeId): ?NodeWebSocketService
+    {
+        return $this->nodeServices[$nodeId] ?? null;
+    }
+    
+    /**
      * Start all WebSocket servers for configured nodes
      */
     public function start(): void
@@ -87,9 +101,7 @@ class WebSocketServerManager
             'count' => count($nodes)
         ]);
         
-        $portOffset = 0;
-        
-        // Create WebSocket server for each node
+        // Create WebSocket service for each node (as internal services, not separate servers)
         foreach ($nodes as $node) {
             $nodeId = $node['id'];
             
@@ -97,50 +109,75 @@ class WebSocketServerManager
                 // Get full node configuration
                 $nodeConfig = $this->configService->getNodeConfig($nodeId, null);
                 
-                // Assign port incrementally
+                // Calculate port for reference (though we won't create separate servers)
+                $portOffset = count($this->nodeServices);
                 $port = $this->basePort + $portOffset;
                 $this->nodePorts[$nodeId] = $port;
                 
-                // Create node WebSocket service
+                // Create node WebSocket service (internal service, not a separate server)
                 $nodeService = new NodeWebSocketService(
                     $nodeId,
                     $nodeConfig,
-                    $port,
+                    $port, // Port for reference only
                     $this->logger,
-                    $this->loop
+                    $this->loop,
+                    $this->astdbService
                 );
                 
-                // Create Ratchet server for this node
-                $wsServer = new WsServer($nodeService);
-                $httpServer = new HttpServer($wsServer);
-                $server = IoServer::factory($httpServer, $port, '0.0.0.0', $this->loop);
-                
                 $this->nodeServices[$nodeId] = $nodeService;
-                $this->servers[$nodeId] = $server;
                 
-                $this->logger->info("Started WebSocket server for node", [
+                $this->logger->info("Created WebSocket service for node", [
                     'node_id' => $nodeId,
-                    'port' => $port,
+                    'port_reference' => $port,
                     'host' => $nodeConfig['host'] ?? 'unknown'
                 ]);
                 
                 // Start AMI polling for this node
                 $nodeService->start();
                 
-                $portOffset++;
-                
             } catch (Exception $e) {
-                $this->logger->error("Failed to start WebSocket server for node", [
+                $this->logger->error("Failed to create WebSocket service for node", [
                     'node_id' => $nodeId,
                     'error' => $e->getMessage()
                 ]);
             }
         }
         
+        // Create single router server on base port (8105) that routes based on node ID in path
+        $this->createRouterServer();
+        
         $this->logger->info("WebSocket Server Manager started", [
             'total_servers' => count($this->servers),
+            'router_port' => $this->basePort,
             'ports' => $this->nodePorts
         ]);
+    }
+    
+    /**
+     * Create a router server on the base port that routes connections based on node ID
+     */
+    private function createRouterServer(): void
+    {
+        try {
+            $routerService = new WebSocketRouterService($this->logger, $this);
+            
+            // Create Ratchet server with router
+            $wsServer = new WsServer($routerService);
+            $httpServer = new HttpServer($wsServer);
+            $server = IoServer::factory($httpServer, $this->basePort, '0.0.0.0', $this->loop);
+            
+            $this->routerServer = $server;
+            
+            $this->logger->info("WebSocket router server started", [
+                'port' => $this->basePort,
+                'nodes' => array_keys($this->nodeServices)
+            ]);
+        } catch (Exception $e) {
+            $this->logger->error("Failed to start WebSocket router server", [
+                'port' => $this->basePort,
+                'error' => $e->getMessage()
+            ]);
+        }
     }
     
     /**
@@ -170,7 +207,18 @@ class WebSocketServerManager
             }
         }
         
-        // Stop all servers
+        // Stop router server
+        if ($this->routerServer instanceof IoServer) {
+            try {
+                $this->routerServer->socket->close();
+            } catch (Exception $e) {
+                $this->logger->error("Error stopping router server", [
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        // Stop all individual node servers (if any)
         foreach ($this->servers as $nodeId => $server) {
             try {
                 if ($server instanceof IoServer) {

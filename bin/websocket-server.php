@@ -13,6 +13,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use SupermonNg\Services\WebSocketServerManager;
 use SupermonNg\Services\AllStarConfigService;
+use SupermonNg\Services\AstdbCacheService;
 use Monolog\Logger;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogHandler;
@@ -35,8 +36,12 @@ try {
     $userFilesPath = __DIR__ . '/../user_files/';
     $configService = new AllStarConfigService($logger, $userFilesPath);
     
+    // Create ASTDB cache service
+    $astdbFile = $userFilesPath . 'astdb.txt';
+    $astdbService = new AstdbCacheService($logger, $astdbFile);
+    
     // Create WebSocket server manager
-    $manager = new WebSocketServerManager($logger, $configService, $basePort);
+    $manager = new WebSocketServerManager($logger, $configService, $astdbService, $basePort);
     
     // Set up signal handlers for graceful shutdown
     $manager->setupSignalHandlers();

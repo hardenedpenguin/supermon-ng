@@ -3508,7 +3508,7 @@ class NodeController
             }
 
             // Get Asterisk version info
-            $versionResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -V"]);
+            $versionResponse = \SimpleAmiClient::command($ami, "asterisk -V");
             if ($versionResponse && strpos($versionResponse, 'Asterisk') !== false) {
                 return "Asterisk Node";
             }
@@ -3629,7 +3629,7 @@ class NodeController
 
         try {
             // Get node status
-            $statusResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt status $nodeId'"]);
+            $statusResponse = \SimpleAmiClient::command($ami, "asterisk -rx 'rpt status $nodeId'");
             if ($statusResponse) {
                 if (strpos($statusResponse, 'Online') !== false) {
                     $statusInfo['status'] = 'online';
@@ -3641,7 +3641,7 @@ class NodeController
             }
 
             // Get connected nodes with detailed information
-            $connectedResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt nodes $nodeId'"]);
+            $connectedResponse = \SimpleAmiClient::command($ami, "asterisk -rx 'rpt nodes $nodeId'");
             if ($connectedResponse) {
                 $lines = explode("\n", $connectedResponse);
                 $connectedNodes = [];
@@ -3649,7 +3649,7 @@ class NodeController
                     if (preg_match('/Node\s+(\d+)/', $line, $matches)) {
                         $connectedNodeId = $matches[1];
                         // Get additional info for each connected node
-                        $nodeInfoResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt stats $connectedNodeId'"]);
+                        $nodeInfoResponse = \SimpleAmiClient::command($ami, "asterisk -rx 'rpt stats $connectedNodeId'");
                         $info = 'Unknown';
                         $ip = null;
                         if ($nodeInfoResponse) {
@@ -3678,7 +3678,7 @@ class NodeController
             }
 
             // Get key status
-            $keyResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt keyed $nodeId'"]);
+            $keyResponse = \SimpleAmiClient::command($ami, "asterisk -rx 'rpt keyed $nodeId'");
             if ($keyResponse) {
                 if (strpos($keyResponse, 'Keyed') !== false) {
                     $statusInfo['is_keyed'] = true;

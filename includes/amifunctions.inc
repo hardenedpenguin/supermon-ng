@@ -34,7 +34,7 @@ class AMIException extends Exception
     public const TIMEOUT = 5;
     public const INVALID_RESPONSE = 6;
     
-    public function __construct($message, $code = 0, Exception $previous = null)
+    public function __construct($message, $code = 0, ?Exception $previous = null)
     {
         parent::__construct($message, $code, $previous);
     }

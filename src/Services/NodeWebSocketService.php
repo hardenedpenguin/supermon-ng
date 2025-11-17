@@ -6,6 +6,7 @@ use Ratchet\MessageComponentInterface;
 use Ratchet\ConnectionInterface;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\LoopInterface;
+use SupermonNg\Services\AstdbCacheService;
 use Exception;
 
 /**
@@ -22,6 +23,7 @@ class NodeWebSocketService implements MessageComponentInterface
     private int $port;
     private LoggerInterface $logger;
     private LoopInterface $loop;
+    private AstdbCacheService $astdbService;
     
     /** @var ConnectionInterface[] */
     private array $clients = [];
@@ -29,20 +31,22 @@ class NodeWebSocketService implements MessageComponentInterface
     private $amiConnection = null;
     private bool $amiConnected = false;
     private int $pollInterval = 1; // seconds
-    private ?string $lastData = null;
+    private ?array $lastData = null; // Changed to array for diffing
     
     public function __construct(
         string $nodeId,
         array $nodeConfig,
         int $port,
         LoggerInterface $logger,
-        LoopInterface $loop
+        LoopInterface $loop,
+        AstdbCacheService $astdbService
     ) {
         $this->nodeId = $nodeId;
         $this->nodeConfig = $nodeConfig;
         $this->port = $port;
         $this->logger = $logger;
         $this->loop = $loop;
+        $this->astdbService = $astdbService;
     }
     
     /**
@@ -146,8 +150,11 @@ class NodeWebSocketService implements MessageComponentInterface
             $data = $this->fetchNodeStatus();
             
             if ($data !== null) {
-                $this->lastData = $data;
-                $this->broadcast($data);
+                // Only broadcast if data changed (data diffing)
+                if ($this->hasDataChanged($data)) {
+                    $this->lastData = $data;
+                    $this->broadcast(json_encode($data));
+                }
             }
             
         } catch (Exception $e) {
@@ -162,9 +169,10 @@ class NodeWebSocketService implements MessageComponentInterface
     }
     
     /**
-     * Fetch node status from AMI
+     * Fetch and parse node status from AMI
+     * Returns structured data array or null on error
      */
-    private function fetchNodeStatus(): ?string
+    private function fetchNodeStatus(): ?array
     {
         if ($this->amiConnection === null) {
             return null;
@@ -187,15 +195,26 @@ class NodeWebSocketService implements MessageComponentInterface
                 "NODE" => $this->nodeId
             ]);
             
-            // Combine and format as JSON
+            // Parse the AMI responses into structured data
+            $parsedData = $this->parseNodeAmiData($xstatResponse, $sawStatResponse !== false ? $sawStatResponse : '');
+            
+            // Build structured response
             $data = [
                 'node' => $this->nodeId,
                 'timestamp' => time(),
-                'xstat' => $xstatResponse,
-                'sawstat' => $sawStatResponse !== false ? $sawStatResponse : ''
+                'status' => 'online',
+                'cos_keyed' => $parsedData['cos_keyed'] ?? 0,
+                'tx_keyed' => $parsedData['tx_keyed'] ?? 0,
+                'cpu_temp' => $parsedData['cpu_temp'] ?? null,
+                'cpu_up' => $parsedData['cpu_up'] ?? null,
+                'cpu_load' => $parsedData['cpu_load'] ?? null,
+                'ALERT' => $parsedData['ALERT'] ?? null,
+                'WX' => $parsedData['WX'] ?? null,
+                'DISK' => $parsedData['DISK'] ?? null,
+                'remote_nodes' => $parsedData['remote_nodes'] ?? []
             ];
             
-            return json_encode($data);
+            return $data;
             
         } catch (Exception $e) {
             $this->logger->error("Error fetching node status", [
@@ -204,6 +223,152 @@ class NodeWebSocketService implements MessageComponentInterface
             ]);
             return null;
         }
+    }
+    
+    /**
+     * Parse XStat and SawStat responses into structured data
+     * Similar to NodeController::parseNodeAmiData but adapted for WebSocket service
+     */
+    private function parseNodeAmiData(string $rptStatus, string $sawStatus): array
+    {
+        $parsedVars = [];
+        $conns = [];
+        $keyups = [];
+        $modes = [];
+        $allLinkedNodes = [];
+        
+        // Parse XStat response for Var: lines
+        if (!empty($rptStatus)) {
+            $lines = explode("\n", $rptStatus);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                // Parse Var: lines
+                if (strpos($line, 'Var: ') === 0) {
+                    $varLine = substr($line, 5);
+                    if (strpos($varLine, '=') !== false) {
+                        list($key, $value) = explode('=', $varLine, 2);
+                        $parsedVars[trim($key)] = trim($value);
+                    }
+                }
+                
+                // Parse Conn: lines
+                if (strpos($line, 'Conn: ') === 0) {
+                    $connLine = substr($line, 6);
+                    $data = preg_split('/\s+/', $connLine);
+                    if (!empty($data[0])) {
+                        $conns[] = $data;
+                    }
+                }
+                
+                // Parse LinkedNodes
+                if (preg_match("/LinkedNodes: (.*)/", $line, $matches)) {
+                    $longRangeLinks = preg_split("/, /", trim($matches[1]));
+                    foreach ($longRangeLinks as $link) {
+                        if (!empty($link)) {
+                            $n_val = substr($link, 1);
+                            $connectionType = substr($link, 0, 1);
+                            $modes[$n_val]['mode'] = $connectionType;
+                            
+                            if (is_numeric($n_val) && intval($n_val) >= 2000) {
+                                $allLinkedNodes[] = $n_val;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Parse SawStat response for keyed timing data
+        if (!empty($sawStatus)) {
+            $lines = explode("\n", $sawStatus);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if (empty($line)) continue;
+                
+                if (strpos($line, 'Conn: ') === 0) {
+                    $connLine = substr($line, 6);
+                    $data = preg_split('/\s+/', $connLine);
+                    if (isset($data[0]) && isset($data[1]) && isset($data[2]) && isset($data[3])) {
+                        $keyups[$data[0]] = [
+                            'node' => $data[0],
+                            'isKeyed' => $data[1],
+                            'keyed' => $data[2],
+                            'unkeyed' => $data[3]
+                        ];
+                    }
+                }
+            }
+        }
+        
+        // Build remote nodes array
+        $remoteNodes = [];
+        $ECHOLINK_NODE_THRESHOLD = 3000000;
+        
+        foreach ($conns as $connData) {
+            $n = $connData[0];
+            if (empty($n)) continue;
+            
+            $ip = $connData[1] ?? '';
+            $port = $connData[2] ?? '';
+            $direction = $connData[3] ?? '';
+            $elapsed = $connData[4] ?? '';
+            $status = $connData[5] ?? '';
+            
+            $isEcholink = (is_numeric($n) && $n > $ECHOLINK_NODE_THRESHOLD && empty($ip));
+            
+            // Get node info from ASTDB
+            $nodeInfo = $this->astdbService->getSingleNodeInfo($n);
+            $info = "Node $n";
+            if ($nodeInfo) {
+                $info = trim(($nodeInfo['callsign'] ?? '') . ' ' . ($nodeInfo['description'] ?? '') . ' ' . ($nodeInfo['location'] ?? ''));
+            }
+            
+            $remoteNode = [
+                'node' => $n,
+                'info' => $info,
+                'ip' => $isEcholink ? "" : $ip,
+                'direction' => $isEcholink ? ($connData[2] ?? '') : $direction,
+                'elapsed' => $isEcholink ? ($connData[3] ?? '') : $elapsed,
+                'link' => $isEcholink ? ($connData[4] ?? 'UNKNOWN') : $status,
+                'keyed' => 'n/a',
+                'last_keyed' => '-1',
+                'mode' => $isEcholink ? 'Echolink' : 'Allstar'
+            ];
+            
+            // Handle Echolink connection status
+            if ($isEcholink && isset($modes[$n]['mode'])) {
+                $remoteNode['link'] = ($modes[$n]['mode'] == 'C') ? "CONNECTING" : "ESTABLISHED";
+            }
+            
+            // Use keyed timing data from SawStat
+            if (isset($keyups[$n])) {
+                $remoteNode['keyed'] = ($keyups[$n]['isKeyed'] == 1) ? 'yes' : 'no';
+                $remoteNode['last_keyed'] = $keyups[$n]['keyed'];
+            }
+            
+            // Set mode from LinkedNodes
+            if (isset($modes[$n])) {
+                $remoteNode['mode'] = $modes[$n]['mode'];
+            }
+            
+            $remoteNodes[] = $remoteNode;
+        }
+        
+        // Extract main node stats
+        $mainNodeCosKeyed = ($parsedVars['RPT_RXKEYED'] ?? '0') === '1' ? 1 : 0;
+        $mainNodeTxKeyed = ($parsedVars['RPT_TXKEYED'] ?? '0') === '1' ? 1 : 0;
+        
+        return [
+            'cos_keyed' => $mainNodeCosKeyed,
+            'tx_keyed' => $mainNodeTxKeyed,
+            'cpu_temp' => $parsedVars['cpu_temp'] ?? null,
+            'cpu_up' => $parsedVars['cpu_up'] ?? null,
+            'cpu_load' => $parsedVars['cpu_load'] ?? null,
+            'ALERT' => $parsedVars['ALERT'] ?? null,
+            'WX' => $parsedVars['WX'] ?? null,
+            'DISK' => $parsedVars['DISK'] ?? null,
+            'remote_nodes' => $remoteNodes
+        ];
     }
     
     /**
@@ -224,6 +389,55 @@ class NodeWebSocketService implements MessageComponentInterface
     }
     
     /**
+     * Check if data has changed compared to last broadcast
+     * Implements data diffing to reduce unnecessary broadcasts
+     */
+    private function hasDataChanged(array $newData): bool
+    {
+        if ($this->lastData === null) {
+            return true; // First time, always send
+        }
+        
+        // Compare key fields that matter for UI updates
+        $keyFields = ['cos_keyed', 'tx_keyed', 'cpu_temp', 'cpu_up', 'cpu_load', 'ALERT', 'WX', 'DISK'];
+        
+        foreach ($keyFields as $field) {
+            if (($newData[$field] ?? null) !== ($this->lastData[$field] ?? null)) {
+                return true;
+            }
+        }
+        
+        // Compare remote nodes count and keyed status
+        $newRemoteCount = count($newData['remote_nodes'] ?? []);
+        $oldRemoteCount = count($this->lastData['remote_nodes'] ?? []);
+        
+        if ($newRemoteCount !== $oldRemoteCount) {
+            return true;
+        }
+        
+        // Compare keyed status of remote nodes
+        foreach ($newData['remote_nodes'] ?? [] as $newNode) {
+            $nodeId = $newNode['node'] ?? null;
+            if ($nodeId === null) continue;
+            
+            $oldNode = null;
+            foreach ($this->lastData['remote_nodes'] ?? [] as $old) {
+                if (($old['node'] ?? null) === $nodeId) {
+                    $oldNode = $old;
+                    break;
+                }
+            }
+            
+            // New node or keyed status changed
+            if ($oldNode === null || ($newNode['keyed'] ?? 'n/a') !== ($oldNode['keyed'] ?? 'n/a')) {
+                return true;
+            }
+        }
+        
+        return false; // No significant changes
+    }
+    
+    /**
      * Handle new WebSocket connection
      */
     public function onOpen(ConnectionInterface $conn): void
@@ -238,7 +452,7 @@ class NodeWebSocketService implements MessageComponentInterface
         
         // Send last known data immediately if available
         if ($this->lastData !== null) {
-            $conn->send($this->lastData);
+            $conn->send(json_encode($this->lastData));
         }
     }
     

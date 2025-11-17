@@ -7,8 +7,11 @@
  */
 
 // Set error reporting for development (should be disabled in production)
+// In production, disable display_errors to prevent HTML output in JSON responses
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/../user_files/logs/php_errors.log');
 
 // Include the bootstrap file
 require_once __DIR__ . '/../src/bootstrap.php';

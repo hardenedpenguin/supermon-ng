@@ -94,6 +94,7 @@ Supermon-ng $version is a modernized and extensible version of the original Supe
 - PWA (Progressive Web App) support
 - Modern JavaScript framework integration
 - Comprehensive testing suite
+- Real-time WebSocket support for live node monitoring
 
 ## Installation
 
@@ -500,6 +501,7 @@ main() {
     
     cp -r config/ "$release_dir/"
     cp -r systemd/ "$release_dir/"
+    cp -r bin/ "$release_dir/"
     
     # Configuration files
     cp composer.json "$release_dir/"
@@ -563,6 +565,7 @@ main() {
     echo "   - Built frontend (frontend/dist/)"
     echo "   - User configuration files (user_files/)"
     echo "   - Performance optimization configs (config/)"
+    echo "   - WebSocket server (bin/websocket-server.php)"
     echo "   - Installation script (install.sh)"
     echo "   - Update system (scripts/update.sh, scripts/version-check.sh)"
     echo "   - Security configurations (sudoers.d/, systemd/)"
