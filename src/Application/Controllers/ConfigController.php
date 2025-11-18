@@ -94,13 +94,15 @@ class ConfigController
             // Read from user-specific INI file
             if (file_exists($absoluteIniFile)) {
                 $iniConfig = parse_ini_file($absoluteIniFile, true);
-                if ($iniConfig) {
+                if ($iniConfig && is_array($iniConfig)) {
                     foreach ($iniConfig as $nodeId => $nodeConfig) {
                         if (is_array($nodeConfig) && isset($nodeConfig['host'])) {
                             $config[$nodeId] = $nodeConfig;
                         }
                     }
                 }
+                // Reset $iniConfig to null after first parse (will be re-parsed below for default node)
+                $iniConfig = null;
             }
             
             // Get default node from INI file
@@ -115,6 +117,7 @@ class ConfigController
                 
                 if ($iniConfig === false || $iniConfigGlobal === false) {
                     $this->logger->error("Failed to parse INI file: $absoluteIniFile");
+                    $iniConfig = null; // Ensure it's null, not false
                 } else {
                     $this->logger->info("Parsed INI sections: " . implode(', ', array_keys($iniConfig)));
                     $this->logger->info("Global INI keys: " . implode(', ', array_keys($iniConfigGlobal)));
@@ -174,12 +177,19 @@ class ConfigController
             }
             
             // Resolve group names to actual node IDs
-            if ($defaultNode && $iniConfig !== null) {
-                $resolvedDefaultNode = $this->resolveGroupToNodes($defaultNode, $iniConfig);
-                if ($resolvedDefaultNode !== $defaultNode) {
-                    $this->logger->info("Resolved group '$defaultNode' to nodes: $resolvedDefaultNode");
+            if ($defaultNode && $iniConfig !== null && is_array($iniConfig)) {
+                // Ensure $defaultNode is a string (INI parsing may return int)
+                $defaultNodeStr = (string)$defaultNode;
+                $resolvedDefaultNode = $this->resolveGroupToNodes($defaultNodeStr, $iniConfig);
+                if ($resolvedDefaultNode !== $defaultNodeStr) {
+                    $this->logger->info("Resolved group '$defaultNodeStr' to nodes: $resolvedDefaultNode");
                     $defaultNode = $resolvedDefaultNode;
+                } else {
+                    $defaultNode = $defaultNodeStr;
                 }
+            } elseif ($defaultNode) {
+                // Ensure $defaultNode is a string even if we don't resolve groups
+                $defaultNode = (string)$defaultNode;
             }
 
             $response->getBody()->write(json_encode([

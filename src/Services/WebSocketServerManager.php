@@ -110,8 +110,9 @@ class WebSocketServerManager
                 $nodeConfig = $this->configService->getNodeConfig($nodeId, null);
                 
                 // Calculate port for reference (though we won't create separate servers)
+                // Start at basePort + 1 (8106) since basePort (8105) is reserved for the router
                 $portOffset = count($this->nodeServices);
-                $port = $this->basePort + $portOffset;
+                $port = $this->basePort + 1 + $portOffset;
                 $this->nodePorts[$nodeId] = $port;
                 
                 // Create node WebSocket service (internal service, not a separate server)
@@ -159,24 +160,45 @@ class WebSocketServerManager
     private function createRouterServer(): void
     {
         try {
+            $this->logger->info("Creating WebSocket router server", [
+                'port' => $this->basePort,
+                'bind_address' => '0.0.0.0'
+            ]);
+            
             $routerService = new WebSocketRouterService($this->logger, $this);
             
             // Create Ratchet server with router
+            // WsServer handles WebSocket upgrades automatically
+            $this->logger->info("Wrapping router service with WsServer");
             $wsServer = new WsServer($routerService);
+            
+            // HttpServer handles HTTP requests and passes WebSocket upgrades to WsServer
+            // It needs a service that implements HttpServerInterface, but WsServer provides that
+            $this->logger->info("Wrapping WsServer with HttpServer");
             $httpServer = new HttpServer($wsServer);
-            $server = IoServer::factory($httpServer, $this->basePort, '0.0.0.0', $this->loop);
+            
+            $this->logger->info("Creating IoServer", [
+                'port' => $this->basePort,
+                'host' => '0.0.0.0'
+            ]);
+            // Use new IoServer() instead of factory() to ensure proper loop integration
+            $socket = new \React\Socket\Server('0.0.0.0:' . $this->basePort, $this->loop);
+            $server = new IoServer($httpServer, $socket, $this->loop);
             
             $this->routerServer = $server;
             
-            $this->logger->info("WebSocket router server started", [
+            $this->logger->info("WebSocket router server started successfully", [
                 'port' => $this->basePort,
-                'nodes' => array_keys($this->nodeServices)
+                'nodes' => array_keys($this->nodeServices),
+                'server_class' => get_class($server)
             ]);
         } catch (Exception $e) {
             $this->logger->error("Failed to start WebSocket router server", [
                 'port' => $this->basePort,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
+            throw $e;
         }
     }
     
@@ -185,6 +207,17 @@ class WebSocketServerManager
      */
     public function run(): void
     {
+        $this->logger->info("Starting event loop", [
+            'port' => $this->basePort
+        ]);
+        
+        // Verify server is ready
+        if ($this->routerServer === null) {
+            $this->logger->error("Cannot run event loop: router server not initialized");
+            return;
+        }
+        
+        $this->logger->info("Event loop starting - server ready to accept connections");
         $this->loop->run();
     }
     
@@ -247,6 +280,14 @@ class WebSocketServerManager
             pcntl_signal(SIGTERM, [$this, 'handleShutdown']);
             pcntl_signal(SIGINT, [$this, 'handleShutdown']);
             pcntl_signal(SIGHUP, [$this, 'handleShutdown']);
+            
+            // Dispatch signals periodically in the event loop
+            // Signals won't be dispatched automatically in React event loop
+            $this->loop->addPeriodicTimer(0.1, function () {
+                if (function_exists('pcntl_signal_dispatch')) {
+                    pcntl_signal_dispatch();
+                }
+            });
         }
     }
     

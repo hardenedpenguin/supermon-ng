@@ -55,11 +55,20 @@ class NodeController
                 // Get node info from ASTDB
                 $nodeInfo = $this->getNodeInfoFromAstdb((string)$nodeId, $astdb);
                 
+                // Use ASTDB data for callsign and location
+                $callsign = $nodeInfo['callsign'] ?? 'Unknown';
+                $location = $nodeInfo['location'] ?? 'Unknown';
+                $description = $nodeInfo['description'] ?? 'Unknown';
+                
+                // Header uses only the location field (not callsign + description + location)
+                // This matches the original behavior where header shows just the node name/description
+                $info = $location ?: $description ?: "Node $nodeId";
+                
                 // Skip AMI data for list view - it's too expensive
                 // AMI data is fetched separately via getAmiStatus endpoint
                 $amiData = [
                     'node' => $nodeId,
-                    'info' => $nodeInfo['description'] ?? 'Node ' . $nodeId,
+                    'info' => $info,
                     'status' => 'unknown',
                     'cos_keyed' => 0,
                     'tx_keyed' => 0,
@@ -71,10 +80,6 @@ class NodeController
                     'DISK' => null,
                     'remote_nodes' => []
                 ];
-                
-                // Use ASTDB data for callsign and location
-                $callsign = $nodeInfo['callsign'] ?? 'Unknown';
-                $location = $nodeInfo['location'] ?? 'Unknown';
                 
                 // Determine if node is online based on AMI data
                 $isOnline = ($amiData['status'] ?? 'offline') === 'online';
@@ -98,8 +103,9 @@ class NodeController
                     'id' => $nodeId,
                     'node_number' => $nodeId,
                     'callsign' => $callsign,
-                    'description' => $node['system'],
+                    'description' => $description, // ASTDB description field
                     'location' => $location,
+                    'info' => $info, // Header uses callsign + description + location (skip empty parts)
                     'status' => $amiData['status'] ?? 'offline',
                     'last_heard' => $isOnline ? date('Y-m-d H:i:s') : null,
                     'connected_nodes' => $connectedNodes,

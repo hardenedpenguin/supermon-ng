@@ -37,7 +37,12 @@ try {
     $configService = new AllStarConfigService($logger, $userFilesPath);
     
     // Create ASTDB cache service
+    // Check both user_files and root directory for astdb.txt
     $astdbFile = $userFilesPath . 'astdb.txt';
+    if (!file_exists($astdbFile)) {
+        // Fallback to root directory (legacy location)
+        $astdbFile = __DIR__ . '/../astdb.txt';
+    }
     $astdbService = new AstdbCacheService($logger, $astdbFile);
     
     // Create WebSocket server manager
@@ -54,8 +59,20 @@ try {
         'node_ports' => $manager->getAllNodePorts()
     ]);
     
+    $logger->info("About to start event loop - this will block");
+    
     // Run the event loop (blocks until stopped)
-    $manager->run();
+    try {
+        $manager->run();
+    } catch (Throwable $e) {
+        $logger->error("Event loop error", [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        throw $e;
+    }
+    
+    $logger->info("Event loop exited");
     
 } catch (Exception $e) {
     if (isset($logger)) {

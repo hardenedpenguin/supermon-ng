@@ -304,6 +304,21 @@ class NodeWebSocketService implements MessageComponentInterface
         $remoteNodes = [];
         $ECHOLINK_NODE_THRESHOLD = 3000000;
         
+        // Collect all node IDs first for batch lookup (like NodeController does)
+        $nodeIds = [];
+        foreach ($conns as $connData) {
+            $n = $connData[0];
+            if (!empty($n)) {
+                $nodeIds[] = (string)$n;
+            }
+        }
+        
+        // Batch lookup node info from ASTDB (more efficient than individual lookups)
+        $nodeInfoMap = [];
+        if (!empty($nodeIds)) {
+            $nodeInfoMap = $this->astdbService->getMultipleNodeInfo($nodeIds);
+        }
+        
         foreach ($conns as $connData) {
             $n = $connData[0];
             if (empty($n)) continue;
@@ -316,8 +331,9 @@ class NodeWebSocketService implements MessageComponentInterface
             
             $isEcholink = (is_numeric($n) && $n > $ECHOLINK_NODE_THRESHOLD && empty($ip));
             
-            // Get node info from ASTDB
-            $nodeInfo = $this->astdbService->getSingleNodeInfo($n);
+            // Get node info from batch lookup map (ensure node ID is string for lookup)
+            $nodeIdStr = (string)$n;
+            $nodeInfo = $nodeInfoMap[$nodeIdStr] ?? null;
             $info = "Node $n";
             if ($nodeInfo) {
                 $info = trim(($nodeInfo['callsign'] ?? '') . ' ' . ($nodeInfo['description'] ?? '') . ' ' . ($nodeInfo['location'] ?? ''));

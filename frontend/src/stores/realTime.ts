@@ -40,13 +40,52 @@ export const useRealTimeStore = defineStore('realTime', () => {
       // Use batch initialization for better performance
       const batchResult = await batchInitialization()
       
-      // Process nodes data
+      // Process nodes data - merge with existing nodes to preserve WebSocket updates
       if (batchResult.nodes?.data) {
         const rawNodes = batchResult.nodes.data || []
-        nodes.value = rawNodes.map((node: any) => ({
-          ...node,
-          info: `${node.node_number || node.id} - ${node.description || 'Unknown'}`
-        }))
+        const newNodes = rawNodes.map((node: any) => {
+          // Header uses description only, not full format
+          // Full format (callsign + description + location) is used for connected nodes
+          const info = node.info || node.description || `Node ${node.node_number || node.id}`
+          return {
+            ...node,
+            info
+          }
+        })
+        
+        // Merge new nodes with existing nodes (preserve WebSocket-updated data)
+        newNodes.forEach((newNode: Node) => {
+          const nodeId = String(newNode.id || newNode.node_number)
+          const existingIndex = nodes.value.findIndex(n => String(n.id) === nodeId)
+          
+          if (existingIndex > -1) {
+            // Merge: preserve WebSocket-updated real-time fields, update static fields from API
+            const existing = nodes.value[existingIndex]
+            nodes.value[existingIndex] = {
+              ...existing, // Start with existing (has WebSocket real-time data)
+              // Update static fields from API (callsign, description, location)
+              callsign: newNode.callsign || existing.callsign,
+              description: newNode.description || existing.description,
+              location: newNode.location || existing.location,
+              node_number: newNode.node_number || existing.node_number,
+              id: newNode.id || existing.id,
+              info: newNode.info || existing.info,
+              // Preserve real-time fields from WebSocket
+              connected_nodes: existing.connected_nodes || newNode.connected_nodes,
+              remote_nodes: existing.remote_nodes || newNode.remote_nodes,
+              status: existing.status || newNode.status,
+              is_online: existing.is_online !== undefined ? existing.is_online : newNode.is_online,
+              last_updated: existing.last_updated || newNode.last_updated
+            } as Node
+          } else {
+            // Add new node
+            nodes.value.push(newNode)
+          }
+        })
+        
+        // Remove nodes that are no longer in the API response (cleanup)
+        const newNodeIds = new Set(newNodes.map(n => String(n.id || n.node_number)))
+        nodes.value = nodes.value.filter(n => newNodeIds.has(String(n.id || n.node_number)))
       }
       
       // Process configuration data
@@ -196,24 +235,42 @@ export const useRealTimeStore = defineStore('realTime', () => {
       const nodeId = String(data.node)
       const existingNodeIndex = nodes.value.findIndex(n => String(n.id) === String(nodeId))
       
-      // Map WebSocket data to Node structure
+      // Map WebSocket data to Node structure (only update fields that are provided)
       const nodeUpdate: Partial<Node> = {
         status: data.status || 'online',
-        cos_keyed: data.cos_keyed ?? 0,
-        tx_keyed: data.tx_keyed ?? 0,
-        cpu_temp: data.cpu_temp ?? null,
-        cpu_up: data.cpu_up ?? null,
-        cpu_load: data.cpu_load ?? null,
-        ALERT: data.ALERT ?? null,
-        WX: data.WX ?? null,
-        DISK: data.DISK ?? null,
         is_online: (data.status || 'online') === 'online',
         is_keyed: (data.cos_keyed ?? 0) > 0 || (data.tx_keyed ?? 0) > 0,
         last_updated: Date.now(),
         updated_at: new Date().toISOString()
       }
       
-      // Process remote nodes if available
+      // Only update these fields if they are provided (not null/undefined)
+      if (data.cos_keyed !== undefined && data.cos_keyed !== null) {
+        nodeUpdate.cos_keyed = data.cos_keyed
+      }
+      if (data.tx_keyed !== undefined && data.tx_keyed !== null) {
+        nodeUpdate.tx_keyed = data.tx_keyed
+      }
+      if (data.cpu_temp !== undefined && data.cpu_temp !== null) {
+        nodeUpdate.cpu_temp = data.cpu_temp
+      }
+      if (data.cpu_up !== undefined && data.cpu_up !== null) {
+        nodeUpdate.cpu_up = data.cpu_up
+      }
+      if (data.cpu_load !== undefined && data.cpu_load !== null) {
+        nodeUpdate.cpu_load = data.cpu_load
+      }
+      if (data.ALERT !== undefined && data.ALERT !== null) {
+        nodeUpdate.ALERT = data.ALERT
+      }
+      if (data.WX !== undefined && data.WX !== null) {
+        nodeUpdate.WX = data.WX
+      }
+      if (data.DISK !== undefined && data.DISK !== null) {
+        nodeUpdate.DISK = data.DISK
+      }
+      
+      // Process remote nodes if available (only update if provided)
       if (data.remote_nodes && Array.isArray(data.remote_nodes)) {
         // Convert remote nodes to connected_nodes format
         const connectedNodes: ConnectedNode[] = data.remote_nodes.map((remote: any) => ({
@@ -231,13 +288,15 @@ export const useRealTimeStore = defineStore('realTime', () => {
         nodeUpdate.connected_nodes = connectedNodes
         nodeUpdate.remote_nodes = connectedNodes
       }
+      // Note: If remote_nodes is not provided, we preserve existing connected_nodes
       
       if (existingNodeIndex > -1) {
-        // Update existing node
+        // Update existing node - preserve all existing fields, only update provided ones
+        const existingNode = nodes.value[existingNodeIndex]
         nodes.value[existingNodeIndex] = {
-          ...nodes.value[existingNodeIndex],
+          ...existingNode,
           ...nodeUpdate
-        }
+        } as Node
       } else {
         // Add new node if it doesn't exist
         // Try to get info from ASTDB

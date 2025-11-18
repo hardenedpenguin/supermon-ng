@@ -17,6 +17,9 @@ use Exception;
  * Routes WebSocket connections based on node ID in the path.
  * Accepts connections like: ws://localhost:8105/546051
  * Routes to the appropriate NodeWebSocketService.
+ * 
+ * Note: When wrapped by WsServer, we only implement MessageComponentInterface.
+ * The request is available via the connection object after the upgrade.
  */
 class WebSocketRouterService implements MessageComponentInterface
 {
@@ -32,6 +35,10 @@ class WebSocketRouterService implements MessageComponentInterface
     ) {
         $this->logger = $logger;
         $this->serverManager = $serverManager;
+        
+        $this->logger->info("WebSocketRouterService constructed", [
+            'nodes_available' => count($serverManager->getAllNodePorts())
+        ]);
     }
     
     /**
@@ -40,59 +47,105 @@ class WebSocketRouterService implements MessageComponentInterface
      */
     public function onOpen(ConnectionInterface $conn): void
     {
-        $this->logger->info("WebSocket connection opened", [
-            'client_id' => $conn->resourceId,
-            'remote_address' => $conn->remoteAddress ?? 'unknown'
-        ]);
+        try {
+            $this->logger->info("=== WebSocket onOpen called ===", [
+                'client_id' => $conn->resourceId,
+                'remote_address' => $conn->remoteAddress ?? 'unknown',
+                'connection_class' => get_class($conn),
+                'timestamp' => microtime(true)
+            ]);
         
-        // Get the request to extract the path
-        // Ratchet stores the HTTP request in the connection object
+        // WsServer stores the HTTP request in the connection object
+        // We need to extract it using reflection
         $request = null;
         $path = '/';
         
-        // Try multiple methods to get the HTTP request
-        // Method 1: Reflection to access httpRequest property
         try {
             $reflection = new \ReflectionObject($conn);
+            
+            // Try to find request in properties
             $properties = $reflection->getProperties();
             foreach ($properties as $property) {
                 $property->setAccessible(true);
                 $value = $property->getValue($conn);
                 if ($value instanceof RequestInterface) {
                     $request = $value;
+                    $path = $request->getUri()->getPath();
+                    $this->logger->info("Extracted path from connection property", [
+                        'client_id' => $conn->resourceId,
+                        'path' => $path,
+                        'property' => $property->getName(),
+                        'full_uri' => (string)$request->getUri()
+                    ]);
                     break;
                 }
             }
             
-            // Also try specifically for httpRequest
+            // Try specifically for httpRequest property (common in Ratchet)
             if (!$request && $reflection->hasProperty('httpRequest')) {
                 $property = $reflection->getProperty('httpRequest');
                 $property->setAccessible(true);
                 $request = $property->getValue($conn);
+                if ($request instanceof RequestInterface) {
+                    $path = $request->getUri()->getPath();
+                    $this->logger->info("Extracted path from httpRequest property", [
+                        'client_id' => $conn->resourceId,
+                        'path' => $path,
+                        'full_uri' => (string)$request->getUri()
+                    ]);
+                }
+            }
+            
+            // If connection is wrapped (e.g., by WsServer), try to unwrap it
+            if (!$request) {
+                // Check if connection has a wrapped connection
+                foreach ($properties as $property) {
+                    $property->setAccessible(true);
+                    $value = $property->getValue($conn);
+                    if ($value instanceof ConnectionInterface && $value !== $conn) {
+                        // Recursively check wrapped connection
+                        $wrappedReflection = new \ReflectionObject($value);
+                        $wrappedProperties = $wrappedReflection->getProperties();
+                        foreach ($wrappedProperties as $wrappedProperty) {
+                            $wrappedProperty->setAccessible(true);
+                            $wrappedValue = $wrappedProperty->getValue($value);
+                            if ($wrappedValue instanceof RequestInterface) {
+                                $request = $wrappedValue;
+                                $path = $request->getUri()->getPath();
+                                $this->logger->info("Extracted path from wrapped connection", [
+                                    'client_id' => $conn->resourceId,
+                                    'path' => $path,
+                                    'wrapped_property' => $wrappedProperty->getName()
+                                ]);
+                                break 2;
+                            }
+                        }
+                        if ($wrappedReflection->hasProperty('httpRequest')) {
+                            $wrappedProperty = $wrappedReflection->getProperty('httpRequest');
+                            $wrappedProperty->setAccessible(true);
+                            $wrappedRequest = $wrappedProperty->getValue($value);
+                            if ($wrappedRequest instanceof RequestInterface) {
+                                $request = $wrappedRequest;
+                                $path = $request->getUri()->getPath();
+                                $this->logger->info("Extracted path from wrapped httpRequest", [
+                                    'client_id' => $conn->resourceId,
+                                    'path' => $path
+                                ]);
+                                break;
+                            }
+                        }
+                    }
+                }
             }
         } catch (\ReflectionException $e) {
-            $this->logger->debug("Reflection failed", ['error' => $e->getMessage()]);
-        }
-        
-        // Method 2: Direct property access
-        if (!$request && isset($conn->httpRequest)) {
-            $request = $conn->httpRequest;
-        }
-        
-        // Method 3: Check if connection has getRequest method
-        if (!$request && method_exists($conn, 'getRequest')) {
-            $request = $conn->getRequest();
-        }
-        
-        if ($request instanceof RequestInterface) {
-            $path = $request->getUri()->getPath();
-            $this->logger->info("Extracted path from HTTP request", [
-                'client_id' => $conn->resourceId,
-                'path' => $path,
-                'full_uri' => (string)$request->getUri()
+            $this->logger->error("Reflection failed to extract request", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
-        } else {
-            $this->logger->warning("WebSocket connection without request object", [
+        }
+        
+        if (!$request) {
+            $this->logger->warning("WebSocket connection without request object - cannot extract path", [
                 'client_id' => $conn->resourceId,
                 'connection_class' => get_class($conn),
                 'available_properties' => array_keys(get_object_vars($conn))
@@ -136,11 +189,23 @@ class WebSocketRouterService implements MessageComponentInterface
         // Route to the node service
         $nodeService->onOpen($conn);
         
-        $this->logger->info("WebSocket connection routed to node", [
-            'client_id' => $conn->resourceId,
-            'node_id' => $nodeId,
-            'path' => $path
-        ]);
+            $this->logger->info("WebSocket connection routed to node", [
+                'client_id' => $conn->resourceId,
+                'node_id' => $nodeId,
+                'path' => $path
+            ]);
+        } catch (Exception $e) {
+            $this->logger->error("Error in onOpen", [
+                'client_id' => $conn->resourceId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            try {
+                $conn->close();
+            } catch (Exception $closeException) {
+                // Ignore close errors
+            }
+        }
     }
     
     /**
@@ -203,19 +268,27 @@ class WebSocketRouterService implements MessageComponentInterface
     {
         $nodeId = $this->connectionNodeMap[$conn->resourceId] ?? null;
         
+        $this->logger->error("WebSocket error", [
+            'client_id' => $conn->resourceId,
+            'node_id' => $nodeId,
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        
         if ($nodeId) {
             $nodeService = $this->serverManager->getNodeService($nodeId);
             if ($nodeService) {
                 $nodeService->onError($conn, $e);
             }
-        } else {
-            $this->logger->error("WebSocket error for unknown connection", [
-                'client_id' => $conn->resourceId,
-                'error' => $e->getMessage()
-            ]);
         }
         
-        $conn->close();
+        try {
+            $conn->close();
+        } catch (Exception $closeException) {
+            $this->logger->error("Error closing connection", [
+                'error' => $closeException->getMessage()
+            ]);
+        }
     }
     
     /**
