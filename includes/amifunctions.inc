@@ -674,54 +674,75 @@ class SimpleAmiClient
         $lines = preg_split('/[\r\n]+/', $voterResponse);
         
         foreach ($lines as $line) {
-            // Parse Client lines
-            if (preg_match('/^Client\s+(\S+)/', $line, $matches)) {
-                $currentClient = $matches[1];
-                $voters[$currentClient] = 0;
+            $line = trim($line);
+            if (empty($line)) continue;
+            
+            // Parse Client lines (Allmon3 format: "Client: <name>")
+            if (preg_match('/^Client:\s*(.+)$/', $line, $matches)) {
+                $rawClientName = trim($matches[1]);
+                // Check for Mix suffix BEFORE cleaning (for color determination)
+                $isMix = (strpos($rawClientName, ' Mix') !== false);
+                // Clean known suffixes (like formatVoterHTML does)
+                $clientName = preg_replace('/(\sMaster\sActiveMaster|\sLocal\sLocal|\sMix)$/', '', $rawClientName);
+                $currentClient = $clientName;
+                // Store with mix flag for later use
+                $voters[$currentClient] = ['rssi' => 0, 'isMix' => $isMix];
             }
-            // Parse RSSI lines
+            // Parse RSSI lines (Allmon3 format: "RSSI: <value>")
             elseif (preg_match('/^RSSI:\s+(\d+)/', $line, $matches) && $currentClient !== null) {
-                $voters[$currentClient] = (int)$matches[1];
+                if (is_array($voters[$currentClient])) {
+                    $voters[$currentClient]['rssi'] = (int)$matches[1];
+                } else {
+                    $voters[$currentClient] = (int)$matches[1];
+                }
             }
-            // Parse Voted line
+            // Parse Voted line (Allmon3 format: "Voted: <client>")
             elseif (preg_match('/^Voted:\s+(.+)$/', $line, $matches)) {
-                $voted = trim($matches[1]);
+                $votedClient = trim($matches[1]);
+                // Clean the voted client name to match
+                $voted = preg_replace('/(\sMaster\sActiveMaster|\sLocal\sLocal|\sMix)$/', '', $votedClient);
             }
         }
         
-        // Generate HTML (Allmon3 style)
-        $html = '';
-        foreach ($voters as $clientId => $rssi) {
-            // Calculate RSSI percentage
-            $rssiPct = ($rssi == 255) ? 100 : (int)($rssi * 0.35 + 10);
-            
-            // Determine bar color
-            $barColor = 'primary';
-            if ($clientId == $voted) {
-                $barColor = 'success';
-            } elseif (preg_match('/\s[Mm]ix/', $clientId)) {
-                $barColor = 'info';
+        // Generate HTML (Allmon3 style - using table format like original supermon)
+        $html = '<table class="rtcm"><tr><th>Client</th><th>RSSI</th></tr>';
+        
+        if (empty($voters)) {
+            $html .= '<tr><td><div class="voter-no-clients">&nbsp;No clients&nbsp;</div></td>';
+            $html .= '<td><div class="voter-empty-bar">&nbsp;</div></td></tr>';
+        } else {
+            foreach ($voters as $clientId => $clientData) {
+                // Handle both array format (with isMix) and simple int format (backward compatibility)
+                $rssi = is_array($clientData) ? ($clientData['rssi'] ?? 0) : $clientData;
+                $isMix = is_array($clientData) ? ($clientData['isMix'] ?? false) : false;
+                
+                // Calculate bar width in pixels (0-255 range, max 300px width)
+                $bar_width_px = round(($rssi / 255) * 300);
+                $bar_width_px = ($rssi == 0) ? 3 : max(1, $bar_width_px);
+                
+                // Determine bar color (Allmon3 style)
+                $barcolor = "#0099FF"; // Blue for voting station
+                $textcolor = 'white';
+                
+                // Check if this client is voted
+                if ($voted && $clientId == $voted) {
+                    $barcolor = 'greenyellow'; // Green for voted
+                    $textcolor = 'black';
+                } elseif ($isMix) {
+                    $barcolor = 'cyan'; // Cyan for non-voting mix station
+                    $textcolor = 'black';
+                }
+                
+                $html .= '<tr>';
+                $html .= '<td><div>' . htmlspecialchars($clientId) . '</div></td>';
+                $html .= '<td><div class="text"><div class="barbox_a">';
+                $html .= '<div class="bar" style="width: ' . $bar_width_px . 'px; background-color: ' . $barcolor . '; color: ' . $textcolor . '">' . $rssi . '</div>';
+                $html .= '</div></div></td></tr>';
             }
-            
-            $html .= '<div class="row justify-content-md-center">';
-            $html .= '  <div class="col-4 col-md-2 text-end">';
-            $html .= '    <b>' . htmlspecialchars($clientId) . '</b>';
-            $html .= '  </div>';
-            $html .= '  <div class="col-8 col-md-10">';
-            $html .= '    <div class="progress" role="progressbar" aria-valuenow="' . $rssiPct . '"';
-            $html .= '    aria-valuemin="0" aria-valuemax="100">';
-            $html .= '      <div class="progress-bar progress-bar-striped bg-' . $barColor . '" style="width: ' . $rssiPct . '%">' . $rssi . '</div>';
-            $html .= '    </div>';
-            $html .= '  </div>';
-            $html .= '</div>';
         }
         
-        $html .= '<div class="row d-flex align-items-center">';
-        $html .= '  <div class="col-2">&nbsp</div>';
-        $html .= '  <div class="col-8">';
-        $html .= '    Last Update: ' . date('Y-m-d H:i:s');
-        $html .= '  </div>';
-        $html .= '</div>';
+        $html .= '<tr><td colspan="2"> </td></tr>';
+        $html .= '</table><br/>';
         
         return [
             'html' => $html,

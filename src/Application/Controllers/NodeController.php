@@ -3331,11 +3331,22 @@ class NodeController
                     ->withHeader('Content-Type', 'application/json');
             }
 
-            // Parse voter response
-            list($nodesData, $votedData) = $this->parseVoterResponse($voterResponse);
+            // Use Allmon3's parseVoterStatus function to generate HTML
+            $voterData = \SimpleAmiClient::parseVoterStatus($voterResponse);
+            $baseHtml = $voterData['html'] ?? '';
             
-            // Format HTML for the node
-            $html = $this->formatVoterHTML($node, $nodesData, $votedData, $nodeConfig);
+            // Add node header (like formatVoterHTML does)
+            $info = $this->getAstInfo($node);
+            $nodeHeader = '';
+            if (!empty($nodeConfig['hideNodeURL'])) {
+                $nodeHeader = "<tr><th colspan=2><i>   Node $node - $info   </i></th></tr>";
+            } else {
+                $nodeURL = "http://stats.allstarlink.org/nodeinfo.cgi?node=$node";
+                $nodeHeader = "<tr><th colspan=2><i>   Node <a href=\"$nodeURL\" target=\"_blank\">$node</a> - $info   </i></th></tr>";
+            }
+            
+            // Insert header before the Client/RSSI header row
+            $html = str_replace('<tr><th>Client</th><th>RSSI</th></tr>', $nodeHeader . '<tr><th>Client</th><th>RSSI</th></tr>', $baseHtml);
 
             $response->getBody()->write(json_encode([
                 'success' => true,
