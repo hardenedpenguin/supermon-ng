@@ -13,8 +13,11 @@ use Exception;
  * Node WebSocket Service
  * 
  * Manages WebSocket connections for a single node.
- * Maintains persistent AMI connection and broadcasts real-time data.
- * Matches Allmon3's per-node WebSocket architecture.
+ * Maintains dedicated persistent AMI connection (not using connection pool)
+ * and broadcasts real-time data. Matches Allmon3's per-node WebSocket architecture.
+ * 
+ * Note: Uses dedicated AMI connections instead of the connection pool to avoid
+ * hogging pool connections that should be available for short-lived API requests.
  */
 class NodeWebSocketService implements MessageComponentInterface
 {
@@ -86,7 +89,8 @@ class NodeWebSocketService implements MessageComponentInterface
     }
     
     /**
-     * Connect to AMI for this node
+     * Connect to AMI for this node using dedicated persistent connection
+     * (not using connection pool to avoid hogging pool connections)
      */
     private function connectToAmi(): void
     {
@@ -101,7 +105,8 @@ class NodeWebSocketService implements MessageComponentInterface
             $user = $this->nodeConfig['user'] ?? 'admin';
             $password = $this->nodeConfig['passwd'] ?? '';
             
-            $this->amiConnection = \SimpleAmiClient::getConnection($host, $user, $password);
+            // Use dedicated connection (not connection pool) for persistent WebSocket service
+            $this->amiConnection = \SimpleAmiClient::connect($host);
             
             if ($this->amiConnection === false) {
                 $this->logger->error("Failed to connect to AMI for node", [
@@ -112,8 +117,20 @@ class NodeWebSocketService implements MessageComponentInterface
                 return;
             }
             
+            // Login to AMI
+            if (\SimpleAmiClient::login($this->amiConnection, $user, $password) === false) {
+                $this->logger->error("Failed to login to AMI for node", [
+                    'node_id' => $this->nodeId,
+                    'host' => $host
+                ]);
+                \SimpleAmiClient::logoff($this->amiConnection);
+                $this->amiConnection = null;
+                $this->amiConnected = false;
+                return;
+            }
+            
             $this->amiConnected = true;
-            $this->logger->info("Connected to AMI for node", [
+            $this->logger->info("Connected to AMI for node (dedicated connection)", [
                 'node_id' => $this->nodeId,
                 'host' => $host
             ]);
@@ -124,6 +141,14 @@ class NodeWebSocketService implements MessageComponentInterface
                 'error' => $e->getMessage()
             ]);
             $this->amiConnected = false;
+            if ($this->amiConnection !== null) {
+                try {
+                    \SimpleAmiClient::logoff($this->amiConnection);
+                } catch (Exception $e2) {
+                    // Ignore cleanup errors
+                }
+                $this->amiConnection = null;
+            }
         }
     }
     
@@ -529,7 +554,7 @@ class NodeWebSocketService implements MessageComponentInterface
     }
     
     /**
-     * Cleanup: close AMI connection
+     * Cleanup: close dedicated AMI connection
      */
     public function cleanup(): void
     {
@@ -539,11 +564,10 @@ class NodeWebSocketService implements MessageComponentInterface
         
         if ($this->amiConnection !== null) {
             try {
-                $host = $this->nodeConfig['host'] ?? 'localhost:5038';
-                $user = $this->nodeConfig['user'] ?? 'admin';
-                \SimpleAmiClient::returnConnection($this->amiConnection, $host, $user);
+                // Close dedicated connection (not returning to pool)
+                \SimpleAmiClient::logoff($this->amiConnection);
             } catch (Exception $e) {
-                $this->logger->error("Error returning AMI connection", [
+                $this->logger->error("Error closing AMI connection", [
                     'node_id' => $this->nodeId,
                     'error' => $e->getMessage()
                 ]);
