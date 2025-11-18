@@ -433,6 +433,4 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->post('/fast-restart', [SystemController::class, 'fastRestart']);
         $group->post('/reboot', [SystemController::class, 'reboot']);
     });
-    
-    
 });

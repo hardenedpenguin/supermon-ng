@@ -50,12 +50,12 @@
             </td>
             <td>{{ connectedNode.info || connectedNode.ip || 'Unknown' }}</td>
             <td v-if="showDetail" align="center">
-              {{ formatLastKeyed(connectedNode.last_keyed) }}
+              {{ formatLastKeyed(connectedNode.last_keyed, index) }}
             </td>
             <td align="center">{{ connectedNode.link || 'n/a' }}</td>
             <td align="center">{{ connectedNode.direction || 'n/a' }}</td>
             <td v-if="showDetail" align="right">
-              {{ connectedNode.elapsed || 'N/A' }}
+              {{ formatElapsed(connectedNode.elapsed, index) }}
             </td>
             <td align="center">{{ getModeText(connectedNode.mode) }}</td>
           </tr>
@@ -102,6 +102,10 @@ import { useAppStore } from '@/stores/app'
 import BubbleChart from './BubbleChart.vue'
 import LsnodModal from './LsnodModal.vue'
 import type { ConnectedNode, Node } from '@/types/node'
+
+// Timer state for real-time updates
+const timerTick = ref(0)
+const nodeTimers = ref<Map<string, { elapsedBase: number | null, elapsedTimestamp: number | null, lastKeyedBase: number | null, lastKeyedTimestamp: number | null }>>(new Map())
 
 // Emits
 const emit = defineEmits<{
@@ -399,10 +403,58 @@ const updateNodeData = (data: Node | null) => {
     // Use user preferences for display count, fallback to 999
     const maxDisplay = appStore.user?.preferences?.displayedNodes || 999
     displayedNodes.value = Math.min(totalNodes.value, maxDisplay)
+    
+    // Update timer bases for real-time calculations
+    connectedNodes.value.forEach((node: ConnectedNode) => {
+      const nodeKey = `${props.node.id}-${node.node}`
+      
+      // Parse elapsed time - could be HH:MM:SS or seconds
+      let elapsedBase: number | null = null
+      let elapsedTimestamp: number | null = null
+      if (node.elapsed && node.elapsed !== 'N/A' && node.elapsed !== 'unknown' && node.elapsed !== '') {
+        // Try parsing as HH:MM:SS
+        const timeMatch = node.elapsed.match(/(\d+):(\d+):(\d+)/)
+        if (timeMatch) {
+          const hours = parseInt(timeMatch[1])
+          const minutes = parseInt(timeMatch[2])
+          const seconds = parseInt(timeMatch[3])
+          elapsedBase = hours * 3600 + minutes * 60 + seconds
+          elapsedTimestamp = Date.now() // Store when we received this value
+        } else {
+          // Try parsing as seconds
+          const seconds = parseInt(node.elapsed)
+          if (!isNaN(seconds)) {
+            elapsedBase = seconds
+            elapsedTimestamp = Date.now() // Store when we received this value
+          }
+        }
+      }
+      
+      // Parse last_keyed - should be seconds since last keyed
+      let lastKeyedBase: number | null = null
+      let lastKeyedTimestamp: number | null = null
+      if (node.last_keyed && node.last_keyed !== '-1' && node.last_keyed !== 'N/A' && node.last_keyed !== 'n/a') {
+        const seconds = parseInt(node.last_keyed)
+        if (!isNaN(seconds) && seconds >= 0) {
+          lastKeyedBase = seconds
+          lastKeyedTimestamp = Date.now() // Store when we received this value
+        }
+      }
+      
+      // Update or create timer entry
+      nodeTimers.value.set(nodeKey, {
+        elapsedBase,
+        elapsedTimestamp,
+        lastKeyedBase,
+        lastKeyedTimestamp
+      })
+    })
   } else {
     connectedNodes.value = []
     totalNodes.value = 0
     displayedNodes.value = 0
+    // Clear timers when no nodes
+    nodeTimers.value.clear()
   }
 }
 
@@ -416,8 +468,11 @@ watchEffect(() => {
   // Header status details have changed
 })
 
-// Format last keyed time
-const formatLastKeyed = (lastKeyed: string | null | undefined): string => {
+// Format last keyed time with real-time updates
+const formatLastKeyed = (lastKeyed: string | null | undefined, index: number): string => {
+  // Access timerTick to trigger reactivity
+  const _ = timerTick.value
+  
   if (!lastKeyed || lastKeyed === 'N/A' || lastKeyed === 'n/a') {
     return 'N/A'
   }
@@ -427,23 +482,97 @@ const formatLastKeyed = (lastKeyed: string | null | undefined): string => {
     return 'Never'
   }
   
-  // If it's a number, it might be seconds since last keyed
-  const numValue = parseInt(lastKeyed)
-  if (!isNaN(numValue)) {
-    if (numValue === -1) {
-      return 'Never'
+  // Get the connected node to find its timer
+  const connectedNode = connectedNodes.value[index]
+  if (!connectedNode) {
+    return 'N/A'
+  }
+  
+  const nodeKey = `${props.node.id}-${connectedNode.node}`
+  const timer = nodeTimers.value.get(nodeKey)
+  
+  // Calculate current seconds since last keyed
+  let currentSeconds: number | null = null
+  if (timer && timer.lastKeyedBase !== null && timer.lastKeyedTimestamp !== null) {
+    // Calculate elapsed time since we received the value
+    const elapsedSinceUpdate = Math.floor((Date.now() - timer.lastKeyedTimestamp) / 1000)
+    currentSeconds = timer.lastKeyedBase + elapsedSinceUpdate
+  } else {
+    // Fallback: try parsing the value directly
+    const numValue = parseInt(lastKeyed)
+    if (!isNaN(numValue) && numValue >= 0) {
+      currentSeconds = numValue
     }
-    
+  }
+  
+  if (currentSeconds !== null) {
     // Convert seconds to HH:MM:SS format (matching original Supermon-ng)
-    const hours = Math.floor(numValue / 3600)
-    const minutes = Math.floor((numValue % 3600) / 60)
-    const seconds = numValue % 60
+    const hours = Math.floor(currentSeconds / 3600)
+    const minutes = Math.floor((currentSeconds % 3600) / 60)
+    const seconds = currentSeconds % 60
     
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
   }
   
   // If it's already a formatted string, return as is
   return String(lastKeyed)
+}
+
+// Format elapsed time with real-time updates
+const formatElapsed = (elapsed: string | null | undefined, index: number): string => {
+  // Access timerTick to trigger reactivity
+  const _ = timerTick.value
+  
+  if (!elapsed || elapsed === 'N/A' || elapsed === 'unknown' || elapsed === '') {
+    return 'N/A'
+  }
+  
+  // Get the connected node to find its timer
+  const connectedNode = connectedNodes.value[index]
+  if (!connectedNode) {
+    return 'N/A'
+  }
+  
+  const nodeKey = `${props.node.id}-${connectedNode.node}`
+  const timer = nodeTimers.value.get(nodeKey)
+  
+  // Calculate current elapsed time
+  let currentSeconds: number | null = null
+  if (timer && timer.elapsedBase !== null && timer.elapsedTimestamp !== null) {
+    // Calculate elapsed time since we received the value
+    // The backend sends the elapsed time since connection started
+    // So we add the time that has passed since we received the update
+    const elapsedSinceUpdate = Math.floor((Date.now() - timer.elapsedTimestamp) / 1000)
+    currentSeconds = timer.elapsedBase + elapsedSinceUpdate
+  } else {
+    // Try parsing the value directly
+    // Try parsing as HH:MM:SS
+    const timeMatch = elapsed.match(/(\d+):(\d+):(\d+)/)
+    if (timeMatch) {
+      const hours = parseInt(timeMatch[1])
+      const minutes = parseInt(timeMatch[2])
+      const seconds = parseInt(timeMatch[3])
+      currentSeconds = hours * 3600 + minutes * 60 + seconds
+    } else {
+      // Try parsing as seconds
+      const seconds = parseInt(elapsed)
+      if (!isNaN(seconds)) {
+        currentSeconds = seconds
+      }
+    }
+  }
+  
+  if (currentSeconds !== null) {
+    // Convert seconds to HH:MM:SS format
+    const hours = Math.floor(currentSeconds / 3600)
+    const minutes = Math.floor((currentSeconds % 3600) / 60)
+    const secs = currentSeconds % 60
+    
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+  
+  // If it's already a formatted string, return as is
+  return String(elapsed)
 }
 
 // Event handling for modal links
@@ -460,13 +589,20 @@ const handleModalLinkClick = (event: Event) => {
   }
 }
 
-// Set up event delegation with more specific targeting
+// Set up real-time timer updates
+let timerInterval: ReturnType<typeof setInterval> | null = null
+
 onMounted(() => {
   // Use a more specific selector to avoid conflicts
   const tableElement = document.querySelector(`#table_${props.node.id}`)
   if (tableElement) {
     tableElement.addEventListener('click', handleModalLinkClick)
   }
+  
+  // Start timer for real-time updates (update every second)
+  timerInterval = setInterval(() => {
+    timerTick.value = Date.now()
+  }, 1000)
 })
 
 onUnmounted(() => {
@@ -474,6 +610,15 @@ onUnmounted(() => {
   if (tableElement) {
     tableElement.removeEventListener('click', handleModalLinkClick)
   }
+  
+  // Clear timer interval
+  if (timerInterval) {
+    clearInterval(timerInterval)
+    timerInterval = null
+  }
+  
+  // Clear timers
+  nodeTimers.value.clear()
 })
 
 // Expose methods for parent component

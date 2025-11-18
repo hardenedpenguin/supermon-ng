@@ -842,7 +842,7 @@ class NodeController
      */
     private function getNodeAmiData(array $nodeConfig, string $nodeId): array
     {
-        // Include the legacy AMI functions using optimized service
+        // Include the AMI functions using optimized service
         $this->includeService->includeAmiFunctions();
         $this->includeService->includeNodeInfo();
         // Helpers functionality now available as modern services
@@ -3335,7 +3335,7 @@ class NodeController
             $voterData = \SimpleAmiClient::parseVoterStatus($voterResponse);
             $baseHtml = $voterData['html'] ?? '';
             
-            // Add node header (like formatVoterHTML does)
+            // Add node header to voter HTML output
             $info = $this->getAstInfo($node);
             $nodeHeader = '';
             if (!empty($nodeConfig['hideNodeURL'])) {
@@ -3380,131 +3380,6 @@ class NodeController
         ]);
         
         return $result;
-    }
-
-    /**
-     * Parse voter response from AMI
-     */
-    private function parseVoterResponse(string $response): array
-    {
-        $lines = explode("\n", $response);
-        $parsedNodesData = [];
-        $parsedVotedData = [];
-        $currentNodeContext = null;
-        $currentClientData = [];
-
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-
-            $parts = explode(": ", $line, 2);
-            if (count($parts) < 2) continue;
-            
-            list($key, $value) = $parts;
-
-            switch ($key) {
-                case 'Node':
-                    if ($currentNodeContext && !empty($currentClientData) && isset($currentClientData['name'])) {
-                        $parsedNodesData[$currentNodeContext][$currentClientData['name']] = $currentClientData;
-                    }
-                    $currentNodeContext = $value;
-                    $currentClientData = [];
-                    if (!isset($parsedNodesData[$currentNodeContext])) {
-                        $parsedNodesData[$currentNodeContext] = [];
-                    }
-                    break;
-
-                case 'Client':
-                    if ($currentNodeContext && !empty($currentClientData) && isset($currentClientData['name'])) {
-                        $parsedNodesData[$currentNodeContext][$currentClientData['name']] = $currentClientData;
-                    }
-                    // Check for the "Mix" suffix BEFORE cleaning it
-                    $isMix = (strpos($value, ' Mix') !== false);
-                    
-                    // Clean all known suffixes from the client name
-                    $cleanName = preg_replace('/(\sMaster\sActiveMaster|\sLocal\sLocal|\sMix)$/', '', $value);
-                    
-                    // Store the clean name and the isMix flag
-                    $currentClientData = ['name' => $cleanName, 'isMix' => $isMix, 'rssi' => 'N/A', 'ip' => 'N/A'];
-                    break;
-                    
-                case 'RSSI':
-                    if (isset($currentClientData['name'])) {
-                        $currentClientData['rssi'] = $value;
-                    }
-                    break;
-                    
-                case 'IP':
-                    if (isset($currentClientData['name'])) {
-                        $currentClientData['ip'] = $value;
-                    }
-                    break;
-
-                case 'Voted':
-                    if ($currentNodeContext) {
-                        $parsedVotedData[$currentNodeContext] = $value;
-                    }
-                    break;
-            }
-        }
-
-        if ($currentNodeContext && !empty($currentClientData) && isset($currentClientData['name'])) {
-            $parsedNodesData[$currentNodeContext][$currentClientData['name']] = $currentClientData;
-        }
-
-        return [$parsedNodesData, $parsedVotedData];
-    }
-
-    /**
-     * Format voter HTML for display
-     */
-    private function formatVoterHTML(string $nodeNum, array $nodesData, array $votedData, array $currentConfig): string
-    {
-        $message = '';
-        $info = $this->getAstInfo($nodeNum); 
-
-        if (!empty($currentConfig['hideNodeURL'])) {
-            $message .= "<table class='rtcm'><tr><th colspan=2><i>   Node $nodeNum - $info   </i></th></tr>";
-        } else {
-            $nodeURL = "http://stats.allstarlink.org/nodeinfo.cgi?node=$nodeNum";
-            $message .= "<table class='rtcm'><tr><th colspan=2><i>   Node <a href=\"$nodeURL\" target=\"_blank\">$nodeNum</a> - $info   </i></th></tr>";
-        }
-        $message .= "<tr><th>Client</th><th>RSSI</th></tr>";
-
-        if (!isset($nodesData[$nodeNum]) || empty($nodesData[$nodeNum])) {
-            $message .= "<tr><td><div class='voter-no-clients'>&nbsp;No clients&nbsp;</div></td>";
-            $message .= "<td><div class='voter-empty-bar'>&nbsp;</div></td></tr>";
-        } else {
-            $clients = $nodesData[$nodeNum];
-            $votedClient = isset($votedData[$nodeNum]) && $votedData[$nodeNum] !== 'none' ? $votedData[$nodeNum] : null;
-
-            foreach($clients as $clientName => $client) {
-                $rssi = isset($client['rssi']) ? (int)$client['rssi'] : 0;
-                $bar_width_px = round(($rssi / 255) * 300); 
-                $bar_width_px = ($rssi == 0) ? 3 : max(1, $bar_width_px);
-                
-                $barcolor = "#0099FF"; 
-                $textcolor = 'white'; 
-                
-                if ($votedClient && $clientName === $votedClient) {
-                    $barcolor = 'greenyellow'; 
-                    $textcolor = 'black';
-                } elseif (isset($client['isMix']) && $client['isMix'] === true) {
-                    $barcolor = 'cyan'; 
-                    $textcolor = 'black';
-                }
-
-                $message .= "<tr>";
-                $message .= "<td><div>" . htmlspecialchars($clientName) . "</div></td>";
-                $message .= "<td><div class='text'> <div class='barbox_a'>";
-                $message .= "<div class='bar' style='width: " . $bar_width_px . "px; background-color: $barcolor; color: $textcolor'>" . $rssi . "</div>";
-                $message .= "</div></td></tr>";
-            }
-        }
-        $message .= "<tr><td colspan=2> </td></tr>";
-        $message .= "</table><br/>";
-        
-        return str_replace(["\r", "\n"], '', $message);
     }
 
     /**
