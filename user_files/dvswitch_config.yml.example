@@ -1,0 +1,117 @@
+# DVSwitch Mode Configuration
+# This file defines the available modes and their associated talkgroups for DVSwitch
+# Copy this file to dvswitch_config.yml and customize for your system
+#
+# PER-NODE CONFIGURATION:
+# ======================
+# You can configure DVSwitch per-node in two ways:
+#
+# 1. Per-node config files (recommended for different modes per node):
+#    Create: dvswitch_config_{nodeId}.yml (e.g., dvswitch_config_1998.yml)
+#    This file will be used for that specific node instead of the global config
+#
+# 2. Per-node dvswitch_path in allmon.ini:
+#    Add to node section in allmon.ini:
+#    [1998]
+#    host=127.0.0.1:5038
+#    user=admin
+#    passwd=
+#    dvswitch_path=/opt/MMDVM_Bridge/dvswitch.sh
+#    # ... other node settings
+#
+# If neither is configured, the system uses:
+# - Default dvswitch_path: /opt/MMDVM_Bridge/dvswitch.sh
+# - Global config: dvswitch_config.yml
+#
+# Format:
+# modes:
+#   - MODE_NAME:
+#       talkgroups:
+#         - tgid: "talkgroup_id"
+#           alias: "Display Name"
+
+modes:
+  - DMR:
+      talkgroups:
+        - tgid: "4000"
+          alias: DISCONNECT
+        - tgid: "9990#"
+          alias: PARROT
+        - tgid: "91"
+          alias: WorldWide
+        - tgid: "3100"
+          alias: USA
+        - tgid: "31010"
+          alias: Alabama-Link
+        - tgid: "3101"
+          alias: California
+        - tgid: "3102"
+          alias: Texas
+        - tgid: "3103"
+          alias: New York
+        - tgid: "3104"
+          alias: Florida
+        # Example with password/network format:
+        # - tgid: "yourtgifpasswordhere@tgif.network:62031!0"
+        #   alias: TGIFNetwork Select
+        # - tgid: "yourbrandmeisterpasswordhere@3102.repeater.net:62031!4000"
+        #   alias: Brandmeister Select
+
+  - YSF:
+      talkgroups:
+        - tgid: "register.ysfreflector.de:42020"
+          alias: PARROT
+        - tgid: "americalink.hamfm.com:42000"
+          alias: US-AMERICA-LINK
+        - tgid: "ysf.kansascitywide.com:42000"
+          alias: US-KCWide
+        - tgid: "ysfreflector.de:42020"
+          alias: YSF Reflector DE
+        - tgid: "ysfreflector.com:42020"
+          alias: YSF Reflector COM
+
+  - P25:
+      talkgroups:
+        - tgid: "9999"
+          alias: Disconnect
+        - tgid: "10"
+          alias: Parrot
+        - tgid: "10100"
+          alias: WorldWide
+        - tgid: "31010"
+          alias: Alabama-Link
+        - tgid: "31088"
+          alias: ColoradoHD
+        - tgid: "3101"
+          alias: California
+        - tgid: "3102"
+          alias: Texas
+
+  - DSTAR:
+      talkgroups:
+        - tgid: "REF030CL"
+          alias: REF030C
+        - tgid: "       U"
+          alias: Unlink
+        - tgid: "REF001EL"
+          alias: Echo (Parrot)
+        - tgid: "REF004CL"
+          alias: REF004C
+        - tgid: "REF012CL"
+          alias: REF012C
+        - tgid: "REF014CL"
+          alias: REF014C
+
+  - NXDN:
+      talkgroups:
+        - tgid: "9999"
+          alias: Unlink
+        - tgid: "10"
+          alias: Parrot
+        - tgid: "31088"
+          alias: ColoradoHD
+        - tgid: "3101"
+          alias: California
+        - tgid: "3102"
+          alias: Texas
+

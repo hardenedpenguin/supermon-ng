@@ -1339,7 +1339,8 @@ class ConfigController
                 'WERRUSER' => true,
                 'BANUSER' => false,
                 'SYSINFUSER' => true,
-                'SUSBUSER' => false
+                'SUSBUSER' => false,
+                'DVSWITCHUSER' => false
             ];
             
             return $defaultPermissions[$permission] ?? false;

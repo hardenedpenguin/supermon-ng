@@ -15,6 +15,7 @@ use SupermonNg\Application\Controllers\DatabasePerformanceController;
 use SupermonNg\Application\Controllers\HttpPerformanceController;
 use SupermonNg\Application\Controllers\SessionPerformanceController;
 use SupermonNg\Application\Controllers\FileIOPerformanceController;
+use SupermonNg\Application\Controllers\DvswitchController;
 use SupermonNg\Application\Middleware\ApiAuthMiddleware;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
 
@@ -309,6 +310,15 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         // Lsnod Routes
         $group->get('/{id}/lsnodes', [NodeController::class, 'lsnodes']);
         $group->get('/{id}/lsnodes/web', [NodeController::class, 'lsnodesWeb']);
+    });
+
+    // DVSwitch routes
+    $group->group('/dvswitch', function (RouteCollectorProxy $group) {
+        $group->get('/nodes', [DvswitchController::class, 'getNodes']);
+        $group->get('/node/{nodeId}/modes', [DvswitchController::class, 'getModes']);
+        $group->get('/node/{nodeId}/mode/{mode}/talkgroups', [DvswitchController::class, 'getTalkgroups']);
+        $group->post('/node/{nodeId}/mode/{mode}', [DvswitchController::class, 'switchMode']);
+        $group->post('/node/{nodeId}/tune/{tgid}', [DvswitchController::class, 'switchTalkgroup']);
     });
 
     // Config routes

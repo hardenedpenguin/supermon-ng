@@ -11,6 +11,7 @@
         "monolog/monolog": "^3.4",
         "ramsey/uuid": "^4.7",
         "symfony/cache": "^6.3",
+        "symfony/yaml": "^6.3",
         "cboden/ratchet": "^0.4",
         "phpunit/phpunit": "^10.5",
         "doctrine/dbal": "^3.0"

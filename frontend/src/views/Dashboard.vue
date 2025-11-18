@@ -97,6 +97,7 @@
       <input v-if="appStore.hasPermission('ASTLKUSER')" type="button" class="submit" value="Lookup" @click="astlookup">
       <input v-if="appStore.hasPermission('RSTATUSER')" type="button" class="submit" value="Rpt Stats" @click="rptstats">
       <input v-if="appStore.hasPermission('BUBLUSER')" type="button" class="submit" value="Bubble" @click="bubble">
+      <input v-if="appStore.hasPermission('DVSWITCHUSER')" type="button" class="submit" value="DVSwitch Mode" @click="showDvswitchModal = true">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Favorites" @click="showFavoritesModal = true">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Add Favorite" @click="showAddFavoriteModal = true">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Delete Favorite" @click="showDeleteFavoriteModal = true">
@@ -275,6 +276,9 @@
     <!-- Voter Modal -->
     <Voter :show="showVoterModal" @close="showVoterModal = false" />
     
+    <!-- DVSwitch Modal -->
+    <DVSwitchModal v-model:isVisible="showDvswitchModal" />
+    
     <!-- ConfigEditor Modal -->
     <ConfigEditor v-model:open="showConfigEditorModal" />
     
@@ -316,6 +320,7 @@ import DisplayConfig from '@/components/DisplayConfig.vue'
 import AddFavorite from '@/components/AddFavorite.vue'
 import DeleteFavorite from '@/components/DeleteFavorite.vue'
 import Favorites from '@/components/Favorites.vue'
+import DVSwitchModal from '@/components/DVSwitchModal.vue'
 import AstLog from '@/components/AstLog.vue'
 import AstLookup from '@/components/AstLookup.vue'
 import BubbleChart from '@/components/BubbleChart.vue'
@@ -378,6 +383,7 @@ const showWebErrLogModal = ref(false)
 const showVoterModal = ref(false)
 const showConfigEditorModal = ref(false)
 const showSystemInfoModal = ref(false)
+const showDvswitchModal = ref(false)
 
 
 const nodeTableRefs = ref<any[]>([])

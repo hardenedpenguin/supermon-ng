@@ -453,4 +453,23 @@ return [
         );
     },
     
+    // DVSwitch Service
+    \SupermonNg\Services\DvswitchService::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Services\DvswitchService(
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\AllStarConfigService::class),
+            $_ENV['DVSWITCH_PATH'] ?? '/opt/MMDVM_Bridge/dvswitch.sh',
+            $_ENV['DVSWITCH_CONFIG_PATH'] ?? __DIR__ . '/../../user_files/dvswitch_config.yml'
+        );
+    },
+    
+    // DVSwitch Controller
+    \SupermonNg\Application\Controllers\DvswitchController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\DvswitchController(
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\DvswitchService::class),
+            $c->get(\SupermonNg\Application\Controllers\ConfigController::class)
+        );
+    },
+    
 ];
