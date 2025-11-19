@@ -315,129 +315,72 @@ else
     exit 1
 fi
 
-# Create systemd service files
-echo "🔧 Creating systemd services..."
+# Install systemd service files
+echo "🔧 Installing systemd services..."
 
-# Backend service
-SERVICE_FILE="/etc/systemd/system/supermon-ng-backend.service"
-if [ -f "$SERVICE_FILE" ]; then
-    echo "⚠️  Service file $SERVICE_FILE already exists. Skipping creation."
-    echo "   If you want to update the service, please remove it manually first:"
-    echo "   sudo rm $SERVICE_FILE"
-else
-    echo "📝 Creating backend service file..."
-    cat > "$SERVICE_FILE" << 'SERVICE_EOF'
-[Unit]
-Description=Supermon-NG Backend
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=APP_DIR_PLACEHOLDER
-ExecStart=/usr/bin/php -S localhost:8000 -t public public/index.php
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-SERVICE_EOF
+# Function to install systemd file from repository
+install_systemd_file() {
+    local SOURCE_FILE="$1"
+    local TARGET_FILE="$2"
+    local FILE_TYPE="$3"  # "service" or "timer"
+    
+    if [ ! -f "$SOURCE_FILE" ]; then
+        echo "❌ Error: Source file $SOURCE_FILE not found"
+        return 1
+    fi
+    
+    if [ -f "$TARGET_FILE" ]; then
+        echo "⚠️  $FILE_TYPE file $TARGET_FILE already exists. Overwriting existing file..."
+    fi
+    
+    echo "📝 Installing $FILE_TYPE file from $SOURCE_FILE..."
+    cp "$SOURCE_FILE" "$TARGET_FILE"
+    
     # Replace placeholder with actual path
-    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$SERVICE_FILE"
-    echo "✅ Backend service file created"
-fi
+    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$TARGET_FILE"
+    
+    # Set proper permissions (644 for systemd files)
+    chmod 644 "$TARGET_FILE"
+    chown root:root "$TARGET_FILE"
+    
+    echo "✅ $FILE_TYPE file installed: $(basename $TARGET_FILE)"
+}
 
-# Database update service
-SERVICE_FILE="/etc/systemd/system/supermon-ng-database-update.service"
-if [ -f "$SERVICE_FILE" ]; then
-    echo "⚠️  Service file $SERVICE_FILE already exists. Skipping creation."
-else
-    echo "📝 Creating database update service file..."
-    cat > "$SERVICE_FILE" << 'SERVICE_EOF'
-[Unit]
-Description=Supermon-NG Database Auto-Update Service
-After=network.target
+# Backend service (copy from systemd directory)
+install_systemd_file \
+    "$INSTALLER_DIR/systemd/supermon-ng-backend.service" \
+    "/etc/systemd/system/supermon-ng-backend.service" \
+    "Service"
 
-[Service]
-Type=oneshot
-User=root
-WorkingDirectory=APP_DIR_PLACEHOLDER
-ExecStart=/usr/bin/php APP_DIR_PLACEHOLDER/scripts/database-auto-update.php
+# WebSocket service (copy from systemd directory)
+install_systemd_file \
+    "$INSTALLER_DIR/systemd/supermon-ng-websocket.service" \
+    "/etc/systemd/system/supermon-ng-websocket.service" \
+    "Service"
 
-[Install]
-WantedBy=multi-user.target
-SERVICE_EOF
-    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$SERVICE_FILE"
-    echo "✅ Database update service file created"
-fi
+# Database update service (copy from systemd directory)
+install_systemd_file \
+    "$INSTALLER_DIR/systemd/supermon-ng-database-update.service" \
+    "/etc/systemd/system/supermon-ng-database-update.service" \
+    "Service"
 
-# Database update timer
-TIMER_FILE="/etc/systemd/system/supermon-ng-database-update.timer"
-if [ -f "$TIMER_FILE" ]; then
-    echo "⚠️  Timer file $TIMER_FILE already exists. Skipping creation."
-else
-    echo "📝 Creating database update timer file..."
-    cat > "$TIMER_FILE" << 'TIMER_EOF'
-[Unit]
-Description=Run Supermon-NG Database Update every 3 hours
-Requires=supermon-ng-database-update.service
+# Database update timer (copy from systemd directory)
+install_systemd_file \
+    "$INSTALLER_DIR/systemd/supermon-ng-database-update.timer" \
+    "/etc/systemd/system/supermon-ng-database-update.timer" \
+    "Timer"
 
-[Timer]
-OnBootSec=5min
-OnUnitActiveSec=3h
-AccuracySec=5min
+# Node status update service (copy from systemd directory)
+install_systemd_file \
+    "$INSTALLER_DIR/systemd/supermon-ng-node-status.service" \
+    "/etc/systemd/system/supermon-ng-node-status.service" \
+    "Service"
 
-[Install]
-WantedBy=timers.target
-TIMER_EOF
-    echo "✅ Database update timer file created"
-fi
-
-# Node status update service
-SERVICE_FILE="/etc/systemd/system/supermon-ng-node-status.service"
-if [ -f "$SERVICE_FILE" ]; then
-    echo "⚠️  Service file $SERVICE_FILE already exists. Skipping creation."
-else
-    echo "📝 Creating node status service file..."
-    cat > "$SERVICE_FILE" << 'SERVICE_EOF'
-[Unit]
-Description=Supermon-NG Node Status Update Service
-After=network.target
-
-[Service]
-Type=oneshot
-User=root
-WorkingDirectory=APP_DIR_PLACEHOLDER/user_files/sbin
-ExecStart=/usr/bin/python3 APP_DIR_PLACEHOLDER/user_files/sbin/ast_node_status_update.py
-
-[Install]
-WantedBy=multi-user.target
-SERVICE_EOF
-    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$SERVICE_FILE"
-    echo "✅ Node status service file created"
-fi
-
-# Node status update timer
-TIMER_FILE="/etc/systemd/system/supermon-ng-node-status.timer"
-if [ -f "$TIMER_FILE" ]; then
-    echo "⚠️  Timer file $TIMER_FILE already exists. Skipping creation."
-else
-    echo "📝 Creating node status timer file..."
-    cat > "$TIMER_FILE" << 'TIMER_EOF'
-[Unit]
-Description=Run Supermon-NG Node Status Update every 3 minutes
-Requires=supermon-ng-node-status.service
-
-[Timer]
-OnBootSec=2min
-OnUnitActiveSec=3min
-AccuracySec=30s
-
-[Install]
-WantedBy=timers.target
-TIMER_EOF
-    echo "✅ Node status timer file created"
-fi
+# Node status update timer (copy from systemd directory)
+install_systemd_file \
+    "$INSTALLER_DIR/systemd/supermon-ng-node-status.timer" \
+    "/etc/systemd/system/supermon-ng-node-status.timer" \
+    "Timer"
 
 # Install Apache if not present (unless skipping Apache configuration)
 if [ "$SKIP_APACHE" = false ]; then
@@ -602,18 +545,14 @@ systemctl daemon-reload
 systemctl enable supermon-ng-backend
 systemctl start supermon-ng-backend
 
-# Copy and enable WebSocket service
-if [ -f "$APP_DIR/systemd/supermon-ng-websocket.service" ]; then
-    echo "📦 Installing WebSocket service..."
-    cp "$APP_DIR/systemd/supermon-ng-websocket.service" /etc/systemd/system/
-    systemctl daemon-reload
-    systemctl enable supermon-ng-websocket
-    systemctl start supermon-ng-websocket
-    echo "✅ WebSocket service installed and started"
+# Enable and start websocket service (if it exists)
+if systemctl list-unit-files | grep -q "supermon-ng-websocket.service"; then
+    systemctl enable supermon-ng-websocket.service
+    systemctl start supermon-ng-websocket.service
+    echo "✅ WebSocket service enabled and started"
 else
-    echo "⚠️  WebSocket service file not found, skipping"
+    echo "⚠️  WebSocket service not found, skipping"
 fi
-
 
 # Enable and start node status timer (if it exists)
 if systemctl list-unit-files | grep -q "supermon-ng-node-status.timer"; then

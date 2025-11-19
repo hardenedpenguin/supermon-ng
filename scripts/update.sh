@@ -223,7 +223,7 @@ update_application() {
     # Stop services
     print_status "Stopping services..."
     systemctl stop supermon-ng-backend 2>/dev/null || true
-    systemctl stop supermon-ng-websocket 2>/dev/null || true
+    systemctl stop supermon-ng-websocket.service 2>/dev/null || true
     systemctl stop supermon-ng-node-status.timer 2>/dev/null || true
     
     # Create temporary directory for new files
@@ -402,85 +402,65 @@ update_application() {
 update_services() {
     print_status "Updating system services..."
     
-    # Update backend service
-    cat > "/etc/systemd/system/supermon-ng-backend.service" << EOF
-[Unit]
-Description=Supermon-NG Backend
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/php -S localhost:8000 -t public public/index.php
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
+    # Function to install systemd file from repository
+    install_systemd_file() {
+        local SOURCE_FILE="$1"
+        local TARGET_FILE="$2"
+        local FILE_TYPE="$3"  # "service" or "timer"
+        
+        if [ ! -f "$SOURCE_FILE" ]; then
+            print_error "Source file $SOURCE_FILE not found"
+            return 1
+        fi
+        
+        print_status "Installing $FILE_TYPE file from $SOURCE_FILE..."
+        cp "$SOURCE_FILE" "$TARGET_FILE"
+        
+        # Replace placeholder with actual path
+        sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$TARGET_FILE"
+        
+        # Set proper permissions (644 for systemd files)
+        chmod 644 "$TARGET_FILE"
+        chown root:root "$TARGET_FILE"
+        
+        print_status "$FILE_TYPE file installed: $(basename $TARGET_FILE)"
+    }
     
-    # Update database auto-update service
-    cat > "/etc/systemd/system/supermon-ng-database-update.service" << EOF
-[Unit]
-Description=Supermon-NG Database Auto-Update Service
-After=network.target
-
-[Service]
-Type=oneshot
-User=root
-WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/php $APP_DIR/scripts/database-auto-update.php
-
-[Install]
-WantedBy=multi-user.target
-EOF
+    # Backend service (copy from systemd directory)
+    install_systemd_file \
+        "$PROJECT_ROOT/systemd/supermon-ng-backend.service" \
+        "/etc/systemd/system/supermon-ng-backend.service" \
+        "Service"
     
-    # Update database auto-update timer
-    cat > "/etc/systemd/system/supermon-ng-database-update.timer" << EOF
-[Unit]
-Description=Run Supermon-NG Database Update every 3 hours
-Requires=supermon-ng-database-update.service
-
-[Timer]
-OnBootSec=5min
-OnUnitActiveSec=3h
-AccuracySec=5min
-
-[Install]
-WantedBy=timers.target
-EOF
+    # WebSocket service (copy from systemd directory)
+    install_systemd_file \
+        "$PROJECT_ROOT/systemd/supermon-ng-websocket.service" \
+        "/etc/systemd/system/supermon-ng-websocket.service" \
+        "Service"
     
-    # Update node status service
-    cat > "/etc/systemd/system/supermon-ng-node-status.service" << EOF
-[Unit]
-Description=Supermon-NG Node Status Update Service
-After=network.target
-
-[Service]
-Type=oneshot
-User=root
-WorkingDirectory=$APP_DIR/user_files/sbin
-ExecStart=/usr/bin/python3 $APP_DIR/user_files/sbin/ast_node_status_update.py
-
-[Install]
-WantedBy=multi-user.target
-EOF
+    # Database update service (copy from systemd directory)
+    install_systemd_file \
+        "$PROJECT_ROOT/systemd/supermon-ng-database-update.service" \
+        "/etc/systemd/system/supermon-ng-database-update.service" \
+        "Service"
     
-    # Update node status timer
-    cat > "/etc/systemd/system/supermon-ng-node-status.timer" << EOF
-[Unit]
-Description=Run Supermon-NG Node Status Update every 3 minutes
-Requires=supermon-ng-node-status.service
-
-[Timer]
-OnBootSec=2min
-OnUnitActiveSec=3min
-AccuracySec=30s
-
-[Install]
-WantedBy=timers.target
-EOF
+    # Database update timer (copy from systemd directory)
+    install_systemd_file \
+        "$PROJECT_ROOT/systemd/supermon-ng-database-update.timer" \
+        "/etc/systemd/system/supermon-ng-database-update.timer" \
+        "Timer"
+    
+    # Node status update service (copy from systemd directory)
+    install_systemd_file \
+        "$PROJECT_ROOT/systemd/supermon-ng-node-status.service" \
+        "/etc/systemd/system/supermon-ng-node-status.service" \
+        "Service"
+    
+    # Node status update timer (copy from systemd directory)
+    install_systemd_file \
+        "$PROJECT_ROOT/systemd/supermon-ng-node-status.timer" \
+        "/etc/systemd/system/supermon-ng-node-status.timer" \
+        "Timer"
     
     # Update WebSocket service
     if [ -f "$APP_DIR/systemd/supermon-ng-websocket.service" ]; then
@@ -493,10 +473,13 @@ EOF
     systemctl enable supermon-ng-backend
     systemctl restart supermon-ng-backend
     
-    if [ -f "/etc/systemd/system/supermon-ng-websocket.service" ]; then
-        systemctl enable supermon-ng-websocket
-        systemctl restart supermon-ng-websocket
-        print_status "WebSocket service restarted"
+    # Enable and restart websocket service (if it exists)
+    if systemctl list-unit-files | grep -q "supermon-ng-websocket.service"; then
+        systemctl enable supermon-ng-websocket.service
+        systemctl restart supermon-ng-websocket.service
+        print_status "WebSocket service enabled and restarted"
+    else
+        print_warning "WebSocket service not found, skipping"
     fi
     
     # Enable and start node status timer
