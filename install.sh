@@ -172,6 +172,11 @@ if [ "$(pwd)" != "$APP_DIR" ]; then
         echo "📄 Copying astdb.txt..."
         cp astdb.txt "$APP_DIR/"
     fi
+    # Explicitly copy bin directory if it exists (WebSocket server)
+    if [ -d "bin" ]; then
+        echo "📄 Copying bin directory..."
+        cp -r bin "$APP_DIR/"
+    fi
     cd "$APP_DIR"
 fi
 

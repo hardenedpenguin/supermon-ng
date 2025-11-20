@@ -245,6 +245,7 @@ update_application() {
         "cache"              # Application cache
         "logs"               # Log directory
         "config"             # Performance optimization configurations
+        "bin"                # WebSocket server binary
     )
     
     for file in "${PRODUCTION_FILES[@]}"; do
