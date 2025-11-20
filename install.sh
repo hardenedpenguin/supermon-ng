@@ -420,13 +420,7 @@ else
     ProxyPass /supermon-ng/api http://localhost:8000/api
     ProxyPassReverse /supermon-ng/api http://localhost:8000/api
     
-    # Alias for Supermon-NG application (after ProxyPass)
-    Alias /supermon-ng APP_DIR_PLACEHOLDER/public
-    
-    # Alias for user files
-    Alias /supermon-ng/user_files APP_DIR_PLACEHOLDER/user_files
-    
-    # WebSocket proxy for Supermon-NG nodes
+    # WebSocket proxy for Supermon-NG nodes (must come before Alias directives)
     # All WebSocket connections route to the single router server on port 8105
     # The router extracts the node ID from the path and routes internally
     # MUST use RewriteRule with [P] flag for WebSocket proxying to work correctly
@@ -435,6 +429,12 @@ else
     RewriteCond %{HTTP:Connection} =Upgrade [NC]
     RewriteRule ^/supermon-ng/ws/(.+)$ ws://localhost:8105/supermon-ng/ws/$1 [P,L]
     ProxyPassReverse /supermon-ng/ws/ ws://localhost:8105/supermon-ng/ws/
+    
+    # Alias for Supermon-NG application (after ProxyPass)
+    Alias /supermon-ng APP_DIR_PLACEHOLDER/public
+    
+    # Alias for user files
+    Alias /supermon-ng/user_files APP_DIR_PLACEHOLDER/user_files
     
     # Proxy HamClock requests (adjust IP and port as needed)
     # Uncomment and modify the following lines if you have HamClock running:

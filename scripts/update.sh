@@ -566,40 +566,110 @@ update_apache_config() {
     
     print_status "Updating Apache configuration..."
     
-    # Check if Apache config needs updating
+    # Regenerate Apache configuration template with latest configuration
     APACHE_TEMPLATE="$APP_DIR/apache-config-template.conf"
     APACHE_SITE_FILE="/etc/apache2/sites-available/supermon-ng.conf"
     
-    if [ -f "$APACHE_TEMPLATE" ]; then
-        # Detect IP addresses for new config
-        if [ -f "$APP_DIR/scripts/update.sh" ]; then
-            # Use the IP detection function from install.sh
-            source "$APP_DIR/scripts/update.sh" 2>/dev/null || true
-        fi
+    print_status "Regenerating Apache configuration template..."
+    cat > "$APACHE_TEMPLATE" << APACHE_EOF
+# Supermon-NG Apache Configuration Template
+# Copy this configuration to your Apache sites-available directory
+
+<VirtualHost *:80>
+    DocumentRoot /var/www/html
+    
+    # Proxy configurations (must come before Alias directives)
+    ProxyPreserveHost On
+    
+    # Proxy supermon-ng API requests to backend (must come before Alias)
+    ProxyPass /supermon-ng/api http://localhost:8000/api
+    ProxyPassReverse /supermon-ng/api http://localhost:8000/api
+    
+    # WebSocket proxy for Supermon-NG nodes (must come before Alias directives)
+    # All WebSocket connections route to the single router server on port 8105
+    # The router extracts the node ID from the path and routes internally
+    # MUST use RewriteRule with [P] flag for WebSocket proxying to work correctly
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteCond %{HTTP:Connection} =Upgrade [NC]
+    RewriteRule ^/supermon-ng/ws/(.+)$ ws://localhost:8105/supermon-ng/ws/$1 [P,L]
+    ProxyPassReverse /supermon-ng/ws/ ws://localhost:8105/supermon-ng/ws/
+    
+    # Alias for Supermon-NG application (after ProxyPass)
+    Alias /supermon-ng APP_DIR_PLACEHOLDER/public
+    
+    # Alias for user files
+    Alias /supermon-ng/user_files APP_DIR_PLACEHOLDER/user_files
+    
+    # Proxy HamClock requests (adjust IP and port as needed)
+    # Uncomment and modify the following lines if you have HamClock running:
+    # WebSocket proxy for HamClock (must come before general proxy)
+    # ProxyPass /hamclock/live-ws ws://10.0.0.41:8082/live-ws upgrade=websocket
+    # ProxyPassReverse /hamclock/live-ws ws://10.0.0.41:8082/live-ws
+    # 
+    # General HamClock proxy
+    # ProxyPass /hamclock/ http://10.0.0.41:8082/
+    # ProxyPassReverse /hamclock/ http://10.0.0.41:8082/
+    # 
+    
+    # Configure Supermon-NG directory
+    <Directory "APP_DIR_PLACEHOLDER/public">
+        AllowOverride All
+        Require all granted
         
-        # Update Apache site configuration
-        # Note: No backup of system files - Apache config is managed by installation
-        cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
+        # Ensure index.html is served by default (Vue.js frontend)
+        DirectoryIndex index.html index.php
         
-        # Disable the default site to avoid conflicts
-        print_status "Disabling default Apache site..."
-        a2dissite -q 000-default 2>/dev/null || {
-            print_warning "Failed to disable default site (may not exist)"
-        }
-        
-        # Enable the supermon-ng site
-        print_status "Enabling supermon-ng Apache site..."
-        a2ensite -q supermon-ng 2>/dev/null || {
-            print_warning "Failed to enable Apache site automatically"
-        }
-        
-        # Test and restart Apache
-        if apache2ctl configtest >/dev/null 2>&1; then
-            systemctl restart apache2
-            print_status "Apache configuration updated successfully"
-        else
-            print_warning "Apache configuration test failed. Please check manually."
-        fi
+        # Handle Vue router (SPA) - rewrite all requests to index.html
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^ index.html [QSA,L]
+    </Directory>
+    
+    # Configure user files directory
+    <Directory "APP_DIR_PLACEHOLDER/user_files">
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    # Configure main document root
+    <Directory "/var/www/html">
+        AllowOverride All
+        Require all granted
+        Options Indexes FollowSymLinks
+    </Directory>
+    
+    ErrorLog \${APACHE_LOG_DIR}/supermon-ng_error.log
+    CustomLog \${APACHE_LOG_DIR}/supermon-ng_access.log combined
+</VirtualHost>
+APACHE_EOF
+    # Replace placeholder with actual path
+    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$APACHE_TEMPLATE"
+    print_status "Apache configuration template regenerated"
+    
+    # Update Apache site configuration
+    # Note: No backup of system files - Apache config is managed by installation
+    cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
+    
+    # Disable the default site to avoid conflicts
+    print_status "Disabling default Apache site..."
+    a2dissite -q 000-default 2>/dev/null || {
+        print_warning "Failed to disable default site (may not exist)"
+    }
+    
+    # Enable the supermon-ng site
+    print_status "Enabling supermon-ng Apache site..."
+    a2ensite -q supermon-ng 2>/dev/null || {
+        print_warning "Failed to enable Apache site automatically"
+    }
+    
+    # Test and restart Apache
+    if apache2ctl configtest >/dev/null 2>&1; then
+        systemctl restart apache2
+        print_status "Apache configuration updated successfully"
+    else
+        print_warning "Apache configuration test failed. Please check manually."
     fi
 }
 
