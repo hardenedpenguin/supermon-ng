@@ -62,6 +62,9 @@ $RSTATUSER=array("anarchy");
 // Bubble button
 $BUBLUSER=array("anarchy");
 
+// DVSwitch mode button
+$DVSWITCHUSER=array("anarchy");
+
 // Favorites button
 $FAVUSER=array("anarchy");
 

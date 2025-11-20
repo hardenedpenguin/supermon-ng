@@ -302,6 +302,7 @@ class AuthController
                 'ASTLKUSER' => true,
                 'RSTATUSER' => true,
                 'BUBLUSER' => true,
+                'DVSWITCHUSER' => true,
                 'FAVUSER' => true,
                 'CTRLUSER' => true,
                 'CFGEDUSER' => true,
@@ -338,7 +339,7 @@ class AuthController
         $permissions = [];
         $permissionNames = [
             'PERMUSER', 'CONNECTUSER', 'DISCUSER', 'MONUSER', 'LMONUSER', 'DTMFUSER',
-            'ASTLKUSER', 'RSTATUSER', 'BUBLUSER', 'FAVUSER', 'CTRLUSER',
+            'ASTLKUSER', 'RSTATUSER', 'BUBLUSER', 'DVSWITCHUSER', 'FAVUSER', 'CTRLUSER',
             'CFGEDUSER', 'ASTRELUSER', 'ASTSTRUSER', 'ASTSTPUSER', 'FSTRESUSER',
             'RBTUSER', 'UPDUSER', 'HWTOUSER', 'WIKIUSER', 'CSTATUSER',
             'ASTATUSER', 'EXNUSER', 'ACTNUSER', 'ALLNUSER',
@@ -433,6 +434,7 @@ class AuthController
             'ASTLKUSER' => true,
             'RSTATUSER' => true,
             'BUBLUSER' => true,
+            'DVSWITCHUSER' => false, // Disable DVSwitch for anonymous users (requires configuration)
             'FAVUSER' => true,
             'CTRLUSER' => false, // Disable admin features for anonymous users
             'CFGEDUSER' => true, // Allow config editor for unauthenticated users

@@ -1464,6 +1464,7 @@ class NodeController
                 'ASTLKUSER' => true,
                 'RSTATUSER' => true,
                 'BUBLUSER' => true,
+                'DVSWITCHUSER' => false,
                 'FAVUSER' => true,
                 'CTRLUSER' => false,
                 'CFGEDUSER' => true,
