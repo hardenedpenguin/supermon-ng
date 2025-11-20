@@ -429,7 +429,7 @@ else
     RewriteEngine On
     RewriteCond %{HTTP:Upgrade} =websocket [NC]
     RewriteCond %{HTTP:Connection} =Upgrade [NC]
-    RewriteRule ^/supermon-ng/ws/(.+)$ ws://localhost:8105/supermon-ng/ws/$1 [P,L]
+    RewriteRule ^/supermon-ng/ws/(.+)$ ws://localhost:8105/supermon-ng/ws/\$1 [P,L]
     ProxyPassReverse /supermon-ng/ws/ ws://localhost:8105/supermon-ng/ws/
     
     # Alias for Supermon-NG application (after ProxyPass)
