@@ -424,6 +424,8 @@ else
     # All WebSocket connections route to the single router server on port 8105
     # The router extracts the node ID from the path and routes internally
     # MUST use RewriteRule with [P] flag for WebSocket proxying to work correctly
+    # CRITICAL: The $1 in the target URL preserves the node ID from the path
+    # Without $1, connections will fail with "no valid node ID in path" errors
     RewriteEngine On
     RewriteCond %{HTTP:Upgrade} =websocket [NC]
     RewriteCond %{HTTP:Connection} =Upgrade [NC]

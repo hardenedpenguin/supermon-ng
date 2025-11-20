@@ -159,9 +159,11 @@ class WebSocketRouterService implements MessageComponentInterface
         $nodeId = $this->extractNodeIdFromPath($path);
         
         if (!$nodeId) {
-            $this->logger->warning("WebSocket connection without valid node ID in path", [
+            // Log at INFO level - invalid connections are expected (health checks, wrong URLs, etc.)
+            $this->logger->info("WebSocket connection rejected: no valid node ID in path", [
                 'client_id' => $conn->resourceId,
                 'path' => $path,
+                'remote_address' => $conn->remoteAddress ?? 'unknown',
                 'extracted_parts' => explode('/', trim($path, '/'))
             ]);
             $conn->close();
