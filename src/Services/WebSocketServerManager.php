@@ -89,11 +89,11 @@ class WebSocketServerManager
             'base_port' => $this->basePort
         ]);
         
-        // Get all available nodes from default allmon.ini
-        $nodes = $this->configService->getAvailableNodes(null);
+        // Get all available nodes from all *allmon.ini files (allmon.ini and username-allmon.ini)
+        $nodes = $this->configService->getAllNodesFromAllIniFiles();
         
         if (empty($nodes)) {
-            $this->logger->warning("No nodes found in configuration");
+            $this->logger->warning("No nodes found in any INI file");
             return;
         }
         
@@ -106,8 +106,15 @@ class WebSocketServerManager
             $nodeId = $node['id'];
             
             try {
-                // Get full node configuration
-                $nodeConfig = $this->configService->getNodeConfig($nodeId, null);
+                // Get full node configuration from any INI file
+                $nodeConfig = $this->configService->findNodeConfigInAnyIniFile($nodeId);
+                
+                if ($nodeConfig === null) {
+                    $this->logger->warning("Node config not found in any INI file", [
+                        'node_id' => $nodeId
+                    ]);
+                    continue;
+                }
                 
                 // Calculate port for reference (though we won't create separate servers)
                 // Start at basePort + 1 (8106) since basePort (8105) is reserved for the router

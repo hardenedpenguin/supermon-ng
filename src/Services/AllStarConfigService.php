@@ -216,6 +216,104 @@ class AllStarConfigService
     }
 
     /**
+     * Get all nodes from all *allmon.ini files (allmon.ini and username-allmon.ini)
+     * This is used to create WebSocket services for all configured nodes
+     */
+    public function getAllNodesFromAllIniFiles(): array
+    {
+        $allNodes = [];
+        $nodeIdsSeen = [];
+        
+        // Find all *allmon.ini files in user_files directory
+        $iniFiles = glob($this->userFilesPath . '*allmon.ini');
+        
+        if (empty($iniFiles)) {
+            $this->logger->warning("No *allmon.ini files found", [
+                'path' => $this->userFilesPath
+            ]);
+            return [];
+        }
+        
+        $this->logger->info("Found INI files for WebSocket services", [
+            'files' => array_map('basename', $iniFiles),
+            'count' => count($iniFiles)
+        ]);
+        
+        // Load nodes from each INI file
+        foreach ($iniFiles as $iniFile) {
+            try {
+                $config = $this->parseIniFile($iniFile);
+                
+                foreach ($config as $nodeId => $nodeConfig) {
+                    // Skip non-node sections like [Hubs], [ASL3+], etc.
+                    if (!is_array($nodeConfig) || !isset($nodeConfig['host'])) {
+                        continue;
+                    }
+                    
+                    // Only add if we haven't seen this node ID yet (avoid duplicates)
+                    if (!isset($nodeIdsSeen[$nodeId])) {
+                        $allNodes[] = [
+                            'id' => $nodeId,
+                            'host' => $nodeConfig['host'],
+                            'user' => $nodeConfig['user'] ?? 'admin',
+                            'system' => $nodeConfig['system'] ?? 'Nodes',
+                            'menu' => $nodeConfig['menu'] ?? 'yes',
+                            'hideNodeURL' => $nodeConfig['hideNodeURL'] ?? 'no'
+                        ];
+                        $nodeIdsSeen[$nodeId] = true;
+                    }
+                }
+            } catch (Exception $e) {
+                $this->logger->warning("Failed to load nodes from INI file", [
+                    'file' => basename($iniFile),
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        $this->logger->info("Loaded all nodes from all INI files", [
+            'total_count' => count($allNodes),
+            'unique_node_ids' => array_keys($nodeIdsSeen),
+            'ini_files_checked' => count($iniFiles)
+        ]);
+        
+        return $allNodes;
+    }
+    
+    /**
+     * Find node configuration in any INI file (for WebSocket router)
+     * Returns the node config if found, or null if not found
+     */
+    public function findNodeConfigInAnyIniFile(string $nodeId): ?array
+    {
+        // First try default allmon.ini
+        try {
+            $config = $this->getNodeConfig($nodeId, null);
+            return $config;
+        } catch (Exception $e) {
+            // Node not found in default, continue to check other files
+        }
+        
+        // Find all *allmon.ini files and check each one
+        $iniFiles = glob($this->userFilesPath . '*allmon.ini');
+        
+        foreach ($iniFiles as $iniFile) {
+            try {
+                $config = $this->parseIniFile($iniFile);
+                
+                if (isset($config[$nodeId]) && is_array($config[$nodeId])) {
+                    return $config[$nodeId];
+                }
+            } catch (Exception $e) {
+                // Continue to next file
+                continue;
+            }
+        }
+        
+        return null;
+    }
+
+    /**
      * Clear the configuration cache
      */
     public function clearCache(): void
