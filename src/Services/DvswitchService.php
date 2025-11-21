@@ -39,11 +39,14 @@ class DvswitchService
      * Get ABINFO file path for a specific node
      * ABINFO files are used by DVSwitch to track state per node
      * The file name uses a port number, not the node ID
+     * Format: /tmp/ABInfo_{port}.json (e.g., /tmp/ABInfo_34001.json)
      * 
      * Supports user-specific INI files (username-allmon.ini) for multi-user/multi-node setups.
      * If a user has a username-allmon.ini file configured, abinfo_file can be defined there.
+     * 
+     * @throws Exception if neither abinfo_file nor abinfo_port is configured
      */
-    private function getAbinfoFileForNode(string $nodeId, ?string $username = null): ?string
+    private function getAbinfoFileForNode(string $nodeId, ?string $username = null): string
     {
         // Try user-specific config first (if username provided)
         if ($username) {
@@ -55,25 +58,14 @@ class DvswitchService
                     return $nodeConfig['abinfo_file'];
                 }
                 
-                // Check if node has abinfo_port configured (port number for ABINFO file)
+                // Check if node has abinfo_port configured (port number for ABInfo file)
                 if (isset($nodeConfig['abinfo_port']) && !empty($nodeConfig['abinfo_port'])) {
-                    return '/tmp/ABINFO_' . $nodeConfig['abinfo_port'] . '.json';
+                    return '/tmp/ABInfo_' . $nodeConfig['abinfo_port'] . '.json';
                 }
                 
-                // Check if node has abinfo_suffix (will be combined with /tmp/ABINFO_)
+                // Check if node has abinfo_suffix (will be combined with /tmp/ABInfo_)
                 if (isset($nodeConfig['abinfo_suffix']) && !empty($nodeConfig['abinfo_suffix'])) {
-                    return '/tmp/ABINFO_' . $nodeConfig['abinfo_suffix'] . '.json';
-                }
-                
-                // Extract port from host configuration (format: host:port)
-                if (isset($nodeConfig['host']) && !empty($nodeConfig['host'])) {
-                    $hostParts = explode(':', $nodeConfig['host']);
-                    if (count($hostParts) >= 2) {
-                        $port = trim($hostParts[1]);
-                        if (!empty($port)) {
-                            return '/tmp/ABINFO_' . $port . '.json';
-                        }
-                    }
+                    return '/tmp/ABInfo_' . $nodeConfig['abinfo_suffix'] . '.json';
                 }
             } catch (Exception $e) {
                 $this->logger->debug("Node not found in user-specific config, trying default", [
@@ -93,25 +85,14 @@ class DvswitchService
                 return $nodeConfig['abinfo_file'];
             }
             
-            // Check if node has abinfo_port configured (port number for ABINFO file)
+            // Check if node has abinfo_port configured (port number for ABInfo file)
             if (isset($nodeConfig['abinfo_port']) && !empty($nodeConfig['abinfo_port'])) {
-                return '/tmp/ABINFO_' . $nodeConfig['abinfo_port'] . '.json';
+                return '/tmp/ABInfo_' . $nodeConfig['abinfo_port'] . '.json';
             }
             
-            // Check if node has abinfo_suffix (will be combined with /tmp/ABINFO_)
+            // Check if node has abinfo_suffix (will be combined with /tmp/ABInfo_)
             if (isset($nodeConfig['abinfo_suffix']) && !empty($nodeConfig['abinfo_suffix'])) {
-                return '/tmp/ABINFO_' . $nodeConfig['abinfo_suffix'] . '.json';
-            }
-            
-            // Extract port from host configuration (format: host:port)
-            if (isset($nodeConfig['host']) && !empty($nodeConfig['host'])) {
-                $hostParts = explode(':', $nodeConfig['host']);
-                if (count($hostParts) >= 2) {
-                    $port = trim($hostParts[1]);
-                    if (!empty($port)) {
-                        return '/tmp/ABINFO_' . $port . '.json';
-                    }
-                }
+                return '/tmp/ABInfo_' . $nodeConfig['abinfo_suffix'] . '.json';
             }
         } catch (Exception $e) {
             $this->logger->debug("Could not get node config for ABINFO file", [
@@ -120,11 +101,18 @@ class DvswitchService
             ]);
         }
         
-        // Fallback: use node ID if port cannot be determined
-        $this->logger->warning('Could not determine port for ABINFO file, using node ID', [
-            'node_id' => $nodeId
+        // No valid configuration found - fail with warning
+        $errorMessage = "ABINFO file not configured for node {$nodeId}. " .
+                       "Please set either 'abinfo_file' (full path) or 'abinfo_port' (port number) " .
+                       "in allmon.ini or username-allmon.ini for this node. " .
+                       "Example: abinfo_port=34001 (creates /tmp/ABInfo_34001.json)";
+        
+        $this->logger->warning($errorMessage, [
+            'node_id' => $nodeId,
+            'username' => $username
         ]);
-        return '/tmp/ABINFO_' . $nodeId . '.json';
+        
+        throw new Exception($errorMessage);
     }
     
     /**

@@ -13,6 +13,7 @@
 # 2. Per-node ABINFO file mapping (for multiple nodes):
 #    Each node can use a different ABINFO JSON file to track its state separately.
 #    The ABINFO file name uses a PORT NUMBER, not the node ID.
+#    Format: /tmp/ABInfo_{port}.json (e.g., /tmp/ABInfo_34001.json)
 #    
 #    Configuration can be set in:
 #    - allmon.ini (default configuration)
@@ -20,16 +21,18 @@
 #    
 #    Add to node section in allmon.ini or username-allmon.ini:
 #    [1998]
-#    host=127.0.0.1:5038
-#    abinfo_file=/tmp/ABINFO_5038.json
-#    # OR use port number (will be combined with /tmp/ABINFO_):
-#    abinfo_port=5038
-#    # OR use suffix (will be combined with /tmp/ABINFO_):
-#    abinfo_suffix=5038
-#    # If not specified, defaults to extracting port from host (host:port)
-#    # Fallback: /tmp/ABINFO_{nodeId}.json if port cannot be determined
+#    host=127.0.0.1:34001
+#    # Option 1: Set full path directly
+#    abinfo_file=/tmp/ABInfo_34001.json
+#    # Option 2: Set port number (will be combined with /tmp/ABInfo_)
+#    abinfo_port=34001
+#    # Option 3: Set suffix (will be combined with /tmp/ABInfo_)
+#    abinfo_suffix=34001
 #    
-# If neither is configured, the system uses:
+#    REQUIRED: Either abinfo_file OR abinfo_port must be configured.
+#    If neither is set, DVSwitch operations will fail with a configuration error.
+#
+# DEFAULT BEHAVIOR (if per-node configs are not used):
 # - Default dvswitch_path: /opt/MMDVM_Bridge/dvswitch.sh
 # - Global config: dvswitch_config.yml
 #
