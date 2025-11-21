@@ -316,7 +316,8 @@ onMounted(() => {
 }
 
 .dvswitch-modal {
-  background: white;
+  background: var(--container-bg);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 0;
   max-width: 600px;
@@ -324,6 +325,7 @@ onMounted(() => {
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  color: var(--text-color);
 }
 
 .dvswitch-modal-header {
@@ -331,14 +333,14 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid #ddd;
-  background-color: #f5f5f5;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--table-header-bg);
 }
 
 .dvswitch-modal-header h2 {
   margin: 0;
   font-size: 1.5em;
-  color: #333;
+  color: var(--text-color);
 }
 
 .close-button {
@@ -346,15 +348,18 @@ onMounted(() => {
   border: none;
   font-size: 2em;
   cursor: pointer;
-  color: #666;
+  color: var(--text-color);
   padding: 0;
   width: 30px;
   height: 30px;
   line-height: 1;
+  opacity: 0.7;
+  transition: opacity 0.2s;
 }
 
 .close-button:hover {
-  color: #000;
+  opacity: 1;
+  color: var(--primary-color);
 }
 
 .dvswitch-modal-content {
@@ -371,18 +376,19 @@ onMounted(() => {
 }
 
 .loading-message {
-  background-color: #e3f2fd;
-  color: #1976d2;
+  background-color: var(--link-color);
+  color: var(--background-color);
+  opacity: 0.2;
 }
 
 .error-message {
-  background-color: #ffebee;
-  color: #c62828;
+  background-color: var(--error-color);
+  color: var(--background-color);
 }
 
 .success-message {
-  background-color: #e8f5e9;
-  color: #2e7d32;
+  background-color: var(--success-color);
+  color: var(--background-color);
 }
 
 .dvswitch-section {
@@ -399,20 +405,22 @@ onMounted(() => {
 
 .dvswitch-input-section label {
   font-weight: bold;
-  color: #333;
+  color: var(--text-color);
 }
 
 .dvswitch-input-section select {
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   font-size: 1em;
-  background-color: white;
+  background-color: var(--input-bg);
+  color: var(--input-text);
 }
 
 .dvswitch-input-section select:disabled {
-  background-color: #f5f5f5;
+  background-color: var(--border-color);
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .dvswitch-buttons {
@@ -428,30 +436,33 @@ onMounted(() => {
   border-radius: 4px;
   font-size: 1em;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, opacity 0.2s;
 }
 
 .action-button {
-  background-color: #1976d2;
-  color: white;
+  background-color: var(--link-color);
+  color: var(--background-color);
 }
 
 .action-button:hover:not(:disabled) {
-  background-color: #1565c0;
+  opacity: 0.9;
+  filter: brightness(1.1);
 }
 
 .action-button:disabled {
-  background-color: #ccc;
+  background-color: var(--border-color);
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .cancel-button {
-  background-color: #757575;
-  color: white;
+  background-color: var(--border-color);
+  color: var(--text-color);
 }
 
 .cancel-button:hover {
-  background-color: #616161;
+  background-color: var(--primary-color);
+  color: var(--background-color);
 }
 </style>
 
