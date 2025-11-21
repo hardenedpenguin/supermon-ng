@@ -120,6 +120,7 @@ interface Props {
   node: {
     id: string
     info?: string
+    callsign?: string
   }
   showDetail?: boolean
   astdb?: Record<string, any>
@@ -149,7 +150,12 @@ const tableClass = computed(() => {
 
 const nodeTitle = computed(() => {
   const nodeId = props.node.id
-  const nodeInfo = props.node.info || 'Node not in database'
+  let nodeInfo = props.node.info || 'Node not in database'
+  
+  // Prepend callsign if available and not already in info (like in 4.0.9)
+  if (props.node.callsign && props.node.callsign !== 'N/A' && !nodeInfo.startsWith(props.node.callsign)) {
+    nodeInfo = `${props.node.callsign} ${nodeInfo}`.trim()
+  }
   
   // Check for custom URL
   const customUrlKey = `URL_${nodeId}`

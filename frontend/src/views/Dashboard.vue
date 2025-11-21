@@ -149,7 +149,7 @@
         <NodeTable 
           v-for="(node, index) in displayedNodes"
           :key="String(node.id)"
-          :node="{ id: String(node.id), info: (node as NodeType).info }"
+          :node="{ id: String(node.id), info: (node as NodeType).info, callsign: (node as NodeType).callsign }"
           :show-detail="true"
           :astdb="realTimeStore.astdb"
           :config="realTimeStore.nodeConfig"
