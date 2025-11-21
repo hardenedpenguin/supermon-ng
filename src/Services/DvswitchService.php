@@ -16,7 +16,7 @@ class DvswitchService
     private LoggerInterface $logger;
     private AllStarConfigService $configService;
     private string $userFilesPath;
-    private ?string $defaultDvswitchPath;
+    private string $dvswitchPath;
     private ?string $defaultConfigPath;
     private array $nodeModesCache = [];
     
@@ -30,31 +30,101 @@ class DvswitchService
         $this->configService = $configService;
         $this->userFilesPath = $this->configService->getUserFilesPath();
         
-        // Default paths
-        $this->defaultDvswitchPath = $defaultDvswitchPath ?? '/opt/MMDVM_Bridge/dvswitch.sh';
+        // Hardcoded DVSwitch path
+        $this->dvswitchPath = '/opt/MMDVM_Bridge/dvswitch.sh';
         $this->defaultConfigPath = $defaultConfigPath ?? $this->userFilesPath . 'dvswitch_config.yml';
     }
     
     /**
-     * Get DVSwitch path for a specific node
+     * Get ABINFO file path for a specific node
+     * ABINFO files are used by DVSwitch to track state per node
+     * The file name uses a port number, not the node ID
+     * 
+     * Supports user-specific INI files (username-allmon.ini) for multi-user/multi-node setups.
+     * If a user has a username-allmon.ini file configured, abinfo_file can be defined there.
      */
-    private function getDvswitchPathForNode(string $nodeId, ?string $username = null): string
+    private function getAbinfoFileForNode(string $nodeId, ?string $username = null): ?string
     {
+        // Try user-specific config first (if username provided)
+        if ($username) {
+            try {
+                $nodeConfig = $this->configService->getNodeConfig($nodeId, $username);
+                
+                // Check if node has a specific abinfo_file configured
+                if (isset($nodeConfig['abinfo_file']) && !empty($nodeConfig['abinfo_file'])) {
+                    return $nodeConfig['abinfo_file'];
+                }
+                
+                // Check if node has abinfo_port configured (port number for ABINFO file)
+                if (isset($nodeConfig['abinfo_port']) && !empty($nodeConfig['abinfo_port'])) {
+                    return '/tmp/ABINFO_' . $nodeConfig['abinfo_port'] . '.json';
+                }
+                
+                // Check if node has abinfo_suffix (will be combined with /tmp/ABINFO_)
+                if (isset($nodeConfig['abinfo_suffix']) && !empty($nodeConfig['abinfo_suffix'])) {
+                    return '/tmp/ABINFO_' . $nodeConfig['abinfo_suffix'] . '.json';
+                }
+                
+                // Extract port from host configuration (format: host:port)
+                if (isset($nodeConfig['host']) && !empty($nodeConfig['host'])) {
+                    $hostParts = explode(':', $nodeConfig['host']);
+                    if (count($hostParts) >= 2) {
+                        $port = trim($hostParts[1]);
+                        if (!empty($port)) {
+                            return '/tmp/ABINFO_' . $port . '.json';
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                $this->logger->debug("Node not found in user-specific config, trying default", [
+                    'node_id' => $nodeId,
+                    'username' => $username,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        // Fallback to default allmon.ini if user-specific config doesn't have the node
         try {
-            $nodeConfig = $this->configService->getNodeConfig($nodeId, $username);
+            $nodeConfig = $this->configService->getNodeConfig($nodeId, null);
             
-            // Check if node has a specific dvswitch_path configured
-            if (isset($nodeConfig['dvswitch_path']) && !empty($nodeConfig['dvswitch_path'])) {
-                return $nodeConfig['dvswitch_path'];
+            // Check if node has a specific abinfo_file configured
+            if (isset($nodeConfig['abinfo_file']) && !empty($nodeConfig['abinfo_file'])) {
+                return $nodeConfig['abinfo_file'];
+            }
+            
+            // Check if node has abinfo_port configured (port number for ABINFO file)
+            if (isset($nodeConfig['abinfo_port']) && !empty($nodeConfig['abinfo_port'])) {
+                return '/tmp/ABINFO_' . $nodeConfig['abinfo_port'] . '.json';
+            }
+            
+            // Check if node has abinfo_suffix (will be combined with /tmp/ABINFO_)
+            if (isset($nodeConfig['abinfo_suffix']) && !empty($nodeConfig['abinfo_suffix'])) {
+                return '/tmp/ABINFO_' . $nodeConfig['abinfo_suffix'] . '.json';
+            }
+            
+            // Extract port from host configuration (format: host:port)
+            if (isset($nodeConfig['host']) && !empty($nodeConfig['host'])) {
+                $hostParts = explode(':', $nodeConfig['host']);
+                if (count($hostParts) >= 2) {
+                    $port = trim($hostParts[1]);
+                    if (!empty($port)) {
+                        return '/tmp/ABINFO_' . $port . '.json';
+                    }
+                }
             }
         } catch (Exception $e) {
-            $this->logger->debug("Could not get node config for DVSwitch path", [
+            $this->logger->debug("Could not get node config for ABINFO file", [
                 'node_id' => $nodeId,
                 'error' => $e->getMessage()
             ]);
         }
         
-        return $this->defaultDvswitchPath;
+        // Fallback: use node ID if port cannot be determined
+        $this->logger->warning('Could not determine port for ABINFO file, using node ID', [
+            'node_id' => $nodeId
+        ]);
+        return '/tmp/ABINFO_' . $nodeId . '.json';
     }
     
     /**
@@ -77,8 +147,7 @@ class DvswitchService
      */
     public function isConfiguredForNode(string $nodeId, ?string $username = null): bool
     {
-        $dvswitchPath = $this->getDvswitchPathForNode($nodeId, $username);
-        return file_exists($dvswitchPath) && is_executable($dvswitchPath);
+        return file_exists($this->dvswitchPath) && is_executable($this->dvswitchPath);
     }
     
     /**
@@ -183,14 +252,12 @@ class DvswitchService
      */
     public function switchMode(string $nodeId, string $modeName, ?string $username = null): array
     {
-        $dvswitchPath = $this->getDvswitchPathForNode($nodeId, $username);
-        
-        if (!file_exists($dvswitchPath)) {
-            throw new Exception("DVSwitch script not found at: {$dvswitchPath} for node {$nodeId}");
+        if (!file_exists($this->dvswitchPath)) {
+            throw new Exception("DVSwitch script not found at: {$this->dvswitchPath} for node {$nodeId}");
         }
         
-        if (!is_executable($dvswitchPath)) {
-            throw new Exception("DVSwitch script is not executable: {$dvswitchPath} for node {$nodeId}");
+        if (!is_executable($this->dvswitchPath)) {
+            throw new Exception("DVSwitch script is not executable: {$this->dvswitchPath} for node {$nodeId}");
         }
         
         // Validate mode exists for this node
@@ -207,10 +274,21 @@ class DvswitchService
             throw new Exception("Mode '{$modeName}' not found in configuration for node {$nodeId}");
         }
         
-        // Execute dvswitch.sh mode command
-        $command = escapeshellarg($dvswitchPath) . ' mode ' . escapeshellarg($modeName);
+        // Get ABINFO file for this node
+        $abinfoFile = $this->getAbinfoFileForNode($nodeId, $username);
+        
+        // Execute dvswitch.sh mode command with ABINFO parameter
+        $command = 'ABINFO=' . escapeshellarg($abinfoFile) . ' ' . escapeshellarg($this->dvswitchPath) . ' mode ' . escapeshellarg($modeName);
+        
         $output = [];
         $returnVar = 0;
+        
+        $this->logger->debug('Executing DVSwitch mode command', [
+            'node_id' => $nodeId,
+            'mode' => $modeName,
+            'abinfo_file' => $abinfoFile,
+            'command' => $command
+        ]);
         
         exec($command . ' 2>&1', $output, $returnVar);
         
@@ -247,20 +325,29 @@ class DvswitchService
      */
     public function switchTalkgroup(string $nodeId, string $tgid, ?string $username = null): array
     {
-        $dvswitchPath = $this->getDvswitchPathForNode($nodeId, $username);
-        
-        if (!file_exists($dvswitchPath)) {
-            throw new Exception("DVSwitch script not found at: {$dvswitchPath} for node {$nodeId}");
+        if (!file_exists($this->dvswitchPath)) {
+            throw new Exception("DVSwitch script not found at: {$this->dvswitchPath} for node {$nodeId}");
         }
         
-        if (!is_executable($dvswitchPath)) {
-            throw new Exception("DVSwitch script is not executable: {$dvswitchPath} for node {$nodeId}");
+        if (!is_executable($this->dvswitchPath)) {
+            throw new Exception("DVSwitch script is not executable: {$this->dvswitchPath} for node {$nodeId}");
         }
         
-        // Execute dvswitch.sh tune command
-        $command = escapeshellarg($dvswitchPath) . ' tune ' . escapeshellarg($tgid);
+        // Get ABINFO file for this node
+        $abinfoFile = $this->getAbinfoFileForNode($nodeId, $username);
+        
+        // Execute dvswitch.sh tune command with ABINFO parameter
+        $command = 'ABINFO=' . escapeshellarg($abinfoFile) . ' ' . escapeshellarg($this->dvswitchPath) . ' tune ' . escapeshellarg($tgid);
+        
         $output = [];
         $returnVar = 0;
+        
+        $this->logger->debug('Executing DVSwitch tune command', [
+            'node_id' => $nodeId,
+            'tgid' => $tgid,
+            'abinfo_file' => $abinfoFile,
+            'command' => $command
+        ]);
         
         exec($command . ' 2>&1', $output, $returnVar);
         

@@ -10,14 +10,30 @@
 #    Create: dvswitch_config_{nodeId}.yml (e.g., dvswitch_config_1998.yml)
 #    This file will be used for that specific node instead of the global config
 #
-# 2. Per-node dvswitch_path in allmon.ini:
-#    Add to node section in allmon.ini:
+# 2. Per-node ABINFO file mapping (for multiple nodes):
+#    Each node can use a different ABINFO JSON file to track its state separately.
+#    The ABINFO file name uses a PORT NUMBER, not the node ID.
+#    
+#    Configuration can be set in:
+#    - allmon.ini (default configuration)
+#    - username-allmon.ini (user-specific configuration for multi-user setups)
+#    
+#    Add to node section in allmon.ini or username-allmon.ini:
 #    [1998]
 #    host=127.0.0.1:5038
-#    user=admin
-#    passwd=
-#    dvswitch_path=/opt/MMDVM_Bridge/dvswitch.sh
-#    # ... other node settings
+#    abinfo_file=/tmp/ABINFO_5038.json
+#    # OR use port number (will be combined with /tmp/ABINFO_):
+#    abinfo_port=5038
+#    # OR use suffix (will be combined with /tmp/ABINFO_):
+#    abinfo_suffix=5038
+#    # If not specified, defaults to extracting port from host (host:port)
+#    # Fallback: /tmp/ABINFO_{nodeId}.json if port cannot be determined
+#    
+#    Example for user-specific configuration (username-allmon.ini):
+#    [1998]
+#    host=127.0.0.1:5038
+#    abinfo_file=/tmp/ABINFO_user1_5038.json
+#    # This allows different users to have different ABINFO files for the same node
 #
 # If neither is configured, the system uses:
 # - Default dvswitch_path: /opt/MMDVM_Bridge/dvswitch.sh
