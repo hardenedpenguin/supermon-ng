@@ -64,6 +64,10 @@
                 {{ tg.alias }} ({{ tg.tgid }})
               </option>
             </select>
+            <!-- TGIF Network Note -->
+            <div v-if="selectedTalkgroup && selectedTalkgroup.includes('tgif.network')" class="tgif-note">
+              <small>ℹ️ Note: TGIF Network requires a key-up (transmission) after switching talkgroups for the change to take effect on the network.</small>
+            </div>
           </div>
           
           <!-- Action Buttons -->
@@ -463,6 +467,21 @@ onMounted(() => {
 .cancel-button:hover {
   background-color: var(--primary-color);
   color: var(--background-color);
+}
+
+.tgif-note {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background-color: var(--link-color);
+  color: var(--background-color);
+  border-radius: 4px;
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+.tgif-note small {
+  display: block;
+  line-height: 1.4;
 }
 </style>
 
