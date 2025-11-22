@@ -330,6 +330,14 @@ update_application() {
             fi
         done
         
+        # Protect ALL dvswitch_config*.yml files (user-specific DVSwitch configurations)
+        print_status "Protecting DVSwitch configuration files (dvswitch_config*.yml)..."
+        find "$APP_DIR/user_files" -maxdepth 1 -name "dvswitch_config*.yml" | while read -r config_file; do
+            filename=$(basename "$config_file")
+            print_status "Preserving DVSwitch configuration file: $filename"
+            cp "$config_file" "$TEMP_DIR/user_files/"
+        done
+        
         # Always preserve critical root-level files from the existing installation
         for critical_file in "${CRITICAL_ROOT_FILES[@]}"; do
             if [ -f "$APP_DIR/$critical_file" ]; then
