@@ -52,20 +52,35 @@
           </div>
           
           <!-- Talkgroup Selection -->
-          <div v-if="selectedMode && talkgroups.length > 0" class="dvswitch-input-section">
+          <div v-if="selectedMode" class="dvswitch-input-section">
             <label for="dvswitch-talkgroup">Talkgroup:</label>
             <select 
               id="dvswitch-talkgroup"
               v-model="selectedTalkgroup" 
+              @change="onTalkgroupChange"
               :disabled="switching"
             >
               <option value="">Select a talkgroup</option>
               <option v-for="tg in talkgroups" :key="tg.tgid" :value="tg.tgid">
                 {{ tg.alias }} ({{ tg.tgid }})
               </option>
+              <option value="__CUSTOM__">Custom TG</option>
             </select>
+            
+            <!-- Custom Talkgroup Input (shown when Custom TG is selected) -->
+            <div v-if="selectedTalkgroup === '__CUSTOM__'" class="custom-tg-input">
+              <input
+                id="custom-talkgroup"
+                v-model="customTalkgroup"
+                type="text"
+                placeholder="Enter custom talkgroup ID"
+                :disabled="switching"
+                class="custom-tg-field"
+              />
+            </div>
+            
             <!-- TGIF Network Note -->
-            <div v-if="selectedTalkgroup && selectedTalkgroup.includes('tgif.network')" class="tgif-note">
+            <div v-if="effectiveTalkgroup && effectiveTalkgroup.includes('tgif.network')" class="tgif-note">
               <small>ℹ️ Note: TGIF Network requires a key-up (transmission) after switching talkgroups for the change to take effect on the network.</small>
             </div>
           </div>
@@ -81,9 +96,9 @@
             </button>
             
             <button 
-              v-if="selectedNode && selectedMode && selectedTalkgroup"
+              v-if="selectedNode && selectedMode && effectiveTalkgroup"
               @click="switchTalkgroup" 
-              :disabled="!selectedTalkgroup || switching"
+              :disabled="!effectiveTalkgroup || switching"
               class="action-button"
             >
               {{ switching ? 'Switching...' : 'Switch Talkgroup' }}
@@ -103,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { api } from '@/utils/api'
 
 interface Mode {
@@ -136,11 +151,20 @@ const talkgroups = ref<Talkgroup[]>([])
 const selectedNode = ref('')
 const selectedMode = ref('')
 const selectedTalkgroup = ref('')
+const customTalkgroup = ref('')
 const loading = ref(false)
 const loadingModes = ref(false)
 const switching = ref(false)
 const error = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
+
+// Computed property to get the effective talkgroup (either from dropdown or custom input)
+const effectiveTalkgroup = computed(() => {
+  if (selectedTalkgroup.value === '__CUSTOM__') {
+    return customTalkgroup.value.trim()
+  }
+  return selectedTalkgroup.value
+})
 
 const closeModal = () => {
   emit('update:isVisible', false)
@@ -149,6 +173,7 @@ const closeModal = () => {
     selectedNode.value = ''
     selectedMode.value = ''
     selectedTalkgroup.value = ''
+    customTalkgroup.value = ''
     modes.value = []
     talkgroups.value = []
     error.value = null
@@ -182,6 +207,7 @@ const onNodeChange = async () => {
   // Reset mode and talkgroup when node changes
   selectedMode.value = ''
   selectedTalkgroup.value = ''
+  customTalkgroup.value = ''
   modes.value = []
   talkgroups.value = []
   
@@ -217,6 +243,7 @@ const onModeChange = async () => {
   if (!selectedMode.value || !selectedNode.value) {
     talkgroups.value = []
     selectedTalkgroup.value = ''
+    customTalkgroup.value = ''
     return
   }
   
@@ -235,6 +262,13 @@ const onModeChange = async () => {
     console.error('Error loading talkgroups:', err)
   } finally {
     loadingModes.value = false
+  }
+}
+
+const onTalkgroupChange = () => {
+  // Clear custom talkgroup when switching away from custom option
+  if (selectedTalkgroup.value !== '__CUSTOM__') {
+    customTalkgroup.value = ''
   }
 }
 
@@ -267,19 +301,20 @@ const switchMode = async () => {
 }
 
 const switchTalkgroup = async () => {
-  if (!selectedTalkgroup.value || !selectedNode.value) return
+  const tgid = effectiveTalkgroup.value
+  if (!tgid || !selectedNode.value) return
   
   switching.value = true
   error.value = null
   successMessage.value = null
   
   try {
-    const tgid = encodeURIComponent(selectedTalkgroup.value)
-    const response = await api.post(`/dvswitch/node/${encodeURIComponent(selectedNode.value)}/tune/${tgid}`, {
+    const encodedTgid = encodeURIComponent(tgid)
+    const response = await api.post(`/dvswitch/node/${encodeURIComponent(selectedNode.value)}/tune/${encodedTgid}`, {
       node: selectedNode.value
     })
     if (response.data.success) {
-      successMessage.value = response.data.data?.message || `Switched node ${selectedNode.value} to talkgroup: ${selectedTalkgroup.value}`
+      successMessage.value = response.data.data?.message || `Switched node ${selectedNode.value} to talkgroup: ${tgid}`
     } else {
       error.value = response.data.message || 'Failed to switch talkgroup'
     }
@@ -425,6 +460,31 @@ onMounted(() => {
   background-color: var(--border-color);
   cursor: not-allowed;
   opacity: 0.6;
+}
+
+.custom-tg-input {
+  margin-top: 8px;
+}
+
+.custom-tg-field {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1em;
+  background-color: var(--input-bg);
+  color: var(--input-text);
+}
+
+.custom-tg-field:disabled {
+  background-color: var(--border-color);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.custom-tg-field:focus {
+  outline: none;
+  border-color: var(--primary-color);
 }
 
 .dvswitch-buttons {
