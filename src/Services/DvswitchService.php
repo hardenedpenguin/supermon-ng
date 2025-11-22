@@ -474,6 +474,20 @@ class DvswitchService
             'username' => $username ?? 'null'
         ]);
         
+        // Extract talkgroup number from connection string format if needed
+        // Format: password@server:port!talkgroup or just talkgroup number
+        // STFU's txTg command expects just the talkgroup number
+        $originalTgid = $tgid;
+        if (strpos($tgid, '!') !== false) {
+            // Extract talkgroup from format: password@server:port!talkgroup
+            $parts = explode('!', $tgid);
+            $tgid = end($parts);
+            $this->logger->info('Extracted talkgroup from connection string', [
+                'original' => $originalTgid,
+                'extracted' => $tgid
+            ]);
+        }
+        
         if (!file_exists($this->dvswitchPath)) {
             throw new Exception("DVSwitch script not found at: {$this->dvswitchPath} for node {$nodeId}");
         }

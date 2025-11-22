@@ -199,9 +199,12 @@ class NodeController
 
         $this->logger->info("Fetching node details", ['node_id' => $nodeId]);
 
+        // Get current user (null when logged out - that's fine, will use default config)
+        $currentUser = $this->getCurrentUser();
+
         // Get node configuration
         try {
-            $nodeConfig = $this->configService->getNodeConfig($nodeId);
+            $nodeConfig = $this->configService->getNodeConfig($nodeId, $currentUser);
             if (!$nodeConfig) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -1210,6 +1213,29 @@ class NodeController
                     $curNodes[$n]['mode'] = $modes[$n]['mode'];
                 } else {
                     $curNodes[$n]['mode'] = $isEcholink ? 'Echolink' : 'Allstar';
+                }
+            }
+        }
+        
+        // Also add nodes from LinkedNodes that aren't already in curNodes
+        // This handles connections that show up as T546050 in LinkedNodes but not in Conn: lines
+        foreach ($allLinkedNodes as $linkedNodeId) {
+            if (!isset($curNodes[$linkedNodeId])) {
+                // This is a linked node that wasn't in the direct connections
+                $curNodes[$linkedNodeId]['node'] = $linkedNodeId;
+                $curNodes[$linkedNodeId]['info'] = \getAstInfo($fp, $linkedNodeId);
+                $curNodes[$linkedNodeId]['ip'] = 'Indirect'; // Linked nodes don't have direct IP
+                $curNodes[$linkedNodeId]['direction'] = isset($modes[$linkedNodeId]) ? ($modes[$linkedNodeId]['mode'] == 'T' ? 'OUT' : 'IN') : 'unknown';
+                $curNodes[$linkedNodeId]['elapsed'] = 'unknown';
+                $curNodes[$linkedNodeId]['link'] = 'LINKED';
+                $curNodes[$linkedNodeId]['keyed'] = 'n/a';
+                $curNodes[$linkedNodeId]['last_keyed'] = '-1';
+                $curNodes[$linkedNodeId]['mode'] = isset($modes[$linkedNodeId]) ? $modes[$linkedNodeId]['mode'] : 'Allstar';
+                
+                // Use keyed timing data from SawStat if available
+                if (isset($keyups[$linkedNodeId])) {
+                    $curNodes[$linkedNodeId]['keyed'] = ($keyups[$linkedNodeId]['isKeyed'] == 1) ? 'yes' : 'no';
+                    $curNodes[$linkedNodeId]['last_keyed'] = $keyups[$linkedNodeId]['keyed'];
                 }
             }
         }
@@ -3539,32 +3565,45 @@ class NodeController
                 $lines = explode("\n", $connectedResponse);
                 $connectedNodes = [];
                 foreach ($lines as $line) {
-                    if (preg_match('/Node\s+(\d+)/', $line, $matches)) {
-                        $connectedNodeId = $matches[1];
-                        // Get additional info for each connected node
-                        $nodeInfoResponse = \SimpleAmiClient::command($ami, "asterisk -rx 'rpt stats $connectedNodeId'");
-                        $info = 'Unknown';
-                        $ip = null;
-                        if ($nodeInfoResponse) {
-                            if (preg_match('/Info:\s*(.+)/', $nodeInfoResponse, $infoMatches)) {
-                                $info = trim($infoMatches[1]);
+                    $line = trim($line);
+                    // Skip empty lines and header
+                    if (empty($line) || strpos($line, 'CONNECTED NODES') !== false) {
+                        continue;
+                    }
+                    
+                    // Parse connected nodes - format is "T546050" or "R546050" (space-separated or comma-separated)
+                    // Handle both space-separated and comma-separated formats
+                    $nodeIds = preg_split('/[\s,]+/', $line);
+                    foreach ($nodeIds as $nodeItem) {
+                        $nodeItem = trim($nodeItem);
+                        // Match format: T546050 or R546050 (T = Transmit, R = Receive)
+                        if (preg_match('/^[TR](\d+)$/', $nodeItem, $matches)) {
+                            $connectedNodeId = $matches[1];
+                            // Get additional info for each connected node
+                            $nodeInfoResponse = \SimpleAmiClient::command($ami, "asterisk -rx 'rpt stats $connectedNodeId'");
+                            $info = 'Unknown';
+                            $ip = null;
+                            if ($nodeInfoResponse) {
+                                if (preg_match('/Info:\s*(.+)/', $nodeInfoResponse, $infoMatches)) {
+                                    $info = trim($infoMatches[1]);
+                                }
+                                if (preg_match('/IP:\s*(\d+\.\d+\.\d+\.\d+)/', $nodeInfoResponse, $ipMatches)) {
+                                    $ip = $ipMatches[1];
+                                }
                             }
-                            if (preg_match('/IP:\s*(\d+\.\d+\.\d+\.\d+)/', $nodeInfoResponse, $ipMatches)) {
-                                $ip = $ipMatches[1];
-                            }
+                            
+                            $connectedNodes[] = [
+                                'node' => $connectedNodeId,
+                                'info' => $info,
+                                'ip' => $ip,
+                                'last_keyed' => date('Y-m-d H:i:s'),
+                                'link' => 'IAX',
+                                'direction' => 'unknown',
+                                'elapsed' => 'unknown',
+                                'mode' => 'duplex',
+                                'keyed' => '0'
+                            ];
                         }
-                        
-                        $connectedNodes[] = [
-                            'node' => $connectedNodeId,
-                            'info' => $info,
-                            'ip' => $ip,
-                            'last_keyed' => date('Y-m-d H:i:s'),
-                            'link' => 'IAX',
-                            'direction' => 'unknown',
-                            'elapsed' => 'unknown',
-                            'mode' => 'duplex',
-                            'keyed' => '0'
-                        ];
                     }
                 }
                 $statusInfo['connected_nodes'] = $connectedNodes;
@@ -3763,7 +3802,9 @@ class NodeController
     {
         try {
             // Use the original supermon 1.0.6 approach with AMI commands
-            $nodeConfig = $this->loadNodeConfig($this->getCurrentUser(), $nodeId);
+            // Get current user (null when logged out - that's fine, will use default config)
+            $currentUser = $this->getCurrentUser();
+            $nodeConfig = $this->loadNodeConfig($currentUser, $nodeId);
             if (!$nodeConfig) {
                 throw new \Exception("Configuration for node $nodeId not found");
             }
@@ -3806,24 +3847,79 @@ class NodeController
     }
 
     /**
-     * Get node data for lsnod display (direct connections only)
-     * Keep it simple - just show direct connections
+     * Get node data for lsnod display (direct connections and linked nodes)
+     * Show both direct connections and linked nodes (like T546050)
      */
     private function getNodeDataForLsnod($fp, string $node): array
     {
         // Get basic node data (direct connections and system stats only)
         $basicNodeData = $this->getNodeData($fp, $node);
         
-        // Filter to only show direct connections (no linked nodes)
-        $directConnections = [];
-        foreach ($basicNodeData['remote_nodes'] ?? [] as $remoteNode) {
-            // Only include direct connections (those with actual connection details)
-            if (isset($remoteNode['ip']) && $remoteNode['ip'] !== 'N/A' && $remoteNode['ip'] !== 'Indirect') {
-                $directConnections[] = $remoteNode;
+        // Also get connections from rpt nodes command to catch connections that XStat might miss
+        // This is important for reverse connections (when another node connects TO this node)
+        $rptNodesResponse = \SimpleAmiClient::command($fp, "asterisk -rx 'rpt nodes $node'");
+        $additionalNodes = [];
+        
+        if ($rptNodesResponse) {
+            $lines = explode("\n", $rptNodesResponse);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                // Skip empty lines and header
+                if (empty($line) || strpos($line, 'CONNECTED NODES') !== false) {
+                    continue;
+                }
+                
+                // Parse connected nodes - format is "T546050" or "R546050" (space-separated or comma-separated)
+                $nodeIds = preg_split('/[\s,]+/', $line);
+                foreach ($nodeIds as $nodeItem) {
+                    $nodeItem = trim($nodeItem);
+                    // Match format: T546050 or R546050 (T = Transmit, R = Receive)
+                    if (preg_match('/^[TR](\d+)$/', $nodeItem, $matches)) {
+                        $connectedNodeId = $matches[1];
+                        
+                        // Check if this node is already in remote_nodes
+                        $alreadyExists = false;
+                        foreach ($basicNodeData['remote_nodes'] ?? [] as $existingNode) {
+                            if (($existingNode['node'] ?? '') == $connectedNodeId) {
+                                $alreadyExists = true;
+                                break;
+                            }
+                        }
+                        
+                        // If not already in the list, add it
+                        if (!$alreadyExists) {
+                            $additionalNodes[] = [
+                                'node' => $connectedNodeId,
+                                'info' => \getAstInfo($fp, $connectedNodeId),
+                                'ip' => 'Indirect', // Linked nodes from rpt nodes are indirect
+                                'link' => 'LINKED',
+                                'direction' => substr($nodeItem, 0, 1) == 'T' ? 'OUT' : 'IN',
+                                'keyed' => null,
+                                'mode' => 'Allstar',
+                                'elapsed' => null,
+                                'last_keyed' => null
+                            ];
+                        }
+                    }
+                }
             }
         }
         
-        $basicNodeData['remote_nodes'] = $directConnections;
+        // Include both direct connections AND linked nodes (Indirect)
+        // Linked nodes are valid connections that should be displayed
+        $allConnections = [];
+        foreach ($basicNodeData['remote_nodes'] ?? [] as $remoteNode) {
+            // Include direct connections (with IP) and linked nodes (Indirect)
+            // Only exclude nodes with 'N/A' IP which indicates no connection
+            if (isset($remoteNode['ip']) && $remoteNode['ip'] !== 'N/A') {
+                $allConnections[] = $remoteNode;
+            }
+        }
+        
+        // Add any additional nodes found via rpt nodes command
+        $allConnections = array_merge($allConnections, $additionalNodes);
+        
+        $basicNodeData['remote_nodes'] = $allConnections;
         
         return $basicNodeData;
     }
@@ -3942,12 +4038,27 @@ class NodeController
             $systemState[] = ['Disk', $nodeData['DISK']];
         }
         
+        // Determine node status from system state
+        $nodeStatus = 'unknown';
+        if (isset($nodeData['cos_keyed']) || isset($nodeData['tx_keyed'])) {
+            $nodeStatus = 'online';
+        }
+        
         return [
             'main_node' => [
                 'node_number' => $nodeId,
                 'callsign' => $mainNodeInfo['callsign'],
                 'frequency' => $mainNodeInfo['frequency'],
-                'location' => $mainNodeInfo['location']
+                'location' => $mainNodeInfo['location'],
+                'status' => $nodeStatus,
+                'cos_keyed' => $nodeData['cos_keyed'] ?? 0,
+                'tx_keyed' => $nodeData['tx_keyed'] ?? 0,
+                'cpu_temp' => $nodeData['cpu_temp'] ?? null,
+                'cpu_up' => $nodeData['cpu_up'] ?? null,
+                'cpu_load' => $nodeData['cpu_load'] ?? null,
+                'alert' => $nodeData['ALERT'] ?? null,
+                'wx' => $nodeData['WX'] ?? null,
+                'disk' => $nodeData['DISK'] ?? null
             ],
             'system_state' => $systemState,
             'nodes' => $nodes,
