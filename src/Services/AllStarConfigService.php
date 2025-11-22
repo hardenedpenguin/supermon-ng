@@ -117,28 +117,63 @@ class AllStarConfigService
         $standardAllmonIni = $this->userFilesPath . 'allmon.ini';
         
         if (!$username) {
+            $this->logger->warning("No username provided, using standard allmon.ini", [
+                'ini_file' => $standardAllmonIni
+            ]);
             return $standardAllmonIni;
         }
+
+        $this->logger->warning("Resolving INI file for username", [
+            'username' => $username,
+            'auth_ini_file' => $this->authIniFile
+        ]);
 
         // Load authini.inc to get user-to-INI mapping
         $inimap = [];
         if (file_exists($this->authIniFile)) {
             $inimap = $this->loadAuthIniMapping();
+            $this->logger->warning("Loaded authini.inc mapping", [
+                'username' => $username,
+                'mapping_found' => isset($inimap[$username]),
+                'mapped_file' => $inimap[$username] ?? 'not found'
+            ]);
+        } else {
+            $this->logger->warning("authini.inc file not found", [
+                'auth_ini_file' => $this->authIniFile
+            ]);
         }
 
         if (isset($inimap[$username]) && $inimap[$username] !== '') {
             $targetFile = $this->userFilesPath . $inimap[$username];
             if (file_exists($targetFile)) {
+                $this->logger->warning("Using user-specific INI file", [
+                    'username' => $username,
+                    'ini_file' => $targetFile
+                ]);
                 return $targetFile;
+            } else {
+                $this->logger->warning("Mapped INI file does not exist", [
+                    'username' => $username,
+                    'mapped_file' => $inimap[$username],
+                    'target_file' => $targetFile
+                ]);
             }
         }
 
         // Fallback to nolog.ini if user has no access
         $nologFile = $this->userFilesPath . 'nolog.ini';
         if (file_exists($nologFile)) {
+            $this->logger->warning("Using nolog.ini fallback", [
+                'username' => $username,
+                'ini_file' => $nologFile
+            ]);
             return $nologFile;
         }
 
+        $this->logger->warning("Using standard allmon.ini as fallback", [
+            'username' => $username,
+            'ini_file' => $standardAllmonIni
+        ]);
         return $standardAllmonIni;
     }
 
@@ -184,13 +219,33 @@ class AllStarConfigService
     public function getNodeConfig(string $nodeId, ?string $username = null): array
     {
         $iniFile = $this->getIniFileName($username);
+        $this->logger->warning("Getting node config", [
+            'node_id' => $nodeId,
+            'username' => $username ?? 'null',
+            'ini_file' => $iniFile
+        ]);
+        
         $config = $this->parseIniFile($iniFile);
 
         if (!isset($config[$nodeId])) {
+            $this->logger->warning("Node not found in INI file", [
+                'node_id' => $nodeId,
+                'username' => $username ?? 'null',
+                'ini_file' => $iniFile,
+                'available_nodes' => array_keys($config)
+            ]);
             throw new Exception("Node $nodeId is not defined in $iniFile");
         }
 
-        return $config[$nodeId];
+        $nodeConfig = $config[$nodeId];
+        $this->logger->warning("Node config retrieved", [
+            'node_id' => $nodeId,
+            'username' => $username ?? 'null',
+            'ini_file' => $iniFile,
+            'config_keys' => array_keys($nodeConfig)
+        ]);
+
+        return $nodeConfig;
     }
 
     /**

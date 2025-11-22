@@ -35,8 +35,15 @@ class DvswitchController
             session_start();
         }
         
-        if (isset($_SESSION['user']) && !empty($_SESSION['user'])) {
-            return $_SESSION['user'];
+        // Check if user is logged in via session (must be authenticated)
+        if (isset($_SESSION['user']) && !empty($_SESSION['user']) && isset($_SESSION['authenticated']) && $_SESSION['authenticated']) {
+            // Check if session is not too old (24 hours)
+            if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) < 86400) {
+                return $_SESSION['user'];
+            } else {
+                // Session expired
+                return null;
+            }
         }
         
         if (isset($_SERVER['PHP_AUTH_USER'])) {
@@ -55,12 +62,26 @@ class DvswitchController
      */
     private function hasPermission(?string $user): bool
     {
+        $this->logger->warning("Checking DVSwitch permission", [
+            'user' => $user ?? 'null',
+            'session_user' => $_SESSION['user'] ?? 'not set',
+            'php_auth_user' => $_SERVER['PHP_AUTH_USER'] ?? 'not set',
+            'remote_user' => $_SERVER['REMOTE_USER'] ?? 'not set'
+        ]);
+        
         // Use reflection to call ConfigController's hasUserPermission method
         $reflection = new \ReflectionClass($this->configController);
         $method = $reflection->getMethod('hasUserPermission');
         $method->setAccessible(true);
         
-        return $method->invoke($this->configController, $user, 'DVSWITCHUSER');
+        $hasPermission = $method->invoke($this->configController, $user, 'DVSWITCHUSER');
+        
+        $this->logger->warning("DVSwitch permission check result", [
+            'user' => $user ?? 'null',
+            'has_permission' => $hasPermission
+        ]);
+        
+        return $hasPermission;
     }
     
     /**
@@ -228,11 +249,26 @@ class DvswitchController
      */
     public function switchMode(Request $request, Response $response, array $args): Response
     {
+        $this->logger->warning("switchMode endpoint called", [
+            'session_status' => session_status(),
+            'session_id' => session_id() ?: 'no session',
+            'session_user' => $_SESSION['user'] ?? 'not set',
+            'php_auth_user' => $_SERVER['PHP_AUTH_USER'] ?? 'not set',
+            'remote_user' => $_SERVER['REMOTE_USER'] ?? 'not set'
+        ]);
+        
         try {
             $currentUser = $this->getCurrentUser();
             
+            $this->logger->warning("getCurrentUser returned", [
+                'current_user' => $currentUser ?? 'null'
+            ]);
+            
             // Check permission
             if (!$this->hasPermission($currentUser)) {
+                $this->logger->warning("Permission denied for DVSwitch", [
+                    'user' => $currentUser ?? 'null'
+                ]);
                 $response->getBody()->write(json_encode([
                     'success' => false,
                     'message' => 'You are not authorized to use DVSwitch mode switching.'
@@ -290,11 +326,26 @@ class DvswitchController
      */
     public function switchTalkgroup(Request $request, Response $response, array $args): Response
     {
+        $this->logger->warning("switchTalkgroup endpoint called", [
+            'session_status' => session_status(),
+            'session_id' => session_id() ?: 'no session',
+            'session_user' => $_SESSION['user'] ?? 'not set',
+            'php_auth_user' => $_SERVER['PHP_AUTH_USER'] ?? 'not set',
+            'remote_user' => $_SERVER['REMOTE_USER'] ?? 'not set'
+        ]);
+        
         try {
             $currentUser = $this->getCurrentUser();
             
+            $this->logger->warning("getCurrentUser returned", [
+                'current_user' => $currentUser ?? 'null'
+            ]);
+            
             // Check permission
             if (!$this->hasPermission($currentUser)) {
+                $this->logger->warning("Permission denied for DVSwitch", [
+                    'user' => $currentUser ?? 'null'
+                ]);
                 $response->getBody()->write(json_encode([
                     'success' => false,
                     'message' => 'You are not authorized to use DVSwitch mode switching.'
