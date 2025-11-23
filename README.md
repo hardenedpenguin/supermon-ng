@@ -1,11 +1,13 @@
-# Supermon-NG V4.0.9 - Modern AllStar Link Management Dashboard
+# Supermon-NG V4.1.0 - Modern AllStar Link Management Dashboard
 
 A modern, responsive web-based management interface for AllStar Link nodes, built with Vue.js 3 and PHP 8.
 
 ## ✨ Features
 
 - **Modern Vue.js 3 Frontend** - Responsive, fast, and intuitive interface
-- **Real-time Node Monitoring** - Live status updates and statistics
+- **WebSocket Real-time Updates** - Live node status updates via WebSocket (no polling)
+- **DVSwitch Mode Switcher** - Switch between DMR, YSF, P25, D-STAR, and NXDN modes
+- **Real-time Node Monitoring** - Live status updates, connections, and statistics
 - **HamClock Integration** - Embedded HamClock display with modal support
 - **Node Status Management** - Automated Asterisk variable updates
 - **User Authentication** - Secure login system with role-based permissions
@@ -14,6 +16,7 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 - **Custom Theming** - Support for custom header backgrounds
 - **Log Viewing** - Access to system and application logs
 - **Control Panel** - Execute AllStar commands remotely
+- **Multi-node Support** - Manage multiple AllStar nodes from a single dashboard
 
 ## 📋 System Requirements
 
@@ -30,17 +33,17 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.9/supermon-ng-V4.0.9.tar.xz
-tar -xJf supermon-ng-V4.0.9.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.0/supermon-ng-V4.1.0.tar.xz
+tar -xJf supermon-ng-V4.1.0.tar.xz
 cd supermon-ng
 sudo ./install.sh
 ```
 
 The installer automatically handles:
 - Dependency installation (PHP, Apache modules, ACL tools)
-- Apache configuration with proxy support
+- Apache configuration with proxy and WebSocket support
 - Security setup (sudoers, file permissions, ACLs)
-- Systemd services for backend and node status updates
+- Systemd services for backend, WebSocket, and node status updates
 - Frontend deployment
 
 **Options:**
@@ -92,6 +95,18 @@ Edit `/var/www/html/supermon-ng/user_files/allmon.ini` to add your AllStar nodes
 - Configure via web dashboard (Node Status button) or create `/var/www/html/supermon-ng/user_files/sbin/node_info.ini`
 - Enable timer: `sudo systemctl enable supermon-ng-node-status.timer && sudo systemctl start supermon-ng-node-status.timer`
 
+**DVSwitch Mode Switcher:**
+- Copy `/var/www/html/supermon-ng/user_files/dvswitch_config.yml.example` to `dvswitch_config.yml`
+- Configure talkgroups for each mode (DMR, YSF, P25, D-STAR, NXDN)
+- For multi-node setups, configure `abinfo_file` or `abinfo_port` in `allmon.ini`:
+  ```ini
+  [1998]
+  host=127.0.0.1:34001
+  abinfo_port=34001
+  ```
+- Per-node configs: Create `dvswitch_config_{nodeId}.yml` for node-specific settings
+- Requires `DVSWITCHUSER` permission in `authusers.inc`
+
 ### User Management
 
 ```bash
@@ -116,6 +131,7 @@ Edit `/var/www/html/supermon-ng/user_files/authusers.inc` to configure permissio
 
 - **Basic**: `$CONNECTUSER`, `$DISCUSER`, `$MONUSER` - Connect/disconnect/monitor nodes
 - **Advanced**: `$DTMFUSER`, `$RSTATUSER`, `$FAVUSER` - DTMF, stats, favorites
+- **DVSwitch**: `$DVSWITCHUSER` - Access to DVSwitch mode and talkgroup switching
 - **Administrative**: `$CTRLUSER`, `$CFGEDUSER`, `$SYSINFUSER` - Control panel, config editor, system info
 
 **Single User Setup:**
@@ -129,8 +145,8 @@ sudo sed -i 's/"anarchy"/"yourusername"/g' /var/www/html/supermon-ng/user_files/
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.9/supermon-ng-V4.0.9.tar.xz
-tar -xJf supermon-ng-V4.0.9.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.0/supermon-ng-V4.1.0.tar.xz
+tar -xJf supermon-ng-V4.1.0.tar.xz
 cd supermon-ng
 sudo ./scripts/update.sh
 ```
@@ -140,10 +156,11 @@ sudo ./scripts/update.sh
 - `--force`: Update even if versions match
 
 The update script:
-- ✅ Preserves all user configuration files (`allmon.ini`, `authusers.inc`, `.htpasswd`, etc.)
+- ✅ Preserves all user configuration files (`allmon.ini`, `authusers.inc`, `.htpasswd`, `dvswitch_config*.yml`, etc.)
 - ✅ Creates automatic backups before updating
 - ✅ Updates system services and dependencies
 - ✅ Validates configuration and restarts services
+- ✅ Preserves WebSocket and DVSwitch configurations
 
 **Check Current Version:**
 ```bash
@@ -159,6 +176,10 @@ sudo /var/www/html/supermon-ng/scripts/version-check.sh
 sudo systemctl status supermon-ng-backend
 sudo systemctl restart supermon-ng-backend
 
+# WebSocket service (real-time updates)
+sudo systemctl status supermon-ng-websocket
+sudo systemctl restart supermon-ng-websocket
+
 # Node status timer (if configured)
 sudo systemctl status supermon-ng-node-status.timer
 
@@ -171,6 +192,7 @@ sudo systemctl restart apache2
 
 - **Apache**: `/var/log/apache2/supermon-ng_error.log`, `/var/log/apache2/supermon-ng_access.log`
 - **Backend**: `sudo journalctl -u supermon-ng-backend -f`
+- **WebSocket**: `sudo journalctl -u supermon-ng-websocket -f`
 - **Node Status**: `/var/log/supermon-ng-node-status.log`
 - **Asterisk**: `/var/log/asterisk/messages`
 
@@ -179,6 +201,7 @@ sudo systemctl restart apache2
 - **Node Config**: `/var/www/html/supermon-ng/user_files/allmon.ini`
 - **User Permissions**: `/var/www/html/supermon-ng/user_files/authusers.inc`
 - **Global Settings**: `/var/www/html/supermon-ng/user_files/global.inc`
+- **DVSwitch Config**: `/var/www/html/supermon-ng/user_files/dvswitch_config.yml`
 - **Apache Config**: `/etc/apache2/sites-available/supermon-ng.conf`
 
 ## 🐛 Troubleshooting
@@ -197,6 +220,15 @@ sudo tail -f /var/log/apache2/supermon-ng_error.log
 sudo systemctl start supermon-ng-backend
 sudo systemctl enable supermon-ng-backend
 sudo journalctl -u supermon-ng-backend -f
+```
+
+**WebSocket not connecting:**
+```bash
+sudo systemctl status supermon-ng-websocket
+sudo systemctl restart supermon-ng-websocket
+sudo journalctl -u supermon-ng-websocket -f
+sudo apache2ctl configtest
+# Ensure proxy_wstunnel module is enabled: sudo a2enmod proxy_wstunnel
 ```
 
 **Permission issues:**
@@ -222,12 +254,12 @@ sudo asterisk -rx "manager show connected"
 
 ```bash
 # Installation
-cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.9/supermon-ng-V4.0.9.tar.xz
-tar -xJf supermon-ng-V4.0.9.tar.xz && cd supermon-ng && sudo ./install.sh
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.0/supermon-ng-V4.1.0.tar.xz
+tar -xJf supermon-ng-V4.1.0.tar.xz && cd supermon-ng && sudo ./install.sh
 
 # Update
-cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.9/supermon-ng-V4.0.9.tar.xz
-tar -xJf supermon-ng-V4.0.9.tar.xz && cd supermon-ng && sudo ./scripts/update.sh
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.0/supermon-ng-V4.1.0.tar.xz
+tar -xJf supermon-ng-V4.1.0.tar.xz && cd supermon-ng && sudo ./scripts/update.sh
 
 # Check version
 sudo /var/www/html/supermon-ng/scripts/version-check.sh
@@ -236,7 +268,7 @@ sudo /var/www/html/supermon-ng/scripts/version-check.sh
 cd /var/www/html/supermon-ng && sudo ./scripts/manage_users.php list
 
 # Service status
-sudo systemctl status supermon-ng-backend apache2
+sudo systemctl status supermon-ng-backend supermon-ng-websocket apache2
 ```
 
 ## 🔒 Security
@@ -246,6 +278,7 @@ sudo systemctl status supermon-ng-backend apache2
 - Role-based access control
 - Secure password hashing
 - Limited sudo access for specific commands only
+- WebSocket connections validated and authenticated
 
 ## 🤝 Contributing
 
@@ -274,6 +307,16 @@ Include:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 🆕 What's New in V4.1.0
+
+- **WebSocket Real-time Updates**: Live node status updates without page refreshes
+- **DVSwitch Mode Switcher**: Switch between DMR, YSF, P25, D-STAR, and NXDN modes
+- **Network-Specific Talkgroups**: Support for TGIF and BrandMeister networks with proper connection strings
+- **Custom Talkgroup Input**: Manually enter any talkgroup ID
+- **Multi-node DVSwitch Support**: Configure different DVSwitch settings per node
+- **Improved Node Status Display**: Better handling of connections and status when logged off
+- **Enhanced WebSocket Infrastructure**: Dedicated AMI connections for real-time updates
+
 ---
 
-**Supermon-NG V4.0.9** - Bringing AllStar Link management into the modern era! 🚀📡
+**Supermon-NG V4.1.0** - Bringing AllStar Link management into the modern era! 🚀📡
