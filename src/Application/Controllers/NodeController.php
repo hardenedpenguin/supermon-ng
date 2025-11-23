@@ -3578,31 +3578,31 @@ class NodeController
                         $nodeItem = trim($nodeItem);
                         // Match format: T546050 or R546050 (T = Transmit, R = Receive)
                         if (preg_match('/^[TR](\d+)$/', $nodeItem, $matches)) {
-                            $connectedNodeId = $matches[1];
-                            // Get additional info for each connected node
-                            $nodeInfoResponse = \SimpleAmiClient::command($ami, "asterisk -rx 'rpt stats $connectedNodeId'");
-                            $info = 'Unknown';
-                            $ip = null;
-                            if ($nodeInfoResponse) {
-                                if (preg_match('/Info:\s*(.+)/', $nodeInfoResponse, $infoMatches)) {
-                                    $info = trim($infoMatches[1]);
-                                }
-                                if (preg_match('/IP:\s*(\d+\.\d+\.\d+\.\d+)/', $nodeInfoResponse, $ipMatches)) {
-                                    $ip = $ipMatches[1];
-                                }
+                        $connectedNodeId = $matches[1];
+                        // Get additional info for each connected node
+                        $nodeInfoResponse = \SimpleAmiClient::command($ami, "asterisk -rx 'rpt stats $connectedNodeId'");
+                        $info = 'Unknown';
+                        $ip = null;
+                        if ($nodeInfoResponse) {
+                            if (preg_match('/Info:\s*(.+)/', $nodeInfoResponse, $infoMatches)) {
+                                $info = trim($infoMatches[1]);
                             }
-                            
-                            $connectedNodes[] = [
-                                'node' => $connectedNodeId,
-                                'info' => $info,
-                                'ip' => $ip,
-                                'last_keyed' => date('Y-m-d H:i:s'),
-                                'link' => 'IAX',
-                                'direction' => 'unknown',
-                                'elapsed' => 'unknown',
-                                'mode' => 'duplex',
-                                'keyed' => '0'
-                            ];
+                            if (preg_match('/IP:\s*(\d+\.\d+\.\d+\.\d+)/', $nodeInfoResponse, $ipMatches)) {
+                                $ip = $ipMatches[1];
+                            }
+                        }
+                        
+                        $connectedNodes[] = [
+                            'node' => $connectedNodeId,
+                            'info' => $info,
+                            'ip' => $ip,
+                            'last_keyed' => date('Y-m-d H:i:s'),
+                            'link' => 'IAX',
+                            'direction' => 'unknown',
+                            'elapsed' => 'unknown',
+                            'mode' => 'duplex',
+                            'keyed' => '0'
+                        ];
                         }
                     }
                 }
