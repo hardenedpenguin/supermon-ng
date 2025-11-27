@@ -1216,19 +1216,8 @@ class ConfigController
             return $response->withStatus(403);
         }
 
-        $data = $request->getParsedBody();
-        $localNode = $data['localnode'] ?? null;
-
-        if (empty($localNode)) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => 'Local node not specified'
-            ]));
-            return $response->withStatus(400);
-        }
-
         try {
-            // Get user's INI file
+            // IAX2/Module reload is local only - get first available node from config
             $userIniFile = $this->getUserIniFile($currentUser);
             
             if (!file_exists($userIniFile)) {
@@ -1240,23 +1229,25 @@ class ConfigController
             }
 
             $config = parse_ini_file($userIniFile, true);
-
-            if (!isset($config[$localNode])) {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => "Node $localNode is not defined in $userIniFile"
-                ]));
-                return $response->withStatus(400);
+            
+            // Find first node with AMI configuration (local only)
+            $amiHost = null;
+            $amiUser = null;
+            $amiPass = null;
+            
+            foreach ($config as $nodeId => $nodeConfig) {
+                if (is_array($nodeConfig) && isset($nodeConfig['host']) && isset($nodeConfig['user']) && isset($nodeConfig['passwd'])) {
+                    $amiHost = $nodeConfig['host'];
+                    $amiUser = $nodeConfig['user'];
+                    $amiPass = $nodeConfig['passwd'];
+                    break;
+                }
             }
-
-            $amiHost = $config[$localNode]['host'] ?? null;
-            $amiUser = $config[$localNode]['user'] ?? null;
-            $amiPass = $config[$localNode]['passwd'] ?? null;
 
             if (empty($amiHost) || empty($amiUser) || empty($amiPass)) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
-                    'message' => "AMI host, user, or password not configured for node $localNode"
+                    'message' => "No valid AMI configuration found in $userIniFile"
                 ]));
                 return $response->withStatus(500);
             }
@@ -1275,7 +1266,7 @@ class ConfigController
             }
 
             $results = [];
-            $results[] = "Reloading configurations for node - $localNode:";
+            $results[] = "Reloading IAX2 and Module configurations (local):";
 
             // Execute reload commands separately (must be passed separately to AMI to work correctly)
             $commands = ["iax2 reload", "module reload"];

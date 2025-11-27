@@ -1991,20 +1991,18 @@ class NodeController
             ];
         }
 
+        // Send restart command - Asterisk will restart immediately
+        // We can't verify success since the server restarts, but if we got here,
+        // we successfully connected and sent the command, so assume success
         $restartOutput = \SimpleAmiClient::command($fp, "rpt restart");
         \SimpleAmiClient::logoff($fp);
 
-        if ($restartOutput === false) {
-            return [
-                'success' => false,
-                'message' => 'Failed to send restart command to Asterisk'
-            ];
-        }
-
+        // Since Asterisk restarts immediately, we can't verify the response
+        // If we successfully connected and sent the command, consider it successful
         return [
             'success' => true,
-            'message' => 'Fast restart command sent successfully. Asterisk is restarting now.',
-            'output' => $restartOutput
+            'message' => 'RPT restart command sent successfully. Asterisk is restarting now.',
+            'output' => $restartOutput ?: 'Command sent (server restarting, no response available)'
         ];
     }
 

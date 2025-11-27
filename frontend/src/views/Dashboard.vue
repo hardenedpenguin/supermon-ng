@@ -823,16 +823,8 @@ const configeditor = async () => {
 
 const astreload = async () => {
   try {
-
-    
-    if (!selectedNode.value) {
-      alert('Please select a node first')
-      return
-    }
-
-    const response = await api.post('/config/asterisk/reload', {
-      localnode: selectedNode.value
-    })
+    // IAX2/Module reload is local only - no node selection needed
+    const response = await api.post('/config/asterisk/reload', {})
 
     if (response.data.success) {
       alert('Asterisk configuration reload completed successfully!\n\n' + response.data.results.join('\n'))
