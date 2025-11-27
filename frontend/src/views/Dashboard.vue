@@ -3,12 +3,12 @@
     <!-- Header Section (mimics header.inc structure) -->
     <div class="header" :style="{ backgroundImage: headerBackgroundUrl }">
       <!-- Main Title -->
-      <div class="header-title">
+      <div class="header-title" :style="headerTitleStyle">
         <a href="#"><i>{{ headerTitle }}</i></a>
       </div>
       
       <!-- Call Sign -->
-      <div v-if="systemInfo?.callsign" class="header-title2">
+      <div v-if="systemInfo?.callsign" class="header-title2" :style="callsignStyle">
         <a v-if="systemInfo?.myUrl" :href="getCleanUrl(systemInfo.myUrl)" :target="shouldOpenInNewTab(systemInfo.myUrl) ? '_blank' : '_self'">
           <i>{{ systemInfo.callsign }}</i>
         </a>
@@ -480,11 +480,10 @@ const displayedNodes = computed((): NodeType[] => {
 })
 
 const headerBackgroundUrl = computed(() => {
-  // Use custom background if available, otherwise use default
-  if (systemInfo.value?.customHeaderBackground) {
-    return `url('${systemInfo.value.customHeaderBackground}')`
-  }
-  return "url('/supermon-ng/background.jpg')"
+  // Backend handles checking for custom header file first, then default background
+  // customHeaderBackground will always have a value (either custom or default)
+  const backgroundUrl = systemInfo.value?.customHeaderBackground || '/supermon-ng/background.jpg'
+  return `url('${backgroundUrl}')`
 })
 
 const formatHeaderTag = () => {
@@ -556,6 +555,26 @@ const headerTitle = computed(() => {
   return appStore.isAuthenticated ? 
     'Supermon-ng AllStar Manager' : 
     'Supermon-ng AllStar Monitor'
+})
+
+// Computed property for header title color (title_logged or title_not_logged)
+const headerTitleStyle = computed(() => {
+  const color = appStore.isAuthenticated 
+    ? systemInfo.value?.titleLoggedColor 
+    : systemInfo.value?.titleNotLoggedColor
+  
+  if (color) {
+    return { color: color }
+  }
+  return {}
+})
+
+// Computed property for callsign color
+const callsignStyle = computed(() => {
+  if (systemInfo.value?.callsignColor) {
+    return { color: systemInfo.value.callsignColor }
+  }
+  return {}
 })
 
 // Watcher to update selectedLocalNode when selectedNode changes
@@ -1393,7 +1412,7 @@ watch(displayedNodes, (newDisplayedNodes) => {
 .header-title a:link,
 .header-title a:visited {
   text-decoration: none;
-  color: white;
+  color: inherit;
 }
 
 /* Header Title2 (call sign) */
@@ -1409,6 +1428,13 @@ watch(displayedNodes, (newDisplayedNodes) => {
   font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
   letter-spacing: normal;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.header-title2 a,
+.header-title2 a:link,
+.header-title2 a:visited {
+  text-decoration: none;
+  color: inherit;
 }
 
 /* Header Tag (location and title) */

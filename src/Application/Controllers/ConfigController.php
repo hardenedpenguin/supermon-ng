@@ -519,7 +519,7 @@ class ConfigController
     {
         $userFilesDir = 'user_files';
         
-        // Auto-detect which header background file exists
+        // Check for custom header-background.* file
         $formats = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         $imagePath = null;
         $filename = null;
@@ -640,7 +640,10 @@ class ConfigController
             'hamclockEnabled' => filter_var($globalConfig['HAMCLOCK_ENABLED'] ?? 'False', FILTER_VALIDATE_BOOLEAN),
             'hamclockUrlInternal' => $globalConfig['HAMCLOCK_URL_INTERNAL'] ?? null,
             'hamclockUrlExternal' => $globalConfig['HAMCLOCK_URL_EXTERNAL'] ?? null,
-            'customHeaderBackground' => $this->getCustomHeaderBackground()
+            'customHeaderBackground' => $this->getCustomHeaderBackground(),
+            'callsignColor' => $globalConfig['CALLSIGN_COLOR'] ?? null,
+            'titleLoggedColor' => $globalConfig['TITLE_LOGGED_COLOR'] ?? null,
+            'titleNotLoggedColor' => $globalConfig['TITLE_NOT_LOGGED_COLOR'] ?? null
         ];
         
         return $systemInfo;
@@ -701,7 +704,10 @@ class ConfigController
                 'WELCOME_MSG_LOGGED' => $WELCOME_MSG_LOGGED ?? null,
                 'HAMCLOCK_ENABLED' => $HAMCLOCK_ENABLED ?? 'False',
                 'HAMCLOCK_URL_INTERNAL' => $HAMCLOCK_URL_INTERNAL ?? null,
-                'HAMCLOCK_URL_EXTERNAL' => $HAMCLOCK_URL_EXTERNAL ?? null
+                'HAMCLOCK_URL_EXTERNAL' => $HAMCLOCK_URL_EXTERNAL ?? null,
+                'CALLSIGN_COLOR' => $CALLSIGN_COLOR ?? null,
+                'TITLE_LOGGED_COLOR' => $TITLE_LOGGED_COLOR ?? null,
+                'TITLE_NOT_LOGGED_COLOR' => $TITLE_NOT_LOGGED_COLOR ?? null
             ];
         }
         
@@ -710,12 +716,14 @@ class ConfigController
     
     /**
      * Check if custom header background exists and return the API URL
+     * If no custom header is found, returns the default background path
      */
-    private function getCustomHeaderBackground(): ?string
+    private function getCustomHeaderBackground(): string
     {
-        // Auto-detect header-background.* files
+        // Check for custom header-background.* file first
         $userFilesDir = 'user_files';
         $formats = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        
         foreach ($formats as $format) {
             $customBackgroundPath = "$userFilesDir/header-background.$format";
             if (file_exists($customBackgroundPath)) {
@@ -723,7 +731,8 @@ class ConfigController
             }
         }
         
-        return null;
+        // If no custom header found, return default background
+        return "/supermon-ng/background.jpg";
     }
 
     /**
