@@ -1991,7 +1991,7 @@ class NodeController
             ];
         }
 
-        $restartOutput = \SimpleAmiClient::command($fp, "restart now");
+        $restartOutput = \SimpleAmiClient::command($fp, "rpt restart");
         \SimpleAmiClient::logoff($fp);
 
         if ($restartOutput === false) {

@@ -1268,8 +1268,8 @@ class ConfigController
             $results = [];
             $results[] = "Reloading configurations for node - $localNode:";
 
-            // Execute reload commands (remove sleep delays for faster execution)
-            $commands = ["rpt reload", "iax2 reload", "extensions reload"];
+            // Execute reload commands separately (must be passed separately to AMI to work correctly)
+            $commands = ["iax2 reload", "module reload"];
             foreach ($commands as $cmd) {
                 if (\SimpleAmiClient::command($fp, $cmd) !== false) {
                     $results[] = "- {$cmd} reloaded successfully.";
