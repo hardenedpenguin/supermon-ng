@@ -33,7 +33,7 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.1/supermon-ng-V4.1.1.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/v4.1.1/supermon-ng-V4.1.1.tar.xz
 tar -xJf supermon-ng-V4.1.1.tar.xz
 cd supermon-ng
 sudo ./install.sh
@@ -160,7 +160,7 @@ sudo sed -i 's/"anarchy"/"yourusername"/g' /var/www/html/supermon-ng/user_files/
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.1/supermon-ng-V4.1.1.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/v4.1.1/supermon-ng-V4.1.1.tar.xz
 tar -xJf supermon-ng-V4.1.1.tar.xz
 cd supermon-ng
 sudo ./scripts/update.sh
@@ -269,11 +269,11 @@ sudo asterisk -rx "manager show connected"
 
 ```bash
 # Installation
-cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.1/supermon-ng-V4.1.1.tar.xz
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/v4.1.1/supermon-ng-V4.1.1.tar.xz
 tar -xJf supermon-ng-V4.1.1.tar.xz && cd supermon-ng && sudo ./install.sh
 
 # Update
-cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.1/supermon-ng-V4.1.1.tar.xz
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/v4.1.1/supermon-ng-V4.1.1.tar.xz
 tar -xJf supermon-ng-V4.1.1.tar.xz && cd supermon-ng && sudo ./scripts/update.sh
 
 # Check version
