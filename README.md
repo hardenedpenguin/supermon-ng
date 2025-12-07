@@ -1,4 +1,4 @@
-# Supermon-NG V4.1.0 - Modern AllStar Link Management Dashboard
+# Supermon-NG V4.1.1 - Modern AllStar Link Management Dashboard
 
 A modern, responsive web-based management interface for AllStar Link nodes, built with Vue.js 3 and PHP 8.
 
@@ -13,7 +13,7 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 - **User Authentication** - Secure login system with role-based permissions
 - **System Information** - CPU, memory, disk usage, and temperature monitoring
 - **Configuration Management** - Web-based editing of configuration files
-- **Custom Theming** - Support for custom header backgrounds
+- **Custom Theming** - Support for custom header backgrounds and text colors
 - **Log Viewing** - Access to system and application logs
 - **Control Panel** - Execute AllStar commands remotely
 - **Multi-node Support** - Manage multiple AllStar nodes from a single dashboard
@@ -33,8 +33,8 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.0/supermon-ng-V4.1.0.tar.xz
-tar -xJf supermon-ng-V4.1.0.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.1/supermon-ng-V4.1.1.tar.xz
+tar -xJf supermon-ng-V4.1.1.tar.xz
 cd supermon-ng
 sudo ./install.sh
 ```
@@ -90,10 +90,25 @@ Edit `/var/www/html/supermon-ng/user_files/allmon.ini` to add your AllStar nodes
 **Custom Header Background:**
 - Place image file named `header-background.jpg` (or `.png`, `.gif`, `.webp`) in `/var/www/html/supermon-ng/user_files/`
 - Recommended size: 900x164 pixels
+- System checks for custom header first, falls back to default `background.jpg` if not found
+
+**Custom Header Text Colors:**
+- Edit `/var/www/html/supermon-ng/user_files/global.inc`
+- Configure colors for:
+  - `$CALLSIGN_COLOR` - Callsign text color
+  - `$TITLE_LOGGED_COLOR` - Title text when logged in
+  - `$TITLE_NOT_LOGGED_COLOR` - Title text when not logged in
+- Can use color names, hex codes, or RGB values
 
 **Node Status Updates:**
 - Configure via web dashboard (Node Status button) or create `/var/www/html/supermon-ng/user_files/sbin/node_info.ini`
 - Enable timer: `sudo systemctl enable supermon-ng-node-status.timer && sudo systemctl start supermon-ng-node-status.timer`
+- **Weather Alerts**: Only SkywarnPlus-NG is supported for weather alerts displayed in node tables
+  - Configure `API_URL` in `node_info.ini` to point to your SkywarnPlus-NG instance
+  - `CUSTOM_LINK` is used as a display link only (users can click alerts to view full details)
+- **Weather and System Info Display**: Requires `saytime_weather` module to be loaded in Asterisk
+  - Weather and system information will only display in node tables if `saytime_weather` is available
+  - Install and configure `saytime_weather` module for your Asterisk installation
 
 **DVSwitch Mode Switcher:**
 - Copy `/var/www/html/supermon-ng/user_files/dvswitch_config.yml.example` to `dvswitch_config.yml`
@@ -145,8 +160,8 @@ sudo sed -i 's/"anarchy"/"yourusername"/g' /var/www/html/supermon-ng/user_files/
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.0/supermon-ng-V4.1.0.tar.xz
-tar -xJf supermon-ng-V4.1.0.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.1/supermon-ng-V4.1.1.tar.xz
+tar -xJf supermon-ng-V4.1.1.tar.xz
 cd supermon-ng
 sudo ./scripts/update.sh
 ```
@@ -254,12 +269,12 @@ sudo asterisk -rx "manager show connected"
 
 ```bash
 # Installation
-cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.0/supermon-ng-V4.1.0.tar.xz
-tar -xJf supermon-ng-V4.1.0.tar.xz && cd supermon-ng && sudo ./install.sh
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.1/supermon-ng-V4.1.1.tar.xz
+tar -xJf supermon-ng-V4.1.1.tar.xz && cd supermon-ng && sudo ./install.sh
 
 # Update
-cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.0/supermon-ng-V4.1.0.tar.xz
-tar -xJf supermon-ng-V4.1.0.tar.xz && cd supermon-ng && sudo ./scripts/update.sh
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.1/supermon-ng-V4.1.1.tar.xz
+tar -xJf supermon-ng-V4.1.1.tar.xz && cd supermon-ng && sudo ./scripts/update.sh
 
 # Check version
 sudo /var/www/html/supermon-ng/scripts/version-check.sh
@@ -307,6 +322,33 @@ Include:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 🆕 What's New in V4.1.1
+
+### Major Features
+- **Control Panel Improvements**: Fixed node selection with fallback chain, better error handling
+- **Header Customization**: Custom header background fallback and customizable text colors (callsign, titles)
+- **Button Command Updates**: 
+  - RESTART button now uses `rpt restart` (more reliable)
+  - IAX2/Module RELOAD executes `iax2 reload` and `module reload` separately
+  - Removed node requirement for local-only commands
+- **SkywarnPlus-NG Integration**: Updated to use SkywarnPlus-NG API (only supported weather alert system)
+- **WebSocket Service Improvements**: 
+  - Suppressed PHP 8.2+ deprecation warnings
+  - 30-second backoff for AMI reconnection attempts
+  - Improved graceful shutdown handling
+  - Reduced log noise for unreachable nodes
+
+### Requirements
+- **Weather Alerts**: Only SkywarnPlus-NG is supported for weather alerts in node tables
+- **Weather/System Info Display**: Requires `saytime_weather` module to be loaded in Asterisk
+
+### Bug Fixes
+- Fixed Control Panel button not showing commands
+- Fixed exception handling in WebSocket server
+- Fixed IAX2/Module reload requiring node number
+- Fixed restart button showing failed even when successful
+- Fixed header background not checking for custom files first
+
 ## 🆕 What's New in V4.1.0
 
 - **WebSocket Real-time Updates**: Live node status updates without page refreshes
@@ -319,4 +361,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Supermon-NG V4.1.0** - Bringing AllStar Link management into the modern era! 🚀📡
+**Supermon-NG V4.1.1** - Bringing AllStar Link management into the modern era! 🚀📡
