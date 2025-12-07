@@ -19,7 +19,9 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogHandler;
 
 // Set up error handling
-error_reporting(E_ALL);
+// Suppress PHP 8.2+ deprecation warnings from Ratchet library (dynamic properties)
+// These are library issues, not application issues
+error_reporting(E_ALL & ~E_DEPRECATED);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 

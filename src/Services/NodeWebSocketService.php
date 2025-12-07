@@ -35,6 +35,9 @@ class NodeWebSocketService implements MessageComponentInterface
     private bool $amiConnected = false;
     private int $pollInterval = 1; // seconds
     private ?array $lastData = null; // Changed to array for diffing
+    private int $lastAmiReconnectAttempt = 0; // Timestamp of last reconnect attempt
+    private int $amiReconnectBackoff = 30; // Seconds between reconnect attempts
+    private bool $amiReconnectLogged = false; // Track if we've logged the reconnect failure
     
     public function __construct(
         string $nodeId,
@@ -98,6 +101,13 @@ class NodeWebSocketService implements MessageComponentInterface
             return;
         }
         
+        // Implement backoff: only attempt reconnection every N seconds
+        $now = time();
+        if ($now - $this->lastAmiReconnectAttempt < $this->amiReconnectBackoff) {
+            return; // Too soon to retry
+        }
+        $this->lastAmiReconnectAttempt = $now;
+        
         try {
             require_once __DIR__ . '/../../includes/amifunctions.inc';
             
@@ -109,20 +119,27 @@ class NodeWebSocketService implements MessageComponentInterface
             $this->amiConnection = \SimpleAmiClient::connect($host);
             
             if ($this->amiConnection === false) {
-                $this->logger->error("Failed to connect to AMI for node", [
-                    'node_id' => $this->nodeId,
-                    'host' => $host
-                ]);
+                // Only log once per backoff period to reduce noise
+                if (!$this->amiReconnectLogged) {
+                    $this->logger->warning("Failed to connect to AMI for node (will retry every {$this->amiReconnectBackoff}s)", [
+                        'node_id' => $this->nodeId,
+                        'host' => $host
+                    ]);
+                    $this->amiReconnectLogged = true;
+                }
                 $this->amiConnected = false;
                 return;
             }
             
             // Login to AMI
             if (\SimpleAmiClient::login($this->amiConnection, $user, $password) === false) {
-                $this->logger->error("Failed to login to AMI for node", [
-                    'node_id' => $this->nodeId,
-                    'host' => $host
-                ]);
+                if (!$this->amiReconnectLogged) {
+                    $this->logger->warning("Failed to login to AMI for node (will retry every {$this->amiReconnectBackoff}s)", [
+                        'node_id' => $this->nodeId,
+                        'host' => $host
+                    ]);
+                    $this->amiReconnectLogged = true;
+                }
                 \SimpleAmiClient::logoff($this->amiConnection);
                 $this->amiConnection = null;
                 $this->amiConnected = false;
@@ -130,16 +147,21 @@ class NodeWebSocketService implements MessageComponentInterface
             }
             
             $this->amiConnected = true;
+            $this->amiReconnectLogged = false; // Reset on successful connection
             $this->logger->info("Connected to AMI for node (dedicated connection)", [
                 'node_id' => $this->nodeId,
                 'host' => $host
             ]);
             
         } catch (Exception $e) {
-            $this->logger->error("AMI connection error for node", [
-                'node_id' => $this->nodeId,
-                'error' => $e->getMessage()
-            ]);
+            if (!$this->amiReconnectLogged) {
+                $this->logger->warning("AMI connection error for node (will retry every {$this->amiReconnectBackoff}s)", [
+                    'node_id' => $this->nodeId,
+                    'error' => $e->getMessage(),
+                    'host' => $this->nodeConfig['host'] ?? 'unknown'
+                ]);
+                $this->amiReconnectLogged = true;
+            }
             $this->amiConnected = false;
             if ($this->amiConnection !== null) {
                 try {

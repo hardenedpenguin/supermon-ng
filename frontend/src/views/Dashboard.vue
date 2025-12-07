@@ -216,7 +216,7 @@
         <BubbleChart v-model:open="showBubbleChartModal" :local-node="targetNode" />
         
         <!-- Control Panel Modal -->
-        <ControlPanel v-model:isVisible="showControlPanelModal" :local-node="targetNode" />
+        <ControlPanel v-model:isVisible="showControlPanelModal" :local-node="targetNode || selectedLocalNode || selectedNode || String(displayedNodes[0]?.id || '')" />
         
                   <!-- RPT Stats Modal -->
           <RptStats v-model:isVisible="showRptStatsModal" :node-number="targetNode" />

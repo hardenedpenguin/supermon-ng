@@ -284,28 +284,34 @@ class WebSocketServerManager
     public function setupSignalHandlers(): void
     {
         if (function_exists('pcntl_signal')) {
-            pcntl_signal(SIGTERM, [$this, 'handleShutdown']);
-            pcntl_signal(SIGINT, [$this, 'handleShutdown']);
-            pcntl_signal(SIGHUP, [$this, 'handleShutdown']);
+            // Use closure to properly handle shutdown
+            $shutdownHandler = function (int $signal) {
+                $this->logger->info("Received shutdown signal", ['signal' => $signal]);
+                // Schedule shutdown on the event loop to ensure clean exit
+                $this->loop->addTimer(0.1, function () {
+                    $this->stop();
+                    exit(0);
+                });
+            };
             
-            // Dispatch signals periodically in the event loop
-            // Signals won't be dispatched automatically in React event loop
-            $this->loop->addPeriodicTimer(0.1, function () {
+            pcntl_signal(SIGTERM, $shutdownHandler);
+            pcntl_signal(SIGINT, $shutdownHandler);
+            pcntl_signal(SIGHUP, $shutdownHandler);
+            
+            // Enable async signal handling
+            pcntl_async_signals(true);
+            
+            // Also add periodic signal dispatch to ensure signals are processed
+            $this->loop->addPeriodicTimer(0.5, function () {
                 if (function_exists('pcntl_signal_dispatch')) {
                     pcntl_signal_dispatch();
                 }
             });
+            
+            $this->logger->info("Signal handlers registered");
+        } else {
+            $this->logger->warning("pcntl_signal not available, signal handling disabled");
         }
-    }
-    
-    /**
-     * Handle shutdown signals
-     */
-    public function handleShutdown(int $signal): void
-    {
-        $this->logger->info("Received shutdown signal", ['signal' => $signal]);
-        $this->stop();
-        exit(0);
     }
 }
 
