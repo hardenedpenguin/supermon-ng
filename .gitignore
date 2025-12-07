@@ -89,3 +89,4 @@ mobile-apps/android/*.hprof.index
 
 # Android development setup script
 setup-android-env.sh
+user_files/sbin/__pycache__/

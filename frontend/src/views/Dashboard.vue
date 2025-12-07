@@ -97,7 +97,7 @@
       <input v-if="appStore.hasPermission('ASTLKUSER')" type="button" class="submit" value="Lookup" @click="astlookup">
       <input v-if="appStore.hasPermission('RSTATUSER')" type="button" class="submit" value="Rpt Stats" @click="rptstats">
       <input v-if="appStore.hasPermission('BUBLUSER')" type="button" class="submit" value="Bubble" @click="bubble">
-      <input v-if="appStore.hasPermission('DVSWITCHUSER')" type="button" class="submit" value="DVSwitch Mode" @click="showDvswitchModal = true">
+      <input v-if="appStore.hasPermission('CTRLUSER')" type="button" class="submit" value="Control Panel" @click="showControlPanelModal = true">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Favorites" @click="showFavoritesModal = true">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Add Favorite" @click="showAddFavoriteModal = true">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Delete Favorite" @click="showDeleteFavoriteModal = true">
@@ -129,6 +129,7 @@
       <!-- Additional System Buttons -->
       <input v-if="appStore.hasPermission('GPIOUSER')" type="button" class="submit" value="GPIO" @click="openpigpio">
       <input v-if="appStore.hasPermission('BANUSER')" type="button" class="submit" value="Access List" @click="openbanallow">
+      <input v-if="appStore.hasPermission('DVSWITCHUSER')" type="button" class="submit" value="DVSwitch Mode" @click="showDvswitchModal = true">
     </div>
 
     <!-- Bottom Utility Buttons (matches original exactly) -->
@@ -406,6 +407,7 @@ const hasControlPermissions = computed(() => {
          appStore.hasPermission('MONITORUSER') || 
          appStore.hasPermission('PERMUSER')
 })
+
 
 const availableNodes = computed(() => {
   return realTimeStore.nodes

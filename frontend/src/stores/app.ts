@@ -53,6 +53,8 @@ export const useAppStore = defineStore('app', () => {
       
       if (response.data.success && response.data.data) {
         const data = response.data.data
+        console.log('Auth response permissions:', data.permissions)
+        console.log('CTRLUSER permission:', data.permissions?.CTRLUSER)
         user.value = {
           ...data.user,
           permissions: data.permissions
