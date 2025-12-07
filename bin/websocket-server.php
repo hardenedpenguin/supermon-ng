@@ -74,7 +74,7 @@ try {
     
     $logger->info("Event loop exited");
     
-} catch (Exception $e) {
+} catch (Throwable $e) {
     if (isset($logger)) {
         $logger->error("Fatal error in WebSocket server", [
             'error' => $e->getMessage(),
