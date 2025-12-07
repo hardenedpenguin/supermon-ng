@@ -124,10 +124,7 @@ const resetState = () => {
 }
 
 const loadCommands = async () => {
-  console.log('loadCommands called with localNode:', props.localNode)
-  
   if (!props.localNode) {
-    console.warn('Control Panel: No localNode provided, cannot load commands')
     error.value = 'Please select a node first'
     return
   }
@@ -136,19 +133,10 @@ const loadCommands = async () => {
   error.value = ''
   
   try {
-    console.log('Control Panel: Making API call for node:', props.localNode)
     const response = await api.get(`/config/controlpanel?node=${props.localNode}`)
-    
-    console.log('Control Panel API Response:', response.data)
     
     if (response.data.success) {
       commands.value = response.data.data
-      console.log('Control Panel Commands loaded:', {
-        labels: commands.value.labels,
-        cmds: commands.value.cmds,
-        labelsLength: commands.value.labels?.length || 0,
-        hasCommands: hasCommands.value
-      })
     } else {
       error.value = response.data.message || 'Failed to load control panel commands'
     }
