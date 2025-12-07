@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=oneshot
 User=root
-WorkingDirectory=/var/www/html/supermon-ng
-ExecStart=/usr/bin/php /var/www/html/supermon-ng/scripts/database-auto-update.php
+WorkingDirectory=APP_DIR_PLACEHOLDER
+ExecStart=/usr/bin/php APP_DIR_PLACEHOLDER/scripts/database-auto-update.php
 
 [Install]
 WantedBy=multi-user.target

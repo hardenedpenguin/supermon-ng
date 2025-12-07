@@ -94,6 +94,7 @@ Supermon-ng $version is a modernized and extensible version of the original Supe
 - PWA (Progressive Web App) support
 - Modern JavaScript framework integration
 - Comprehensive testing suite
+- Real-time WebSocket support for live node monitoring
 
 ## Installation
 
@@ -121,8 +122,8 @@ Supermon-ng includes an intelligent update system that preserves your configurat
 \`\`\`bash
 # Download new version and extract
 cd /tmp
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.0.7/supermon-ng-V4.0.7.tar.xz
-tar -xJf supermon-ng-V4.0.7.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/$version/supermon-ng-$version.tar.xz
+tar -xJf supermon-ng-$version.tar.xz
 cd supermon-ng
 
 # Run the update script
@@ -389,17 +390,29 @@ validate_release() {
     
     # Check for essential files
     local required_files=(
+        "index.php"
         "install.sh"
-        ".htaccess"
         "composer.json"
         "includes/common.inc"
         "INSTALL.md"
         "RELEASE_NOTES.md"
     )
     
+    # Optional but recommended files
+    local recommended_files=(
+        ".htaccess"
+        "public/index.php"
+    )
+    
     for file in "${required_files[@]}"; do
         if [[ ! -f "$release_dir/$file" ]]; then
-            warning "Required file missing: $file (will be created)"
+            error "Required file missing: $file"
+        fi
+    done
+    
+    for file in "${recommended_files[@]}"; do
+        if [[ ! -f "$release_dir/$file" ]]; then
+            warning "Recommended file missing: $file"
         fi
     done
     
@@ -409,13 +422,26 @@ validate_release() {
         "user_files"
         "src"
         "public"
-        "frontend"
         "scripts"
+    )
+    
+    # Optional but recommended directories
+    local recommended_dirs=(
+        "frontend"
+        "systemd"
+        "config"
+        "bin"
     )
     
     for dir in "${required_dirs[@]}"; do
         if [[ ! -d "$release_dir/$dir" ]]; then
             error "Required directory missing: $dir"
+        fi
+    done
+    
+    for dir in "${recommended_dirs[@]}"; do
+        if [[ ! -d "$release_dir/$dir" ]]; then
+            warning "Recommended directory missing: $dir"
         fi
     done
     
@@ -438,12 +464,23 @@ main() {
     local release_dir="/tmp/supermon-ng"
     local release_file="/tmp/$release_name.tar.xz"
     
-    log "Creating release directory: $release_dir"
+    # Clean up existing release tarballs and directory (per memory: use fixed filename supermon-ng.tar.xz)
+    log "Cleaning up existing release files..."
+    rm -f /tmp/supermon-ng.tar.xz /tmp/supermon-ng-*.tar.xz 2>/dev/null || true
     rm -rf "$release_dir"
+    
+    log "Creating release directory: $release_dir"
     mkdir -p "$release_dir"
     
     # Copy essential files and directories
     log "Copying production files..."
+    
+    # Root index.php file (main entry point)
+    if [ -f "index.php" ]; then
+        cp index.php "$release_dir/"
+    else
+        warning "index.php not found in root directory"
+    fi
     
     # Core application directories (production only)
     cp -r includes/ "$release_dir/"
@@ -498,14 +535,45 @@ main() {
         cp -r frontend/dist/* "$release_dir/frontend/" 2>/dev/null || true
     fi
     
-    cp -r config/ "$release_dir/"
-    cp -r systemd/ "$release_dir/"
+    # Configuration directories
+    if [ -d "config" ]; then
+        cp -r config/ "$release_dir/"
+    fi
+    
+    # Systemd files (verify they use placeholders before copying)
+    if [ -d "systemd" ]; then
+        log "Validating systemd files have placeholders..."
+        local has_hardcoded=false
+        for service_file in systemd/*.service systemd/*.timer; do
+            if [ -f "$service_file" ]; then
+                if grep -q "/var/www/html/supermon-ng" "$service_file" 2>/dev/null; then
+                    warning "Found hardcoded path in $service_file - should use APP_DIR_PLACEHOLDER"
+                    has_hardcoded=true
+                fi
+            fi
+        done
+        if [ "$has_hardcoded" = true ]; then
+            warning "Some systemd files have hardcoded paths. They should use APP_DIR_PLACEHOLDER."
+        fi
+        cp -r systemd/ "$release_dir/"
+    fi
+    
+    # WebSocket server binary
+    if [ -d "bin" ]; then
+        cp -r bin/ "$release_dir/"
+    fi
     
     # Configuration files
     cp composer.json "$release_dir/"
     cp composer.lock "$release_dir/" 2>/dev/null || true
-    cp .htaccess "$release_dir/"
-    cp public/.htaccess "$release_dir/public/" 2>/dev/null || true
+    
+    # Apache .htaccess files
+    if [ -f ".htaccess" ]; then
+        cp .htaccess "$release_dir/"
+    fi
+    if [ -f "public/.htaccess" ]; then
+        cp public/.htaccess "$release_dir/public/" 2>/dev/null || true
+    fi
     
     # Documentation
     cp README.md "$release_dir/" 2>/dev/null || true
@@ -514,8 +582,9 @@ main() {
     
     # Installation and security files
     cp install.sh "$release_dir/"
-    cp -r sudoers.d/ "$release_dir/" 2>/dev/null || true
-    cp -r systemd/ "$release_dir/" 2>/dev/null || true
+    if [ -d "sudoers.d" ]; then
+        cp -r sudoers.d/ "$release_dir/"
+    fi
     
     # Essential scripts only (exclude development scripts)
     mkdir -p "$release_dir/scripts"
@@ -563,6 +632,7 @@ main() {
     echo "   - Built frontend (frontend/dist/)"
     echo "   - User configuration files (user_files/)"
     echo "   - Performance optimization configs (config/)"
+    echo "   - WebSocket server (bin/websocket-server.php)"
     echo "   - Installation script (install.sh)"
     echo "   - Update system (scripts/update.sh, scripts/version-check.sh)"
     echo "   - Security configurations (sudoers.d/, systemd/)"

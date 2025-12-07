@@ -66,6 +66,22 @@ $BACKGROUND_HEIGHT = "164px";
 $DISPLAY_BACKGROUND = "black";
 
 // ========================================
+// HEADER TEXT COLORS
+// ========================================
+
+// Color for callsign text in header
+// Can be color name, hex code, or RGB value
+// $CALLSIGN_COLOR = "#00ff00";
+
+// Color for title text when user is logged in
+// Can be color name, hex code, or RGB value
+// $TITLE_LOGGED_COLOR = "#ffff00";
+
+// Color for title text when user is not logged in
+// Can be color name, hex code, or RGB value
+// $TITLE_NOT_LOGGED_COLOR = "#ffffff";
+
+// ========================================
 // LOGO CONFIGURATION
 // ========================================
 

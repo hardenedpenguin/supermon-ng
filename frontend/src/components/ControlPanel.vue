@@ -124,19 +124,19 @@ const resetState = () => {
 }
 
 const loadCommands = async () => {
-  if (!props.localNode) return
+  if (!props.localNode) {
+    error.value = 'Please select a node first'
+    return
+  }
   
   loading.value = true
   error.value = ''
   
   try {
-
     const response = await api.get(`/config/controlpanel?node=${props.localNode}`)
-    
     
     if (response.data.success) {
       commands.value = response.data.data
-      
     } else {
       error.value = response.data.message || 'Failed to load control panel commands'
     }

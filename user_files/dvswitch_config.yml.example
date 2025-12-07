@@ -1,0 +1,114 @@
+# DVSwitch Mode Configuration
+# Copy this file to dvswitch_config.yml and customize for your system
+#
+# Per-node configuration:
+# - Create dvswitch_config_{nodeId}.yml for node-specific settings
+# - Configure abinfo_file or abinfo_port in allmon.ini for each node
+#
+# Format:
+# modes:
+#   - MODE_NAME:
+#       talkgroups:
+#         - tgid: "talkgroup_id"
+#           alias: "Display Name"
+
+modes:
+  - DMR:
+      talkgroups:
+        # TGIF Network Examples (replace YOURPASSWORD with your TGIF password):
+        - tgid: "YOURPASSWORD@tgif.network:62031!0"
+          alias: TGIF Worldwide
+        - tgid: "YOURPASSWORD@tgif.network:62031!1"
+          alias: TGIF Local
+        - tgid: "YOURPASSWORD@tgif.network:62031!2"
+          alias: TGIF Regional
+        - tgid: "YOURPASSWORD@tgif.network:62031!3"
+          alias: TGIF National
+        - tgid: "YOURPASSWORD@tgif.network:62031!4000"
+          alias: TGIF Disconnect
+        # BrandMeister Network Examples (replace YOURPASSWORD with your BrandMeister hostpost password):
+        - tgid: "YOURPASSWORD@3102.repeater.net:62031!91"
+          alias: BM WorldWide
+        - tgid: "YOURPASSWORD@3102.repeater.net:62031!3100"
+          alias: BM USA
+        - tgid: "YOURPASSWORD@3102.repeater.net:62031!3101"
+          alias: BM California
+        - tgid: "YOURPASSWORD@3102.repeater.net:62031!3102"
+          alias: BM Texas
+        - tgid: "YOURPASSWORD@3102.repeater.net:62031!4000"
+          alias: BM Disconnect
+
+  - YSF:
+      talkgroups:
+        - tgid: "register.ysfreflector.de:42020"
+          alias: PARROT
+        - tgid: "americalink.hamfm.com:42000"
+          alias: US-AMERICA-LINK
+        - tgid: "ysf.kansascitywide.com:42000"
+          alias: US-KCWide
+        - tgid: "ysfreflector.de:42020"
+          alias: YSF Reflector DE
+        - tgid: "ysfreflector.com:42020"
+          alias: YSF Reflector COM
+        - tgid: "register.ysfreflector.de:42020"
+          alias: YSF Reflector Register DE
+        - tgid: "register.ysfreflector.com:42020"
+          alias: YSF Reflector Register COM
+
+  - P25:
+      talkgroups:
+        - tgid: "9999"
+          alias: Disconnect
+        - tgid: "10"
+          alias: Parrot
+        - tgid: "10100"
+          alias: WorldWide
+        - tgid: "3101"
+          alias: California
+        - tgid: "3102"
+          alias: Texas
+        - tgid: "3103"
+          alias: New York
+        - tgid: "3104"
+          alias: Florida
+        - tgid: "31010"
+          alias: Alabama-Link
+        - tgid: "31088"
+          alias: ColoradoHD
+
+  - DSTAR:
+      talkgroups:
+        - tgid: "       U"
+          alias: Unlink
+        - tgid: "REF001EL"
+          alias: Echo (Parrot)
+        - tgid: "REF004CL"
+          alias: REF004C
+        - tgid: "REF012CL"
+          alias: REF012C
+        - tgid: "REF014CL"
+          alias: REF014C
+        - tgid: "REF030CL"
+          alias: REF030C
+        - tgid: "REF038CL"
+          alias: REF038C
+        - tgid: "REF050CL"
+          alias: REF050C
+        - tgid: "REF052CL"
+          alias: REF052C
+        - tgid: "REF054CL"
+          alias: REF054C
+
+  - NXDN:
+      talkgroups:
+        - tgid: "9999"
+          alias: Unlink
+        - tgid: "10"
+          alias: Parrot
+        - tgid: "3101"
+          alias: California
+        - tgid: "3102"
+          alias: Texas
+        - tgid: "31088"
+          alias: ColoradoHD
+

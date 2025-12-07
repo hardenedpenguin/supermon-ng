@@ -55,11 +55,20 @@ class NodeController
                 // Get node info from ASTDB
                 $nodeInfo = $this->getNodeInfoFromAstdb((string)$nodeId, $astdb);
                 
+                // Use ASTDB data for callsign and location
+                $callsign = $nodeInfo['callsign'] ?? 'Unknown';
+                $location = $nodeInfo['location'] ?? 'Unknown';
+                $description = $nodeInfo['description'] ?? 'Unknown';
+                
+                // Header uses only the location field (not callsign + description + location)
+                // This matches the original behavior where header shows just the node name/description
+                $info = $location ?: $description ?: "Node $nodeId";
+                
                 // Skip AMI data for list view - it's too expensive
                 // AMI data is fetched separately via getAmiStatus endpoint
                 $amiData = [
                     'node' => $nodeId,
-                    'info' => $nodeInfo['description'] ?? 'Node ' . $nodeId,
+                    'info' => $info,
                     'status' => 'unknown',
                     'cos_keyed' => 0,
                     'tx_keyed' => 0,
@@ -71,10 +80,6 @@ class NodeController
                     'DISK' => null,
                     'remote_nodes' => []
                 ];
-                
-                // Use ASTDB data for callsign and location
-                $callsign = $nodeInfo['callsign'] ?? 'Unknown';
-                $location = $nodeInfo['location'] ?? 'Unknown';
                 
                 // Determine if node is online based on AMI data
                 $isOnline = ($amiData['status'] ?? 'offline') === 'online';
@@ -98,8 +103,9 @@ class NodeController
                     'id' => $nodeId,
                     'node_number' => $nodeId,
                     'callsign' => $callsign,
-                    'description' => $node['system'],
+                    'description' => $description, // ASTDB description field
                     'location' => $location,
+                    'info' => $info, // Header uses callsign + description + location (skip empty parts)
                     'status' => $amiData['status'] ?? 'offline',
                     'last_heard' => $isOnline ? date('Y-m-d H:i:s') : null,
                     'connected_nodes' => $connectedNodes,
@@ -193,9 +199,12 @@ class NodeController
 
         $this->logger->info("Fetching node details", ['node_id' => $nodeId]);
 
+        // Get current user (null when logged out - that's fine, will use default config)
+        $currentUser = $this->getCurrentUser();
+
         // Get node configuration
         try {
-            $nodeConfig = $this->configService->getNodeConfig($nodeId);
+            $nodeConfig = $this->configService->getNodeConfig($nodeId, $currentUser);
             if (!$nodeConfig) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -836,7 +845,7 @@ class NodeController
      */
     private function getNodeAmiData(array $nodeConfig, string $nodeId): array
     {
-        // Include the legacy AMI functions using optimized service
+        // Include the AMI functions using optimized service
         $this->includeService->includeAmiFunctions();
         $this->includeService->includeNodeInfo();
         // Helpers functionality now available as modern services
@@ -1038,44 +1047,27 @@ class NodeController
             return [];
         }
         
-        $actionRand = mt_rand();
-        $rptStatus = '';
-        $sawStatus = '';
-        $eol = "\r\n";
-
-        // Execute XStat command
-        $actionID_xstat = 'xstat' . $actionRand;
-        $xstatCommand = "Action: RptStatus{$eol}COMMAND: XStat{$eol}NODE: {$node}{$eol}ActionID: {$actionID_xstat}{$eol}{$eol}";
+        // Execute XStat command using action() method (Allmon3 style)
+        $rptStatus = \SimpleAmiClient::action($fp, "RptStatus", [
+            "COMMAND" => "XStat",
+            "NODE" => $node
+        ]);
         
-        $xstatBytesWritten = @fwrite($fp, $xstatCommand);
-        if ($xstatBytesWritten === false || $xstatBytesWritten === 0) {
-            error_log("getNodeViaAmi: XStat fwrite FAILED for node $node");
-            return [];
-        }
-        
-        $rptStatus = \SimpleAmiClient::getResponse($fp, $actionID_xstat);
         if ($rptStatus === false) {
-            error_log("getNodeViaAmi: XStat getResponse FAILED for node $node");
+            error_log("getNodeViaAmi: XStat action FAILED for node $node");
             $rptStatus = '';
         }
-        
 
-        // Execute SawStat command
-        $actionID_sawstat = 'sawstat' . $actionRand;
-        $sawStatCommand = "Action: RptStatus{$eol}COMMAND: SawStat{$eol}NODE: {$node}{$eol}ActionID: {$actionID_sawstat}{$eol}{$eol}";
+        // Execute SawStat command using action() method (Allmon3 style)
+        $sawStatus = \SimpleAmiClient::action($fp, "RptStatus", [
+            "COMMAND" => "SawStat",
+            "NODE" => $node
+        ]);
         
-        $sawStatBytesWritten = @fwrite($fp, $sawStatCommand);
-        if ($sawStatBytesWritten === false || $sawStatBytesWritten === 0) {
-            error_log("getNodeViaAmi: SawStat fwrite FAILED for node $node");
-            return $this->parseNodeAmiData($fp, $node, $rptStatus, '');
-        }
-        
-        $sawStatus = \SimpleAmiClient::getResponse($fp, $actionID_sawstat);
         if ($sawStatus === false) {
-            error_log("getNodeViaAmi: SawStat getResponse FAILED for node $node");
+            error_log("getNodeViaAmi: SawStat action FAILED for node $node");
             $sawStatus = '';
         }
-        
         
         return $this->parseNodeAmiData($fp, $node, $rptStatus, $sawStatus);
     }
@@ -1225,6 +1217,29 @@ class NodeController
             }
         }
         
+        // Also add nodes from LinkedNodes that aren't already in curNodes
+        // This handles connections that show up as T546050 in LinkedNodes but not in Conn: lines
+        foreach ($allLinkedNodes as $linkedNodeId) {
+            if (!isset($curNodes[$linkedNodeId])) {
+                // This is a linked node that wasn't in the direct connections
+                $curNodes[$linkedNodeId]['node'] = $linkedNodeId;
+                $curNodes[$linkedNodeId]['info'] = \getAstInfo($fp, $linkedNodeId);
+                $curNodes[$linkedNodeId]['ip'] = 'Indirect'; // Linked nodes don't have direct IP
+                $curNodes[$linkedNodeId]['direction'] = isset($modes[$linkedNodeId]) ? ($modes[$linkedNodeId]['mode'] == 'T' ? 'OUT' : 'IN') : 'unknown';
+                $curNodes[$linkedNodeId]['elapsed'] = 'unknown';
+                $curNodes[$linkedNodeId]['link'] = 'LINKED';
+                $curNodes[$linkedNodeId]['keyed'] = 'n/a';
+                $curNodes[$linkedNodeId]['last_keyed'] = '-1';
+                $curNodes[$linkedNodeId]['mode'] = isset($modes[$linkedNodeId]) ? $modes[$linkedNodeId]['mode'] : 'Allstar';
+                
+                // Use keyed timing data from SawStat if available
+                if (isset($keyups[$linkedNodeId])) {
+                    $curNodes[$linkedNodeId]['keyed'] = ($keyups[$linkedNodeId]['isKeyed'] == 1) ? 'yes' : 'no';
+                    $curNodes[$linkedNodeId]['last_keyed'] = $keyups[$linkedNodeId]['keyed'];
+                }
+            }
+        }
+        
         // Add local node stats
         $localStatsKey = 1;
         if (!isset($curNodes[$localStatsKey])) {
@@ -1257,6 +1272,119 @@ class NodeController
         return $this->astdbService->getAstdb();
     }
 
+    /**
+     * Get WebSocket port configuration for a node
+     * Ports are assigned incrementally: basePort (8105) + node index
+     */
+    public function getWebSocketPort(Request $request, Response $response, array $args): Response
+    {
+        $nodeId = $args['id'] ?? null;
+        
+        if (!$nodeId) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Node ID required'
+            ]));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+        
+        try {
+            $currentUser = $this->getCurrentUser();
+            $basePort = 8105; // Base port for WebSocket servers
+            
+            // Get all available nodes to determine index
+            $nodes = $this->configService->getAvailableNodes($currentUser);
+            
+            // Find node index
+            $nodeIndex = null;
+            foreach ($nodes as $index => $node) {
+                if ($node['id'] == $nodeId) {
+                    $nodeIndex = $index;
+                    break;
+                }
+            }
+            
+            if ($nodeIndex === null) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'error' => 'Node not found'
+                ]));
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+            
+            // Calculate port: basePort + index
+            $port = $basePort + $nodeIndex;
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'node' => $nodeId,
+                'port' => $port,
+                'ws_url' => "ws://" . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "/supermon-ng/ws/{$nodeId}"
+            ]));
+            
+            return $response->withHeader('Content-Type', 'application/json');
+            
+        } catch (Exception $e) {
+            $this->logger->error("Error getting WebSocket port", [
+                'node_id' => $nodeId,
+                'error' => $e->getMessage()
+            ]);
+            
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Internal server error'
+            ]));
+            
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
+    
+    /**
+     * Get WebSocket port configuration for all nodes
+     */
+    public function getAllWebSocketPorts(Request $request, Response $response): Response
+    {
+        try {
+            $currentUser = $this->getCurrentUser();
+            $basePort = 8105; // Base port for WebSocket servers
+            
+            // Get all available nodes
+            $nodes = $this->configService->getAvailableNodes($currentUser);
+            
+            $portConfig = [];
+            foreach ($nodes as $index => $node) {
+                $nodeId = $node['id'];
+                $port = $basePort + $index;
+                
+                $portConfig[$nodeId] = [
+                    'node' => $nodeId,
+                    'port' => $port,
+                    'ws_url' => "ws://" . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "/supermon-ng/ws/{$nodeId}"
+                ];
+            }
+            
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'base_port' => $basePort,
+                'nodes' => $portConfig
+            ]));
+            
+            return $response->withHeader('Content-Type', 'application/json');
+            
+        } catch (Exception $e) {
+            $this->logger->error("Error getting all WebSocket ports", [
+                'error' => $e->getMessage()
+            ]);
+            
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Internal server error'
+            ]));
+            
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
+    
     /**
      * Get the currently logged in user from session
      */
@@ -1362,6 +1490,7 @@ class NodeController
                 'ASTLKUSER' => true,
                 'RSTATUSER' => true,
                 'BUBLUSER' => true,
+                'DVSWITCHUSER' => false,
                 'FAVUSER' => true,
                 'CTRLUSER' => false,
                 'CFGEDUSER' => true,
@@ -1862,20 +1991,18 @@ class NodeController
             ];
         }
 
-        $restartOutput = \SimpleAmiClient::command($fp, "restart now");
+        // Send restart command - Asterisk will restart immediately
+        // We can't verify success since the server restarts, but if we got here,
+        // we successfully connected and sent the command, so assume success
+        $restartOutput = \SimpleAmiClient::command($fp, "rpt restart");
         \SimpleAmiClient::logoff($fp);
 
-        if ($restartOutput === false) {
-            return [
-                'success' => false,
-                'message' => 'Failed to send restart command to Asterisk'
-            ];
-        }
-
+        // Since Asterisk restarts immediately, we can't verify the response
+        // If we successfully connected and sent the command, consider it successful
         return [
             'success' => true,
-            'message' => 'Fast restart command sent successfully. Asterisk is restarting now.',
-            'output' => $restartOutput
+            'message' => 'RPT restart command sent successfully. Asterisk is restarting now.',
+            'output' => $restartOutput ?: 'Command sent (server restarting, no response available)'
         ];
     }
 
@@ -3215,9 +3342,8 @@ class NodeController
                     ->withHeader('Content-Type', 'application/json');
             }
 
-            // Get voter status
-            $actionID = 'voter' . preg_replace('/[^a-zA-Z0-9]/', '', $node) . mt_rand(1000, 9999);
-            $voterResponse = $this->getVoterStatus($ami, $actionID);
+            // Get voter status using action() method (Allmon3 style)
+            $voterResponse = $this->getVoterStatus($ami, $node);
             
             if ($voterResponse === false) {
                 $response->getBody()->write(json_encode([
@@ -3230,11 +3356,22 @@ class NodeController
                     ->withHeader('Content-Type', 'application/json');
             }
 
-            // Parse voter response
-            list($nodesData, $votedData) = $this->parseVoterResponse($voterResponse);
+            // Use Allmon3's parseVoterStatus function to generate HTML
+            $voterData = \SimpleAmiClient::parseVoterStatus($voterResponse);
+            $baseHtml = $voterData['html'] ?? '';
             
-            // Format HTML for the node
-            $html = $this->formatVoterHTML($node, $nodesData, $votedData, $nodeConfig);
+            // Add node header to voter HTML output
+            $info = $this->getAstInfo($node);
+            $nodeHeader = '';
+            if (!empty($nodeConfig['hideNodeURL'])) {
+                $nodeHeader = "<tr><th colspan=2><i>   Node $node - $info   </i></th></tr>";
+            } else {
+                $nodeURL = "http://stats.allstarlink.org/nodeinfo.cgi?node=$node";
+                $nodeHeader = "<tr><th colspan=2><i>   Node <a href=\"$nodeURL\" target=\"_blank\">$node</a> - $info   </i></th></tr>";
+            }
+            
+            // Insert header before the Client/RSSI header row
+            $html = str_replace('<tr><th>Client</th><th>RSSI</th></tr>', $nodeHeader . '<tr><th>Client</th><th>RSSI</th></tr>', $baseHtml);
 
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -3259,142 +3396,15 @@ class NodeController
     }
 
     /**
-     * Get voter status via AMI
+     * Get voter status via AMI using action() method (Allmon3 style)
      */
-    private function getVoterStatus($ami, $actionID): string|false
+    private function getVoterStatus($ami, $node): string|false
     {
-        $result = \SimpleAmiClient::command($ami, "VoterStatus");
+        $result = \SimpleAmiClient::action($ami, "VoterStatus", [
+            "NODE" => $node
+        ]);
         
-        if ($result !== false) {
-            return $result;
-        }
-        
-        return false;
-    }
-
-    /**
-     * Parse voter response from AMI
-     */
-    private function parseVoterResponse(string $response): array
-    {
-        $lines = explode("\n", $response);
-        $parsedNodesData = [];
-        $parsedVotedData = [];
-        $currentNodeContext = null;
-        $currentClientData = [];
-
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (empty($line)) continue;
-
-            $parts = explode(": ", $line, 2);
-            if (count($parts) < 2) continue;
-            
-            list($key, $value) = $parts;
-
-            switch ($key) {
-                case 'Node':
-                    if ($currentNodeContext && !empty($currentClientData) && isset($currentClientData['name'])) {
-                        $parsedNodesData[$currentNodeContext][$currentClientData['name']] = $currentClientData;
-                    }
-                    $currentNodeContext = $value;
-                    $currentClientData = [];
-                    if (!isset($parsedNodesData[$currentNodeContext])) {
-                        $parsedNodesData[$currentNodeContext] = [];
-                    }
-                    break;
-
-                case 'Client':
-                    if ($currentNodeContext && !empty($currentClientData) && isset($currentClientData['name'])) {
-                        $parsedNodesData[$currentNodeContext][$currentClientData['name']] = $currentClientData;
-                    }
-                    // Check for the "Mix" suffix BEFORE cleaning it
-                    $isMix = (strpos($value, ' Mix') !== false);
-                    
-                    // Clean all known suffixes from the client name
-                    $cleanName = preg_replace('/(\sMaster\sActiveMaster|\sLocal\sLocal|\sMix)$/', '', $value);
-                    
-                    // Store the clean name and the isMix flag
-                    $currentClientData = ['name' => $cleanName, 'isMix' => $isMix, 'rssi' => 'N/A', 'ip' => 'N/A'];
-                    break;
-                    
-                case 'RSSI':
-                    if (isset($currentClientData['name'])) {
-                        $currentClientData['rssi'] = $value;
-                    }
-                    break;
-                    
-                case 'IP':
-                    if (isset($currentClientData['name'])) {
-                        $currentClientData['ip'] = $value;
-                    }
-                    break;
-
-                case 'Voted':
-                    if ($currentNodeContext) {
-                        $parsedVotedData[$currentNodeContext] = $value;
-                    }
-                    break;
-            }
-        }
-
-        if ($currentNodeContext && !empty($currentClientData) && isset($currentClientData['name'])) {
-            $parsedNodesData[$currentNodeContext][$currentClientData['name']] = $currentClientData;
-        }
-
-        return [$parsedNodesData, $parsedVotedData];
-    }
-
-    /**
-     * Format voter HTML for display
-     */
-    private function formatVoterHTML(string $nodeNum, array $nodesData, array $votedData, array $currentConfig): string
-    {
-        $message = '';
-        $info = $this->getAstInfo($nodeNum); 
-
-        if (!empty($currentConfig['hideNodeURL'])) {
-            $message .= "<table class='rtcm'><tr><th colspan=2><i>   Node $nodeNum - $info   </i></th></tr>";
-        } else {
-            $nodeURL = "http://stats.allstarlink.org/nodeinfo.cgi?node=$nodeNum";
-            $message .= "<table class='rtcm'><tr><th colspan=2><i>   Node <a href=\"$nodeURL\" target=\"_blank\">$nodeNum</a> - $info   </i></th></tr>";
-        }
-        $message .= "<tr><th>Client</th><th>RSSI</th></tr>";
-
-        if (!isset($nodesData[$nodeNum]) || empty($nodesData[$nodeNum])) {
-            $message .= "<tr><td><div class='voter-no-clients'>&nbsp;No clients&nbsp;</div></td>";
-            $message .= "<td><div class='voter-empty-bar'>&nbsp;</div></td></tr>";
-        } else {
-            $clients = $nodesData[$nodeNum];
-            $votedClient = isset($votedData[$nodeNum]) && $votedData[$nodeNum] !== 'none' ? $votedData[$nodeNum] : null;
-
-            foreach($clients as $clientName => $client) {
-                $rssi = isset($client['rssi']) ? (int)$client['rssi'] : 0;
-                $bar_width_px = round(($rssi / 255) * 300); 
-                $bar_width_px = ($rssi == 0) ? 3 : max(1, $bar_width_px);
-                
-                $barcolor = "#0099FF"; 
-                $textcolor = 'white'; 
-                
-                if ($votedClient && $clientName === $votedClient) {
-                    $barcolor = 'greenyellow'; 
-                    $textcolor = 'black';
-                } elseif (isset($client['isMix']) && $client['isMix'] === true) {
-                    $barcolor = 'cyan'; 
-                    $textcolor = 'black';
-                }
-
-                $message .= "<tr>";
-                $message .= "<td><div>" . htmlspecialchars($clientName) . "</div></td>";
-                $message .= "<td><div class='text'> <div class='barbox_a'>";
-                $message .= "<div class='bar' style='width: " . $bar_width_px . "px; background-color: $barcolor; color: $textcolor'>" . $rssi . "</div>";
-                $message .= "</div></td></tr>";
-            }
-        }
-        $message .= "<tr><td colspan=2> </td></tr>";
-        $message .= "</table><br/>";
-        
-        return str_replace(["\r", "\n"], '', $message);
+        return $result;
     }
 
     /**
@@ -3415,7 +3425,7 @@ class NodeController
             }
 
             // Get Asterisk version info
-            $versionResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -V"]);
+            $versionResponse = \SimpleAmiClient::command($ami, "asterisk -V");
             if ($versionResponse && strpos($versionResponse, 'Asterisk') !== false) {
                 return "Asterisk Node";
             }
@@ -3536,7 +3546,7 @@ class NodeController
 
         try {
             // Get node status
-            $statusResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt status $nodeId'"]);
+            $statusResponse = \SimpleAmiClient::command($ami, "asterisk -rx 'rpt status $nodeId'");
             if ($statusResponse) {
                 if (strpos($statusResponse, 'Online') !== false) {
                     $statusInfo['status'] = 'online';
@@ -3548,15 +3558,27 @@ class NodeController
             }
 
             // Get connected nodes with detailed information
-            $connectedResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt nodes $nodeId'"]);
+            $connectedResponse = \SimpleAmiClient::command($ami, "asterisk -rx 'rpt nodes $nodeId'");
             if ($connectedResponse) {
                 $lines = explode("\n", $connectedResponse);
                 $connectedNodes = [];
                 foreach ($lines as $line) {
-                    if (preg_match('/Node\s+(\d+)/', $line, $matches)) {
+                    $line = trim($line);
+                    // Skip empty lines and header
+                    if (empty($line) || strpos($line, 'CONNECTED NODES') !== false) {
+                        continue;
+                    }
+                    
+                    // Parse connected nodes - format is "T546050" or "R546050" (space-separated or comma-separated)
+                    // Handle both space-separated and comma-separated formats
+                    $nodeIds = preg_split('/[\s,]+/', $line);
+                    foreach ($nodeIds as $nodeItem) {
+                        $nodeItem = trim($nodeItem);
+                        // Match format: T546050 or R546050 (T = Transmit, R = Receive)
+                        if (preg_match('/^[TR](\d+)$/', $nodeItem, $matches)) {
                         $connectedNodeId = $matches[1];
                         // Get additional info for each connected node
-                        $nodeInfoResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt stats $connectedNodeId'"]);
+                        $nodeInfoResponse = \SimpleAmiClient::command($ami, "asterisk -rx 'rpt stats $connectedNodeId'");
                         $info = 'Unknown';
                         $ip = null;
                         if ($nodeInfoResponse) {
@@ -3579,13 +3601,14 @@ class NodeController
                             'mode' => 'duplex',
                             'keyed' => '0'
                         ];
+                        }
                     }
                 }
                 $statusInfo['connected_nodes'] = $connectedNodes;
             }
 
             // Get key status
-            $keyResponse = \SimpleAmiClient::command($ami, "Command", ["Command" => "asterisk -rx 'rpt keyed $nodeId'"]);
+            $keyResponse = \SimpleAmiClient::command($ami, "asterisk -rx 'rpt keyed $nodeId'");
             if ($keyResponse) {
                 if (strpos($keyResponse, 'Keyed') !== false) {
                     $statusInfo['is_keyed'] = true;
@@ -3777,7 +3800,9 @@ class NodeController
     {
         try {
             // Use the original supermon 1.0.6 approach with AMI commands
-            $nodeConfig = $this->loadNodeConfig($this->getCurrentUser(), $nodeId);
+            // Get current user (null when logged out - that's fine, will use default config)
+            $currentUser = $this->getCurrentUser();
+            $nodeConfig = $this->loadNodeConfig($currentUser, $nodeId);
             if (!$nodeConfig) {
                 throw new \Exception("Configuration for node $nodeId not found");
             }
@@ -3820,24 +3845,79 @@ class NodeController
     }
 
     /**
-     * Get node data for lsnod display (direct connections only)
-     * Keep it simple - just show direct connections
+     * Get node data for lsnod display (direct connections and linked nodes)
+     * Show both direct connections and linked nodes (like T546050)
      */
     private function getNodeDataForLsnod($fp, string $node): array
     {
         // Get basic node data (direct connections and system stats only)
         $basicNodeData = $this->getNodeData($fp, $node);
         
-        // Filter to only show direct connections (no linked nodes)
-        $directConnections = [];
-        foreach ($basicNodeData['remote_nodes'] ?? [] as $remoteNode) {
-            // Only include direct connections (those with actual connection details)
-            if (isset($remoteNode['ip']) && $remoteNode['ip'] !== 'N/A' && $remoteNode['ip'] !== 'Indirect') {
-                $directConnections[] = $remoteNode;
+        // Also get connections from rpt nodes command to catch connections that XStat might miss
+        // This is important for reverse connections (when another node connects TO this node)
+        $rptNodesResponse = \SimpleAmiClient::command($fp, "asterisk -rx 'rpt nodes $node'");
+        $additionalNodes = [];
+        
+        if ($rptNodesResponse) {
+            $lines = explode("\n", $rptNodesResponse);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                // Skip empty lines and header
+                if (empty($line) || strpos($line, 'CONNECTED NODES') !== false) {
+                    continue;
+                }
+                
+                // Parse connected nodes - format is "T546050" or "R546050" (space-separated or comma-separated)
+                $nodeIds = preg_split('/[\s,]+/', $line);
+                foreach ($nodeIds as $nodeItem) {
+                    $nodeItem = trim($nodeItem);
+                    // Match format: T546050 or R546050 (T = Transmit, R = Receive)
+                    if (preg_match('/^[TR](\d+)$/', $nodeItem, $matches)) {
+                        $connectedNodeId = $matches[1];
+                        
+                        // Check if this node is already in remote_nodes
+                        $alreadyExists = false;
+                        foreach ($basicNodeData['remote_nodes'] ?? [] as $existingNode) {
+                            if (($existingNode['node'] ?? '') == $connectedNodeId) {
+                                $alreadyExists = true;
+                                break;
+                            }
+                        }
+                        
+                        // If not already in the list, add it
+                        if (!$alreadyExists) {
+                            $additionalNodes[] = [
+                                'node' => $connectedNodeId,
+                                'info' => \getAstInfo($fp, $connectedNodeId),
+                                'ip' => 'Indirect', // Linked nodes from rpt nodes are indirect
+                                'link' => 'LINKED',
+                                'direction' => substr($nodeItem, 0, 1) == 'T' ? 'OUT' : 'IN',
+                                'keyed' => null,
+                                'mode' => 'Allstar',
+                                'elapsed' => null,
+                                'last_keyed' => null
+                            ];
+                        }
+                    }
+                }
             }
         }
         
-        $basicNodeData['remote_nodes'] = $directConnections;
+        // Include both direct connections AND linked nodes (Indirect)
+        // Linked nodes are valid connections that should be displayed
+        $allConnections = [];
+        foreach ($basicNodeData['remote_nodes'] ?? [] as $remoteNode) {
+            // Include direct connections (with IP) and linked nodes (Indirect)
+            // Only exclude nodes with 'N/A' IP which indicates no connection
+            if (isset($remoteNode['ip']) && $remoteNode['ip'] !== 'N/A') {
+                $allConnections[] = $remoteNode;
+            }
+        }
+        
+        // Add any additional nodes found via rpt nodes command
+        $allConnections = array_merge($allConnections, $additionalNodes);
+        
+        $basicNodeData['remote_nodes'] = $allConnections;
         
         return $basicNodeData;
     }
@@ -3956,12 +4036,27 @@ class NodeController
             $systemState[] = ['Disk', $nodeData['DISK']];
         }
         
+        // Determine node status from system state
+        $nodeStatus = 'unknown';
+        if (isset($nodeData['cos_keyed']) || isset($nodeData['tx_keyed'])) {
+            $nodeStatus = 'online';
+        }
+        
         return [
             'main_node' => [
                 'node_number' => $nodeId,
                 'callsign' => $mainNodeInfo['callsign'],
                 'frequency' => $mainNodeInfo['frequency'],
-                'location' => $mainNodeInfo['location']
+                'location' => $mainNodeInfo['location'],
+                'status' => $nodeStatus,
+                'cos_keyed' => $nodeData['cos_keyed'] ?? 0,
+                'tx_keyed' => $nodeData['tx_keyed'] ?? 0,
+                'cpu_temp' => $nodeData['cpu_temp'] ?? null,
+                'cpu_up' => $nodeData['cpu_up'] ?? null,
+                'cpu_load' => $nodeData['cpu_load'] ?? null,
+                'alert' => $nodeData['ALERT'] ?? null,
+                'wx' => $nodeData['WX'] ?? null,
+                'disk' => $nodeData['DISK'] ?? null
             ],
             'system_state' => $systemState,
             'nodes' => $nodes,

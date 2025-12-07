@@ -70,11 +70,13 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
     if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'], true)) {
         $uri = $request->getUri()->getPath();
         
-        // Skip CSRF validation for auth endpoints (login, etc.) and bubble chart
+        // Skip CSRF validation for auth endpoints (login, etc.), bubble chart, and DVSwitch endpoints
         // Also handle paths with /supermon-ng prefix
         $normalizedUri = str_replace('/supermon-ng', '', $uri);
         $skipPaths = ['/api/auth/login', '/api/auth/logout', '/api/auth/me', '/api/config/bubblechart'];
-        if (!in_array($uri, $skipPaths) && !in_array($normalizedUri, $skipPaths)) {
+        // Skip CSRF for DVSwitch endpoints (they have their own permission checks)
+        $isDvswitchPath = strpos($normalizedUri, '/api/dvswitch/') === 0 || strpos($uri, '/api/dvswitch/') === 0;
+        if (!in_array($uri, $skipPaths) && !in_array($normalizedUri, $skipPaths) && !$isDvswitchPath) {
             $parsedBody = $request->getParsedBody();
             // For DELETE requests, body might be empty, so check header first
             $token = $request->getHeaderLine('X-CSRF-Token') ?? ($parsedBody['csrf_token'] ?? '');

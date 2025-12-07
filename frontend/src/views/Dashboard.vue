@@ -3,12 +3,12 @@
     <!-- Header Section (mimics header.inc structure) -->
     <div class="header" :style="{ backgroundImage: headerBackgroundUrl }">
       <!-- Main Title -->
-      <div class="header-title">
+      <div class="header-title" :style="headerTitleStyle">
         <a href="#"><i>{{ headerTitle }}</i></a>
       </div>
       
       <!-- Call Sign -->
-      <div v-if="systemInfo?.callsign" class="header-title2">
+      <div v-if="systemInfo?.callsign" class="header-title2" :style="callsignStyle">
         <a v-if="systemInfo?.myUrl" :href="getCleanUrl(systemInfo.myUrl)" :target="shouldOpenInNewTab(systemInfo.myUrl) ? '_blank' : '_self'">
           <i>{{ systemInfo.callsign }}</i>
         </a>
@@ -97,6 +97,7 @@
       <input v-if="appStore.hasPermission('ASTLKUSER')" type="button" class="submit" value="Lookup" @click="astlookup">
       <input v-if="appStore.hasPermission('RSTATUSER')" type="button" class="submit" value="Rpt Stats" @click="rptstats">
       <input v-if="appStore.hasPermission('BUBLUSER')" type="button" class="submit" value="Bubble" @click="bubble">
+      <input v-if="appStore.hasPermission('CTRLUSER')" type="button" class="submit" value="Control Panel" @click="showControlPanelModal = true">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Favorites" @click="showFavoritesModal = true">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Add Favorite" @click="showAddFavoriteModal = true">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Delete Favorite" @click="showDeleteFavoriteModal = true">
@@ -119,7 +120,7 @@
       <input v-if="appStore.hasPermission('WERRUSER')" type="button" class="submit" value="Web Error Log" @click="weberrlog">
       
       <!-- System Control Buttons -->
-      <input v-if="appStore.hasPermission('ASTRELUSER')" type="button" class="submit" value="Iax/Rpt/DP RELOAD" @click="astreload">
+      <input v-if="appStore.hasPermission('ASTRELUSER')" type="button" class="submit" value="IAX2/Module RELOAD" @click="astreload">
       <input v-if="appStore.hasPermission('ASTSTRUSER')" type="button" class="submit" value="AST START" @click="astaron">
       <input v-if="appStore.hasPermission('ASTSTPUSER')" type="button" class="submit" value="AST STOP" @click="astaroff">
       <input v-if="appStore.hasPermission('FSTRESUSER')" type="button" class="submit" value="RESTART" @click="fastrestart">
@@ -128,6 +129,7 @@
       <!-- Additional System Buttons -->
       <input v-if="appStore.hasPermission('GPIOUSER')" type="button" class="submit" value="GPIO" @click="openpigpio">
       <input v-if="appStore.hasPermission('BANUSER')" type="button" class="submit" value="Access List" @click="openbanallow">
+      <input v-if="appStore.hasPermission('DVSWITCHUSER')" type="button" class="submit" value="DVSwitch Mode" @click="showDvswitchModal = true">
     </div>
 
     <!-- Bottom Utility Buttons (matches original exactly) -->
@@ -148,7 +150,7 @@
         <NodeTable 
           v-for="(node, index) in displayedNodes"
           :key="String(node.id)"
-          :node="{ id: String(node.id), info: (node as NodeType).info }"
+          :node="{ id: String(node.id), info: (node as NodeType).info, callsign: (node as NodeType).callsign }"
           :show-detail="true"
           :astdb="realTimeStore.astdb"
           :config="realTimeStore.nodeConfig"
@@ -214,7 +216,7 @@
         <BubbleChart v-model:open="showBubbleChartModal" :local-node="targetNode" />
         
         <!-- Control Panel Modal -->
-        <ControlPanel v-model:isVisible="showControlPanelModal" :local-node="targetNode" />
+        <ControlPanel v-model:isVisible="showControlPanelModal" :local-node="targetNode || selectedLocalNode || selectedNode || String(displayedNodes[0]?.id || '')" />
         
                   <!-- RPT Stats Modal -->
           <RptStats v-model:isVisible="showRptStatsModal" :node-number="targetNode" />
@@ -275,6 +277,9 @@
     <!-- Voter Modal -->
     <Voter :show="showVoterModal" @close="showVoterModal = false" />
     
+    <!-- DVSwitch Modal -->
+    <DVSwitchModal v-model:isVisible="showDvswitchModal" />
+    
     <!-- ConfigEditor Modal -->
     <ConfigEditor v-model:open="showConfigEditorModal" />
     
@@ -316,6 +321,7 @@ import DisplayConfig from '@/components/DisplayConfig.vue'
 import AddFavorite from '@/components/AddFavorite.vue'
 import DeleteFavorite from '@/components/DeleteFavorite.vue'
 import Favorites from '@/components/Favorites.vue'
+import DVSwitchModal from '@/components/DVSwitchModal.vue'
 import AstLog from '@/components/AstLog.vue'
 import AstLookup from '@/components/AstLookup.vue'
 import BubbleChart from '@/components/BubbleChart.vue'
@@ -378,6 +384,7 @@ const showWebErrLogModal = ref(false)
 const showVoterModal = ref(false)
 const showConfigEditorModal = ref(false)
 const showSystemInfoModal = ref(false)
+const showDvswitchModal = ref(false)
 
 
 const nodeTableRefs = ref<any[]>([])
@@ -400,6 +407,7 @@ const hasControlPermissions = computed(() => {
          appStore.hasPermission('MONITORUSER') || 
          appStore.hasPermission('PERMUSER')
 })
+
 
 const availableNodes = computed(() => {
   return realTimeStore.nodes
@@ -474,11 +482,10 @@ const displayedNodes = computed((): NodeType[] => {
 })
 
 const headerBackgroundUrl = computed(() => {
-  // Use custom background if available, otherwise use default
-  if (systemInfo.value?.customHeaderBackground) {
-    return `url('${systemInfo.value.customHeaderBackground}')`
-  }
-  return "url('/supermon-ng/background.jpg')"
+  // Backend handles checking for custom header file first, then default background
+  // customHeaderBackground will always have a value (either custom or default)
+  const backgroundUrl = systemInfo.value?.customHeaderBackground || '/supermon-ng/background.jpg'
+  return `url('${backgroundUrl}')`
 })
 
 const formatHeaderTag = () => {
@@ -550,6 +557,26 @@ const headerTitle = computed(() => {
   return appStore.isAuthenticated ? 
     'Supermon-ng AllStar Manager' : 
     'Supermon-ng AllStar Monitor'
+})
+
+// Computed property for header title color (title_logged or title_not_logged)
+const headerTitleStyle = computed(() => {
+  const color = appStore.isAuthenticated 
+    ? systemInfo.value?.titleLoggedColor 
+    : systemInfo.value?.titleNotLoggedColor
+  
+  if (color) {
+    return { color: color }
+  }
+  return {}
+})
+
+// Computed property for callsign color
+const callsignStyle = computed(() => {
+  if (systemInfo.value?.callsignColor) {
+    return { color: systemInfo.value.callsignColor }
+  }
+  return {}
 })
 
 // Watcher to update selectedLocalNode when selectedNode changes
@@ -798,16 +825,8 @@ const configeditor = async () => {
 
 const astreload = async () => {
   try {
-
-    
-    if (!selectedNode.value) {
-      alert('Please select a node first')
-      return
-    }
-
-    const response = await api.post('/config/asterisk/reload', {
-      localnode: selectedNode.value
-    })
+    // IAX2/Module reload is local only - no node selection needed
+    const response = await api.post('/config/asterisk/reload', {})
 
     if (response.data.success) {
       alert('Asterisk configuration reload completed successfully!\n\n' + response.data.results.join('\n'))
@@ -1156,7 +1175,7 @@ onMounted(async () => {
   
   // Initialize realTime store
   await realTimeStore.initialize()
-  realTimeStore.startPolling()
+  // WebSocket connections are established automatically when startMonitoring() is called
   
   // Load system info, database status, and check for default node
   try {
@@ -1225,7 +1244,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  realTimeStore.stopPolling()
+  // WebSocket connections are cleaned up automatically when stopMonitoring() is called
 })
 
 // Watch for node table refs updates
@@ -1387,7 +1406,7 @@ watch(displayedNodes, (newDisplayedNodes) => {
 .header-title a:link,
 .header-title a:visited {
   text-decoration: none;
-  color: white;
+  color: inherit;
 }
 
 /* Header Title2 (call sign) */
@@ -1403,6 +1422,13 @@ watch(displayedNodes, (newDisplayedNodes) => {
   font-family: "Lucida Grande", Lucida, Verdana, sans-serif;
   letter-spacing: normal;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.header-title2 a,
+.header-title2 a:link,
+.header-title2 a:visited {
+  text-decoration: none;
+  color: inherit;
 }
 
 /* Header Tag (location and title) */

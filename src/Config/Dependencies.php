@@ -140,16 +140,17 @@ return [
                     // Include AMI functions
                     require_once __DIR__ . '/../includes/amifunctions.inc';
                     
-                    // Create AMI connection
-                    $ami = new \SimpleAmiClient();
-                    $connected = $ami->connect($config['host'], $config['port']);
+                    // Use static methods - SimpleAmiClient methods are all static
+                    $host = $config['host'] . ':' . ($config['port'] ?? 5038);
+                    $fp = \SimpleAmiClient::getConnection($host, $config['username'], $config['password']);
                     
-                    if ($connected) {
-                        $loggedIn = $ami->login($config['username'], $config['password']);
-                        if ($loggedIn) {
-                            $this->connections[$nodeId] = $ami;
-                            return true;
-                        }
+                    if ($fp !== false) {
+                        $this->connections[$nodeId] = [
+                            'fp' => $fp,
+                            'host' => $host,
+                            'user' => $config['username']
+                        ];
+                        return true;
                     }
                     
                     return false;
@@ -166,8 +167,9 @@ return [
                         }
                     }
                     
-                    $ami = $this->connections[$nodeId];
-                    $response = \SimpleAmiClient::command($ami, "Command", ["Command" => $command]);
+                    $conn = $this->connections[$nodeId];
+                    $fp = $conn['fp'];
+                    $response = \SimpleAmiClient::command($fp, $command);
                     
                     return $response ?: "No response";
                 } catch (Exception $e) {
@@ -177,6 +179,9 @@ return [
             
             public function disconnect(string $nodeId): void {
                 if (isset($this->connections[$nodeId])) {
+                    $conn = $this->connections[$nodeId];
+                    // Return connection to pool instead of closing
+                    \SimpleAmiClient::returnConnection($conn['fp'], $conn['host'], $conn['user']);
                     unset($this->connections[$nodeId]);
                 }
             }
@@ -445,6 +450,25 @@ return [
         return new \SupermonNg\Application\Controllers\AstdbController(
             $c->get(LoggerInterface::class),
             $c->get(\SupermonNg\Services\AstdbCacheService::class)
+        );
+    },
+    
+    // DVSwitch Service
+    \SupermonNg\Services\DvswitchService::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Services\DvswitchService(
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\AllStarConfigService::class),
+            $_ENV['DVSWITCH_PATH'] ?? '/opt/MMDVM_Bridge/dvswitch.sh',
+            $_ENV['DVSWITCH_CONFIG_PATH'] ?? __DIR__ . '/../../user_files/dvswitch_config.yml'
+        );
+    },
+    
+    // DVSwitch Controller
+    \SupermonNg\Application\Controllers\DvswitchController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\DvswitchController(
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\DvswitchService::class),
+            $c->get(\SupermonNg\Application\Controllers\ConfigController::class)
         );
     },
     

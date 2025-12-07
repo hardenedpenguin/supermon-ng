@@ -1,0 +1,15 @@
+[Unit]
+Description=Supermon-NG Backend
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=APP_DIR_PLACEHOLDER
+ExecStart=/usr/bin/php -S localhost:8000 -t public public/index.php
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+

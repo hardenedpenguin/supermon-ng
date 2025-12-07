@@ -223,6 +223,7 @@ update_application() {
     # Stop services
     print_status "Stopping services..."
     systemctl stop supermon-ng-backend 2>/dev/null || true
+    systemctl stop supermon-ng-websocket.service 2>/dev/null || true
     systemctl stop supermon-ng-node-status.timer 2>/dev/null || true
     
     # Create temporary directory for new files
@@ -244,6 +245,7 @@ update_application() {
         "cache"              # Application cache
         "logs"               # Log directory
         "config"             # Performance optimization configurations
+        "bin"                # WebSocket server binary
     )
     
     for file in "${PRODUCTION_FILES[@]}"; do
@@ -328,6 +330,14 @@ update_application() {
             fi
         done
         
+        # Protect ALL dvswitch_config*.yml files (user-specific DVSwitch configurations)
+        print_status "Protecting DVSwitch configuration files (dvswitch_config*.yml)..."
+        find "$APP_DIR/user_files" -maxdepth 1 -name "dvswitch_config*.yml" | while read -r config_file; do
+            filename=$(basename "$config_file")
+            print_status "Preserving DVSwitch configuration file: $filename"
+            cp "$config_file" "$TEMP_DIR/user_files/"
+        done
+        
         # Always preserve critical root-level files from the existing installation
         for critical_file in "${CRITICAL_ROOT_FILES[@]}"; do
             if [ -f "$APP_DIR/$critical_file" ]; then
@@ -401,90 +411,85 @@ update_application() {
 update_services() {
     print_status "Updating system services..."
     
-    # Update backend service
-    cat > "/etc/systemd/system/supermon-ng-backend.service" << EOF
-[Unit]
-Description=Supermon-NG Backend
-After=network.target
-
-[Service]
-Type=simple
-User=www-data
-WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/php -S localhost:8000 -t public public/index.php
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
+    # Function to install systemd file from repository
+    install_systemd_file() {
+        local SOURCE_FILE="$1"
+        local TARGET_FILE="$2"
+        local FILE_TYPE="$3"  # "service" or "timer"
+        
+        if [ ! -f "$SOURCE_FILE" ]; then
+            print_error "Source file $SOURCE_FILE not found"
+            return 1
+        fi
+        
+        print_status "Installing $FILE_TYPE file from $SOURCE_FILE..."
+        cp "$SOURCE_FILE" "$TARGET_FILE"
+        
+        # Replace placeholder with actual path
+        sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$TARGET_FILE"
+        
+        # Set proper permissions (644 for systemd files)
+        chmod 644 "$TARGET_FILE"
+        chown root:root "$TARGET_FILE"
+        
+        print_status "$FILE_TYPE file installed: $(basename $TARGET_FILE)"
+    }
     
-    # Update database auto-update service
-    cat > "/etc/systemd/system/supermon-ng-database-update.service" << EOF
-[Unit]
-Description=Supermon-NG Database Auto-Update Service
-After=network.target
-
-[Service]
-Type=oneshot
-User=root
-WorkingDirectory=$APP_DIR
-ExecStart=/usr/bin/php $APP_DIR/scripts/database-auto-update.php
-
-[Install]
-WantedBy=multi-user.target
-EOF
+    # Backend service (copy from systemd directory)
+    install_systemd_file \
+        "$PROJECT_ROOT/systemd/supermon-ng-backend.service" \
+        "/etc/systemd/system/supermon-ng-backend.service" \
+        "Service"
     
-    # Update database auto-update timer
-    cat > "/etc/systemd/system/supermon-ng-database-update.timer" << EOF
-[Unit]
-Description=Run Supermon-NG Database Update every 3 hours
-Requires=supermon-ng-database-update.service
-
-[Timer]
-OnBootSec=5min
-OnUnitActiveSec=3h
-AccuracySec=5min
-
-[Install]
-WantedBy=timers.target
-EOF
+    # WebSocket service (copy from systemd directory)
+    install_systemd_file \
+        "$PROJECT_ROOT/systemd/supermon-ng-websocket.service" \
+        "/etc/systemd/system/supermon-ng-websocket.service" \
+        "Service"
     
-    # Update node status service
-    cat > "/etc/systemd/system/supermon-ng-node-status.service" << EOF
-[Unit]
-Description=Supermon-NG Node Status Update Service
-After=network.target
-
-[Service]
-Type=oneshot
-User=root
-WorkingDirectory=$APP_DIR/user_files/sbin
-ExecStart=/usr/bin/python3 $APP_DIR/user_files/sbin/ast_node_status_update.py
-
-[Install]
-WantedBy=multi-user.target
-EOF
+    # Database update service (copy from systemd directory)
+    install_systemd_file \
+        "$PROJECT_ROOT/systemd/supermon-ng-database-update.service" \
+        "/etc/systemd/system/supermon-ng-database-update.service" \
+        "Service"
     
-    # Update node status timer
-    cat > "/etc/systemd/system/supermon-ng-node-status.timer" << EOF
-[Unit]
-Description=Run Supermon-NG Node Status Update every 3 minutes
-Requires=supermon-ng-node-status.service
-
-[Timer]
-OnBootSec=2min
-OnUnitActiveSec=3min
-AccuracySec=30s
-
-[Install]
-WantedBy=timers.target
-EOF
+    # Database update timer (copy from systemd directory)
+    install_systemd_file \
+        "$PROJECT_ROOT/systemd/supermon-ng-database-update.timer" \
+        "/etc/systemd/system/supermon-ng-database-update.timer" \
+        "Timer"
+    
+    # Node status update service (copy from systemd directory)
+    install_systemd_file \
+        "$PROJECT_ROOT/systemd/supermon-ng-node-status.service" \
+        "/etc/systemd/system/supermon-ng-node-status.service" \
+        "Service"
+    
+    # Node status update timer (copy from systemd directory)
+    install_systemd_file \
+        "$PROJECT_ROOT/systemd/supermon-ng-node-status.timer" \
+        "/etc/systemd/system/supermon-ng-node-status.timer" \
+        "Timer"
+    
+    # Update WebSocket service
+    if [ -f "$APP_DIR/systemd/supermon-ng-websocket.service" ]; then
+        cp "$APP_DIR/systemd/supermon-ng-websocket.service" /etc/systemd/system/
+        print_status "WebSocket service file updated"
+    fi
     
     # Reload systemd and restart services
     systemctl daemon-reload
     systemctl enable supermon-ng-backend
     systemctl restart supermon-ng-backend
+    
+    # Enable and restart websocket service (if it exists)
+    if systemctl list-unit-files | grep -q "supermon-ng-websocket.service"; then
+        systemctl enable supermon-ng-websocket.service
+        systemctl restart supermon-ng-websocket.service
+        print_status "WebSocket service enabled and restarted"
+    else
+        print_warning "WebSocket service not found, skipping"
+    fi
     
     # Enable and start node status timer
     systemctl enable supermon-ng-node-status.timer
@@ -569,40 +574,112 @@ update_apache_config() {
     
     print_status "Updating Apache configuration..."
     
-    # Check if Apache config needs updating
+    # Regenerate Apache configuration template with latest configuration
     APACHE_TEMPLATE="$APP_DIR/apache-config-template.conf"
     APACHE_SITE_FILE="/etc/apache2/sites-available/supermon-ng.conf"
     
-    if [ -f "$APACHE_TEMPLATE" ]; then
-        # Detect IP addresses for new config
-        if [ -f "$APP_DIR/scripts/update.sh" ]; then
-            # Use the IP detection function from install.sh
-            source "$APP_DIR/scripts/update.sh" 2>/dev/null || true
-        fi
+    print_status "Regenerating Apache configuration template..."
+    cat > "$APACHE_TEMPLATE" << APACHE_EOF
+# Supermon-NG Apache Configuration Template
+# Copy this configuration to your Apache sites-available directory
+
+<VirtualHost *:80>
+    DocumentRoot /var/www/html
+    
+    # Proxy configurations (must come before Alias directives)
+    ProxyPreserveHost On
+    
+    # Proxy supermon-ng API requests to backend (must come before Alias)
+    ProxyPass /supermon-ng/api http://localhost:8000/api
+    ProxyPassReverse /supermon-ng/api http://localhost:8000/api
+    
+    # WebSocket proxy for Supermon-NG nodes (must come before Alias directives)
+    # All WebSocket connections route to the single router server on port 8105
+    # The router extracts the node ID from the path and routes internally
+    # MUST use RewriteRule with [P] flag for WebSocket proxying to work correctly
+    # CRITICAL: The $1 in the target URL preserves the node ID from the path
+    # Without $1, connections will fail with "no valid node ID in path" errors
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteCond %{HTTP:Connection} =Upgrade [NC]
+    RewriteRule ^/supermon-ng/ws/(.+)$ ws://localhost:8105/supermon-ng/ws/\$1 [P,L]
+    ProxyPassReverse /supermon-ng/ws/ ws://localhost:8105/supermon-ng/ws/
+    
+    # Alias for Supermon-NG application (after ProxyPass)
+    Alias /supermon-ng APP_DIR_PLACEHOLDER/public
+    
+    # Alias for user files
+    Alias /supermon-ng/user_files APP_DIR_PLACEHOLDER/user_files
+    
+    # Proxy HamClock requests (adjust IP and port as needed)
+    # Uncomment and modify the following lines if you have HamClock running:
+    # WebSocket proxy for HamClock (must come before general proxy)
+    # ProxyPass /hamclock/live-ws ws://10.0.0.41:8082/live-ws upgrade=websocket
+    # ProxyPassReverse /hamclock/live-ws ws://10.0.0.41:8082/live-ws
+    # 
+    # General HamClock proxy
+    # ProxyPass /hamclock/ http://10.0.0.41:8082/
+    # ProxyPassReverse /hamclock/ http://10.0.0.41:8082/
+    # 
+    
+    # Configure Supermon-NG directory
+    <Directory "APP_DIR_PLACEHOLDER/public">
+        AllowOverride All
+        Require all granted
         
-        # Update Apache site configuration
-        # Note: No backup of system files - Apache config is managed by installation
-        cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
+        # Ensure index.html is served by default (Vue.js frontend)
+        DirectoryIndex index.html index.php
         
-        # Disable the default site to avoid conflicts
-        print_status "Disabling default Apache site..."
-        a2dissite -q 000-default 2>/dev/null || {
-            print_warning "Failed to disable default site (may not exist)"
-        }
-        
-        # Enable the supermon-ng site
-        print_status "Enabling supermon-ng Apache site..."
-        a2ensite -q supermon-ng 2>/dev/null || {
-            print_warning "Failed to enable Apache site automatically"
-        }
-        
-        # Test and restart Apache
-        if apache2ctl configtest >/dev/null 2>&1; then
-            systemctl restart apache2
-            print_status "Apache configuration updated successfully"
-        else
-            print_warning "Apache configuration test failed. Please check manually."
-        fi
+        # Handle Vue router (SPA) - rewrite all requests to index.html
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^ index.html [QSA,L]
+    </Directory>
+    
+    # Configure user files directory
+    <Directory "APP_DIR_PLACEHOLDER/user_files">
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    # Configure main document root
+    <Directory "/var/www/html">
+        AllowOverride All
+        Require all granted
+        Options Indexes FollowSymLinks
+    </Directory>
+    
+    ErrorLog \${APACHE_LOG_DIR}/supermon-ng_error.log
+    CustomLog \${APACHE_LOG_DIR}/supermon-ng_access.log combined
+</VirtualHost>
+APACHE_EOF
+    # Replace placeholder with actual path
+    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$APACHE_TEMPLATE"
+    print_status "Apache configuration template regenerated"
+    
+    # Update Apache site configuration
+    # Note: No backup of system files - Apache config is managed by installation
+    cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
+    
+    # Disable the default site to avoid conflicts
+    print_status "Disabling default Apache site..."
+    a2dissite -q 000-default 2>/dev/null || {
+        print_warning "Failed to disable default site (may not exist)"
+    }
+    
+    # Enable the supermon-ng site
+    print_status "Enabling supermon-ng Apache site..."
+    a2ensite -q supermon-ng 2>/dev/null || {
+        print_warning "Failed to enable Apache site automatically"
+    }
+    
+    # Test and restart Apache
+    if apache2ctl configtest >/dev/null 2>&1; then
+        systemctl restart apache2
+        print_status "Apache configuration updated successfully"
+    else
+        print_warning "Apache configuration test failed. Please check manually."
     fi
 }
 
@@ -663,6 +740,7 @@ display_summary() {
     echo ""
     echo "🔧 Service Status:"
     systemctl is-active supermon-ng-backend > /dev/null && echo "   ✅ Backend: Running" || echo "   ❌ Backend: Failed"
+    systemctl is-active supermon-ng-websocket > /dev/null && echo "   ✅ WebSocket: Running" || echo "   ❌ WebSocket: Failed"
     systemctl is-active apache2 > /dev/null && echo "   ✅ Apache: Running" || echo "   ❌ Apache: Failed"
     
     echo ""

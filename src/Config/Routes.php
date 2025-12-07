@@ -15,6 +15,7 @@ use SupermonNg\Application\Controllers\DatabasePerformanceController;
 use SupermonNg\Application\Controllers\HttpPerformanceController;
 use SupermonNg\Application\Controllers\SessionPerformanceController;
 use SupermonNg\Application\Controllers\FileIOPerformanceController;
+use SupermonNg\Application\Controllers\DvswitchController;
 use SupermonNg\Application\Middleware\ApiAuthMiddleware;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
 
@@ -250,12 +251,14 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->get('', [NodeController::class, 'list']);
         $group->get('/available', [NodeController::class, 'available']);
         $group->get('/ami/status', [NodeController::class, 'getAmiStatus']);
+        $group->get('/websocket/ports', [NodeController::class, 'getAllWebSocketPorts']);
         
         // Voter Route (must come before variable routes)
         $group->get('/voter/status', [NodeController::class, 'voterStatus']);
         
         $group->get('/{id}', [NodeController::class, 'get']);
         $group->get('/{id}/status', [NodeController::class, 'status']);
+        $group->get('/{id}/websocket/port', [NodeController::class, 'getWebSocketPort']);
         $group->post('/connect', [NodeController::class, 'connect']);
         $group->post('/disconnect', [NodeController::class, 'disconnect']);
         $group->post('/monitor', [NodeController::class, 'monitor']);
@@ -307,6 +310,15 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         // Lsnod Routes
         $group->get('/{id}/lsnodes', [NodeController::class, 'lsnodes']);
         $group->get('/{id}/lsnodes/web', [NodeController::class, 'lsnodesWeb']);
+    });
+
+    // DVSwitch routes
+    $group->group('/dvswitch', function (RouteCollectorProxy $group) {
+        $group->get('/nodes', [DvswitchController::class, 'getNodes']);
+        $group->get('/node/{nodeId}/modes', [DvswitchController::class, 'getModes']);
+        $group->get('/node/{nodeId}/mode/{mode}/talkgroups', [DvswitchController::class, 'getTalkgroups']);
+        $group->post('/node/{nodeId}/mode/{mode}', [DvswitchController::class, 'switchMode']);
+        $group->post('/node/{nodeId}/tune/{tgid}', [DvswitchController::class, 'switchTalkgroup']);
     });
 
     // Config routes
@@ -431,6 +443,4 @@ $app->group('/api', function (RouteCollectorProxy $group) {
         $group->post('/fast-restart', [SystemController::class, 'fastRestart']);
         $group->post('/reboot', [SystemController::class, 'reboot']);
     });
-    
-    
 });
