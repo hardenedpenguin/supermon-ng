@@ -2769,10 +2769,6 @@ class ConfigController
                 ['path' => '/home/irlp/custom/lockout_list', 'name' => 'IRLP Lockout List', 'description' => 'IRLP lockout list'],
                 ['path' => '/home/irlp/custom/timing', 'name' => 'IRLP Timing', 'description' => 'IRLP timing settings']
             ],
-            'Misc' => [
-                ['path' => '/usr/local/etc/allstar.env', 'name' => 'AllStar Environment', 'description' => 'AllStar environment variables'],
-                ['path' => '/usr/local/bin/AUTOSKY/AutoSky.ini', 'name' => 'AutoSky Configuration', 'description' => 'AutoSky settings']
-            ]
         ];
     }
 

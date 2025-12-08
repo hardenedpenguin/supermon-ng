@@ -37,10 +37,6 @@ WHITELISTED_FILES["/opt/Analog_Bridge/Analog_Bridge.ini"]="root:root:644:"
 WHITELISTED_FILES["/opt/MMDVM_Bridge/MMDVM_Bridge.ini"]="root:root:644:"
 WHITELISTED_FILES["/opt/MMDVM_Bridge/DVSwitch.ini"]="root:root:644:"
 
-# Misc files
-WHITELISTED_FILES["/usr/local/etc/allstar.env"]="root:root:644:"
-WHITELISTED_FILES["/usr/local/bin/AUTOSKY/AutoSky.ini"]="root:root:640:"
-
 # IRLP files
 WHITELISTED_FILES["/home/irlp/scripts/irlp.crons"]="irlp:irlp:640:sudo -u irlp crontab /home/irlp/scripts/irlp.crons"
 WHITELISTED_FILES["/home/irlp/noupdate/scripts/irlp.crons"]="irlp:irlp:640:sudo -u irlp crontab /home/irlp/noupdate/scripts/irlp.crons"
