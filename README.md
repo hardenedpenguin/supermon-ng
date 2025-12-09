@@ -1,6 +1,6 @@
 # Supermon-NG V4.1.1 - Modern AllStar Link Management Dashboard
 
-![Supermon-NG](supermon-ng.png)
+<img src="supermon-ng.png" alt="Supermon-NG" width="200"/>
 
 A modern, responsive web-based management interface for AllStar Link nodes, built with Vue.js 3 and PHP 8.
 
