@@ -75,10 +75,9 @@ class NodeStatusController
             $iniContent .= "WX_LOCATION = " . ($data['wx_location'] ?? '') . "\n";
             $iniContent .= "TEMP_UNIT = " . ($data['temp_unit'] ?? 'F') . "\n\n";
             
-            $iniContent .= "[autosky]\n";
-            $iniContent .= "MASTER_ENABLE = " . ($data['autosky_enabled'] ? 'yes' : 'no') . "\n";
-            $iniContent .= "ALERT_INI = " . ($data['alert_ini'] ?? '/usr/local/bin/AUTOSKY/AutoSky.ini') . "\n";
-            $iniContent .= "WARNINGS_FILE = " . ($data['warnings_file'] ?? '/var/www/html/AUTOSKY/warnings.txt') . "\n";
+            $iniContent .= "[skywarnplus]\n";
+            $iniContent .= "MASTER_ENABLE = " . ($data['skywarnplus_enabled'] ? 'yes' : 'no') . "\n";
+            $iniContent .= "API_URL = " . ($data['api_url'] ?? '') . "\n";
             $iniContent .= "CUSTOM_LINK = " . ($data['custom_link'] ?? '') . "\n";
 
             // Write configuration file

@@ -70,7 +70,8 @@ export interface FavoritesConfig {
 export interface NodeInfoConfig {
   enabled: boolean
   customLink?: string
-  autoSkyEnabled?: boolean
+  skywarnplusEnabled?: boolean
+  apiUrl?: string
   sysInfoUser?: string
 }
 

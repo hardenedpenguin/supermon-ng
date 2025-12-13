@@ -90,38 +90,28 @@
               </select>
             </div>
 
-            <!-- AutoSky/SkywarnPlus Configuration -->
+            <!-- SkywarnPlus Configuration -->
             <div class="form-group">
               <label class="checkbox-label">
                 <input 
                   type="checkbox" 
-                  v-model="config.autosky_enabled"
+                  v-model="config.skywarnplus_enabled"
                 >
                 Enable SkywarnPlus Weather Alerts
               </label>
             </div>
 
-            <div v-if="config.autosky_enabled" class="autosky-config">
+            <div v-if="config.skywarnplus_enabled" class="skywarnplus-config">
               <div class="form-group">
-                <label for="alert_ini">Alert INI File:</label>
+                <label for="api_url">API URL:</label>
                 <input 
-                  type="text" 
-                  id="alert_ini" 
-                  v-model="config.alert_ini" 
-                  placeholder="/usr/local/bin/AUTOSKY/AutoSky.ini"
+                  type="url" 
+                  id="api_url" 
+                  v-model="config.api_url" 
+                  placeholder="http://10.0.0.5:8100"
                   class="form-control"
                 >
-              </div>
-
-              <div class="form-group">
-                <label for="warnings_file">Warnings File:</label>
-                <input 
-                  type="text" 
-                  id="warnings_file" 
-                  v-model="config.warnings_file" 
-                  placeholder="/var/www/html/AUTOSKY/warnings.txt"
-                  class="form-control"
-                >
+                <small class="form-text">SkywarnPlus-ng API endpoint URL</small>
               </div>
 
               <div class="form-group">
@@ -130,9 +120,10 @@
                   type="url" 
                   id="custom_link" 
                   v-model="config.custom_link" 
-                  placeholder="https://alerts.weather.gov/..."
+                  placeholder="https://api.weather.gov/alerts/active/zone/TXC039"
                   class="form-control"
                 >
+                <small class="form-text">Optional custom link for weather alerts</small>
               </div>
             </div>
 
@@ -181,9 +172,8 @@ export default {
       wx_code: '',
       wx_location: '',
       temp_unit: 'F',
-      autosky_enabled: false,
-      alert_ini: '/usr/local/bin/AUTOSKY/AutoSky.ini',
-      warnings_file: '/var/www/html/AUTOSKY/warnings.txt',
+      skywarnplus_enabled: false,
+      api_url: '',
       custom_link: ''
     })
     
@@ -205,10 +195,9 @@ export default {
             wx_code: cfg.general?.WX_CODE || '',
             wx_location: cfg.general?.WX_LOCATION || '',
             temp_unit: cfg.general?.TEMP_UNIT || 'F',
-            autosky_enabled: cfg.autosky?.MASTER_ENABLE === 'yes',
-            alert_ini: cfg.autosky?.ALERT_INI || '/usr/local/bin/AUTOSKY/AutoSky.ini',
-            warnings_file: cfg.autosky?.WARNINGS_FILE || '/var/www/html/AUTOSKY/warnings.txt',
-            custom_link: cfg.autosky?.CUSTOM_LINK || ''
+            skywarnplus_enabled: cfg.skywarnplus?.MASTER_ENABLE === 'yes',
+            api_url: cfg.skywarnplus?.API_URL || '',
+            custom_link: cfg.skywarnplus?.CUSTOM_LINK || ''
           }
           nodeNumbers.value = config.value.nodes.join(' ')
         }
@@ -465,7 +454,7 @@ export default {
   margin-right: 8px;
 }
 
-.autosky-config {
+.skywarnplus-config {
   margin-left: 20px;
   padding-left: 15px;
   border-left: 2px solid #444;

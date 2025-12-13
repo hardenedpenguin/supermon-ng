@@ -1,5 +1,17 @@
 RewriteEngine On
 
+# Cache control for assets - allow caching but with revalidation
+<FilesMatch "\.(js|css)$">
+    Header set Cache-Control "public, max-age=3600, must-revalidate"
+</FilesMatch>
+
+# No cache for index.html to ensure latest version is loaded
+<FilesMatch "index\.html$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+</FilesMatch>
+
 # Serve Vue app for root and non-API requests
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
