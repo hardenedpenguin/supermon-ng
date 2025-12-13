@@ -152,6 +152,17 @@ const nodeTitle = computed(() => {
   const nodeId = props.node.id
   let nodeInfo = props.node.info || 'Node not in database'
   
+  // If nodeInfo is just "Node X", "Node not in database", or missing, try to get info from ASTDB
+  if (props.astdb && (!nodeInfo || nodeInfo === `Node ${nodeId}` || nodeInfo === 'Node not in database' || (nodeInfo.startsWith('Node ') && nodeInfo.trim() === `Node ${nodeId}`))) {
+    const astdbEntry = props.astdb[nodeId]
+    if (astdbEntry && Array.isArray(astdbEntry) && astdbEntry.length >= 4) {
+      const callsign = astdbEntry[1] || 'N/A'
+      const description = astdbEntry[2] || 'Unknown'
+      const location = astdbEntry[3] || 'N/A'
+      nodeInfo = `${callsign} ${description} ${location}`.trim()
+    }
+  }
+  
   // Prepend callsign if available and not already in info (like in 4.0.9)
   if (props.node.callsign && props.node.callsign !== 'N/A' && !nodeInfo.startsWith(props.node.callsign)) {
     nodeInfo = `${props.node.callsign} ${nodeInfo}`.trim()
