@@ -41,10 +41,6 @@ www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /o
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /opt/MMDVM_Bridge/MMDVM_Bridge.ini
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /opt/MMDVM_Bridge/DVSwitch.ini
 
-# Misc files
-www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /usr/local/etc/allstar.env
-www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /usr/local/bin/AUTOSKY/AutoSky.ini
-
 # IRLP files
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /home/irlp/scripts/irlp.crons
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /home/irlp/noupdate/scripts/irlp.crons

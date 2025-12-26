@@ -247,34 +247,8 @@ if __name__ == "__main__":
         print(f"Error: Configuration file '{config_file}' not found.")
         exit(1)
 
-    # Skip CUSTOM_LINK_HEADERS lines (ConfigParser doesn't support duplicate keys)
-    cleaned_config_lines = []
-    try:
-        with open(config_file, 'r') as f:
-            lines = f.readlines()
-            in_skywarnplus = False
-            for line in lines:
-                stripped_line = line.strip()
-                if stripped_line == '[skywarnplus]':
-                    in_skywarnplus = True
-                    cleaned_config_lines.append(line)
-                    continue
-                if stripped_line.startswith('[') and stripped_line != '[skywarnplus]':
-                    in_skywarnplus = False
-                    cleaned_config_lines.append(line)
-                    continue
-                if in_skywarnplus and stripped_line.startswith('CUSTOM_LINK_HEADERS'):
-                    continue
-                cleaned_config_lines.append(line)
-    except Exception as e:
-        print(f"Warning: Could not parse config file: {e}")
-        with open(config_file, 'r') as f:
-            cleaned_config_lines = f.readlines()
-
     config = configparser.ConfigParser()
-    import io
-    config = configparser.ConfigParser()
-    config.read_string(''.join(cleaned_config_lines))
+    config.read(config_file)
 
     nodes = config.get("general", "NODE", fallback="").split()
     wx_code = config.get("general", "WX_CODE", fallback="")
