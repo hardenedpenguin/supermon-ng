@@ -517,7 +517,7 @@ class ConfigController
      */
     public function getHeaderBackground(Request $request, Response $response, array $args): Response
     {
-        $userFilesDir = 'user_files';
+        $userFilesDir = __DIR__ . '/../../../user_files';
         
         // Check for custom header-background.* file
         $formats = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
@@ -721,7 +721,7 @@ class ConfigController
     private function getCustomHeaderBackground(): string
     {
         // Check for custom header-background.* file first
-        $userFilesDir = 'user_files';
+        $userFilesDir = __DIR__ . '/../../../user_files';
         $formats = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
         
         foreach ($formats as $format) {
