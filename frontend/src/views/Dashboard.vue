@@ -1,7 +1,7 @@
 <template>
   <div class="dashboard">
     <!-- Header Section (mimics header.inc structure) -->
-    <div class="header" :style="{ backgroundImage: headerBackgroundUrl }">
+    <div class="header" :style="headerBackgroundUrl ? { backgroundImage: headerBackgroundUrl } : {}">
       <!-- Main Title -->
       <div class="header-title" :style="headerTitleStyle">
         <a href="#"><i>{{ headerTitle }}</i></a>
@@ -309,7 +309,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick, onBeforeMount } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useRealTimeStore } from '@/stores/realTime'
 import { api } from '@/utils/api'
@@ -483,8 +483,13 @@ const displayedNodes = computed((): NodeType[] => {
 })
 
 const headerBackgroundUrl = computed(() => {
-  // Use preloaded header background if available, otherwise use systemInfo, then default
-  const backgroundUrl = headerBackground.value || systemInfo.value?.customHeaderBackground || '/supermon-ng/background.jpg'
+  // Don't set background until we've checked for custom header
+  // This prevents the default from loading before we know if custom exists
+  const backgroundUrl = headerBackground.value || systemInfo.value?.customHeaderBackground
+  if (!backgroundUrl) {
+    // Return null to prevent any background from loading until we know which one to use
+    return null
+  }
   return `url('${backgroundUrl}')`
 })
 
@@ -1169,33 +1174,38 @@ const openDonatePopup = () => {
     
   }
 
+// Check for custom header background BEFORE component mounts to prevent default from loading
+// We'll check quickly, but won't set default until we've confirmed from systemInfo
+onBeforeMount(async () => {
+  // Check for custom header immediately using fetch with very short timeout
+  // This runs before the component is mounted
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 50) // 50ms timeout - fail very fast
+  
+  try {
+    const response = await fetch('/supermon-ng/api/config/header-background', {
+      method: 'GET',
+      cache: 'no-cache',
+      signal: controller.signal
+    })
+    clearTimeout(timeoutId)
+    if (response.ok) {
+      // Custom header exists - set it immediately
+      headerBackground.value = '/supermon-ng/api/config/header-background'
+      return
+    }
+  } catch (e) {
+    clearTimeout(timeoutId)
+    // Don't set default here - wait for systemInfo to confirm
+    // This prevents default from loading if systemInfo will have the custom URL
+  }
+  // Don't set default here - let systemInfo be the source of truth
+  // Only set default if systemInfo confirms there's no custom header
+})
+
 // Lifecycle
 onMounted(async () => {
   await appStore.checkAuth()
-  
-  // Preload header background immediately to avoid default flash
-  // Try to load custom header background first by checking if the image exists
-  const checkCustomHeader = () => {
-    // Use Image object to preload and check if custom header exists
-    const img = new Image()
-    const customHeaderUrl = '/supermon-ng/api/config/header-background'
-    
-    img.onload = () => {
-      // Custom header exists, use it
-      headerBackground.value = customHeaderUrl
-    }
-    
-    img.onerror = () => {
-      // Custom header doesn't exist, use default
-      headerBackground.value = '/supermon-ng/background.jpg'
-    }
-    
-    // Start loading the image (this triggers onload or onerror)
-    img.src = customHeaderUrl + '?t=' + Date.now() // Add timestamp to bypass cache
-  }
-  
-  // Start checking for custom header immediately
-  checkCustomHeader()
   
   // Initialize realTime store
   await realTimeStore.initialize()
@@ -1212,16 +1222,13 @@ onMounted(async () => {
     if (systemResponse.data.success) {
       systemInfo.value = systemResponse.data.data || systemResponse.data
       
-      // Update header background from systemInfo only if we haven't preloaded it yet
-      // This prevents the background from switching after initial load
-      if (systemInfo.value?.customHeaderBackground && !headerBackground.value) {
+      // systemInfo is the source of truth for header background
+      // Always use it if available, as the backend has already checked for custom header
+      if (systemInfo.value?.customHeaderBackground) {
         headerBackground.value = systemInfo.value.customHeaderBackground
-      } else if (systemInfo.value?.customHeaderBackground && headerBackground.value !== systemInfo.value.customHeaderBackground) {
-        // Only update if the systemInfo has a custom header and we're currently showing default
-        // This handles the case where preload failed but systemInfo has the correct value
-        if (headerBackground.value === '/supermon-ng/background.jpg') {
-          headerBackground.value = systemInfo.value.customHeaderBackground
-        }
+      } else if (!headerBackground.value) {
+        // Only set default if we haven't set anything yet and systemInfo confirms no custom
+        headerBackground.value = '/supermon-ng/background.jpg'
       }
       
       // Set dynamic page title based on SMSERVERNAME from global.inc
