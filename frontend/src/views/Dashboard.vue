@@ -389,6 +389,7 @@ const showDvswitchModal = ref(false)
 
 const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
+const headerBackground = ref<string | null>(null)
 const showDigitalDashboardModal = ref(false)
 const showHamClockModal = ref(false)
 const showNodeStatusModal = ref(false)
@@ -482,9 +483,8 @@ const displayedNodes = computed((): NodeType[] => {
 })
 
 const headerBackgroundUrl = computed(() => {
-  // Backend handles checking for custom header file first, then default background
-  // customHeaderBackground will always have a value (either custom or default)
-  const backgroundUrl = systemInfo.value?.customHeaderBackground || '/supermon-ng/background.jpg'
+  // Use preloaded header background if available, otherwise use systemInfo, then default
+  const backgroundUrl = headerBackground.value || systemInfo.value?.customHeaderBackground || '/supermon-ng/background.jpg'
   return `url('${backgroundUrl}')`
 })
 
@@ -1173,6 +1173,30 @@ const openDonatePopup = () => {
 onMounted(async () => {
   await appStore.checkAuth()
   
+  // Preload header background immediately to avoid default flash
+  // Try to load custom header background first by checking if the image exists
+  const checkCustomHeader = () => {
+    // Use Image object to preload and check if custom header exists
+    const img = new Image()
+    const customHeaderUrl = '/supermon-ng/api/config/header-background'
+    
+    img.onload = () => {
+      // Custom header exists, use it
+      headerBackground.value = customHeaderUrl
+    }
+    
+    img.onerror = () => {
+      // Custom header doesn't exist, use default
+      headerBackground.value = '/supermon-ng/background.jpg'
+    }
+    
+    // Start loading the image (this triggers onload or onerror)
+    img.src = customHeaderUrl + '?t=' + Date.now() // Add timestamp to bypass cache
+  }
+  
+  // Start checking for custom header immediately
+  checkCustomHeader()
+  
   // Initialize realTime store
   await realTimeStore.initialize()
   // WebSocket connections are established automatically when startMonitoring() is called
@@ -1187,6 +1211,18 @@ onMounted(async () => {
     
     if (systemResponse.data.success) {
       systemInfo.value = systemResponse.data.data || systemResponse.data
+      
+      // Update header background from systemInfo only if we haven't preloaded it yet
+      // This prevents the background from switching after initial load
+      if (systemInfo.value?.customHeaderBackground && !headerBackground.value) {
+        headerBackground.value = systemInfo.value.customHeaderBackground
+      } else if (systemInfo.value?.customHeaderBackground && headerBackground.value !== systemInfo.value.customHeaderBackground) {
+        // Only update if the systemInfo has a custom header and we're currently showing default
+        // This handles the case where preload failed but systemInfo has the correct value
+        if (headerBackground.value === '/supermon-ng/background.jpg') {
+          headerBackground.value = systemInfo.value.customHeaderBackground
+        }
+      }
       
       // Set dynamic page title based on SMSERVERNAME from global.inc
       if (systemInfo.value?.smServerName) {
