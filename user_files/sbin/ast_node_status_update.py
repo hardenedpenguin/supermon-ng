@@ -75,8 +75,8 @@ def get_cpu_temperature(temp_unit):
 def get_weather(wx_code, wx_location):
     if not wx_code or not wx_location:
         return '" "'
-    elif os.access("/usr/sbin/weather.pl", os.X_OK):
-        wx_raw = run_command(f"/usr/sbin/weather.pl \"{wx_code}\" v")
+    elif os.access("/usr/sbin/weather.rb", os.X_OK):
+        wx_raw = run_command(f"/usr/sbin/weather.rb \"{wx_code}\" v")
         if wx_raw:
             return f'"<b>{wx_location}   ({wx_raw})</b>"'
     elif os.access("/usr/local/sbin/weather.sh", os.X_OK):
