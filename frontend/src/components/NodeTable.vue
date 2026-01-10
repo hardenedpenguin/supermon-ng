@@ -311,7 +311,7 @@ const headerStatusDetails = computed(() => {
   if (nodeData.value.cpu_load) details.push(nodeData.value.cpu_load)
   if (nodeData.value.DISK) details.push(nodeData.value.DISK)
   
-  return details.length > 0 ? '<br>' + details.join('<br>') : ''
+  return details.length > 0 ? details.join('<br>') : ''
 })
 
 const headerColspan = computed(() => {
@@ -712,7 +712,7 @@ defineExpose({
 
 .gridtable td b span {
   display: block;
-  margin-top: 2px;
+  margin-top: 0;
   font-weight: normal;
 }
 
