@@ -1,5 +1,7 @@
 import { ref, watch, readonly } from 'vue'
-import type { Theme } from '@/types'
+
+// Export LegacyTheme as Theme for component compatibility
+export type Theme = LegacyTheme
 
 // Legacy theme interface for backward compatibility
 interface LegacyTheme {

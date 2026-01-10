@@ -1,7 +1,7 @@
 <template>
   <div class="custom-theme-builder">
     <div class="builder-header">
-      <h3>{{ isEditing ? 'Edit Custom Theme' : 'Create Custom Theme' }}</h3>
+      <h3>{{ isEditing ? 'Edit Custom Theme' : isCloning ? 'Customize Theme' : 'Create Custom Theme' }}</h3>
       <button @click="$emit('close')" class="close-btn" title="Close">
         ×
       </button>
@@ -550,7 +550,7 @@
           Cancel
         </button>
         <button type="submit" class="save-btn">
-          {{ isEditing ? 'Update Theme' : 'Create Theme' }}
+          {{ isEditing ? 'Update Theme' : isCloning ? 'Create Custom Theme' : 'Create Theme' }}
         </button>
       </div>
     </form>
@@ -563,10 +563,12 @@ import { useTheme, type Theme } from '@/composables/useTheme'
 
 interface Props {
   editingTheme?: Theme
+  baseTheme?: Theme  // For cloning themes - pre-fills form but creates new theme
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  editingTheme: undefined
+  editingTheme: undefined,
+  baseTheme: undefined
 })
 
 const emit = defineEmits<{
@@ -608,6 +610,7 @@ const getContrastStatus = (ratio: number): { status: string; color: string } => 
 }
 
 const isEditing = computed(() => !!props.editingTheme)
+const isCloning = computed(() => !!props.baseTheme && !props.editingTheme)
 
 const themeData = ref({
   label: '',
@@ -654,9 +657,16 @@ const previewStyles = computed(() => ({
 
 onMounted(() => {
   if (props.editingTheme) {
+    // Editing existing custom theme
     themeData.value = {
       label: props.editingTheme.label,
       colors: { ...props.editingTheme.colors }
+    }
+  } else if (props.baseTheme) {
+    // Cloning a theme (built-in or custom) - pre-fill with base theme data but with modified label
+    themeData.value = {
+      label: `Custom ${props.baseTheme.label}`,
+      colors: { ...props.baseTheme.colors }
     }
   }
 })

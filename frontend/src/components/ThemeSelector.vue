@@ -29,18 +29,35 @@
       <div 
         v-for="theme in builtInThemes" 
         :key="theme.name"
-        class="theme-option"
+        class="theme-option built-in-theme"
         :class="{ active: currentTheme === theme.name }"
-        @click="selectTheme(theme.name)"
       >
-        <div class="theme-preview">
-          <div class="preview-header" :style="{ backgroundColor: theme.colors.tableHeader }"></div>
-          <div class="preview-content" :style="{ backgroundColor: theme.colors.container }"></div>
-          <div class="preview-accent" :style="{ backgroundColor: theme.colors.primary }"></div>
+        <div @click="selectTheme(theme.name)" class="theme-preview-section">
+          <div class="theme-preview">
+            <div class="preview-header" :style="{ backgroundColor: theme.colors.tableHeader }"></div>
+            <div class="preview-content" :style="{ backgroundColor: theme.colors.container }"></div>
+            <div class="preview-accent" :style="{ backgroundColor: theme.colors.primary }"></div>
+          </div>
+          <div class="theme-info">
+            <span class="theme-name">{{ theme.label }}</span>
+            <span v-if="currentTheme === theme.name" class="current-badge">Current</span>
+          </div>
         </div>
-        <div class="theme-info">
-          <span class="theme-name">{{ theme.label }}</span>
-          <span v-if="currentTheme === theme.name" class="current-badge">Current</span>
+        <div class="theme-actions">
+          <button 
+            @click.stop="selectTheme(theme.name)"
+            class="select-btn"
+            :disabled="currentTheme === theme.name"
+          >
+            {{ currentTheme === theme.name ? 'Selected' : 'Select' }}
+          </button>
+          <button 
+            @click.stop="cloneTheme(theme)"
+            class="clone-btn"
+            title="Customize This Theme"
+          >
+            🎨 Customize
+          </button>
         </div>
       </div>
     </div>
@@ -90,6 +107,13 @@
               ✏️
             </button>
             <button 
+              @click.stop="cloneTheme(theme)"
+              class="clone-btn"
+              title="Clone Theme"
+            >
+              📋 Clone
+            </button>
+            <button 
               @click.stop="deleteTheme(theme.name)"
               class="delete-btn"
               title="Delete Theme"
@@ -110,6 +134,7 @@
       <div class="modal-content" @click.stop>
         <CustomThemeBuilder 
           :editing-theme="editingTheme"
+          :base-theme="cloningTheme"
           @close="closeCustomBuilder"
           @saved="onThemeSaved"
         />
@@ -134,6 +159,7 @@ const {
 const activeTab = ref<'themes' | 'custom'>('themes')
 const showCustomBuilder = ref(false)
 const editingTheme = ref<Theme | undefined>(undefined)
+const cloningTheme = ref<Theme | undefined>(undefined)
 
 // Get the themes
 const builtInThemes = getBuiltInThemes()
@@ -145,6 +171,13 @@ const selectTheme = (themeName: string) => {
 
 const editTheme = (theme: Theme) => {
   editingTheme.value = theme
+  cloningTheme.value = undefined
+  showCustomBuilder.value = true
+}
+
+const cloneTheme = (theme: Theme) => {
+  cloningTheme.value = theme
+  editingTheme.value = undefined
   showCustomBuilder.value = true
 }
 
@@ -157,6 +190,7 @@ const deleteTheme = (themeName: string) => {
 const closeCustomBuilder = () => {
   showCustomBuilder.value = false
   editingTheme.value = undefined
+  cloningTheme.value = undefined
 }
 
 const onThemeSaved = (theme: Theme) => {
@@ -266,8 +300,21 @@ defineEmits<{
   background-color: var(--input-bg);
 }
 
-.theme-option.custom-theme {
+.theme-option.custom-theme,
+.theme-option.built-in-theme {
   position: relative;
+}
+
+.theme-preview-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  cursor: pointer;
+}
+
+.theme-option.built-in-theme {
+  cursor: default;
 }
 
 .theme-preview {
@@ -343,14 +390,26 @@ defineEmits<{
   cursor: not-allowed;
 }
 
-.edit-btn, .delete-btn {
+.edit-btn, .delete-btn, .clone-btn {
   background: none;
   border: none;
-  font-size: 1rem;
+  font-size: 0.85rem;
   cursor: pointer;
-  padding: 0.25rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 4px;
   transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.clone-btn {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+  border: 1px solid var(--primary-color);
+}
+
+.clone-btn:hover {
+  background-color: var(--link-color);
+  border-color: var(--link-color);
 }
 
 .edit-btn:hover {
@@ -465,9 +524,19 @@ defineEmits<{
     gap: 0.5rem;
   }
   
+  .theme-preview-section {
+    width: 100%;
+  }
+  
   .theme-actions {
     width: 100%;
     justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  
+  .clone-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.4rem;
   }
   
   .custom-themes-header {
