@@ -124,6 +124,7 @@
     <AddFavorite
       v-model:isVisible="showAddFavoriteModal"
       :node-number="selectedNodeForAdd"
+      :local-node="props.localNode || ''"
       @favorite-added="handleFavoriteAdded"
     />
   </Teleport>
@@ -138,6 +139,7 @@ import AddFavorite from './AddFavorite.vue'
 
 interface Props {
   open: boolean
+  localNode?: string
 }
 
 interface Favorite {
@@ -170,6 +172,7 @@ const currentUser = ref('')
 const fileName = ref('')
 const showAddFavoriteModal = ref(false)
 const selectedNodeForAdd = ref('')
+const availableNodes = ref<any[]>([])
 
 const title = computed(() => {
   if (result.value && result.value.success) {
@@ -184,21 +187,39 @@ const title = computed(() => {
   return 'Favorites Panel'
 })
 
+const loadAvailableNodes = async () => {
+  try {
+    const response = await api.get('/nodes')
+    if (response.data.success) {
+      availableNodes.value = response.data.data || []
+    } else {
+      availableNodes.value = []
+    }
+  } catch (err) {
+    console.error('Failed to load available nodes:', err)
+    availableNodes.value = []
+  }
+}
+
 const loadFavorites = async () => {
   loading.value = true
   error.value = ''
   result.value = null
   
   try {
-    const response = await api.get('/config/favorites')
+    // Load available nodes in parallel (don't wait for it)
+    loadAvailableNodes()
     
-    if (response.data.success) {
-      favorites.value = response.data.data
+    // Load favorites
+    const favoritesResponse = await api.get('/config/favorites')
+    
+    if (favoritesResponse.data.success) {
+      favorites.value = favoritesResponse.data.data
       // Get user info from the API response
-      currentUser.value = response.data.user || 'Unknown User'
-      fileName.value = response.data.fileName || 'favorites.ini'
+      currentUser.value = favoritesResponse.data.user || 'Unknown User'
+      fileName.value = favoritesResponse.data.fileName || 'favorites.ini'
     } else {
-      error.value = response.data.message || 'Failed to load favorites'
+      error.value = favoritesResponse.data.message || 'Failed to load favorites'
     }
   } catch (err: unknown) {
     const axiosError = err as AxiosErrorResponse
@@ -209,12 +230,29 @@ const loadFavorites = async () => {
 }
 
 const executeCommand = async (favorite: Favorite) => {
-  // For general favorites, we need to prompt for a node number
+  // For general favorites, we need to get a node number
   if (favorite.section === 'general') {
-    const nodeNumber = prompt(`Enter node number for command "${favorite.label}":`)
-    if (!nodeNumber) {
-      return
+    let nodeNumber: string | null = null
+    
+    // If only one node is available, auto-select it
+    if (availableNodes.value.length === 1) {
+      nodeNumber = String(availableNodes.value[0].id)
+    } else if (props.localNode && availableNodes.value.length > 0) {
+      // If a local node is provided and it's in the available nodes, use it
+      const localNodeInList = availableNodes.value.find(node => String(node.id) === props.localNode)
+      if (localNodeInList) {
+        nodeNumber = String(localNodeInList.id)
+      }
     }
+    
+    // If we couldn't auto-select, prompt the user
+    if (!nodeNumber) {
+      nodeNumber = prompt(`Enter node number for command "${favorite.label}":`)
+      if (!nodeNumber) {
+        return
+      }
+    }
+    
     await executeFavoriteCommand(favorite, nodeNumber)
   } else {
     // For node-specific favorites, use the node from the favorite
@@ -289,6 +327,7 @@ const closeModal = () => {
   favorites.value = []
   currentUser.value = ''
   fileName.value = ''
+  availableNodes.value = []
 }
 
 // Watch for modal open state

@@ -140,6 +140,10 @@ const props = defineProps({
   nodeNumber: {
     type: String,
     default: ''
+  },
+  localNode: {
+    type: String,
+    default: ''
   }
 })
 
@@ -159,6 +163,20 @@ const availableNodes = ref([])
 watch(() => props.nodeNumber, async (newNode) => {
   if (newNode && props.isVisible) {
     await loadNodeInfo(newNode)
+  }
+})
+
+// Watch for changes in addToGeneral to auto-select source node if needed
+watch(() => addToGeneral.value, async (isGeneral) => {
+  if (!isGeneral && availableNodes.value.length === 1 && !sourceNode.value) {
+    // Auto-select the single node when switching to node-specific
+    sourceNode.value = availableNodes.value[0].id
+  } else if (!isGeneral && props.localNode && availableNodes.value.length > 1 && !sourceNode.value) {
+    // If a local node is provided and it's in the available nodes, select it
+    const localNodeInList = availableNodes.value.find(node => String(node.id) === props.localNode)
+    if (localNodeInList) {
+      sourceNode.value = localNodeInList.id
+    }
   }
 })
 
@@ -220,6 +238,17 @@ const loadAvailableNodes = async () => {
     const response = await api.get('/nodes')
     if (response.data.success) {
       availableNodes.value = response.data.data || []
+      
+      // Auto-select if only one node is available and we're adding a node-specific favorite
+      if (availableNodes.value.length === 1 && !addToGeneral.value && !sourceNode.value) {
+        sourceNode.value = availableNodes.value[0].id
+      } else if (props.localNode && availableNodes.value.length > 1 && !addToGeneral.value && !sourceNode.value) {
+        // If a local node is provided and it's in the available nodes, select it
+        const localNodeInList = availableNodes.value.find(node => String(node.id) === props.localNode)
+        if (localNodeInList) {
+          sourceNode.value = localNodeInList.id
+        }
+      }
     } else {
       availableNodes.value = []
     }

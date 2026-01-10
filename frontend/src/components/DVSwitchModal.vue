@@ -139,6 +139,7 @@ interface DvswitchNode {
 
 const props = defineProps<{
   isVisible: boolean
+  localNode?: string
 }>()
 
 const emit = defineEmits<{
@@ -191,6 +192,18 @@ const loadNodes = async () => {
       availableNodes.value = response.data.data || []
       if (availableNodes.value.length === 0) {
         error.value = 'No nodes with DVSwitch configured found.'
+      } else if (availableNodes.value.length === 1) {
+        // Auto-select the single node
+        selectedNode.value = availableNodes.value[0].id
+        // Automatically load modes for the selected node
+        await onNodeChange()
+      } else if (props.localNode) {
+        // If a local node is provided and it's in the available nodes, select it
+        const localNodeInList = availableNodes.value.find(node => node.id === props.localNode)
+        if (localNodeInList) {
+          selectedNode.value = localNodeInList.id
+          await onNodeChange()
+        }
       }
     } else {
       error.value = response.data.message || 'Failed to load nodes'

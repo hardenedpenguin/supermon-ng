@@ -203,6 +203,7 @@
         <!-- Favorites Modal -->
         <Favorites 
           v-model:open="showFavoritesModal"
+          :local-node="selectedLocalNode || selectedNode || String(displayedNodes[0]?.id || '')"
           @command-executed="handleCommandExecuted"
         />
         
@@ -278,7 +279,10 @@
     <Voter :show="showVoterModal" @close="showVoterModal = false" />
     
     <!-- DVSwitch Modal -->
-    <DVSwitchModal v-model:isVisible="showDvswitchModal" />
+    <DVSwitchModal 
+      v-model:isVisible="showDvswitchModal" 
+      :local-node="selectedLocalNode || selectedNode || String(displayedNodes[0]?.id || '')" 
+    />
     
     <!-- ConfigEditor Modal -->
     <ConfigEditor v-model:open="showConfigEditorModal" />
@@ -730,15 +734,32 @@ const dtmf = async () => {
     return
   }
   
-  // Check if we have a local node selected
-  if (!selectedLocalNode.value) {
+  // Determine which node to use for DTMF command
+  let nodeToUse: string | null = null
+  
+  // First, check if we have a local node selected
+  if (selectedLocalNode.value) {
+    nodeToUse = selectedLocalNode.value
+  } else if (selectedNode.value) {
+    // If no local node but we have a selected node, use it
+    nodeToUse = String(selectedNode.value).split(',')[0] // Use first node if it's a group
+  } else if (displayedNodes.value.length === 1) {
+    // If only one node is displayed, use it
+    nodeToUse = String(displayedNodes.value[0].id)
+  } else if (availableNodes.value.length === 1) {
+    // If only one node is available in total, use it
+    nodeToUse = String(availableNodes.value[0].id)
+  }
+  
+  // If we still don't have a node, show error
+  if (!nodeToUse) {
     alert('No local node selected. Please select a node first.')
     return
   }
   
   try {
     const response = await api.post('/nodes/dtmf', {
-      localnode: selectedLocalNode.value,
+      localnode: nodeToUse,
       dtmf: dtmfCommand.trim()
     })
     
