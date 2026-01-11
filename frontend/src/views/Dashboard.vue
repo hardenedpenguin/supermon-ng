@@ -51,6 +51,11 @@
     <!-- Menu Component -->
     <Menu @node-selection="handleNodeSelection" />
 
+    <!-- Date and Time Display -->
+    <div class="datetime-display">
+      {{ currentDateTime }}
+    </div>
+
     <!-- Welcome Message -->
     <div v-if="welcomeMessage" class="welcome-message" v-html="welcomeMessage"></div>
 
@@ -361,6 +366,25 @@ const selectedNode = ref('')
 const selectedLocalNode = ref('')
 const targetNode = ref('')
 const permConnect = ref(false)
+
+// Date and time display
+const currentDateTime = ref('')
+let dateTimeInterval: ReturnType<typeof setInterval> | null = null
+
+const updateDateTime = () => {
+  const now = new Date()
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: true
+  }
+  currentDateTime.value = now.toLocaleString('en-US', options)
+}
 const showLoginModal = ref(false)
 const showDisplayConfigModal = ref(false)
 const showAddFavoriteModal = ref(false)
@@ -1228,6 +1252,10 @@ onBeforeMount(async () => {
 onMounted(async () => {
   await appStore.checkAuth()
   
+  // Initialize date/time display
+  updateDateTime()
+  dateTimeInterval = setInterval(updateDateTime, 1000)
+  
   // Initialize realTime store
   await realTimeStore.initialize()
   // WebSocket connections are established automatically when startMonitoring() is called
@@ -1308,6 +1336,12 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  // Clean up date/time interval
+  if (dateTimeInterval) {
+    clearInterval(dateTimeInterval)
+    dateTimeInterval = null
+  }
+  
   // WebSocket connections are cleaned up automatically when stopMonitoring() is called
 })
 
@@ -1594,6 +1628,19 @@ watch(displayedNodes, (newDisplayedNodes) => {
   position: absolute;
   top: 20%;
   right: 12%;
+}
+
+.datetime-display {
+  margin: 15px auto;
+  max-width: 880px;
+  padding: 10px;
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 500;
+  color: var(--text-color, #e0e0e0);
+  width: calc(100% + 40px);
+  margin-left: -20px;
+  margin-right: -20px;
 }
 
 .welcome-message {
