@@ -498,7 +498,8 @@ class ConfigController
             'number-displayed' => $data['number_displayed'] ?? $defaults['number-displayed'],
             'show-number'      => $data['show_number'] ?? $defaults['show-number'],
             'show-all'         => $data['show_all'] ?? $defaults['show-all'],
-            'show-detailed'    => $data['show_detailed'] ?? $defaults['show-detailed']
+            'show-detailed'    => $data['show_detailed'] ?? $defaults['show-detailed'],
+            'show-date-time'  => $data['show_date_time'] ?? $defaults['show-date-time']
         ];
         
         $this->validateDisplaySettings($settings, $defaults);
@@ -1141,7 +1142,8 @@ class ConfigController
             'number-displayed' => "0",
             'show-number'      => "0",
             'show-all'         => "1",
-            'show-detailed'    => "1"
+            'show-detailed'    => "1",
+            'show-date-time'  => "1"
         ];
     }
 
@@ -1172,7 +1174,7 @@ class ConfigController
             $currentSettings['number-displayed'] = $defaultValues['number-displayed'];
         }
         
-        foreach (['show-number', 'show-all', 'show-detailed'] as $key) {
+        foreach (['show-number', 'show-all', 'show-detailed', 'show-date-time'] as $key) {
             if (!in_array($currentSettings[$key], ["0", "1"])) {
                 $currentSettings[$key] = $defaultValues[$key];
             }

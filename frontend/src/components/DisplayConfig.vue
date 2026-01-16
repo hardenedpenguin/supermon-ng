@@ -35,6 +35,25 @@
             </tr>
             <tr>
               <td valign="top">
+                Show Date/Time Display<br>
+                <input
+                  type="radio"
+                  class="display-config-radio display-config-radio-top"
+                  name="show_date_time"
+                  value="1"
+                  v-model="settings.show_date_time"
+                > YES
+                <input
+                  type="radio"
+                  class="display-config-radio display-config-radio-spaced"
+                  name="show_date_time"
+                  value="0"
+                  v-model="settings.show_date_time"
+                > NO<br>
+              </td>
+            </tr>
+            <tr>
+              <td valign="top">
                 Show the number of connections (Displays x of y)<br>
                 <input 
                   type="radio" 
@@ -108,6 +127,7 @@ interface Props {
 
 interface DisplaySettings {
   'show-detailed'?: string
+  'show-date-time'?: string
   'show-number'?: string
   'show-all'?: string
   'number-displayed'?: string
@@ -123,6 +143,7 @@ const emit = defineEmits<Emits>()
 
 const settings = ref({
   show_detailed: '1',
+  show_date_time: '1',
   show_number: '0',
   show_all: '1',
   number_displayed: '0'
@@ -145,6 +166,7 @@ const loadSettings = async () => {
       const data = response.data.data
       settings.value = {
         show_detailed: data['show-detailed'] || '1',
+        show_date_time: data['show-date-time'] || '1',
         show_number: data['show-number'] || '0',
         show_all: data['show-all'] || '1',
         number_displayed: data['number-displayed'] || '0'
@@ -167,6 +189,7 @@ const saveSettings = async () => {
     error.value = ''
     const response = await api.put('/config/display', {
       show_detailed: settings.value.show_detailed,
+      show_date_time: settings.value.show_date_time,
       show_number: settings.value.show_number,
       show_all: settings.value.show_all,
       number_displayed: settings.value.number_displayed

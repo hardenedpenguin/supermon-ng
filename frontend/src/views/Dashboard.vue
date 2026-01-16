@@ -52,7 +52,7 @@
     <Menu @node-selection="handleNodeSelection" />
 
     <!-- Date and Time Display -->
-    <div class="datetime-display">
+    <div v-if="showDateTime" class="datetime-display">
       {{ currentDateTime }}
     </div>
 
@@ -369,6 +369,7 @@ const permConnect = ref(false)
 
 // Date and time display
 const currentDateTime = ref('')
+const showDateTime = ref(true)
 let dateTimeInterval: ReturnType<typeof setInterval> | null = null
 
 const updateDateTime = () => {
@@ -384,6 +385,19 @@ const updateDateTime = () => {
     hour12: true
   }
   currentDateTime.value = now.toLocaleString('en-US', options)
+}
+
+const loadDisplaySettingsFromCookies = () => {
+  const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+    const [key, value] = cookie.trim().split('=')
+    if (key.startsWith('display-data[')) {
+      const cleanKey = key.replace('display-data[', '').replace(']', '')
+      acc[cleanKey] = value
+    }
+    return acc
+  }, {} as Record<string, string>)
+
+  showDateTime.value = cookies['show-date-time'] !== '0'
 }
 const showLoginModal = ref(false)
 const showDisplayConfigModal = ref(false)
@@ -1253,8 +1267,11 @@ onMounted(async () => {
   await appStore.checkAuth()
   
   // Initialize date/time display
-  updateDateTime()
-  dateTimeInterval = setInterval(updateDateTime, 1000)
+  loadDisplaySettingsFromCookies()
+  if (showDateTime.value) {
+    updateDateTime()
+    dateTimeInterval = setInterval(updateDateTime, 1000)
+  }
   
   // Initialize realTime store
   await realTimeStore.initialize()
