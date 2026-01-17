@@ -1,4 +1,4 @@
-# Supermon-NG V4.1.1 - Modern AllStar Link Management Dashboard
+# Supermon-NG - Modern AllStar Link Management Dashboard
 
 <img src="supermon-ng.png" alt="Supermon-NG" width="200"/>
 
@@ -35,8 +35,8 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/v4.1.1/supermon-ng-V4.1.1.tar.xz
-tar -xJf supermon-ng-V4.1.1.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.2/supermon-ng-V4.1.2.tar.xz
+tar -xJf supermon-ng-V4.1.2.tar.xz
 cd supermon-ng
 sudo ./install.sh
 ```
@@ -162,8 +162,8 @@ sudo sed -i 's/"anarchy"/"yourusername"/g' /var/www/html/supermon-ng/user_files/
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/v4.1.1/supermon-ng-V4.1.1.tar.xz
-tar -xJf supermon-ng-V4.1.1.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.2/supermon-ng-V4.1.2.tar.xz
+tar -xJf supermon-ng-V4.1.2.tar.xz
 cd supermon-ng
 sudo ./scripts/update.sh
 ```
