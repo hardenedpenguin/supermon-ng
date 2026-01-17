@@ -164,9 +164,13 @@ class HttpOptimizationService
     public function addCorsHeaders(Response $response, Request $request): Response
     {
         $origin = $request->getHeaderLine('Origin');
-        $allowedOrigins = ['https://sm.w5gle.us', 'http://localhost:3000', 'http://127.0.0.1:3000'];
+        $allowedOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000'];
+        $originHost = $origin ? parse_url($origin, PHP_URL_HOST) : null;
+        $requestHost = $request->getUri()->getHost();
         
-        if (in_array($origin, $allowedOrigins)) {
+        if ($originHost && $requestHost && $originHost === $requestHost) {
+            $response = $response->withHeader('Access-Control-Allow-Origin', $origin);
+        } elseif (in_array($origin, $allowedOrigins, true)) {
             $response = $response->withHeader('Access-Control-Allow-Origin', $origin);
         }
         
