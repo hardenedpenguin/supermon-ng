@@ -7,8 +7,8 @@ import configparser
 import requests
 import json
 
-# Asterisk/app_rpt does not persist ALERT when it exceeds ~360 chars. Cap to stay under.
-ALERT_MAX_LEN = 350
+# Asterisk/app_rpt does not persist ALERT when it exceeds ~500 chars. Cap as large as practical.
+ALERT_MAX_LEN = 500
 
 def run_command(command):
     try:
