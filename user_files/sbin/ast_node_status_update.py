@@ -104,17 +104,78 @@ def get_disk_usage():
                 return f'"Disk - {used} {percent} used, {available} remains"'
     return '"Disk - N/A"'
 
-def get_skywarnplus_alerts(api_url, master_enable, custom_link=""):
+def _log_skywarn_api_error(msg, status_code=None, body_snippet=None):
+    """Log API error to stderr and /tmp/skywarn_api_errors.log for debugging."""
+    from datetime import datetime
+    line = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {msg}"
+    if status_code is not None:
+        line += f" (HTTP {status_code})"
+    print(line)
+    try:
+        with open("/tmp/skywarn_api_errors.log", "a", encoding="utf-8") as f:
+            f.write(line + "\n")
+            if body_snippet:
+                # Log first 500 chars inline; if longer, add truncated traceback/body
+                snippet = body_snippet[:500] if len(body_snippet) > 500 else body_snippet
+                f.write(f"  | {snippet}\n")
+                if len(body_snippet) > 500:
+                    f.write("  (truncated)\n")
+    except Exception:
+        pass
+
+
+def _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_text="<span style='color: #FF0000;'>No Alerts</span>"):
+    """Format alert data as HTML. Used for both global and per-node."""
+    if not has_alerts or not alerts:
+        return f'"{enabled_text}<br>{no_alerts_text}"'
+    alert_display = []
+    for alert in alerts[:3]:
+        if not isinstance(alert, dict):
+            continue
+        event = alert.get('event', 'Unknown')
+        severity = alert.get('severity', 'Unknown')
+        if severity == 'Extreme':
+            color = '#FF0000'
+        elif severity == 'Severe':
+            color = '#FF6600'
+        elif severity == 'Moderate':
+            color = '#FFCC00'
+        elif severity == 'Minor':
+            color = '#FFFF00'
+        else:
+            color = '#FF0000'
+        alert_text = f"{event}"
+        if custom_link:
+            alert_display.append(f"<a target='WX ALERT' href='{custom_link}' style='color: {color}; text-decoration: none;'><b>{alert_text}</b></a>")
+        else:
+            alert_display.append(f"<span style='color: {color};'><b>{alert_text}</b></span>")
+    if not alert_display:
+        return f'"{enabled_text}<br>{no_alerts_text}"'
+    return f'"{enabled_text}<br>{"<br>".join(alert_display)}"'
+
+
+def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
     """
-    Get alerts from SkywarnPlus-ng API
-    
+    Get alerts from SkywarnPlus-NG API.
+
+    Uses per-node alerts (alerts_by_node) when the API provides them and nodes
+    are configured, so each Supermon node shows alerts only for its counties.
+
+    API errors (timeout, connection refused, HTTP errors) are logged to
+    /tmp/skywarn_api_errors.log and to stderr (node-status-update.log when run
+    via systemd). Check those when the dashboard shows "API Offline" or no alerts.
+
     Args:
-        api_url: Base URL for SkywarnPlus-ng API (e.g., http://10.0.0.5:8100)
-        master_enable: "yes" to enable, anything else to disable
-        custom_link: Optional custom link for alerts (used as display link only, not for fetching)
-    
+        api_url: Base URL for SkywarnPlus-NG API (e.g. http://10.0.0.5:8100).
+                 When using a reverse proxy at /skywarnplus-ng, include the path
+                 (e.g. https://host/skywarnplus-ng).
+        master_enable: "yes" to enable, anything else to disable.
+        custom_link: Optional custom link for alerts (display only, not for fetching).
+        nodes: List of node IDs (strings) from [general] NODE. Used for per-node alerts.
+
     Returns:
-        Formatted HTML string for display
+        Dict mapping node -> formatted HTML string (including quoted wrapper).
+        Fallback key "" used for nodes not in alerts_by_node when using global fallback.
     """
     github_link = '<a href=\'https://github.com/hardenedpenguin/SkywarnPlus-NG\' style=\'color: inherit; text-decoration: none;\'>SkywarnPlus-NG</a>'
     enabled_text = f'<span style=\'color: SpringGreen;\'><b><u>{github_link} Enabled</u></b></span>'
@@ -122,72 +183,118 @@ def get_skywarnplus_alerts(api_url, master_enable, custom_link=""):
     no_alerts_text = '<span style=\'color: #FF0000;\'>No Alerts</span>'
     error_text = '<span style=\'color: #FF0000;\'>API Error</span>'
 
+    node_list = [n.strip() for n in (nodes or []) if n and str(n).strip()]
+    fallback = f'"{disabled_text}"'
     if master_enable.lower() != "yes":
-        return f'"{disabled_text}"'
+        return {n: fallback for n in node_list} if node_list else {"": fallback}
+
+    api_url = str(api_url).strip().rstrip('/')
+    # Use 127.0.0.1 instead of localhost to avoid IPv6 connection refused when
+    # SkywarnPlus-NG listens on IPv4 only (0.0.0.0:8100). Python may resolve
+    # localhost to ::1 first, which fails in that case.
+    try:
+        from urllib.parse import urlparse, urlunparse
+        p = urlparse(api_url)
+        if p.hostname and p.hostname.lower() == 'localhost':
+            netloc = '127.0.0.1' + ('' if p.port is None else f':{p.port}')
+            api_url = urlunparse(p._replace(netloc=netloc))
+    except Exception:
+        pass
+    status_url = f"{api_url}/api/status"
+    print(f"[SkywarnPlus] GET {status_url}")
 
     try:
-        status_url = f"{api_url}/api/status"
-        response = requests.get(status_url, timeout=5)
-        
+        from urllib.parse import urlparse
+        _u = urlparse(status_url)
+        _no_proxy = _u.hostname in ('127.0.0.1', 'localhost', '::1')
+        _kw = {'proxies': {'http': None, 'https': None}} if _no_proxy else {}
+        response = requests.get(status_url, timeout=5, **_kw)
         if response.status_code != 200:
-            print(f"Error: SkywarnPlus-ng API returned status code {response.status_code}")
-            return f'"{enabled_text}<br>{error_text}"'
-        
-        data = response.json()
-        
-        if not data.get('has_alerts', False):
-            return f'"{enabled_text}<br>{no_alerts_text}"'
-        
-        alerts = data.get('alerts', [])
-        alert_display = []
-        
-        for alert in alerts[:3]:  # Limit to 3 most recent alerts
-            event = alert.get('event', 'Unknown')
-            severity = alert.get('severity', 'Unknown')
-            headline = alert.get('headline', 'No headline')
-            
-            if severity == 'Extreme':
-                color = '#FF0000'
-            elif severity == 'Severe':
-                color = '#FF6600'
-            elif severity == 'Moderate':
-                color = '#FFCC00'
-            elif severity == 'Minor':
-                color = '#FFFF00'
-            else:
-                color = '#FF0000'
-            
-            alert_text = f"{event}"
-            
-            if custom_link:
-                alert_display.append(f"<a target='WX ALERT' href='{custom_link}' style='color: {color}; text-decoration: none;'><b>{alert_text}</b></a>")
-            else:
-                alert_display.append(f"<span style='color: {color};'><b>{alert_text}</b></span>")
-        
-        alerts_html = "<br>".join(alert_display)
-        
-        return f'"{enabled_text}<br>{alerts_html}"'
-        
+            body_snippet = getattr(response, 'text', None) or ""
+            err_detail = ""
+            try:
+                parsed = json.loads(body_snippet)
+                if isinstance(parsed, dict) and parsed.get("error"):
+                    err_detail = parsed["error"]
+            except Exception:
+                pass
+            msg = f"SkywarnPlus-NG API error: {status_url}"
+            if err_detail:
+                msg += f" | {err_detail}"
+            _log_skywarn_api_error(msg, status_code=response.status_code, body_snippet=body_snippet or err_detail)
+            one = f'"{enabled_text}<br>{error_text}"'
+            return {n: one for n in node_list} if node_list else {"": one}
+
+        try:
+            data = response.json()
+        except json.JSONDecodeError as e:
+            _log_skywarn_api_error(
+                f"SkywarnPlus-NG API JSON decode error: {e}",
+                body_snippet=response.text[:500] if getattr(response, 'text', None) else None
+            )
+            one = f'"{enabled_text}<br>{error_text}"'
+            return {n: one for n in node_list} if node_list else {"": one}
+
+        if not isinstance(data, dict):
+            _log_skywarn_api_error("SkywarnPlus-NG API returned non-dict response", body_snippet=str(type(data)))
+            one = f'"{enabled_text}<br>{error_text}"'
+            return {n: one for n in node_list} if node_list else {"": one}
+
+        alerts_by_node = data.get("alerts_by_node") or {}
+        has_alerts = data.get("has_alerts", False)
+        alerts = data.get("alerts", [])
+        if not isinstance(alerts, list):
+            alerts = []
+        print(f"[SkywarnPlus] API OK 200 | has_alerts={has_alerts} | alerts_by_node keys={list(alerts_by_node.keys()) if isinstance(alerts_by_node, dict) else 'n/a'}")
+
+        use_per_node = bool(node_list and isinstance(alerts_by_node, dict))
+        result = {}
+
+        if use_per_node:
+            for node in node_list:
+                node_key = str(node).strip()
+                per = alerts_by_node.get(node_key) if node_key else None
+                if isinstance(per, dict) and "alerts" in per:
+                    has = per.get("has_alerts", False)
+                    alist = per.get("alerts", [])
+                    if not isinstance(alist, list):
+                        alist = []
+                    result[node] = _format_alert_html(enabled_text, has, alist, custom_link, no_alerts_text)
+                else:
+                    result[node] = _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_text)
+        else:
+            single = _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_text)
+            for node in node_list:
+                result[node] = single
+            if not node_list:
+                result[""] = single
+
+        return result
+
     except requests.exceptions.Timeout:
-        print("Error: SkywarnPlus-ng API request timed out")
-        return f'"{enabled_text}<br><span style=\'color: #FF6600;\'>API Timeout</span>"'
+        import traceback
+        _log_skywarn_api_error(
+            f"SkywarnPlus-NG API timeout: {status_url}",
+            body_snippet=traceback.format_exc()
+        )
+        one = f'"{enabled_text}<br><span style=\'color: #FF6600;\'>API Timeout</span>"'
+        return {n: one for n in node_list} if node_list else {"": one}
     except requests.exceptions.ConnectionError as e:
         import traceback
-        from datetime import datetime
-        error_msg = f"Error: Could not connect to SkywarnPlus-ng API - URL: {status_url}, Error: {e}"
-        print(error_msg)
-        try:
-            with open("/tmp/skywarn_api_errors.log", "a") as log_file:
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                log_file.write(f"[{timestamp}] {error_msg}\n")
-                traceback.print_exc(file=log_file)
-        except:
-            pass
-        traceback.print_exc()
-        return f'"{enabled_text}<br><span style=\'color: #FF6600;\'>API Offline</span>"'
+        _log_skywarn_api_error(
+            f"SkywarnPlus-NG API offline / connection refused: {status_url} | {e!r}",
+            body_snippet=traceback.format_exc()
+        )
+        one = f'"{enabled_text}<br><span style=\'color: #FF6600;\'>API Offline</span>"'
+        return {n: one for n in node_list} if node_list else {"": one}
     except Exception as e:
-        print(f"Error getting alerts from SkywarnPlus-ng: {e}")
-        return f'"{enabled_text}<br>{error_text}"'
+        import traceback
+        _log_skywarn_api_error(
+            f"SkywarnPlus-NG unexpected error: {e!r}",
+            body_snippet=traceback.format_exc()
+        )
+        one = f'"{enabled_text}<br>{error_text}"'
+        return {n: one for n in node_list} if node_list else {"": one}
 
 def update_node_variables(node, cpu_up, cpu_load, cpu_temp_dsp, wx, disk_usage, alert):
     check_node_command = f"grep -q '[[:blank:]]*\\[{node}\\]' /etc/asterisk/rpt.conf"
@@ -209,11 +316,14 @@ def update_node_variables(node, cpu_up, cpu_load, cpu_temp_dsp, wx, disk_usage, 
         with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as tmp_alert_file:
             tmp_alert_file.write(alert)
             alert_file_path = tmp_alert_file.name
-        
+
+        # Escape ALERT for safe use inside bash double-quotes: \\ -> \\\\, " -> \\"
         with tempfile.NamedTemporaryFile(mode='w', suffix='.sh', delete=False) as tmp_script:
             tmp_script.write(f'''#!/bin/bash
-ALERT_VALUE=$(cat "{alert_file_path}")
-/usr/sbin/asterisk -rx "rpt set variable {node} ALERT=\\"$ALERT_VALUE\\""
+set -e
+ALERT_RAW=$(cat "{alert_file_path}")
+ALERT_ESC=$(printf %s "$ALERT_RAW" | sed 's/\\\\/\\\\\\\\/g; s/"/\\\\"/g')
+/usr/sbin/asterisk -rx "rpt set variable {node} ALERT=\\"$ALERT_ESC\\""
 rm -f "{alert_file_path}"
 ''')
             script_path = tmp_script.name
@@ -224,7 +334,7 @@ rm -f "{alert_file_path}"
         finally:
             try:
                 os.unlink(script_path)
-            except:
+            except Exception:
                 pass
         if result_alert.returncode != 0:
             print(f"Error setting ALERT for node {node}: return code {result_alert.returncode}")
@@ -255,29 +365,34 @@ if __name__ == "__main__":
 
     config = configparser.ConfigParser()
     config.read(config_file)
+    print(f"[NodeStatus] config={config_file}")
 
     nodes = config.get("general", "NODE", fallback="").split()
     wx_code = config.get("general", "WX_CODE", fallback="")
     wx_location = config.get("general", "WX_LOCATION", fallback="")
     temp_unit = config.get("general", "TEMP_UNIT", fallback="F")
 
-    master_enable = config.get("skywarnplus", "MASTER_ENABLE", fallback="no")
-    api_url = config.get("skywarnplus", "API_URL", fallback="http://localhost:8100")
-    custom_link = config.get("skywarnplus", "CUSTOM_LINK", fallback="")
+    master_enable = config.get("skywarnplus", "MASTER_ENABLE", fallback="no").strip()
+    api_url = config.get("skywarnplus", "API_URL", fallback="http://localhost:8100").strip()
+    custom_link = config.get("skywarnplus", "CUSTOM_LINK", fallback="").strip()
+    print(f"[NodeStatus] API_URL={api_url!r} MASTER_ENABLE={master_enable!r} NODES={nodes}")
 
     cpu_up = get_uptime()
     cpu_load = get_cpu_load()
     cpu_temp_dsp = get_cpu_temperature(temp_unit)
     wx = get_weather(wx_code, wx_location)
     disk_usage_info = get_disk_usage()
-    alert = get_skywarnplus_alerts(api_url, master_enable, custom_link)
-    if alert.startswith('"') and alert.endswith('"'):
-        alert = alert[1:-1]
 
-    if nodes:
-        for node in nodes:
-            if node.strip():
-                update_node_variables(node.strip(), cpu_up, cpu_load, cpu_temp_dsp, wx, disk_usage_info, alert)
+    node_list = [n.strip() for n in nodes if n and n.strip()]
+    alerts_map = get_skywarnplus_alerts(api_url, master_enable, custom_link, nodes=node_list)
+    default_alert = alerts_map.get(node_list[0], "") if node_list else ""
+
+    if node_list:
+        for node in node_list:
+            alert = alerts_map.get(node, default_alert)
+            if alert.startswith('"') and alert.endswith('"'):
+                alert = alert[1:-1]
+            update_node_variables(node, cpu_up, cpu_load, cpu_temp_dsp, wx, disk_usage_info, alert)
     else:
         print("No nodes specified in the configuration file.")
 
