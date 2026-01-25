@@ -7,6 +7,9 @@ import configparser
 import requests
 import json
 
+# Asterisk/app_rpt does not persist ALERT when it exceeds ~360 chars. Cap to stay under.
+ALERT_MAX_LEN = 350
+
 def run_command(command):
     try:
         process = subprocess.run(command, shell=True, capture_output=True, text=True, check=True)
@@ -104,6 +107,26 @@ def get_disk_usage():
                 return f'"Disk - {used} {percent} used, {available} remains"'
     return '"Disk - N/A"'
 
+def _debug_log(msg: str) -> None:
+    """Append to /tmp/node_status_debug.log for debugging API → ALERT flow."""
+    from datetime import datetime
+    try:
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open("/tmp/node_status_debug.log", "a", encoding="utf-8") as f:
+            f.write(f"[{ts}] {msg}\n")
+    except Exception:
+        pass
+
+
+def _debug_log_clear() -> None:
+    """Truncate debug log at start of run so we only see latest."""
+    try:
+        with open("/tmp/node_status_debug.log", "w", encoding="utf-8") as f:
+            f.write("")
+    except Exception:
+        pass
+
+
 def _log_skywarn_api_error(msg, status_code=None, body_snippet=None):
     """Log API error to stderr and /tmp/skywarn_api_errors.log for debugging."""
     from datetime import datetime
@@ -124,12 +147,19 @@ def _log_skywarn_api_error(msg, status_code=None, body_snippet=None):
         pass
 
 
-def _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_text="<span style='color: #FF0000;'>No Alerts</span>"):
-    """Format alert data as HTML. Used for both global and per-node."""
+def _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_text="<span style='color: #FF0000;'>No Alerts</span>", max_len=None):
+    """Format alert data as HTML. Add full alerts only; stop before exceeding max_len (no mid-word truncation).
+    When max_len is set, use compact prefix/links so we can fit two full alerts (e.g. Brazoria)."""
     if not has_alerts or not alerts:
         return f'"{enabled_text}<br>{no_alerts_text}"'
-    alert_display = []
-    for alert in alerts[:3]:
+    compact = max_len is not None
+    if compact:
+        prefix = "<span style='color:SpringGreen'><b>SkywarnPlus-NG Enabled</b></span><br>"
+    else:
+        prefix = f"{enabled_text}<br>"
+    total = prefix
+    first = True
+    for alert in alerts[:5]:
         if not isinstance(alert, dict):
             continue
         event = alert.get('event', 'Unknown')
@@ -144,14 +174,22 @@ def _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_
             color = '#FFFF00'
         else:
             color = '#FF0000'
-        alert_text = f"{event}"
         if custom_link:
-            alert_display.append(f"<a target='WX ALERT' href='{custom_link}' style='color: {color}; text-decoration: none;'><b>{alert_text}</b></a>")
+            if compact:
+                seg = f"<a href='{custom_link}' style='color:{color}'><b>{event}</b></a>"
+            else:
+                seg = f"<a target='WX ALERT' href='{custom_link}' style='color: {color}; text-decoration: none;'><b>{event}</b></a>"
         else:
-            alert_display.append(f"<span style='color: {color};'><b>{alert_text}</b></span>")
-    if not alert_display:
-        return f'"{enabled_text}<br>{no_alerts_text}"'
-    return f'"{enabled_text}<br>{"<br>".join(alert_display)}"'
+            seg = f"<span style='color: {color};'><b>{event}</b></span>"
+        candidate = total + ("" if first else "<br>") + seg
+        if max_len is not None and len(candidate) > max_len:
+            break
+        total = candidate
+        first = False
+    if total == prefix:
+        head = prefix.rstrip("<br>") if compact else enabled_text
+        return f'"{head}<br>{no_alerts_text}"'
+    return f'"{total}"'
 
 
 def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
@@ -186,6 +224,7 @@ def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
     node_list = [n.strip() for n in (nodes or []) if n and str(n).strip()]
     fallback = f'"{disabled_text}"'
     if master_enable.lower() != "yes":
+        _debug_log("MASTER_ENABLE != yes | returning disabled for all")
         return {n: fallback for n in node_list} if node_list else {"": fallback}
 
     api_url = str(api_url).strip().rstrip('/')
@@ -201,6 +240,9 @@ def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
     except Exception:
         pass
     status_url = f"{api_url}/api/status"
+    if node_list:
+        nodes_param = ",".join(str(n).strip() for n in node_list)
+        status_url = f"{status_url}?nodes={nodes_param}"
     print(f"[SkywarnPlus] GET {status_url}")
 
     try:
@@ -222,6 +264,7 @@ def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
             if err_detail:
                 msg += f" | {err_detail}"
             _log_skywarn_api_error(msg, status_code=response.status_code, body_snippet=body_snippet or err_detail)
+            _debug_log(f"API HTTP error {response.status_code} request={status_url} | returning API Error for all")
             one = f'"{enabled_text}<br>{error_text}"'
             return {n: one for n in node_list} if node_list else {"": one}
 
@@ -232,11 +275,13 @@ def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
                 f"SkywarnPlus-NG API JSON decode error: {e}",
                 body_snippet=response.text[:500] if getattr(response, 'text', None) else None
             )
+            _debug_log("API JSON decode error | returning API Error for all")
             one = f'"{enabled_text}<br>{error_text}"'
             return {n: one for n in node_list} if node_list else {"": one}
 
         if not isinstance(data, dict):
             _log_skywarn_api_error("SkywarnPlus-NG API returned non-dict response", body_snippet=str(type(data)))
+            _debug_log("API non-dict response | returning API Error for all")
             one = f'"{enabled_text}<br>{error_text}"'
             return {n: one for n in node_list} if node_list else {"": one}
 
@@ -245,10 +290,17 @@ def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
         alerts = data.get("alerts", [])
         if not isinstance(alerts, list):
             alerts = []
-        print(f"[SkywarnPlus] API OK 200 | has_alerts={has_alerts} | alerts_by_node keys={list(alerts_by_node.keys()) if isinstance(alerts_by_node, dict) else 'n/a'}")
+        abn_keys = list(alerts_by_node.keys()) if isinstance(alerts_by_node, dict) else []
+        print(f"[SkywarnPlus] API OK 200 | has_alerts={has_alerts} | alerts_by_node keys={abn_keys}")
+
+        _debug_log(f"API request={status_url} | has_alerts={has_alerts} | alerts_by_node keys={abn_keys} | alerts count={len(alerts)}")
 
         use_per_node = bool(node_list and isinstance(alerts_by_node, dict))
         result = {}
+
+        def _snippet(s: str, n: int = 72) -> str:
+            t = (s or "").replace("\n", " ").strip()
+            return (t[:n] + "..") if len(t) > n else t
 
         if use_per_node:
             for node in node_list:
@@ -259,11 +311,14 @@ def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
                     alist = per.get("alerts", [])
                     if not isinstance(alist, list):
                         alist = []
-                    result[node] = _format_alert_html(enabled_text, has, alist, custom_link, no_alerts_text)
+                    result[node] = _format_alert_html(enabled_text, has, alist, custom_link, no_alerts_text, max_len=ALERT_MAX_LEN)
+                    _debug_log(f"node={node} source=per_node has_alerts={has} alerts={len(alist)} snippet={_snippet(result[node])}")
                 else:
-                    result[node] = _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_text)
+                    result[node] = _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_text, max_len=ALERT_MAX_LEN)
+                    _debug_log(f"node={node} source=global_fallback has_alerts={has_alerts} snippet={_snippet(result[node])}")
         else:
-            single = _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_text)
+            single = _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_text, max_len=ALERT_MAX_LEN)
+            _debug_log(f"source=global single snippet={_snippet(single)}")
             for node in node_list:
                 result[node] = single
             if not node_list:
@@ -277,6 +332,7 @@ def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
             f"SkywarnPlus-NG API timeout: {status_url}",
             body_snippet=traceback.format_exc()
         )
+        _debug_log(f"API TIMEOUT request={status_url} | returning API Timeout for all nodes")
         one = f'"{enabled_text}<br><span style=\'color: #FF6600;\'>API Timeout</span>"'
         return {n: one for n in node_list} if node_list else {"": one}
     except requests.exceptions.ConnectionError as e:
@@ -285,6 +341,7 @@ def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
             f"SkywarnPlus-NG API offline / connection refused: {status_url} | {e!r}",
             body_snippet=traceback.format_exc()
         )
+        _debug_log(f"API CONNECTION ERROR request={status_url} | {e!r} | returning API Offline for all nodes")
         one = f'"{enabled_text}<br><span style=\'color: #FF6600;\'>API Offline</span>"'
         return {n: one for n in node_list} if node_list else {"": one}
     except Exception as e:
@@ -293,69 +350,77 @@ def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
             f"SkywarnPlus-NG unexpected error: {e!r}",
             body_snippet=traceback.format_exc()
         )
+        _debug_log(f"API ERROR request={status_url} | {e!r} | returning API Error for all nodes")
         one = f'"{enabled_text}<br>{error_text}"'
         return {n: one for n in node_list} if node_list else {"": one}
 
+def _rpt_conf_exists():
+    return os.path.isfile("/etc/asterisk/rpt.conf")
+
+
 def update_node_variables(node, cpu_up, cpu_load, cpu_temp_dsp, wx, disk_usage, alert):
-    check_node_command = f"grep -q '[[:blank:]]*\\[{node}\\]' /etc/asterisk/rpt.conf"
-    process_check = subprocess.run(check_node_command, shell=True, capture_output=True, text=True)
-    
-    if process_check.returncode == 0:
-        command = [
-            "/usr/sbin/asterisk",
-            "-rx",
-            f"rpt set variable {node} cpu_up=\"{cpu_up}\" cpu_load={cpu_load} cpu_temp={cpu_temp_dsp} WX={wx} DISK={disk_usage}"
-        ]
-        result = subprocess.run(command, capture_output=True, text=True, check=False)
-        if result.returncode != 0:
-            print(f"Error setting variables for node {node}: {result.stderr}")
+    """Update RPT variables for a node. Returns 'ok', 'skip_rpt', 'error_vars', or 'error_alert'."""
+    # Match section headers: [546051] or [546051](node-main) etc. at line start
+    check_node_command = ["grep", "-qE", rf"^[[:blank:]]*\[{re.escape(str(node))}\]([[:blank:]]*\([^)]*\))?[[:blank:]]*$", "/etc/asterisk/rpt.conf"]
+    process_check = subprocess.run(check_node_command, capture_output=True, text=True)
+    if process_check.returncode != 0:
+        if process_check.returncode == 1:
+            print(f"Invalid Node {node}: not found in /etc/asterisk/rpt.conf")
         else:
-            print(f"Updated Variables Node {node} using rpt set variable")
+            err = (process_check.stderr or "Unknown error").strip()
+            if "No such file" in err:
+                pass  # Already logged once at start
+            else:
+                print(f"Error checking node {node} in /etc/asterisk/rpt.conf: {err}")
+        return "skip_rpt"
 
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as tmp_alert_file:
-            tmp_alert_file.write(alert)
-            alert_file_path = tmp_alert_file.name
+    command = [
+        "/usr/sbin/asterisk",
+        "-rx",
+        f"rpt set variable {node} cpu_up=\"{cpu_up}\" cpu_load={cpu_load} cpu_temp={cpu_temp_dsp} WX={wx} DISK={disk_usage}"
+    ]
+    result = subprocess.run(command, capture_output=True, text=True, check=False)
+    if result.returncode != 0:
+        print(f"Error setting variables for node {node}: {result.stderr}")
+        return "error_vars"
+    print(f"Updated Variables Node {node} using rpt set variable")
 
-        # Escape ALERT for safe use inside bash double-quotes: \\ -> \\\\, " -> \\"
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.sh', delete=False) as tmp_script:
-            tmp_script.write(f'''#!/bin/bash
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as tmp_alert_file:
+        tmp_alert_file.write(alert)
+        alert_file_path = tmp_alert_file.name
+
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.sh', delete=False) as tmp_script:
+        tmp_script.write(f'''#!/bin/bash
 set -e
 ALERT_RAW=$(cat "{alert_file_path}")
 ALERT_ESC=$(printf %s "$ALERT_RAW" | sed 's/\\\\/\\\\\\\\/g; s/"/\\\\"/g')
 /usr/sbin/asterisk -rx "rpt set variable {node} ALERT=\\"$ALERT_ESC\\""
 rm -f "{alert_file_path}"
 ''')
-            script_path = tmp_script.name
-        
+        script_path = tmp_script.name
+
+    try:
+        os.chmod(script_path, 0o755)
+        result_alert = subprocess.run(['bash', script_path], capture_output=True, text=True, check=False)
+    finally:
         try:
-            os.chmod(script_path, 0o755)
-            result_alert = subprocess.run(['bash', script_path], capture_output=True, text=True, check=False)
-        finally:
-            try:
-                os.unlink(script_path)
-            except Exception:
-                pass
-        if result_alert.returncode != 0:
-            print(f"Error setting ALERT for node {node}: return code {result_alert.returncode}")
-            if result_alert.stderr:
-                print(f"Stderr: {result_alert.stderr[:200]}")
-            if result_alert.stdout:
-                print(f"Stdout: {result_alert.stdout[:200]}")
-        else:
-            print(f"Updated ALERT Node {node} using rpt set variable")
-            if result_alert.stdout:
-                print(f"DEBUG: Asterisk stdout: {result_alert.stdout[:100]}")
-            if result_alert.stderr:
-                print(f"DEBUG: Asterisk stderr: {result_alert.stderr[:100]}")
-    else:
-        if process_check.returncode == 1:
-             print(f"Invalid Node {node}: not found in /etc/asterisk/rpt.conf")
-        else:
-             print(f"Error checking node {node} in /etc/asterisk/rpt.conf: {process_check.stderr if process_check.stderr else 'Unknown error'}")
+            os.unlink(script_path)
+        except Exception:
+            pass
+    if result_alert.returncode != 0:
+        print(f"Error setting ALERT for node {node}: return code {result_alert.returncode}")
+        if result_alert.stderr:
+            print(f"Stderr: {result_alert.stderr[:200]}")
+        if result_alert.stdout:
+            print(f"Stdout: {result_alert.stdout[:200]}")
+        return "error_alert"
+    print(f"Updated ALERT Node {node} using rpt set variable")
+    return "ok"
 
 
 if __name__ == "__main__":
+    _debug_log_clear()
     script_dir = os.path.dirname(os.path.realpath(__file__))
     config_file = os.path.join(script_dir, "node_info.ini")
 
@@ -383,18 +448,61 @@ if __name__ == "__main__":
     wx = get_weather(wx_code, wx_location)
     disk_usage_info = get_disk_usage()
 
-    node_list = [n.strip() for n in nodes if n and n.strip()]
+    node_list = []
+    seen = set()
+    for n in nodes:
+        if not n or not str(n).strip():
+            continue
+        s = str(n).strip()
+        if s not in seen:
+            seen.add(s)
+            node_list.append(s)
+
+    if not node_list:
+        _debug_log("exit early: no nodes configured")
+        print("No nodes specified in the configuration file.")
+        exit(0)
+
+    if not _rpt_conf_exists():
+        _debug_log(f"exit early: no rpt.conf | nodes={node_list}")
+        print("[NodeStatus] /etc/asterisk/rpt.conf not found; cannot update any node variables.")
+        print(f"[NodeStatus] Summary: all {len(node_list)} node(s) skipped (no rpt.conf)")
+        exit(0)
+
+    print(f"[NodeStatus] Updating {len(node_list)} node(s): {', '.join(node_list)}")
     alerts_map = get_skywarnplus_alerts(api_url, master_enable, custom_link, nodes=node_list)
     default_alert = alerts_map.get(node_list[0], "") if node_list else ""
 
-    if node_list:
-        for node in node_list:
-            alert = alerts_map.get(node, default_alert)
-            if alert.startswith('"') and alert.endswith('"'):
-                alert = alert[1:-1]
-            update_node_variables(node, cpu_up, cpu_load, cpu_temp_dsp, wx, disk_usage_info, alert)
-    else:
-        print("No nodes specified in the configuration file.")
+    def _snippet(s: str, n: int = 72) -> str:
+        t = (s or "").replace("\n", " ").strip()
+        return (t[:n] + "..") if len(t) > n else t
 
+    summary = []
+    for node in node_list:
+        a = alerts_map.get(node)
+        b = alerts_map.get("")
+        alert = a or b or default_alert
+        if a:
+            src = "map[node]"
+        elif b:
+            src = "map['']"
+        else:
+            src = "default_alert"
+        if isinstance(alert, str) and alert.startswith('"') and alert.endswith('"'):
+            alert = alert[1:-1]
+        _debug_log(f"WRITE node={node} source={src} len={len(alert)} snippet={_snippet(alert)}")
+        status = update_node_variables(node, cpu_up, cpu_load, cpu_temp_dsp, wx, disk_usage_info, alert)
+        _debug_log(f"WRITE node={node} status={status}")
+        if status == "ok":
+            summary.append(f"{node} OK")
+        elif status == "skip_rpt":
+            summary.append(f"{node} skipped (not in rpt.conf)")
+        elif status == "error_vars":
+            summary.append(f"{node} error (vars)")
+        else:
+            summary.append(f"{node} error (ALERT)")
+
+    print(f"[NodeStatus] Summary: {' | '.join(summary)}")
+    _debug_log(f"run complete | summary={' | '.join(summary)}")
     exit(0)
 

@@ -56,7 +56,7 @@
                 class="form-control"
                 required
               >
-              <small class="form-text">Space-separated list of node numbers</small>
+              <small class="form-text">Space-separated node numbers. Each must have a <code>[node]</code> section in /etc/asterisk/rpt.conf (local nodes on this server). Use the same nodes you monitor in allmon.ini.</small>
             </div>
 
             <!-- Weather Configuration -->

@@ -186,12 +186,8 @@ export const useRealTimeStore = defineStore('realTime', () => {
     } catch (err) {
       console.error(`Error connecting to WebSocket for node ${nodeId}:`, err)
       error.value = `Failed to connect to node ${nodeId}`
-      
-      // Remove from monitoring if connection failed
-      const index = monitoringNodes.value.indexOf(nodeId)
-      if (index > -1) {
-        monitoringNodes.value.splice(index, 1)
-      }
+      // Keep node in monitoringNodes so we still poll AMI (fetchNodeData). Otherwise
+      // nodes with WebSocket failures never get status updates and stay "offline".
     }
   }
 
