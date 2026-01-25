@@ -3,7 +3,7 @@
     <thead>
       <tr>
         <th :colspan="colspan">
-          <i v-html="nodeTitle"></i>
+          <i v-html="sanitizedNodeTitle"></i>
         </th>
       </tr>
       <tr>
@@ -28,7 +28,7 @@
         <tr :class="headerStatusClass">
           <td colspan="1" align="center" class="local-node-number">{{ node.id }}</td>
           <td :colspan="headerColspan" align="center">
-            <b>{{ headerStatusText }}<span v-html="headerStatusDetails"></span></b>
+            <b>{{ headerStatusText }}<span v-html="sanitizedHeaderStatusDetails"></span></b>
           </td>
           <td :colspan="headerColspan3"></td>
         </tr>
@@ -99,6 +99,7 @@
 <script setup lang="ts">
 import { computed, ref, watchEffect, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '@/stores/app'
+import { sanitizeHtml } from '@/utils/sanitize'
 import BubbleChart from './BubbleChart.vue'
 import LsnodModal from './LsnodModal.vue'
 import type { ConnectedNode, Node } from '@/types/node'
@@ -313,6 +314,9 @@ const headerStatusDetails = computed(() => {
   
   return details.length > 0 ? details.join('<br>') : ''
 })
+
+const sanitizedNodeTitle = computed(() => sanitizeHtml(nodeTitle.value))
+const sanitizedHeaderStatusDetails = computed(() => sanitizeHtml(headerStatusDetails.value))
 
 const headerColspan = computed(() => {
   if (!nodeData.value) return 1

@@ -52,6 +52,7 @@
 <script setup>
 import { ref, onUnmounted, watch } from 'vue'
 import { api } from '@/utils/api'
+import { sanitizeHtml } from '@/utils/sanitize'
 
 const props = defineProps({
   show: {
@@ -148,7 +149,7 @@ const pollVoterStatus = async (node) => {
     if (response.data.html) {
       const element = document.getElementById(`link_list_${node}`)
       if (element) {
-        element.innerHTML = response.data.html
+        element.innerHTML = sanitizeHtml(response.data.html)
       }
     }
     
@@ -166,7 +167,7 @@ const pollVoterStatus = async (node) => {
     console.error(`Error polling voter status for node ${node}:`, error)
     const element = document.getElementById(`link_list_${node}`)
     if (element) {
-      element.innerHTML = `<div class='error-message'>Error receiving updates for node ${node}. The connection was lost.</div>`
+      element.innerHTML = sanitizeHtml(`<div class='error-message'>Error receiving updates for node ${node}. The connection was lost.</div>`)
     }
     spinners.value[node] = 'X'
     

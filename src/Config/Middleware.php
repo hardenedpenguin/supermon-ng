@@ -115,17 +115,18 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
         $response = $response->withHeader('Access-Control-Allow-Origin', $origin);
     }
     
-    $response = $response->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    $response = $response->withHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, X-CSRF-Token');
     $response = $response->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     $response = $response->withHeader('Access-Control-Allow-Credentials', 'true');
     
     return $response;
 });
 
-// Add error handling middleware
+// Add error handling middleware (disable detailed errors in production)
+$isProduction = ($_ENV['APP_ENV'] ?? 'production') === 'production';
 $errorMiddleware = $app->addErrorMiddleware(
-    true, // Enable error details for debugging
     true,
+    !$isProduction, // Display error details only when not in production
     true
 );
 $errorMiddleware->setErrorHandler(

@@ -17,7 +17,7 @@
       
       <!-- Location and Title -->
       <div class="header-tag">
-        <i v-html="formatHeaderTag()"></i>
+        <i v-html="sanitizeHtml(formatHeaderTag())"></i>
       </div>
       
 
@@ -57,7 +57,7 @@
     </div>
 
     <!-- Welcome Message -->
-    <div v-if="welcomeMessage" class="welcome-message" v-html="welcomeMessage"></div>
+    <div v-if="welcomeMessage" class="welcome-message" v-html="sanitizeHtml(welcomeMessage)"></div>
 
     <!-- Control Panel (matches original link.php structure exactly) -->
     <div v-if="hasControlPermissions" id="connect_form" style="text-align: center;">
@@ -322,6 +322,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick, onBeforeMount }
 import { useAppStore } from '@/stores/app'
 import { useRealTimeStore } from '@/stores/realTime'
 import { api } from '@/utils/api'
+import { sanitizeHtml } from '@/utils/sanitize'
 import type { Node as NodeType } from '@/types'
 import NodeTable from '@/components/NodeTable.vue'
 import LoginForm from '@/components/LoginForm.vue'

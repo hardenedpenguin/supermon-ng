@@ -1304,48 +1304,9 @@ class ConfigController
      */
     private function hasUserPermission(?string $user, string $permission): bool
     {
-        // If no user is provided, use default permissions for unauthenticated users
+        // Unauthenticated users: no permissions (security fix for overly permissive defaults)
         if (!$user) {
-            $defaultPermissions = [
-                'CONNECTUSER' => true,
-                'DISCUSER' => true,
-                'MONUSER' => true,
-                'LMONUSER' => true,
-                'DTMFUSER' => false,
-                'ASTLKUSER' => true,
-                'RSTATUSER' => true,
-                'BUBLUSER' => true,
-                'FAVUSER' => true,
-                'CTRLUSER' => false,
-                'CFGEDUSER' => true,
-                'ASTRELUSER' => false,
-                'ASTSTRUSER' => false,
-                'ASTSTPUSER' => false,
-                'FSTRESUSER' => false,
-                'RBTUSER' => false,
-                'UPDUSER' => true,
-                'HWTOUSER' => true,
-                'WIKIUSER' => true,
-                'CSTATUSER' => true,
-                'ASTATUSER' => true,
-                'EXNUSER' => true,
-                'ACTNUSER' => true,
-                'ALLNUSER' => true,
-                'DBTUSER' => true,
-                'GPIOUSER' => false,
-                'LLOGUSER' => true,
-                'ASTLUSER' => true,
-                'CLOGUSER' => true,
-                'IRLPLOGUSER' => true,
-                'WLOGUSER' => true,
-                'WERRUSER' => true,
-                'BANUSER' => false,
-                'SYSINFUSER' => true,
-                'SUSBUSER' => false,
-                'DVSWITCHUSER' => false
-            ];
-            
-            return $defaultPermissions[$permission] ?? false;
+            return false;
         }
 
         // For authenticated users, check against authusers.inc
@@ -2063,7 +2024,7 @@ class ConfigController
     private function getNodeStatus($node): string
     {
         try {
-            $dnsQuery = shell_exec("nslookup $node 2>/dev/null");
+            $dnsQuery = shell_exec('nslookup ' . escapeshellarg($node) . ' 2>/dev/null');
             if ($dnsQuery !== null && strpos($dnsQuery, 'NOT-FOUND') !== false) {
                 return 'NOT FOUND';
             }
@@ -2122,6 +2083,26 @@ class ConfigController
         }
 
         return $cpCommands;
+    }
+
+    /**
+     * Build whitelist of allowed control panel commands (fixed + INI cmds).
+     * Used to prevent command injection: only these strings may be executed.
+     */
+    private function getAllowedControlPanelCommands(array $cpCommands): array
+    {
+        $fixed = [
+            ' ',
+            'rpt reload',
+            'iax2 reload',
+            'extensions reload',
+            'echolink dbdump',
+            'astup',
+            'astdn',
+        ];
+        $cmds = $cpCommands['cmds'] ?? [];
+        $allowed = array_merge($fixed, array_map('trim', $cmds));
+        return array_values(array_unique($allowed));
     }
 
     /**
@@ -2354,7 +2335,7 @@ class ConfigController
         $node = trim($data['node'] ?? '');
         $command = trim($data['command'] ?? '');
 
-        if (!is_numeric($node) || empty($command)) {
+        if (!is_numeric($node) || $command === '') {
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'message' => 'Invalid node or command parameter'
@@ -2363,6 +2344,17 @@ class ConfigController
         }
 
         try {
+            // Whitelist: only allow commands from control panel INI (or fixed reload/astup/astdn)
+            $cpCommands = $this->loadControlPanelCommands($currentUser, $node);
+            $allowedCommands = $this->getAllowedControlPanelCommands($cpCommands);
+            if (!in_array($command, $allowedCommands, true)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Command not allowed'
+                ]));
+                return $response->withStatus(400);
+            }
+
             // Get control panel configuration
             $config = $this->getControlPanelConfig($currentUser);
             
@@ -2497,7 +2489,7 @@ class ConfigController
     private function executeRptReload(string $node, array $config): array
     {
         // For now, use shell command directly (AMI can be enabled later)
-        $result = shell_exec("sudo /usr/bin/astup.sh rpt reload $node 2>&1");
+        $result = shell_exec('sudo /usr/bin/astup.sh rpt reload ' . escapeshellarg($node) . ' 2>&1');
         return [
             'command' => 'rpt reload',
             'node' => $node,
@@ -2512,7 +2504,7 @@ class ConfigController
     private function executeIax2Reload(string $node, array $config): array
     {
         // For now, use shell command directly (AMI can be enabled later)
-        $result = shell_exec("sudo /usr/bin/astup.sh iax2 reload 2>&1");
+        $result = shell_exec('sudo /usr/bin/astup.sh iax2 reload 2>&1');
         return [
             'command' => 'iax2 reload',
             'node' => $node,
@@ -2527,7 +2519,7 @@ class ConfigController
     private function executeExtensionsReload(string $node, array $config): array
     {
         // For now, use shell command directly (AMI can be enabled later)
-        $result = shell_exec("sudo /usr/bin/astup.sh extensions reload 2>&1");
+        $result = shell_exec('sudo /usr/bin/astup.sh extensions reload 2>&1');
         return [
             'command' => 'extensions reload',
             'node' => $node,
@@ -2542,7 +2534,7 @@ class ConfigController
     private function executeEchoLinkDbDump(string $node, array $config): array
     {
         // For now, use shell command directly (AMI can be enabled later)
-        $result = shell_exec("sudo /usr/bin/astup.sh echolink dbdump 2>&1");
+        $result = shell_exec('sudo /usr/bin/astup.sh echolink dbdump 2>&1');
         return [
             'command' => 'echolink dbdump',
             'node' => $node,
@@ -2617,9 +2609,9 @@ class ConfigController
                 $this->returnAmiConnection($fp, $nodeConfig);
             }
         } catch (\Exception $e) {
-            // If AMI fails, try shell execution as fallback
+            // If AMI fails, try shell execution as fallback (escape to prevent injection)
             $cmdString = str_replace('%node%', $node, $command);
-            $result = shell_exec("sudo asterisk -rx '$cmdString' 2>&1");
+            $result = shell_exec('sudo asterisk -rx ' . escapeshellarg($cmdString) . ' 2>&1');
             
             return [
                 'command' => $command,

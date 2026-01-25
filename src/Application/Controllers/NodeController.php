@@ -758,6 +758,15 @@ class NodeController
     public function getAmiStatus(Request $request, Response $response): Response
     {
         $this->logger->info('Fetching AMI status for nodes');
+
+        $currentUser = $this->getCurrentUser();
+        if (!$currentUser) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'error' => 'Authentication required'
+            ]));
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+        }
         
         try {
             // Get query parameters for node selection
@@ -778,8 +787,6 @@ class NodeController
             // Parse node IDs (comma-separated)
             $nodeIdArray = array_map('trim', explode(',', $nodeIds));
             
-            // Get current user for configuration
-            $currentUser = $this->getCurrentUser();
             $availableNodes = $this->configService->getAvailableNodes($currentUser);
             
             // Filter to only requested nodes that are available
@@ -1479,48 +1486,9 @@ class NodeController
      */
     private function hasUserPermission(?string $user, string $permission): bool
     {
-        // If no user is provided, use default permissions for unauthenticated users
+        // Unauthenticated users: no permissions (security fix for overly permissive defaults)
         if (!$user) {
-            $defaultPermissions = [
-                'CONNECTUSER' => true,
-                'DISCUSER' => true,
-                'MONUSER' => true,
-                'LMONUSER' => true,
-                'DTMFUSER' => false,
-                'ASTLKUSER' => true,
-                'RSTATUSER' => true,
-                'BUBLUSER' => true,
-                'DVSWITCHUSER' => false,
-                'FAVUSER' => true,
-                'CTRLUSER' => false,
-                'CFGEDUSER' => true,
-                'ASTRELUSER' => false,
-                'ASTSTRUSER' => false,
-                'ASTSTPUSER' => false,
-                'FSTRESUSER' => false,
-                'RBTUSER' => false,
-                'UPDUSER' => true,
-                'HWTOUSER' => true,
-                'WIKIUSER' => true,
-                'CSTATUSER' => true,
-                'ASTATUSER' => true,
-                'EXNUSER' => true,
-                'ACTNUSER' => true,
-                'ALLNUSER' => true,
-                'DBTUSER' => true,
-                'GPIOUSER' => false,
-                'LLOGUSER' => true,
-                'ASTLUSER' => true,
-                'CLOGUSER' => true,
-                'IRLPLOGUSER' => true,
-                'WLOGUSER' => true,
-                'WERRUSER' => true,
-                'BANUSER' => false,
-                'SYSINFUSER' => true,
-                'SUSBUSER' => false
-            ];
-            
-            return $defaultPermissions[$permission] ?? false;
+            return false;
         }
 
         // For authenticated users, check against authusers.inc
@@ -3456,8 +3424,8 @@ class NodeController
         ];
 
         try {
-            // Get node status
-            $statusCmd = "sudo /usr/sbin/asterisk -rx 'rpt status $nodeId'";
+            // Get node status (escape $nodeId to prevent injection)
+            $statusCmd = 'sudo /usr/sbin/asterisk -rx ' . escapeshellarg("rpt status $nodeId");
             $statusResponse = shell_exec($statusCmd);
             if ($statusResponse) {
                 if (strpos($statusResponse, 'Online') !== false) {
@@ -3470,7 +3438,7 @@ class NodeController
             }
 
             // Get connected nodes with detailed information
-            $connectedCmd = "sudo /usr/sbin/asterisk -rx 'rpt nodes $nodeId'";
+            $connectedCmd = 'sudo /usr/sbin/asterisk -rx ' . escapeshellarg("rpt nodes $nodeId");
             $connectedResponse = shell_exec($connectedCmd);
             if ($connectedResponse && !empty(trim($connectedResponse))) {
                 $lines = explode("\n", $connectedResponse);
@@ -3506,7 +3474,7 @@ class NodeController
             }
 
             // Get key status
-            $keyCmd = "sudo /usr/sbin/asterisk -rx 'rpt keyed $nodeId'";
+            $keyCmd = 'sudo /usr/sbin/asterisk -rx ' . escapeshellarg("rpt keyed $nodeId");
             $keyResponse = shell_exec($keyCmd);
             if ($keyResponse) {
                 if (strpos($keyResponse, 'Keyed') !== false) {
