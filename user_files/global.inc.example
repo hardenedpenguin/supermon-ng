@@ -133,6 +133,8 @@ $SMLOG = "yes";
 // ========================================
 
 // Enable or disable HamClock integration
+// NOTE: HamClock MUST be configured with a reverse proxy to work properly.
+// An example Apache reverse proxy config is in supermon-ng.conf (ProxyPass /hamclock/ ...).
 $HAMCLOCK_ENABLED = "False";
 
 // HamClock URL for local network access
