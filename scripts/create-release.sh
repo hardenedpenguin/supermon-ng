@@ -633,7 +633,7 @@ main() {
     echo ""
     echo "📋 Excluded development files:"
     echo "   - Source frontend (frontend/src/, node_modules/)"
-    echo "   - Development scripts (backup-config.sh, dev-setup.sh, etc.)"
+    echo "   - Development tooling"
     echo "   - Test files and logs"
     echo "   - Git repository (.git/)"
     echo

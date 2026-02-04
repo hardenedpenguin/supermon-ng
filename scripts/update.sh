@@ -756,7 +756,6 @@ display_summary() {
     echo "   • ASTDB cache system: Multi-level caching with 84.8% compression"
     echo "   • Frontend optimizations: Browser-side caching and batch operations"
     echo "   • Database optimization: Query caching with Doctrine DBAL"
-    echo "   • Performance monitoring: Run scripts/performance-report.sh for metrics"
     echo "   • See PERFORMANCE_OPTIMIZATIONS.md for setup instructions"
     echo ""
 }
