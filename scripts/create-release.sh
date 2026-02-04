@@ -153,15 +153,7 @@ The update system intelligently detects configuration changes and only advises a
 
 ### Upgrading from <2.0.3
 
-If you are updating from anything before 2.0.3, you will need to modify two config files:
-
-**user_files/global.inc:**
-\`\`\`php
-// URL for users accessing from your local network
-\$HAMCLOCK_URL_INTERNAL = "http://YOUR_INTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
-// URL for users accessing from the internet
-\$HAMCLOCK_URL_EXTERNAL = "http://YOUR_EXTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
-\`\`\`
+If you are updating from anything before 2.0.3, you may need to modify:
 
 **user_files/sbin/node_info.ini:**
 \`\`\`ini

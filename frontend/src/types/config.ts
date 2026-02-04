@@ -31,11 +31,6 @@ export interface SystemConfig {
   backgroundHeight?: string
   displayBackground?: boolean
   
-  // HamClock integration
-  hamclockEnabled?: boolean
-  hamclockUrlInternal?: string
-  hamclockUrlExternal?: string
-  
   // Feature flags
   enableNotifications?: boolean
   enableSSE?: boolean

@@ -149,23 +149,6 @@ $WANONLY = "";
 $SMLOG = "yes";
 
 // ========================================
-// HAMCLOCK INTEGRATION
-// ========================================
-
-// Enable or disable HamClock integration
-// NOTE: HamClock MUST be configured with a reverse proxy to work properly.
-// Direct access to HamClock without reverse proxy will not work.
-// An example Apache reverse proxy configuration is available in supermon-ng.conf
-// (see ProxyPass /hamclock/ ... in your Apache sites-available config).
-$HAMCLOCK_ENABLED = "False";
-
-// HamClock URL for local network access (e.g., 192.168.x.x)
-$HAMCLOCK_URL_INTERNAL = "http://YOUR_INTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
-
-// HamClock URL for external internet access
-$HAMCLOCK_URL_EXTERNAL = "http://YOUR_EXTERNAL_IP_OR_HOSTNAME/hamclock/live.html";
-
-// ========================================
 // DIGITAL VOICE INTEGRATION
 // ========================================
 

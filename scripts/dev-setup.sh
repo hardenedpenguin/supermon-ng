@@ -134,8 +134,6 @@ DISPLAY_ERRORS=true
 
 # Development URLs (change to match your setup)
 BASE_URL=http://localhost/supermon-ng
-HAMCLOCK_URL_INTERNAL=http://localhost/hamclock/live.html
-HAMCLOCK_URL_EXTERNAL=http://yourserver.com/hamclock/live.html
 
 # Database/Log paths (development)
 LOG_PATH=./logs/

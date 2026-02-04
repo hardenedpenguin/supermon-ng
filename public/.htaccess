@@ -16,7 +16,6 @@ RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/api/
-RewriteCond %{REQUEST_URI} !^/hamclock/
 RewriteRule ^ index.html [QSA,L]
 
 # Route API requests to PHP backend

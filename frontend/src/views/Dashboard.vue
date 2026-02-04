@@ -141,7 +141,6 @@
     <p class="button-container">
       <input type="button" class="submit" value="Display Configuration" @click="showDisplayConfigModal = true">
       <input v-if="systemInfo?.dvmUrl" type="button" class="submit" value="Digital Dashboard" @click="openDigitalDashboard">
-      <input v-if="systemInfo?.hamclockEnabled" type="button" class="submit" value="HamClock" @click="openHamClock">
       <input v-if="appStore.isAuthenticated && appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="Node Status" @click="openNodeStatus">
       <input v-if="appStore.isAuthenticated && appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="System Info" @click="systeminfo">
     </p>
@@ -301,13 +300,6 @@
       :url="systemInfo?.dvmUrl || ''"
     />
 
-    <!-- HamClock Modal -->
-    <HamClock
-      v-model:isVisible="showHamClockModal"
-      :url="systemInfo?.hamclockUrlExternal || systemInfo?.hamclockUrlInternal || ''"
-      @close="showHamClockModal = false"
-    />
-
     <!-- Node Status Modal -->
     <NodeStatus
       v-model:isVisible="showNodeStatusModal"
@@ -355,7 +347,6 @@ import Voter from '@/components/Voter.vue'
 import ConfigEditor from '@/components/ConfigEditor.vue'
 import SystemInfo from '@/components/SystemInfo.vue'
 import DigitalDashboard from '@/components/DigitalDashboard.vue'
-import HamClock from '@/components/HamClock.vue'
 import NodeStatus from '@/components/NodeStatus.vue'
 
 
@@ -434,7 +425,6 @@ const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
 const headerBackground = ref<string | null>(null)
 const showDigitalDashboardModal = ref(false)
-const showHamClockModal = ref(false)
 const showNodeStatusModal = ref(false)
 const databaseStatus = ref<any>(null)
 const isLoadingDefaultNodes = ref(true)
@@ -851,19 +841,6 @@ const openDigitalDashboard = async () => {
     }
   } catch (error) {
     // Digital dashboard error handled
-  }
-}
-
-const openHamClock = async () => {
-  try {
-    if (systemInfo.value?.hamclockEnabled) {
-      showHamClockModal.value = true
-    } else {
-      alert('HamClock is not enabled')
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    alert('Error opening HamClock: ' + errorMessage)
   }
 }
 

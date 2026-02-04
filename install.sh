@@ -438,17 +438,6 @@ else
     # Alias for user files
     Alias /supermon-ng/user_files APP_DIR_PLACEHOLDER/user_files
     
-    # Proxy HamClock requests (adjust IP and port as needed)
-    # Uncomment and modify the following lines if you have HamClock running:
-    # WebSocket proxy for HamClock (must come before general proxy)
-    # ProxyPass /hamclock/live-ws ws://10.0.0.41:8082/live-ws upgrade=websocket
-    # ProxyPassReverse /hamclock/live-ws ws://10.0.0.41:8082/live-ws
-    # 
-    # General HamClock proxy
-    # ProxyPass /hamclock/ http://10.0.0.41:8082/
-    # ProxyPassReverse /hamclock/ http://10.0.0.41:8082/
-    # 
-    
     # Configure Supermon-NG directory
     <Directory "APP_DIR_PLACEHOLDER/public">
         AllowOverride All

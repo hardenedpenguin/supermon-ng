@@ -14,7 +14,6 @@ RewriteRule ^.*$ public/index.php [QSA,L]
 # Serve Vue app for all other requests
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} !^/hamclock/
 RewriteCond %{REQUEST_URI} !^/supermon-ng/api/
 RewriteCond %{REQUEST_URI} !^/api/
 RewriteRule ^ index.php [QSA,L]

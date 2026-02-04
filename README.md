@@ -10,7 +10,6 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 - **WebSocket Real-time Updates** - Live node status updates via WebSocket (no polling)
 - **DVSwitch Mode Switcher** - Switch between DMR, YSF, P25, D-STAR, and NXDN modes
 - **Real-time Node Monitoring** - Live status updates, connections, and statistics
-- **HamClock Integration** - Embedded HamClock display with modal support
 - **Node Status Management** - Automated Asterisk variable updates
 - **User Authentication** - Secure login system with role-based permissions
 - **System Information** - CPU, memory, disk usage, and temperature monitoring
@@ -82,12 +81,6 @@ The installer automatically handles:
 Edit `/var/www/html/supermon-ng/user_files/allmon.ini` to add your AllStar nodes. See the installation section above for the format.
 
 ### Optional Features
-
-**HamClock Integration:**
-- Edit `/var/www/html/supermon-ng/user_files/global.inc`
-- Set `$HAMCLOCK_ENABLED = "True"`
-- Configure `$HAMCLOCK_URL_INTERNAL` and `$HAMCLOCK_URL_EXTERNAL`
-- Uncomment HamClock proxy lines in Apache config (`/etc/apache2/sites-available/supermon-ng.conf`)
 
 **Custom Header Background:**
 - Place image file named `header-background.jpg` (or `.png`, `.gif`, `.webp`) in `/var/www/html/supermon-ng/user_files/`
