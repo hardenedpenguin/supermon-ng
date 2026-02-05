@@ -111,19 +111,7 @@
                   placeholder="http://10.0.0.5:8100"
                   class="form-control"
                 >
-                <small class="form-text">SkywarnPlus-ng API endpoint URL</small>
-              </div>
-
-              <div class="form-group">
-                <label for="custom_link">Custom Alert Link:</label>
-                <input 
-                  type="url" 
-                  id="custom_link" 
-                  v-model="config.custom_link" 
-                  placeholder="https://api.weather.gov/alerts/active/zone/TXC039"
-                  class="form-control"
-                >
-                <small class="form-text">Optional custom link for weather alerts</small>
+                <small class="form-text">SkywarnPlus-NG API endpoint URL</small>
               </div>
             </div>
 
@@ -173,8 +161,7 @@ export default {
       wx_location: '',
       temp_unit: 'F',
       skywarnplus_enabled: false,
-      api_url: '',
-      custom_link: ''
+      api_url: ''
     })
     
     const nodeNumbers = ref('')
@@ -196,8 +183,7 @@ export default {
             wx_location: cfg.general?.WX_LOCATION || '',
             temp_unit: cfg.general?.TEMP_UNIT || 'F',
             skywarnplus_enabled: cfg.skywarnplus?.MASTER_ENABLE === 'yes',
-            api_url: cfg.skywarnplus?.API_URL || '',
-            custom_link: cfg.skywarnplus?.CUSTOM_LINK || ''
+            api_url: cfg.skywarnplus?.API_URL || ''
           }
           nodeNumbers.value = config.value.nodes.join(' ')
         }

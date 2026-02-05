@@ -100,7 +100,6 @@ Edit `/var/www/html/supermon-ng/user_files/allmon.ini` to add your AllStar nodes
 - Enable timer: `sudo systemctl enable supermon-ng-node-status.timer && sudo systemctl start supermon-ng-node-status.timer`
 - **Weather Alerts**: Only SkywarnPlus-NG is supported for weather alerts displayed in node tables
   - Configure `API_URL` in `node_info.ini` to point to your SkywarnPlus-NG instance
-  - `CUSTOM_LINK` is used as a display link only (users can click alerts to view full details)
 - **Weather and System Info Display**: Requires `saytime_weather` module to be loaded in Asterisk
   - Weather and system information will only display in node tables if `saytime_weather` is available
   - Install and configure `saytime_weather` module for your Asterisk installation

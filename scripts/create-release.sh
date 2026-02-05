@@ -153,13 +153,6 @@ The update system intelligently detects configuration changes and only advises a
 
 ### Upgrading from <2.0.3
 
-If you are updating from anything before 2.0.3, you may need to modify:
-
-**user_files/sbin/node_info.ini:**
-\`\`\`ini
-CUSTOM_LINK = https://alerts.weather.gov/cap/wwaatmget.php?x=TXC039&y=1
-\`\`\`
-
 ## File Structure
 
 \`\`\`

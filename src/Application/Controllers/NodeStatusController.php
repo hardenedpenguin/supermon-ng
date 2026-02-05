@@ -78,7 +78,6 @@ class NodeStatusController
             $iniContent .= "[skywarnplus]\n";
             $iniContent .= "MASTER_ENABLE = " . ($data['skywarnplus_enabled'] ? 'yes' : 'no') . "\n";
             $iniContent .= "API_URL = " . ($data['api_url'] ?? '') . "\n";
-            $iniContent .= "CUSTOM_LINK = " . ($data['custom_link'] ?? '') . "\n";
 
             // Write configuration file
             if (file_put_contents($configFile, $iniContent) === false) {

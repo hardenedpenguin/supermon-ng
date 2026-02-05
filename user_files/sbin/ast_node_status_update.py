@@ -147,9 +147,9 @@ def _log_skywarn_api_error(msg, status_code=None, body_snippet=None):
         pass
 
 
-def _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_text="<span style='color: #FF0000;'>No Alerts</span>", max_len=None):
+def _format_alert_html(enabled_text, has_alerts, alerts, no_alerts_text="<span style='color: #FF0000;'>No Alerts</span>", max_len=None):
     """Format alert data as HTML. Add full alerts only; stop before exceeding max_len (no mid-word truncation).
-    When max_len is set, use compact prefix/links so we can fit two full alerts (e.g. Brazoria)."""
+    When max_len is set, use compact prefix so we can fit two full alerts (e.g. Brazoria)."""
     if not has_alerts or not alerts:
         return f'"{enabled_text}<br>{no_alerts_text}"'
     compact = max_len is not None
@@ -174,13 +174,7 @@ def _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_
             color = '#FFFF00'
         else:
             color = '#FF0000'
-        if custom_link:
-            if compact:
-                seg = f"<a href='{custom_link}' style='color:{color}'><b>{event}</b></a>"
-            else:
-                seg = f"<a target='WX ALERT' href='{custom_link}' style='color: {color}; text-decoration: none;'><b>{event}</b></a>"
-        else:
-            seg = f"<span style='color: {color};'><b>{event}</b></span>"
+        seg = f"<span style='color: {color};'><b>{event}</b></span>"
         candidate = total + ("" if first else "<br>") + seg
         if max_len is not None and len(candidate) > max_len:
             break
@@ -192,7 +186,7 @@ def _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_
     return f'"{total}"'
 
 
-def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
+def get_skywarnplus_alerts(api_url, master_enable, nodes=None):
     """
     Get alerts from SkywarnPlus-NG API.
 
@@ -208,7 +202,6 @@ def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
                  When using a reverse proxy at /skywarnplus-ng, include the path
                  (e.g. https://host/skywarnplus-ng).
         master_enable: "yes" to enable, anything else to disable.
-        custom_link: Optional custom link for alerts (display only, not for fetching).
         nodes: List of node IDs (strings) from [general] NODE. Used for per-node alerts.
 
     Returns:
@@ -311,13 +304,13 @@ def get_skywarnplus_alerts(api_url, master_enable, custom_link="", nodes=None):
                     alist = per.get("alerts", [])
                     if not isinstance(alist, list):
                         alist = []
-                    result[node] = _format_alert_html(enabled_text, has, alist, custom_link, no_alerts_text, max_len=ALERT_MAX_LEN)
+                    result[node] = _format_alert_html(enabled_text, has, alist, no_alerts_text, max_len=ALERT_MAX_LEN)
                     _debug_log(f"node={node} source=per_node has_alerts={has} alerts={len(alist)} snippet={_snippet(result[node])}")
                 else:
-                    result[node] = _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_text, max_len=ALERT_MAX_LEN)
+                    result[node] = _format_alert_html(enabled_text, has_alerts, alerts, no_alerts_text, max_len=ALERT_MAX_LEN)
                     _debug_log(f"node={node} source=global_fallback has_alerts={has_alerts} snippet={_snippet(result[node])}")
         else:
-            single = _format_alert_html(enabled_text, has_alerts, alerts, custom_link, no_alerts_text, max_len=ALERT_MAX_LEN)
+            single = _format_alert_html(enabled_text, has_alerts, alerts, no_alerts_text, max_len=ALERT_MAX_LEN)
             _debug_log(f"source=global single snippet={_snippet(single)}")
             for node in node_list:
                 result[node] = single
@@ -439,7 +432,6 @@ if __name__ == "__main__":
 
     master_enable = config.get("skywarnplus", "MASTER_ENABLE", fallback="no").strip()
     api_url = config.get("skywarnplus", "API_URL", fallback="http://localhost:8100").strip()
-    custom_link = config.get("skywarnplus", "CUSTOM_LINK", fallback="").strip()
     print(f"[NodeStatus] API_URL={api_url!r} MASTER_ENABLE={master_enable!r} NODES={nodes}")
 
     cpu_up = get_uptime()
@@ -470,7 +462,7 @@ if __name__ == "__main__":
         exit(0)
 
     print(f"[NodeStatus] Updating {len(node_list)} node(s): {', '.join(node_list)}")
-    alerts_map = get_skywarnplus_alerts(api_url, master_enable, custom_link, nodes=node_list)
+    alerts_map = get_skywarnplus_alerts(api_url, master_enable, nodes=node_list)
     default_alert = alerts_map.get(node_list[0], "") if node_list else ""
 
     def _snippet(s: str, n: int = 72) -> str:
