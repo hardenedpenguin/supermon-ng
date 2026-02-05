@@ -457,13 +457,11 @@ class NodeController
      */
     private function executeDtmfAction(Request $request, Response $response, array $args): Response
     {
-        // Get and validate parameters
         $data = $request->getParsedBody();
-        $localNode = $data['localnode'] ?? null;
+        $localNode = ValidationService::validateNodeId($data['localnode'] ?? null);
         $dtmfCommand = $data['dtmf'] ?? null;
-        
-        // Validate local node
-        if (!$localNode || !preg_match("/^\d+$/", (string)$localNode)) {
+
+        if ($localNode === false) {
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'message' => 'Please provide a valid local node number.'
@@ -492,7 +490,7 @@ class NodeController
 
         try {
             // Load node configuration
-            $nodeConfig = $this->loadNodeConfig($currentUser, (string)$localNode);
+            $nodeConfig = $this->loadNodeConfig($currentUser, $localNode);
             if (!$nodeConfig) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -501,8 +499,7 @@ class NodeController
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            // Connect to AMI
-            $fp = $this->connectToAmi($nodeConfig, (string)$localNode);
+            $fp = $this->connectToAmi($nodeConfig, $localNode);
             if (!$fp) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -511,8 +508,7 @@ class NodeController
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            // Execute DTMF command
-            $commandResult = $this->executeDtmfCommand($fp, (string)$localNode, $dtmfCommand);
+            $commandResult = $this->executeDtmfCommand($fp, $localNode, $dtmfCommand);
             
             // Return connection to pool
             $this->returnAmiConnection($fp, $nodeConfig);
@@ -564,18 +560,16 @@ class NodeController
     public function rptstats(Request $request, Response $response, array $args): Response
     {
         $data = $request->getParsedBody();
-        $node = $data['node'] ?? null;
-        $localnode = $data['localnode'] ?? null;
+        $node = ValidationService::validateNodeId($data['node'] ?? null);
+        $localnode = ValidationService::validateNodeId($data['localnode'] ?? null);
 
-        // Check authentication
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'RSTATUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to access RPT statistics.']));
             return $response->withHeader('Content-Type', 'application/json');
         }
 
-        // External node stats - redirect to AllStar Link
-        if ($node && is_numeric($node) && $node > 0) {
+        if ($node !== false) {
             $externalUrl = "http://stats.allstarlink.org/stats/$node";
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -586,22 +580,21 @@ class NodeController
             return $response->withHeader('Content-Type', 'application/json');
         }
 
-        // Local node stats via AMI
-        if ($localnode && is_numeric($localnode) && $localnode > 0) {
+        if ($localnode !== false) {
             try {
-                $nodeConfig = $this->loadNodeConfig($currentUser, (string)$localnode);
+                $nodeConfig = $this->loadNodeConfig($currentUser, $localnode);
                 if (!$nodeConfig) {
                     $response->getBody()->write(json_encode(['success' => false, 'message' => "Configuration for local node $localnode not found."]));
                     return $response->withHeader('Content-Type', 'application/json');
                 }
 
-                $fp = $this->connectToAmi($nodeConfig, (string)$localnode);
+                $fp = $this->connectToAmi($nodeConfig, $localnode);
                 if (!$fp) {
                     $response->getBody()->write(json_encode(['success' => false, 'message' => "Could not connect to Asterisk Manager for node $localnode."]));
                     return $response->withHeader('Content-Type', 'application/json');
                 }
 
-                $statsResult = $this->executeRptStatsCommand($fp, (string)$localnode);
+                $statsResult = $this->executeRptStatsCommand($fp, $localnode);
                 $this->returnAmiConnection($fp, $nodeConfig);
 
                 $response->getBody()->write(json_encode([
@@ -647,23 +640,27 @@ class NodeController
      */
     private function executeNodeAction(Request $request, Response $response, array $args, string $action): Response
     {
-        // Get and validate parameters
         $data = $request->getParsedBody();
-        $localNode = $data['localnode'] ?? null;
-        $remoteNode = $data['remotenode'] ?? null;
+        $localNode = ValidationService::validateNodeId($data['localnode'] ?? null);
+        $remoteNodeRaw = $data['remotenode'] ?? null;
+        $remoteNode = $remoteNodeRaw !== null && $remoteNodeRaw !== '' ? ValidationService::validateNodeId($remoteNodeRaw) : null;
         $permInput = $data['perm'] ?? null;
-        
-        // Validate local node
-        if (!$localNode || !preg_match("/^\d+$/", (string)$localNode)) {
+
+        if ($localNode === false) {
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'message' => 'Please provide a valid local node number.'
             ]));
             return $response->withHeader('Content-Type', 'application/json');
         }
+        if ($remoteNode === false) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Please provide a valid remote node number.'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
 
-        // CSRF token validation is handled by middleware
-        // Check user permissions
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, $this->getActionPermission($action))) {
             $response->getBody()->write(json_encode([
@@ -674,8 +671,7 @@ class NodeController
         }
 
         try {
-            // Load node configuration
-            $nodeConfig = $this->loadNodeConfig($currentUser, (string)$localNode);
+            $nodeConfig = $this->loadNodeConfig($currentUser, $localNode);
             if (!$nodeConfig) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -684,8 +680,7 @@ class NodeController
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            // Connect to AMI
-            $fp = $this->connectToAmi($nodeConfig, (string)$localNode);
+            $fp = $this->connectToAmi($nodeConfig, $localNode);
             if (!$fp) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
@@ -694,8 +689,7 @@ class NodeController
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            // Process action and get ilink command
-            $actionResult = $this->processAction($action, $permInput, (string)$localNode, $remoteNode, $currentUser);
+            $actionResult = $this->processAction($action, $permInput, $localNode, $remoteNode, $currentUser);
             if (!$actionResult) {
                 $this->returnAmiConnection($fp, $nodeConfig);
                 $response->getBody()->write(json_encode([
@@ -708,8 +702,7 @@ class NodeController
             $ilink = $actionResult['ilink'];
             $message = $actionResult['message'];
 
-            // Execute AMI command
-            $commandResult = $this->executeAmiCommand($fp, $ilink, (string)$localNode, $remoteNode, $action);
+            $commandResult = $this->executeAmiCommand($fp, $ilink, $localNode, $remoteNode, $action);
             
             // Return connection to pool
             $this->returnAmiConnection($fp, $nodeConfig);
@@ -2126,15 +2119,14 @@ class NodeController
             }
 
             $data = $request->getParsedBody();
-            $localnode = $data['localnode'] ?? null;
+            $localnode = ValidationService::validateNodeId($data['localnode'] ?? null);
 
-            if (empty($localnode) || !preg_match('/^\d+$/', $localnode)) {
-                $this->logger->error('Invalid localnode parameter', ['localnode' => $localnode]);
+            if ($localnode === false) {
+                $this->logger->error('Invalid localnode parameter', ['localnode' => $data['localnode'] ?? null]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Valid local node parameter is required.']));
                 return $response->withHeader('Content-Type', 'application/json');
             }
 
-            // Load configuration using modern system
             $config = $this->loadNodeConfig($currentUser, $localnode);
             if (!$config) {
                 $this->logger->error('Node configuration not found', ['localnode' => $localnode, 'user' => $currentUser]);
@@ -2230,19 +2222,18 @@ class NodeController
         }
 
         $data = $request->getParsedBody();
-        $localnode = $data['localnode'] ?? null;
-        $node = $data['node'] ?? null;
+        $localnode = ValidationService::validateNodeId($data['localnode'] ?? null);
+        $node = ValidationService::validateNodeId($data['node'] ?? null);
         $listtype = $data['listtype'] ?? null;
         $deleteadd = $data['deleteadd'] ?? null;
         $comment = $data['comment'] ?? '';
 
-        // Validate inputs
-        if (empty($localnode) || !preg_match('/^\d+$/', $localnode)) {
+        if ($localnode === false) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Valid local node parameter is required.']));
             return $response->withHeader('Content-Type', 'application/json');
         }
 
-        if (empty($node) || !preg_match('/^\d+$/', $node)) {
+        if ($node === false) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Valid node number is required.']));
             return $response->withHeader('Content-Type', 'application/json');
         }

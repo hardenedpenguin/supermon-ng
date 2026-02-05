@@ -47,12 +47,8 @@ $app->get('/api/test', function ($request, $response) {
 // CSRF token endpoint - MUST be before middleware that might interfere
 $app->get('/api/csrf-token', function ($request, $response) {
     try {
-        // Session should already be started by middleware, but ensure it's active
         if (session_status() === PHP_SESSION_NONE) {
-            // Use same session configuration as middleware
             session_name('supermon61');
-            
-            // Detect HTTPS for secure cookies
             $isSecure = false;
             $serverParams = $request->getServerParams();
             if (($serverParams['HTTPS'] ?? '') === 'on' ||
@@ -61,7 +57,6 @@ $app->get('/api/csrf-token', function ($request, $response) {
                 ($serverParams['SERVER_PORT'] ?? '') == '443') {
                 $isSecure = true;
             }
-            
             session_set_cookie_params([
                 'lifetime' => 86400,
                 'path' => '/supermon-ng',
@@ -70,11 +65,8 @@ $app->get('/api/csrf-token', function ($request, $response) {
                 'httponly' => true,
                 'samesite' => 'Lax'
             ]);
-            
             session_start();
         }
-        
-        // Ensure session is active
         if (session_status() !== PHP_SESSION_ACTIVE) {
             error_log('CSRF token endpoint: Session not active after start attempt');
             $response->getBody()->write(json_encode([
@@ -84,14 +76,10 @@ $app->get('/api/csrf-token', function ($request, $response) {
             ]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
-        
-        // Generate CSRF token if it doesn't exist
         if (!isset($_SESSION['csrf_token']) || empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
-        
         $token = $_SESSION['csrf_token'] ?? '';
-        
         if (empty($token)) {
             error_log('CSRF token endpoint: Generated token is empty');
             $response->getBody()->write(json_encode([
@@ -101,13 +89,11 @@ $app->get('/api/csrf-token', function ($request, $response) {
             ]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
-        
         $response->getBody()->write(json_encode([
             'success' => true,
             'csrf_token' => $token
         ]));
         return $response->withHeader('Content-Type', 'application/json');
-        
     } catch (\Exception $e) {
         error_log('CSRF token endpoint error: ' . $e->getMessage());
         $response->getBody()->write(json_encode([
@@ -119,328 +105,218 @@ $app->get('/api/csrf-token', function ($request, $response) {
     }
 });
 
-// API v1 routes
-$app->group('/api/v1', function (RouteCollectorProxy $group) {
-    // Auth routes
-    $group->group('/auth', function (RouteCollectorProxy $group) {
-        $group->post('/login', [AuthController::class, 'login']);
-        $group->post('/logout', [AuthController::class, 'logout']);
-        $group->get('/me', [AuthController::class, 'me']);
+/**
+ * Register shared API route groups (auth base, astdb, performance, admin).
+ * Used by both /api and /api/v1 to avoid duplication.
+ */
+$registerSharedApiRoutes = function (RouteCollectorProxy $group): void {
+    $group->group('/auth', function (RouteCollectorProxy $g): void {
+        $g->post('/login', [AuthController::class, 'login']);
+        $g->post('/logout', [AuthController::class, 'logout']);
+        $g->get('/me', [AuthController::class, 'me']);
     });
 
-    // Node routes (protected by API auth)
-    $group->group('/nodes', function (RouteCollectorProxy $group) {
-        $group->get('', [NodeController::class, 'list']);
-        $group->get('/available', [NodeController::class, 'available']);
-        $group->get('/{id}', [NodeController::class, 'get']);
-        $group->get('/{id}/status', [NodeController::class, 'status']);
-        $group->post('/{id}/connect', [NodeController::class, 'connect']);
-        $group->post('/{id}/disconnect', [NodeController::class, 'disconnect']);
-        $group->post('/{id}/monitor', [NodeController::class, 'monitor']);
-        $group->post('/{id}/local-monitor', [NodeController::class, 'localMonitor']);
-        $group->post('/{id}/dtmf', [NodeController::class, 'dtmf']);
+    $group->group('/astdb', function (RouteCollectorProxy $g): void {
+        $g->get('/stats', [AstdbController::class, 'getStats']);
+        $g->get('/health', [AstdbController::class, 'health']);
+        $g->get('/search', [AstdbController::class, 'search']);
+        $g->get('/nodes', [AstdbController::class, 'getNodes']);
+        $g->get('/node/{id}', [AstdbController::class, 'getNode']);
+        $g->post('/clear-cache', [AstdbController::class, 'clearCache']);
+    });
+
+    $group->group('/performance', function (RouteCollectorProxy $g): void {
+        $g->get('/metrics', [PerformanceController::class, 'getMetrics']);
+        $g->get('/config-stats', [PerformanceController::class, 'getConfigStats']);
+        $g->get('/file-stats', [PerformanceController::class, 'getFileStats']);
+        $g->post('/clear-caches', [PerformanceController::class, 'clearCaches']);
+        $g->post('/cleanup-cache', [PerformanceController::class, 'cleanupCache']);
+    });
+
+    $group->group('/db-performance', function (RouteCollectorProxy $g): void {
+        $g->get('/metrics', [DatabasePerformanceController::class, 'getMetrics']);
+        $g->get('/database-stats', [DatabasePerformanceController::class, 'getDatabaseStats']);
+        $g->get('/cache-stats', [DatabasePerformanceController::class, 'getCacheStats']);
+        $g->post('/clear-query-cache', [DatabasePerformanceController::class, 'clearQueryCache']);
+        $g->post('/clear-all-caches', [DatabasePerformanceController::class, 'clearAllCaches']);
+        $g->post('/optimize-tables', [DatabasePerformanceController::class, 'optimizeTables']);
+        $g->post('/cleanup-memory-cache', [DatabasePerformanceController::class, 'cleanupMemoryCache']);
+    });
+
+    $group->group('/http-performance', function (RouteCollectorProxy $g): void {
+        $g->get('/metrics', [HttpPerformanceController::class, 'getMetrics']);
+        $g->get('/http-stats', [HttpPerformanceController::class, 'getHttpStats']);
+        $g->get('/middleware-stats', [HttpPerformanceController::class, 'getMiddlewareStats']);
+        $g->get('/slow-middleware', [HttpPerformanceController::class, 'getSlowMiddleware']);
+        $g->get('/middleware-optimization', [HttpPerformanceController::class, 'getMiddlewareOptimization']);
+        $g->post('/reset-http-stats', [HttpPerformanceController::class, 'resetHttpStats']);
+        $g->post('/reset-middleware-stats', [HttpPerformanceController::class, 'resetMiddlewareStats']);
+        $g->get('/test-optimization', [HttpPerformanceController::class, 'testOptimization']);
+    });
+
+    $group->group('/session-performance', function (RouteCollectorProxy $g): void {
+        $g->get('/metrics', [SessionPerformanceController::class, 'getMetrics']);
+        $g->get('/session-stats', [SessionPerformanceController::class, 'getSessionStats']);
+        $g->get('/auth-stats', [SessionPerformanceController::class, 'getAuthStats']);
+        $g->get('/test-authentication', [SessionPerformanceController::class, 'testAuthentication']);
+        $g->post('/cleanup-expired-sessions', [SessionPerformanceController::class, 'cleanupExpiredSessions']);
+        $g->post('/clear-auth-cache', [SessionPerformanceController::class, 'clearAuthCache']);
+        $g->post('/reset-session-stats', [SessionPerformanceController::class, 'resetSessionStats']);
+        $g->post('/reset-auth-stats', [SessionPerformanceController::class, 'resetAuthStats']);
+    });
+
+    $group->group('/fileio-performance', function (RouteCollectorProxy $g): void {
+        $g->get('/metrics', [FileIOPerformanceController::class, 'getMetrics']);
+        $g->get('/external-process-stats', [FileIOPerformanceController::class, 'getExternalProcessStats']);
+        $g->get('/file-io-stats', [FileIOPerformanceController::class, 'getFileIOStats']);
+        $g->post('/clear-irlp-cache', [FileIOPerformanceController::class, 'clearIrlpCache']);
+        $g->post('/clear-file-io-caches', [FileIOPerformanceController::class, 'clearFileIOCaches']);
+        $g->post('/reset-external-process-stats', [FileIOPerformanceController::class, 'resetExternalProcessStats']);
+        $g->post('/reset-file-io-stats', [FileIOPerformanceController::class, 'resetFileIOStats']);
+        $g->get('/test-irlp-lookup', [FileIOPerformanceController::class, 'testIrlpLookup']);
+    });
+
+    $group->group('/admin', function (RouteCollectorProxy $g): void {
+        $g->get('/users', [AdminController::class, 'listUsers']);
+        $g->post('/users', [AdminController::class, 'createUser']);
+        $g->put('/users/{id}', [AdminController::class, 'updateUser']);
+        $g->delete('/users/{id}', [AdminController::class, 'deleteUser']);
+        $g->post('/backup', [AdminController::class, 'backup']);
+        $g->post('/restore', [AdminController::class, 'restore']);
+        $g->post('/clear-cache', [AdminController::class, 'clearCache']);
+    })->add(AdminAuthMiddleware::class);
+};
+
+// API v1 routes (subset: shared routes + v1-specific nodes/config/system)
+$app->group('/api/v1', function (RouteCollectorProxy $group) use ($registerSharedApiRoutes): void {
+    $registerSharedApiRoutes($group);
+
+    $group->group('/nodes', function (RouteCollectorProxy $g): void {
+        $g->get('', [NodeController::class, 'list']);
+        $g->get('/available', [NodeController::class, 'available']);
+        $g->get('/{id}', [NodeController::class, 'get']);
+        $g->get('/{id}/status', [NodeController::class, 'status']);
+        $g->post('/{id}/connect', [NodeController::class, 'connect']);
+        $g->post('/{id}/disconnect', [NodeController::class, 'disconnect']);
+        $g->post('/{id}/monitor', [NodeController::class, 'monitor']);
+        $g->post('/{id}/local-monitor', [NodeController::class, 'localMonitor']);
+        $g->post('/{id}/dtmf', [NodeController::class, 'dtmf']);
     })->add(ApiAuthMiddleware::class);
 
-    // System routes
-    $group->group('/system', function (RouteCollectorProxy $group) {
-        $group->get('/info', [SystemController::class, 'info']);
-        $group->get('/stats', [SystemController::class, 'stats']);
-        $group->get('/logs', [SystemController::class, 'getLogs']);
-        $group->get('/client-ip', [SystemController::class, 'getClientIP']);
+    $group->group('/system', function (RouteCollectorProxy $g): void {
+        $g->get('/info', [SystemController::class, 'info']);
+        $g->get('/stats', [SystemController::class, 'stats']);
+        $g->get('/logs', [SystemController::class, 'getLogs']);
+        $g->get('/client-ip', [SystemController::class, 'getClientIP']);
     });
 
-    // Database routes (removed - using non-versioned routes in /api group instead)
-
-    // ASTDB routes (Phase 7 optimization)
-    $group->group('/astdb', function (RouteCollectorProxy $group) {
-        $group->get('/stats', [AstdbController::class, 'getStats']);
-        $group->get('/health', [AstdbController::class, 'health']);
-        $group->get('/search', [AstdbController::class, 'search']);
-        $group->get('/nodes', [AstdbController::class, 'getNodes']);
-        $group->get('/node/{id}', [AstdbController::class, 'getNode']);
-        $group->post('/clear-cache', [AstdbController::class, 'clearCache']);
+    $group->group('/config', function (RouteCollectorProxy $g): void {
+        $g->get('', [ConfigController::class, 'list']);
+        $g->get('/{key}', [ConfigController::class, 'get']);
+        $g->put('/{key}', [ConfigController::class, 'update']);
     });
-    
-    // Performance monitoring routes (Phase 3 optimization)
-    $group->group('/performance', function (RouteCollectorProxy $group) {
-        $group->get('/metrics', [PerformanceController::class, 'getMetrics']);
-        $group->get('/config-stats', [PerformanceController::class, 'getConfigStats']);
-        $group->get('/file-stats', [PerformanceController::class, 'getFileStats']);
-        $group->post('/clear-caches', [PerformanceController::class, 'clearCaches']);
-        $group->post('/cleanup-cache', [PerformanceController::class, 'cleanupCache']);
-    });
-    
-    // Database performance monitoring routes (Phase 6 optimization)
-    $group->group('/db-performance', function (RouteCollectorProxy $group) {
-        $group->get('/metrics', [DatabasePerformanceController::class, 'getMetrics']);
-        $group->get('/database-stats', [DatabasePerformanceController::class, 'getDatabaseStats']);
-        $group->get('/cache-stats', [DatabasePerformanceController::class, 'getCacheStats']);
-        $group->post('/clear-query-cache', [DatabasePerformanceController::class, 'clearQueryCache']);
-        $group->post('/clear-all-caches', [DatabasePerformanceController::class, 'clearAllCaches']);
-        $group->post('/optimize-tables', [DatabasePerformanceController::class, 'optimizeTables']);
-        $group->post('/cleanup-memory-cache', [DatabasePerformanceController::class, 'cleanupMemoryCache']);
-    });
-    
-    // HTTP performance monitoring routes (Phase 7 optimization)
-    $group->group('/http-performance', function (RouteCollectorProxy $group) {
-        $group->get('/metrics', [HttpPerformanceController::class, 'getMetrics']);
-        $group->get('/http-stats', [HttpPerformanceController::class, 'getHttpStats']);
-        $group->get('/middleware-stats', [HttpPerformanceController::class, 'getMiddlewareStats']);
-        $group->get('/slow-middleware', [HttpPerformanceController::class, 'getSlowMiddleware']);
-        $group->get('/middleware-optimization', [HttpPerformanceController::class, 'getMiddlewareOptimization']);
-        $group->post('/reset-http-stats', [HttpPerformanceController::class, 'resetHttpStats']);
-        $group->post('/reset-middleware-stats', [HttpPerformanceController::class, 'resetMiddlewareStats']);
-        $group->get('/test-optimization', [HttpPerformanceController::class, 'testOptimization']);
-    });
-    
-    // Session performance monitoring routes (Phase 8 optimization)
-    $group->group('/session-performance', function (RouteCollectorProxy $group) {
-        $group->get('/metrics', [SessionPerformanceController::class, 'getMetrics']);
-        $group->get('/session-stats', [SessionPerformanceController::class, 'getSessionStats']);
-        $group->get('/auth-stats', [SessionPerformanceController::class, 'getAuthStats']);
-        $group->get('/test-authentication', [SessionPerformanceController::class, 'testAuthentication']);
-        $group->post('/cleanup-expired-sessions', [SessionPerformanceController::class, 'cleanupExpiredSessions']);
-        $group->post('/clear-auth-cache', [SessionPerformanceController::class, 'clearAuthCache']);
-        $group->post('/reset-session-stats', [SessionPerformanceController::class, 'resetSessionStats']);
-        $group->post('/reset-auth-stats', [SessionPerformanceController::class, 'resetAuthStats']);
-    });
-    
-    // File I/O performance monitoring routes (Phase 9 optimization)
-    $group->group('/fileio-performance', function (RouteCollectorProxy $group) {
-        $group->get('/metrics', [FileIOPerformanceController::class, 'getMetrics']);
-        $group->get('/external-process-stats', [FileIOPerformanceController::class, 'getExternalProcessStats']);
-        $group->get('/file-io-stats', [FileIOPerformanceController::class, 'getFileIOStats']);
-        $group->post('/clear-irlp-cache', [FileIOPerformanceController::class, 'clearIrlpCache']);
-        $group->post('/clear-file-io-caches', [FileIOPerformanceController::class, 'clearFileIOCaches']);
-        $group->post('/reset-external-process-stats', [FileIOPerformanceController::class, 'resetExternalProcessStats']);
-        $group->post('/reset-file-io-stats', [FileIOPerformanceController::class, 'resetFileIOStats']);
-        $group->get('/test-irlp-lookup', [FileIOPerformanceController::class, 'testIrlpLookup']);
-    });
-
-    // Config routes
-    $group->group('/config', function (RouteCollectorProxy $group) {
-        $group->get('', [ConfigController::class, 'list']);
-        $group->get('/{key}', [ConfigController::class, 'get']);
-        $group->put('/{key}', [ConfigController::class, 'update']);
-    });
-
-    // Admin routes (protected by admin auth)
-    $group->group('/admin', function (RouteCollectorProxy $group) {
-        $group->get('/users', [AdminController::class, 'listUsers']);
-        $group->post('/users', [AdminController::class, 'createUser']);
-        $group->put('/users/{id}', [AdminController::class, 'updateUser']);
-        $group->delete('/users/{id}', [AdminController::class, 'deleteUser']);
-        $group->post('/backup', [AdminController::class, 'backup']);
-        $group->post('/restore', [AdminController::class, 'restore']);
-        $group->post('/clear-cache', [AdminController::class, 'clearCache']);
-    })->add(AdminAuthMiddleware::class);
 });
 
-// API routes without version prefix (for frontend compatibility)
-$app->group('/api', function (RouteCollectorProxy $group) {
-    // Auth routes
-    $group->group('/auth', function (RouteCollectorProxy $group) {
-        $group->post('/login', [AuthController::class, 'login']);
-        $group->post('/logout', [AuthController::class, 'logout']);
-        $group->get('/me', [AuthController::class, 'me']);
-        $group->get('/check', [AuthController::class, 'check']);
+// API routes without version prefix (frontend uses this; single source for full route set)
+$app->group('/api', function (RouteCollectorProxy $group) use ($registerSharedApiRoutes): void {
+    $registerSharedApiRoutes($group);
+
+    $group->group('/auth', function (RouteCollectorProxy $g): void {
+        $g->get('/check', [AuthController::class, 'check']);
     });
 
-    // Node routes
-    $group->group('/nodes', function (RouteCollectorProxy $group) {
-        $group->get('', [NodeController::class, 'list']);
-        $group->get('/available', [NodeController::class, 'available']);
-        $group->get('/ami/status', [NodeController::class, 'getAmiStatus']);
-        $group->get('/websocket/ports', [NodeController::class, 'getAllWebSocketPorts']);
-        
-        // Voter Route (must come before variable routes)
-        $group->get('/voter/status', [NodeController::class, 'voterStatus']);
-        
-        $group->get('/{id}', [NodeController::class, 'get']);
-        $group->get('/{id}/status', [NodeController::class, 'status']);
-        $group->get('/{id}/websocket/port', [NodeController::class, 'getWebSocketPort']);
-        $group->post('/connect', [NodeController::class, 'connect']);
-        $group->post('/disconnect', [NodeController::class, 'disconnect']);
-        $group->post('/monitor', [NodeController::class, 'monitor']);
-        $group->post('/local-monitor', [NodeController::class, 'localMonitor']);
-        $group->post('/dtmf', [NodeController::class, 'dtmf']);
-        $group->post('/rptstats', [NodeController::class, 'rptstats']);
-        
-               // CPU Stats Route
-       $group->post('/cpustats', [NodeController::class, 'cpustats']);
-       
-       // Database Route
-       $group->post('/database', [NodeController::class, 'database']);
-       
-               // ExtNodes Route
-        $group->post('/extnodes', [NodeController::class, 'extnodes']);
-        
-        // FastRestart Route
-        $group->post('/fastrestart', [NodeController::class, 'fastrestart']);
-        
-        // IRLP Log Route
-        $group->post('/irlplog', [NodeController::class, 'irlplog']);
-        
-        // Linux Log Route
-        $group->post('/linuxlog', [NodeController::class, 'linuxlog']);
-        
-        // Ban/Allow Routes
-        $group->post('/banallow', [NodeController::class, 'banallow']);
-        $group->post('/banallow/action', [NodeController::class, 'banallowAction']);
-        
-        // Pi GPIO Routes
-        $group->post('/pigpio', [NodeController::class, 'pigpio']);
-        $group->post('/pigpio/action', [NodeController::class, 'pigpioAction']);
-        
-        // Reboot Route
-        $group->post('/reboot', [NodeController::class, 'reboot']);
-        
-        // SMLog Route
-        $group->post('/smlog', [NodeController::class, 'smlog']);
-        
-        // Stats Route
-        $group->post('/stats', [NodeController::class, 'stats']);
-        
-        // Web Access Log Route
-        $group->post('/webacclog', [NodeController::class, 'webacclog']);
-        
-        // Web Error Log Route
-        $group->post('/weberrlog', [NodeController::class, 'weberrlog']);
-        
-        // Lsnod Routes
-        $group->get('/{id}/lsnodes', [NodeController::class, 'lsnodes']);
-        $group->get('/{id}/lsnodes/web', [NodeController::class, 'lsnodesWeb']);
+    $group->group('/nodes', function (RouteCollectorProxy $g): void {
+        $g->get('', [NodeController::class, 'list']);
+        $g->get('/available', [NodeController::class, 'available']);
+        $g->get('/ami/status', [NodeController::class, 'getAmiStatus']);
+        $g->get('/websocket/ports', [NodeController::class, 'getAllWebSocketPorts']);
+        $g->get('/voter/status', [NodeController::class, 'voterStatus']);
+        $g->get('/{id}', [NodeController::class, 'get']);
+        $g->get('/{id}/status', [NodeController::class, 'status']);
+        $g->get('/{id}/websocket/port', [NodeController::class, 'getWebSocketPort']);
+        $g->post('/connect', [NodeController::class, 'connect']);
+        $g->post('/disconnect', [NodeController::class, 'disconnect']);
+        $g->post('/monitor', [NodeController::class, 'monitor']);
+        $g->post('/local-monitor', [NodeController::class, 'localMonitor']);
+        $g->post('/dtmf', [NodeController::class, 'dtmf']);
+        $g->post('/rptstats', [NodeController::class, 'rptstats']);
+        $g->post('/cpustats', [NodeController::class, 'cpustats']);
+        $g->post('/database', [NodeController::class, 'database']);
+        $g->post('/extnodes', [NodeController::class, 'extnodes']);
+        $g->post('/fastrestart', [NodeController::class, 'fastrestart']);
+        $g->post('/irlplog', [NodeController::class, 'irlplog']);
+        $g->post('/linuxlog', [NodeController::class, 'linuxlog']);
+        $g->post('/banallow', [NodeController::class, 'banallow']);
+        $g->post('/banallow/action', [NodeController::class, 'banallowAction']);
+        $g->post('/pigpio', [NodeController::class, 'pigpio']);
+        $g->post('/pigpio/action', [NodeController::class, 'pigpioAction']);
+        $g->post('/reboot', [NodeController::class, 'reboot']);
+        $g->post('/smlog', [NodeController::class, 'smlog']);
+        $g->post('/stats', [NodeController::class, 'stats']);
+        $g->post('/webacclog', [NodeController::class, 'webacclog']);
+        $g->post('/weberrlog', [NodeController::class, 'weberrlog']);
+        $g->get('/{id}/lsnodes', [NodeController::class, 'lsnodes']);
+        $g->get('/{id}/lsnodes/web', [NodeController::class, 'lsnodesWeb']);
     });
 
-    // DVSwitch routes
-    $group->group('/dvswitch', function (RouteCollectorProxy $group) {
-        $group->get('/nodes', [DvswitchController::class, 'getNodes']);
-        $group->get('/node/{nodeId}/modes', [DvswitchController::class, 'getModes']);
-        $group->get('/node/{nodeId}/mode/{mode}/talkgroups', [DvswitchController::class, 'getTalkgroups']);
-        $group->post('/node/{nodeId}/mode/{mode}', [DvswitchController::class, 'switchMode']);
-        $group->post('/node/{nodeId}/tune/{tgid}', [DvswitchController::class, 'switchTalkgroup']);
+    $group->group('/dvswitch', function (RouteCollectorProxy $g): void {
+        $g->get('/nodes', [DvswitchController::class, 'getNodes']);
+        $g->get('/node/{nodeId}/modes', [DvswitchController::class, 'getModes']);
+        $g->get('/node/{nodeId}/mode/{mode}/talkgroups', [DvswitchController::class, 'getTalkgroups']);
+        $g->post('/node/{nodeId}/mode/{mode}', [DvswitchController::class, 'switchMode']);
+        $g->post('/node/{nodeId}/tune/{tgid}', [DvswitchController::class, 'switchTalkgroup']);
     });
 
-    // Config routes
-    $group->group('/config', function (RouteCollectorProxy $group) {
-        $group->get('/nodes', [ConfigController::class, 'getNodes']);
-        $group->get('/user/preferences', [ConfigController::class, 'getUserPreferences']);
-        $group->put('/user/preferences', [ConfigController::class, 'updateUserPreferences']);
-        $group->get('/system-info', [ConfigController::class, 'getSystemInfo']);
-        $group->get('/menu', [ConfigController::class, 'getMenu']);
-        $group->get('/header-background', [ConfigController::class, 'getHeaderBackground']);
-        $group->get('/display', [ConfigController::class, 'getDisplayConfig']);
-        $group->put('/display', [ConfigController::class, 'updateDisplayConfig']);
-        $group->get('/node-info', [ConfigController::class, 'getNodeInfo']);
-        $group->post('/add-favorite', [ConfigController::class, 'addFavorite']);
-        $group->get('/favorites', [ConfigController::class, 'getFavorites']);
-        $group->post('/favorites/add', [ConfigController::class, 'addFavorite']);
-        $group->delete('/favorites', [ConfigController::class, 'deleteFavorite']);
-        $group->post('/favorites/execute', [ConfigController::class, 'executeFavorite']);
-        $group->post('/asterisk/reload', [ConfigController::class, 'executeAsteriskReload']);
-        $group->post('/asterisk/control', [ConfigController::class, 'executeAsteriskControl']);
-        $group->get('/astlog', [ConfigController::class, 'getAstLog']);
-        $group->post('/astlookup', [ConfigController::class, 'performAstLookup']);
-        $group->post('/bubblechart', [ConfigController::class, 'getBubbleChart']);
-                    $group->get('/controlpanel', [ConfigController::class, 'getControlPanel']);
-            $group->post('/controlpanel/execute', [ConfigController::class, 'executeControlPanelCommand']);
-            $group->get('/configeditor/files', [ConfigController::class, 'getConfigEditorFiles']);
-            $group->post('/configeditor/content', [ConfigController::class, 'getConfigFileContent']);
-            $group->post('/configeditor/save', [ConfigController::class, 'saveConfigFile']);
+    $group->group('/config', function (RouteCollectorProxy $g): void {
+        $g->get('/nodes', [ConfigController::class, 'getNodes']);
+        $g->get('/user/preferences', [ConfigController::class, 'getUserPreferences']);
+        $g->put('/user/preferences', [ConfigController::class, 'updateUserPreferences']);
+        $g->get('/system-info', [ConfigController::class, 'getSystemInfo']);
+        $g->get('/menu', [ConfigController::class, 'getMenu']);
+        $g->get('/header-background', [ConfigController::class, 'getHeaderBackground']);
+        $g->get('/display', [ConfigController::class, 'getDisplayConfig']);
+        $g->put('/display', [ConfigController::class, 'updateDisplayConfig']);
+        $g->get('/node-info', [ConfigController::class, 'getNodeInfo']);
+        $g->post('/add-favorite', [ConfigController::class, 'addFavorite']);
+        $g->get('/favorites', [ConfigController::class, 'getFavorites']);
+        $g->post('/favorites/add', [ConfigController::class, 'addFavorite']);
+        $g->delete('/favorites', [ConfigController::class, 'deleteFavorite']);
+        $g->post('/favorites/execute', [ConfigController::class, 'executeFavorite']);
+        $g->post('/asterisk/reload', [ConfigController::class, 'executeAsteriskReload']);
+        $g->post('/asterisk/control', [ConfigController::class, 'executeAsteriskControl']);
+        $g->get('/astlog', [ConfigController::class, 'getAstLog']);
+        $g->post('/astlookup', [ConfigController::class, 'performAstLookup']);
+        $g->post('/bubblechart', [ConfigController::class, 'getBubbleChart']);
+        $g->get('/controlpanel', [ConfigController::class, 'getControlPanel']);
+        $g->post('/controlpanel/execute', [ConfigController::class, 'executeControlPanelCommand']);
+        $g->get('/configeditor/files', [ConfigController::class, 'getConfigEditorFiles']);
+        $g->post('/configeditor/content', [ConfigController::class, 'getConfigFileContent']);
+        $g->post('/configeditor/save', [ConfigController::class, 'saveConfigFile']);
     });
 
-    // Database routes
-    $group->group('/database', function (RouteCollectorProxy $group) {
-        $group->get('/status', [DatabaseController::class, 'status']);
-        $group->post('/generate', [DatabaseController::class, 'generate']);
-        $group->post('/auto-update', [DatabaseController::class, 'autoUpdate']);
-        $group->post('/force-update', [DatabaseController::class, 'forceUpdate']);
-        $group->get('/search', [DatabaseController::class, 'search']);
-        $group->get('/{id}', [DatabaseController::class, 'get']);
+    $group->group('/database', function (RouteCollectorProxy $g): void {
+        $g->get('/status', [DatabaseController::class, 'status']);
+        $g->post('/generate', [DatabaseController::class, 'generate']);
+        $g->post('/auto-update', [DatabaseController::class, 'autoUpdate']);
+        $g->post('/force-update', [DatabaseController::class, 'forceUpdate']);
+        $g->get('/search', [DatabaseController::class, 'search']);
+        $g->get('/{id}', [DatabaseController::class, 'get']);
     });
 
-    // ASTDB routes (Phase 7 optimization)
-    $group->group('/astdb', function (RouteCollectorProxy $group) {
-        $group->get('/stats', [AstdbController::class, 'getStats']);
-        $group->get('/health', [AstdbController::class, 'health']);
-        $group->get('/search', [AstdbController::class, 'search']);
-        $group->get('/nodes', [AstdbController::class, 'getNodes']);
-        $group->get('/node/{id}', [AstdbController::class, 'getNode']);
-        $group->post('/clear-cache', [AstdbController::class, 'clearCache']);
-    });
-    
-    // Performance monitoring routes (Phase 3 optimization)
-    $group->group('/performance', function (RouteCollectorProxy $group) {
-        $group->get('/metrics', [PerformanceController::class, 'getMetrics']);
-        $group->get('/config-stats', [PerformanceController::class, 'getConfigStats']);
-        $group->get('/file-stats', [PerformanceController::class, 'getFileStats']);
-        $group->post('/clear-caches', [PerformanceController::class, 'clearCaches']);
-        $group->post('/cleanup-cache', [PerformanceController::class, 'cleanupCache']);
-    });
-    
-    // Database performance monitoring routes (Phase 6 optimization)
-    $group->group('/db-performance', function (RouteCollectorProxy $group) {
-        $group->get('/metrics', [DatabasePerformanceController::class, 'getMetrics']);
-        $group->get('/database-stats', [DatabasePerformanceController::class, 'getDatabaseStats']);
-        $group->get('/cache-stats', [DatabasePerformanceController::class, 'getCacheStats']);
-        $group->post('/clear-query-cache', [DatabasePerformanceController::class, 'clearQueryCache']);
-        $group->post('/clear-all-caches', [DatabasePerformanceController::class, 'clearAllCaches']);
-        $group->post('/optimize-tables', [DatabasePerformanceController::class, 'optimizeTables']);
-        $group->post('/cleanup-memory-cache', [DatabasePerformanceController::class, 'cleanupMemoryCache']);
-    });
-    
-    // HTTP performance monitoring routes (Phase 7 optimization)
-    $group->group('/http-performance', function (RouteCollectorProxy $group) {
-        $group->get('/metrics', [HttpPerformanceController::class, 'getMetrics']);
-        $group->get('/http-stats', [HttpPerformanceController::class, 'getHttpStats']);
-        $group->get('/middleware-stats', [HttpPerformanceController::class, 'getMiddlewareStats']);
-        $group->get('/slow-middleware', [HttpPerformanceController::class, 'getSlowMiddleware']);
-        $group->get('/middleware-optimization', [HttpPerformanceController::class, 'getMiddlewareOptimization']);
-        $group->post('/reset-http-stats', [HttpPerformanceController::class, 'resetHttpStats']);
-        $group->post('/reset-middleware-stats', [HttpPerformanceController::class, 'resetMiddlewareStats']);
-        $group->get('/test-optimization', [HttpPerformanceController::class, 'testOptimization']);
-    });
-    
-    // Session performance monitoring routes (Phase 8 optimization)
-    $group->group('/session-performance', function (RouteCollectorProxy $group) {
-        $group->get('/metrics', [SessionPerformanceController::class, 'getMetrics']);
-        $group->get('/session-stats', [SessionPerformanceController::class, 'getSessionStats']);
-        $group->get('/auth-stats', [SessionPerformanceController::class, 'getAuthStats']);
-        $group->get('/test-authentication', [SessionPerformanceController::class, 'testAuthentication']);
-        $group->post('/cleanup-expired-sessions', [SessionPerformanceController::class, 'cleanupExpiredSessions']);
-        $group->post('/clear-auth-cache', [SessionPerformanceController::class, 'clearAuthCache']);
-        $group->post('/reset-session-stats', [SessionPerformanceController::class, 'resetSessionStats']);
-        $group->post('/reset-auth-stats', [SessionPerformanceController::class, 'resetAuthStats']);
-    });
-    
-    // File I/O performance monitoring routes (Phase 9 optimization)
-    $group->group('/fileio-performance', function (RouteCollectorProxy $group) {
-        $group->get('/metrics', [FileIOPerformanceController::class, 'getMetrics']);
-        $group->get('/external-process-stats', [FileIOPerformanceController::class, 'getExternalProcessStats']);
-        $group->get('/file-io-stats', [FileIOPerformanceController::class, 'getFileIOStats']);
-        $group->post('/clear-irlp-cache', [FileIOPerformanceController::class, 'clearIrlpCache']);
-        $group->post('/clear-file-io-caches', [FileIOPerformanceController::class, 'clearFileIOCaches']);
-        $group->post('/reset-external-process-stats', [FileIOPerformanceController::class, 'resetExternalProcessStats']);
-        $group->post('/reset-file-io-stats', [FileIOPerformanceController::class, 'resetFileIOStats']);
-        $group->get('/test-irlp-lookup', [FileIOPerformanceController::class, 'testIrlpLookup']);
+    $group->group('/node-status', function (RouteCollectorProxy $g): void {
+        $g->get('/config', [NodeStatusController::class, 'getConfig']);
+        $g->put('/config', [NodeStatusController::class, 'updateConfig']);
+        $g->post('/trigger-update', [NodeStatusController::class, 'triggerUpdate']);
+        $g->get('/service-status', [NodeStatusController::class, 'getServiceStatus']);
     });
 
-    // Node Status routes
-    $group->group('/node-status', function (RouteCollectorProxy $group) {
-        $group->get('/config', [NodeStatusController::class, 'getConfig']);
-        $group->put('/config', [NodeStatusController::class, 'updateConfig']);
-        $group->post('/trigger-update', [NodeStatusController::class, 'triggerUpdate']);
-        $group->get('/service-status', [NodeStatusController::class, 'getServiceStatus']);
-    });
-
-    // System routes
-    $group->group('/system', function (RouteCollectorProxy $group) {
-        $group->get('/info', [SystemController::class, 'info']);
-        $group->get('/stats', [SystemController::class, 'stats']);
-        $group->post('/reload', [SystemController::class, 'reload']);
-        $group->post('/start', [SystemController::class, 'start']);
-        $group->post('/stop', [SystemController::class, 'stop']);
-        $group->post('/fast-restart', [SystemController::class, 'fastRestart']);
-        $group->post('/reboot', [SystemController::class, 'reboot']);
+    $group->group('/system', function (RouteCollectorProxy $g): void {
+        $g->get('/info', [SystemController::class, 'info']);
+        $g->get('/stats', [SystemController::class, 'stats']);
+        $g->post('/reload', [SystemController::class, 'reload']);
+        $g->post('/start', [SystemController::class, 'start']);
+        $g->post('/stop', [SystemController::class, 'stop']);
+        $g->post('/fast-restart', [SystemController::class, 'fastRestart']);
+        $g->post('/reboot', [SystemController::class, 'reboot']);
     });
 });
