@@ -107,6 +107,28 @@ class AuthController
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Return auth payload for bootstrap (same structure as /auth/me data).
+     */
+    public function getAuthData(): array
+    {
+        $user = $this->getCurrentUser();
+        if ($user) {
+            return [
+                'user' => ['name' => $user],
+                'authenticated' => true,
+                'permissions' => $this->getUserPermissions($user),
+                'config_source' => $this->getUserIniFile($user)
+            ];
+        }
+        return [
+            'user' => null,
+            'authenticated' => false,
+            'permissions' => $this->getDefaultPermissions(),
+            'config_source' => 'allmon.ini'
+        ];
+    }
+
     public function check(Request $request, Response $response): Response
     {
         $this->logger->info('Auth check request');

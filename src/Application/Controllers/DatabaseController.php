@@ -28,56 +28,55 @@ class DatabaseController
     }
     
     /**
+     * Return database status payload for bootstrap (same structure as /database/status data).
+     */
+    public function getStatusData(): array
+    {
+        try {
+            $status = $this->databaseService->getDatabaseStatus();
+            if (!is_array($status)) {
+                $status = [];
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Failed to get database status', ['error' => $e->getMessage()]);
+            $status = [];
+        }
+        try {
+            $astdb = $this->astdbService->getAstdb();
+            if (!is_array($astdb)) {
+                $astdb = [];
+            }
+        } catch (\Exception $e) {
+            $this->logger->warning('Failed to load ASTDB data', ['error' => $e->getMessage()]);
+            $astdb = [];
+        }
+        return array_merge($status, ['astdb' => $astdb]);
+    }
+
+    /**
      * Get database status and information
      */
     public function status(Request $request, Response $response): Response
     {
         try {
             $this->logger->info('Fetching database status');
-            
-            // Get database status - handle errors gracefully
-            try {
-                $status = $this->databaseService->getDatabaseStatus();
-                if (!is_array($status)) {
-                    $status = [];
-                }
-            } catch (\Exception $e) {
-                $this->logger->error('Failed to get database status', ['error' => $e->getMessage()]);
-                $status = [];
-            }
-            
-            // Add ASTDB data for frontend compatibility using optimized caching
-            // Ensure astdb is always an array, even if empty
-            try {
-                $astdb = $this->astdbService->getAstdb();
-                if (!is_array($astdb)) {
-                    $astdb = [];
-                }
-            } catch (\Exception $e) {
-                $this->logger->warning('Failed to load ASTDB data', ['error' => $e->getMessage()]);
-                $astdb = [];
-            }
-            
+            $data = $this->getStatusData();
             $response->getBody()->write(json_encode([
                 'success' => true,
-                'data' => array_merge($status, ['astdb' => $astdb])
+                'data' => $data
             ]));
-            
             return $response
                 ->withStatus(200)
                 ->withHeader('Content-Type', 'application/json');
-                
         } catch (\Exception $e) {
             $this->logger->error('Database status endpoint error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'data' => ['astdb' => []]
             ]));
-            
             return $response
                 ->withStatus(200)
                 ->withHeader('Content-Type', 'application/json');

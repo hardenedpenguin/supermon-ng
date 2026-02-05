@@ -450,5 +450,14 @@ return [
             $c->get(\SupermonNg\Application\Controllers\ConfigController::class)
         );
     },
+
+    // Bootstrap Controller (single-call auth + systemInfo + database + nodes)
+    \SupermonNg\Application\Controllers\BootstrapController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\BootstrapController(
+            $c->get(\SupermonNg\Application\Controllers\AuthController::class),
+            $c->get(\SupermonNg\Application\Controllers\ConfigController::class),
+            $c->get(\SupermonNg\Application\Controllers\DatabaseController::class)
+        );
+    },
     
 ];

@@ -10,6 +10,13 @@ export const useAppStore = defineStore('app', () => {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const initialized = ref(false)
+  /** Single-call bootstrap payload (auth + systemInfo + databaseStatus + nodes); cleared after use for refresh */
+  const bootstrapData = ref<{
+    auth?: { user: any; authenticated: boolean; permissions: Record<string, boolean> }
+    systemInfo?: any
+    databaseStatus?: any
+    nodes?: { config: Record<string, any>; ini_file: string; default_node: string | null }
+  } | null>(null)
 
   // Computed
   const hasPermission = computed(() => {
@@ -34,14 +41,28 @@ export const useAppStore = defineStore('app', () => {
     
     loading.value = true
     error.value = null
+    bootstrapData.value = null
     
     try {
-      // Check authentication status
+      const response = await api.get('/bootstrap')
+      if (response.data.success && response.data.data) {
+        const data = response.data.data
+        const auth = data.auth ?? {}
+        user.value = auth.user ? { ...auth.user, permissions: auth.permissions } : null
+        isAuthenticated.value = !!auth.authenticated
+        bootstrapData.value = {
+          auth: data.auth,
+          systemInfo: data.systemInfo,
+          databaseStatus: data.databaseStatus,
+          nodes: data.nodes
+        }
+      } else {
+        await checkAuth()
+      }
+      initialized.value = true
+    } catch {
       await checkAuth()
       initialized.value = true
-    } catch (err) {
-      error.value = 'Failed to initialize application'
-      console.error('App initialization error:', err)
     } finally {
       loading.value = false
     }
@@ -181,6 +202,7 @@ export const useAppStore = defineStore('app', () => {
     loading,
     error,
     initialized,
+    bootstrapData,
     
     // Computed
     hasPermission,

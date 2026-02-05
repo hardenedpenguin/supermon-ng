@@ -16,6 +16,7 @@ use SupermonNg\Application\Controllers\HttpPerformanceController;
 use SupermonNg\Application\Controllers\SessionPerformanceController;
 use SupermonNg\Application\Controllers\FileIOPerformanceController;
 use SupermonNg\Application\Controllers\DvswitchController;
+use SupermonNg\Application\Controllers\BootstrapController;
 use SupermonNg\Application\Middleware\ApiAuthMiddleware;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
 
@@ -220,6 +221,8 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($registerShare
 // API routes without version prefix (frontend uses this; single source for full route set)
 $app->group('/api', function (RouteCollectorProxy $group) use ($registerSharedApiRoutes): void {
     $registerSharedApiRoutes($group);
+
+    $group->get('/bootstrap', [BootstrapController::class, 'get']);
 
     $group->group('/auth', function (RouteCollectorProxy $g): void {
         $g->get('/check', [AuthController::class, 'check']);

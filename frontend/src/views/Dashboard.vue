@@ -1242,8 +1242,6 @@ onBeforeMount(async () => {
 
 // Lifecycle
 onMounted(async () => {
-  await appStore.checkAuth()
-  
   // Initialize date/time display
   loadDisplaySettingsFromCookies()
   if (showDateTime.value) {
@@ -1253,41 +1251,63 @@ onMounted(async () => {
   
   // Initialize realTime store
   await realTimeStore.initialize()
-  // WebSocket connections are established automatically when startMonitoring() is called
   
-  // Load system info, database status, and check for default node
-  try {
-    const [systemResponse, databaseResponse, nodesResponse] = await Promise.all([
-      api.get('/config/system-info'),
-      api.get('/database/status'),
-      api.get('/config/nodes')
-    ])
-    
-    if (systemResponse.data.success) {
-      systemInfo.value = systemResponse.data.data || systemResponse.data
-      
-      // systemInfo is the source of truth for header background
-      // Always use it if available, as the backend has already checked for custom header
+  const boot = appStore.bootstrapData
+  if (boot?.systemInfo != null || boot?.databaseStatus != null || boot?.nodes != null) {
+    if (boot.systemInfo) {
+      systemInfo.value = boot.systemInfo
       if (systemInfo.value?.customHeaderBackground) {
         headerBackground.value = systemInfo.value.customHeaderBackground
       } else if (!headerBackground.value) {
-        // Only set default if we haven't set anything yet and systemInfo confirms no custom
         headerBackground.value = '/supermon-ng/background.jpg'
       }
-      
-      // Set dynamic page title based on SMSERVERNAME from global.inc
       if (systemInfo.value?.smServerName) {
         document.title = systemInfo.value.smServerName
       }
     }
-    
-    if (databaseResponse.data.success) {
-      databaseStatus.value = databaseResponse.data.data || databaseResponse.data
+    if (boot.databaseStatus) databaseStatus.value = boot.databaseStatus
+    const defaultNode = boot.nodes?.default_node
+    if (defaultNode) {
+      selectedNode.value = defaultNode
+      if (defaultNode.includes(',')) {
+        const nodeIds = defaultNode.split(',').map((id: string) => id.trim())
+        for (const nodeId of nodeIds) {
+          await realTimeStore.startMonitoring(nodeId)
+        }
+      } else {
+        await realTimeStore.startMonitoring(defaultNode)
+      }
+      await nextTick()
+      isLoadingDefaultNodes.value = false
+    } else {
+      isLoadingDefaultNodes.value = false
     }
+  } else {
+    try {
+      const [systemResponse, databaseResponse, nodesResponse] = await Promise.all([
+        api.get('/config/system-info'),
+        api.get('/database/status'),
+        api.get('/config/nodes')
+      ])
+      
+      if (systemResponse.data.success) {
+        systemInfo.value = systemResponse.data.data || systemResponse.data
+        if (systemInfo.value?.customHeaderBackground) {
+          headerBackground.value = systemInfo.value.customHeaderBackground
+        } else if (!headerBackground.value) {
+          headerBackground.value = '/supermon-ng/background.jpg'
+        }
+        if (systemInfo.value?.smServerName) {
+          document.title = systemInfo.value.smServerName
+        }
+      }
+      
+      if (databaseResponse.data.success) {
+        databaseStatus.value = databaseResponse.data.data || databaseResponse.data
+      }
 
-    // Check for default node configuration
-    if (nodesResponse.data.success && nodesResponse.data.data?.default_node) {
-      const defaultNode = nodesResponse.data.data.default_node
+      if (nodesResponse.data.success && nodesResponse.data.data?.default_node) {
+        const defaultNode = nodesResponse.data.data.default_node
     
         
         // Set the default node as selected
@@ -1324,9 +1344,10 @@ onMounted(async () => {
       
       // Mark default nodes as loaded
       isLoadingDefaultNodes.value = false
-  } catch (error) {
-    console.error('Error loading system info and default nodes:', error)
-    isLoadingDefaultNodes.value = false
+    } catch (error) {
+      console.error('Error loading system info and default nodes:', error)
+      isLoadingDefaultNodes.value = false
+    }
   }
 })
 
