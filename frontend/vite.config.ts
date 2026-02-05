@@ -67,6 +67,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: true,
+    // CSS for lazy-loaded components is emitted in their chunks (deferred until modal opens)
   }
 })
