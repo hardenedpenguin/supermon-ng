@@ -202,7 +202,9 @@ class ConfigController
                 'timestamp' => date('c')
             ]));
 
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Cache-Control', 'private, max-age=60');
             
         } catch (\Exception $e) {
             $this->logger->error('Error in getNodes', [
@@ -420,7 +422,9 @@ class ConfigController
                 'data' => $systemInfo
             ]));
 
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Cache-Control', 'public, max-age=60');
         } catch (\Exception $e) {
             $this->logger->error('Error in getSystemInfo', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             
@@ -451,7 +455,9 @@ class ConfigController
                 'data' => $menuItems
             ]));
 
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Cache-Control', 'private, max-age=60');
         } catch (\Exception $e) {
             $this->logger->error('Error in getMenu', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             
