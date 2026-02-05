@@ -310,7 +310,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, nextTick, onBeforeMount } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick, onBeforeMount, defineAsyncComponent } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useRealTimeStore } from '@/stores/realTime'
 import { api } from '@/utils/api'
@@ -319,35 +319,35 @@ import type { Node as NodeType } from '@/types'
 import NodeTable from '@/components/NodeTable.vue'
 import LoginForm from '@/components/LoginForm.vue'
 import Menu from '@/components/Menu.vue'
-import DisplayConfig from '@/components/DisplayConfig.vue'
-import AddFavorite from '@/components/AddFavorite.vue'
-import DeleteFavorite from '@/components/DeleteFavorite.vue'
-import Favorites from '@/components/Favorites.vue'
-import DVSwitchModal from '@/components/DVSwitchModal.vue'
-import AstLog from '@/components/AstLog.vue'
-import AstLookup from '@/components/AstLookup.vue'
-import BubbleChart from '@/components/BubbleChart.vue'
-import ControlPanel from '@/components/ControlPanel.vue'
-import RptStats from '@/components/RptStats.vue'
-import CpuStats from '@/components/CpuStats.vue'
-import Database from '@/components/Database.vue'
-import Donate from '@/components/Donate.vue'
-import ExtNodes from '@/components/ExtNodes.vue'
-import FastRestart from '@/components/FastRestart.vue'
-import IRLPLog from '@/components/IRLPLog.vue'
-import LinuxLog from '@/components/LinuxLog.vue'
-import BanAllow from '@/components/BanAllow.vue'
-import PiGPIO from '@/components/PiGPIO.vue'
-import Reboot from '@/components/Reboot.vue'
-import SMLog from '@/components/SMLog.vue'
-import Stats from '@/components/Stats.vue'
-import WebAccLog from '@/components/WebAccLog.vue'
-import WebErrLog from '@/components/WebErrLog.vue'
-import Voter from '@/components/Voter.vue'
-import ConfigEditor from '@/components/ConfigEditor.vue'
-import SystemInfo from '@/components/SystemInfo.vue'
-import DigitalDashboard from '@/components/DigitalDashboard.vue'
-import NodeStatus from '@/components/NodeStatus.vue'
+const DisplayConfig = defineAsyncComponent(() => import('@/components/DisplayConfig.vue'))
+const AddFavorite = defineAsyncComponent(() => import('@/components/AddFavorite.vue'))
+const DeleteFavorite = defineAsyncComponent(() => import('@/components/DeleteFavorite.vue'))
+const Favorites = defineAsyncComponent(() => import('@/components/Favorites.vue'))
+const DVSwitchModal = defineAsyncComponent(() => import('@/components/DVSwitchModal.vue'))
+const AstLog = defineAsyncComponent(() => import('@/components/AstLog.vue'))
+const AstLookup = defineAsyncComponent(() => import('@/components/AstLookup.vue'))
+const BubbleChart = defineAsyncComponent(() => import('@/components/BubbleChart.vue'))
+const ControlPanel = defineAsyncComponent(() => import('@/components/ControlPanel.vue'))
+const RptStats = defineAsyncComponent(() => import('@/components/RptStats.vue'))
+const CpuStats = defineAsyncComponent(() => import('@/components/CpuStats.vue'))
+const Database = defineAsyncComponent(() => import('@/components/Database.vue'))
+const Donate = defineAsyncComponent(() => import('@/components/Donate.vue'))
+const ExtNodes = defineAsyncComponent(() => import('@/components/ExtNodes.vue'))
+const FastRestart = defineAsyncComponent(() => import('@/components/FastRestart.vue'))
+const IRLPLog = defineAsyncComponent(() => import('@/components/IRLPLog.vue'))
+const LinuxLog = defineAsyncComponent(() => import('@/components/LinuxLog.vue'))
+const BanAllow = defineAsyncComponent(() => import('@/components/BanAllow.vue'))
+const PiGPIO = defineAsyncComponent(() => import('@/components/PiGPIO.vue'))
+const Reboot = defineAsyncComponent(() => import('@/components/Reboot.vue'))
+const SMLog = defineAsyncComponent(() => import('@/components/SMLog.vue'))
+const Stats = defineAsyncComponent(() => import('@/components/Stats.vue'))
+const WebAccLog = defineAsyncComponent(() => import('@/components/WebAccLog.vue'))
+const WebErrLog = defineAsyncComponent(() => import('@/components/WebErrLog.vue'))
+const Voter = defineAsyncComponent(() => import('@/components/Voter.vue'))
+const ConfigEditor = defineAsyncComponent(() => import('@/components/ConfigEditor.vue'))
+const SystemInfo = defineAsyncComponent(() => import('@/components/SystemInfo.vue'))
+const DigitalDashboard = defineAsyncComponent(() => import('@/components/DigitalDashboard.vue'))
+const NodeStatus = defineAsyncComponent(() => import('@/components/NodeStatus.vue'))
 
 
 const appStore = useAppStore()
