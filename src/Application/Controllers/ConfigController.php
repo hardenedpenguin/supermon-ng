@@ -688,7 +688,6 @@ class ConfigController
                 'TITLE2' => $TITLE2 ?? null,
                 'TITLE3' => $TITLE3 ?? null,
                 'SMSERVERNAME' => $SMSERVERNAME ?? null,
-                'BACKGROUND' => $BACKGROUND ?? null,
                 'BACKGROUND_COLOR' => $BACKGROUND_COLOR ?? null,
                 'BACKGROUND_HEIGHT' => $BACKGROUND_HEIGHT ?? null,
                 'DISPLAY_BACKGROUND' => $DISPLAY_BACKGROUND ?? null,
