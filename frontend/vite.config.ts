@@ -2,8 +2,29 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 
+/** Injects preload/modulepreload for critical JS and CSS to speed initial load */
+function preloadPlugin() {
+  return {
+    name: 'preload-critical-assets',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html: string) {
+        const preloads: string[] = []
+        const cssHref = html.match(/<link[^>]+href="([^"]+\.css)"[^>]*>/)?.[1]
+        const jsSrc = html.match(/<script[^>]+src="([^"]+\.js)"[^>]*>/)?.[1]
+        if (cssHref) preloads.push(`<link rel="preload" href="${cssHref}" as="style">`)
+        if (jsSrc) preloads.push(`<link rel="modulepreload" href="${jsSrc}">`)
+        if (preloads.length === 0) return html
+        const headClose = html.indexOf('</head>')
+        if (headClose === -1) return html
+        return html.slice(0, headClose) + '\n    ' + preloads.join('\n    ') + '\n  ' + html.slice(headClose)
+      }
+    }
+  }
+}
+
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [vue(), preloadPlugin()],
   base: '/supermon-ng/',
   resolve: {
     alias: {
