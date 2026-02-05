@@ -1,17 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import Dashboard from '@/views/Dashboard.vue'
-import LsnodDisplay from '@/components/LsnodDisplay.vue'
 
 const routes = [
   {
     path: '/',
     name: 'Dashboard',
-    component: Dashboard
+    component: () => import('@/views/Dashboard.vue')
   },
   {
     path: '/lsnod/:id',
     name: 'LsnodDisplay',
-    component: LsnodDisplay,
+    component: () => import('@/components/LsnodDisplay.vue'),
     props: true
   },
   {
