@@ -69,5 +69,13 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
     // CSS for lazy-loaded components is emitted in their chunks (deferred until modal opens)
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['vue', 'vue-router', 'pinia', 'axios'],
+          dompurify: ['dompurify']
+        }
+      }
+    }
   }
 })
