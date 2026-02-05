@@ -6,15 +6,11 @@
  * It initializes the Slim application and handles all API requests.
  */
 
-// Set error reporting for development (should be disabled in production)
-// In production, disable display_errors to prevent HTML output in JSON responses
-error_reporting(E_ALL);
-ini_set('display_errors', 0);
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/../user_files/logs/php_errors.log');
+// Bootstrap sets error_reporting and display_errors from APP_ENV; only set log location here if desired
+ini_set('log_errors', '1');
 
-// Include the bootstrap file
-require_once __DIR__ . '/../src/bootstrap.php';
+// Include the bootstrap file and capture the app instance
+$app = require_once __DIR__ . '/../src/bootstrap.php';
 
 // Set base path if running under /supermon-ng subdirectory
 // .htaccess routes /supermon-ng/api/* to this file, so we need to strip the prefix

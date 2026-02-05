@@ -81,12 +81,11 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
             // For DELETE requests, body might be empty, so check header first
             $token = $request->getHeaderLine('X-CSRF-Token') ?? ($parsedBody['csrf_token'] ?? '');
             
-            if (empty($token) || !isset($_SESSION['csrf_token']) || 
+            if (empty($token) || !isset($_SESSION['csrf_token']) ||
                 !hash_equals($_SESSION['csrf_token'], $token)) {
-                
-                // Debug logging
-                error_log("CSRF validation failed: method=$method, token='$token', session_token='" . ($_SESSION['csrf_token'] ?? 'null') . "', uri='$uri', session_id='" . session_id() . "'");
-                
+                if (($_ENV['APP_ENV'] ?? 'production') !== 'production') {
+                    error_log("CSRF validation failed: method=$method, uri=$uri");
+                }
                 $response = new \Slim\Psr7\Response();
                 $response->getBody()->write(json_encode([
                     'success' => false,

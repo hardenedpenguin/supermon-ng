@@ -11,6 +11,7 @@ use SupermonNg\Domain\Entities\Node;
 use SupermonNg\Services\AllStarConfigService;
 use SupermonNg\Services\AstdbCacheService;
 use SupermonNg\Services\IncludeManagerService;
+use SupermonNg\Services\ValidationService;
 use Ramsey\Uuid\Uuid;
 use Exception;
 
@@ -184,14 +185,12 @@ class NodeController
 
     public function get(Request $request, Response $response, array $args): Response
     {
-        $nodeId = $args['id'] ?? null;
-        
-        if (!$nodeId) {
+        $nodeId = ValidationService::validateNodeId($args['id'] ?? null);
+        if ($nodeId === false) {
             $response->getBody()->write(json_encode([
                 'success' => false,
-                'error' => 'Node ID is required'
+                'error' => 'Node ID is required or invalid'
             ]));
-            
             return $response
                 ->withStatus(400)
                 ->withHeader('Content-Type', 'application/json');
@@ -352,14 +351,12 @@ class NodeController
 
     public function status(Request $request, Response $response, array $args): Response
     {
-        $nodeId = $args['id'] ?? null;
-        
-        if (!$nodeId) {
+        $nodeId = ValidationService::validateNodeId($args['id'] ?? null);
+        if ($nodeId === false) {
             $response->getBody()->write(json_encode([
                 'success' => false,
-                'error' => 'Node ID is required'
+                'error' => 'Node ID is required or invalid'
             ]));
-            
             return $response
                 ->withStatus(400)
                 ->withHeader('Content-Type', 'application/json');
@@ -1285,16 +1282,15 @@ class NodeController
      */
     public function getWebSocketPort(Request $request, Response $response, array $args): Response
     {
-        $nodeId = $args['id'] ?? null;
-        
-        if (!$nodeId) {
+        $nodeId = ValidationService::validateNodeId($args['id'] ?? null);
+        if ($nodeId === false) {
             $response->getBody()->write(json_encode([
                 'success' => false,
-                'error' => 'Node ID required'
+                'error' => 'Node ID required or invalid'
             ]));
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
-        
+
         try {
             $currentUser = $this->getCurrentUser();
             $basePort = 8105; // Base port for WebSocket servers
@@ -3664,17 +3660,17 @@ class NodeController
     public function lsnodes(Request $request, Response $response, array $args): Response
     {
         $this->logger->info('lsnodes request', ['args' => $args]);
-        
-        try {
-            $nodeId = $args['id'] ?? null;
-            if (!$nodeId) {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => 'Node ID is required'
-                ]));
-                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-            }
 
+        $nodeId = ValidationService::validateNodeId($args['id'] ?? null);
+        if ($nodeId === false) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Node ID is required or invalid'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        try {
             // Get current user for permission checking
             $currentUser = $this->getCurrentUser();
             
@@ -3715,17 +3711,17 @@ class NodeController
     public function lsnodesWeb(Request $request, Response $response, array $args): Response
     {
         $this->logger->info('lsnodes web request', ['args' => $args]);
-        
-        try {
-            $nodeId = $args['id'] ?? null;
-            if (!$nodeId) {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => 'Node ID is required'
-                ]));
-                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-            }
 
+        $nodeId = ValidationService::validateNodeId($args['id'] ?? null);
+        if ($nodeId === false) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Node ID is required or invalid'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        try {
             // Get current user for permission checking
             $currentUser = $this->getCurrentUser();
             

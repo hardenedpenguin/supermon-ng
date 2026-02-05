@@ -33,7 +33,6 @@ try {
 // Ensure default values are set (use null coalescing to avoid PHP 8+ warnings)
 $_ENV['APP_ENV'] = $_ENV['APP_ENV'] ?? 'production';
 $_ENV['APP_DEBUG'] = $_ENV['APP_DEBUG'] ?? 'false';
-$_ENV['JWT_SECRET'] = $_ENV['JWT_SECRET'] ?? 'your-secret-key';
 $_ENV['USER_FILES_PATH'] = $_ENV['USER_FILES_PATH'] ?? __DIR__ . '/../user_files/';
 
 // Set error reporting based on environment (use null coalescing to avoid warnings)
@@ -51,8 +50,10 @@ if (($_ENV['APP_ENV'] ?? 'production') === 'production') {
 date_default_timezone_set('UTC');
 
 // Configure session for cross-origin requests
-ini_set('session.cookie_samesite', 'Lax'); // Use Lax for development
-ini_set('session.cookie_secure', '0'); // Set to 1 in production with HTTPS
+$isProduction = ($_ENV['APP_ENV'] ?? 'production') === 'production';
+$sessionSecure = $isProduction ? '1' : '0'; // Require HTTPS in production
+ini_set('session.cookie_samesite', 'Lax');
+ini_set('session.cookie_secure', $sessionSecure);
 ini_set('session.cookie_httponly', '1');
 ini_set('session.cookie_domain', '');
 ini_set('session.cookie_path', '/supermon-ng');

@@ -110,16 +110,15 @@ class AuthController
     public function check(Request $request, Response $response): Response
     {
         $this->logger->info('Auth check request');
-        
-        // Debug session information
-        $this->logger->info('Session debug', [
-            'session_status' => session_status(),
-            'session_id' => session_id(),
-            'session_data' => $_SESSION ?? [],
-            'cookie_header' => $request->getHeaderLine('Cookie'),
-            'user_agent' => $request->getHeaderLine('User-Agent')
-        ]);
-        
+
+        if (($_ENV['APP_ENV'] ?? 'production') !== 'production') {
+            $this->logger->debug('Session debug', [
+                'session_status' => session_status(),
+                'session_id' => session_id(),
+                'uri' => (string) $request->getUri()
+            ]);
+        }
+
         // Check if user is actually logged in via session
         $user = $this->getCurrentUser();
         
@@ -153,12 +152,21 @@ class AuthController
     }
 
     /**
+     * Get user files directory path (trailing slash).
+     */
+    private function getUserFilesPath(): string
+    {
+        $path = $_ENV['USER_FILES_PATH'] ?? dirname(__DIR__, 3) . '/user_files/';
+        return rtrim($path, '/') . '/';
+    }
+
+    /**
      * Verify user credentials against .htpasswd file
      */
     private function verifyCredentials(string $username, string $password): bool
     {
-        $htpasswdFile = 'user_files/.htpasswd';
-        
+        $htpasswdFile = $this->getUserFilesPath() . '.htpasswd';
+
         // Check if .htpasswd file exists
         if (!file_exists($htpasswdFile)) {
             $this->logger->warning('.htpasswd file not found');
@@ -288,8 +296,8 @@ class AuthController
 
     private function getUserPermissions(string $user): array
     {
-        $authFile = 'user_files/authusers.inc';
-        
+        $authFile = $this->getUserFilesPath() . 'authusers.inc';
+
         if (!file_exists($authFile)) {
             // If no auth file exists, grant all permissions
             return [
@@ -375,35 +383,32 @@ class AuthController
      */
     private function getCurrentUser(): ?string
     {
-        // Start session if not already started
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
-        
-        // Debug session data
-        $this->logger->info('getCurrentUser debug', [
-            'session_status' => session_status(),
-            'session_id' => session_id(),
-            'session_data' => $_SESSION ?? [],
-            'has_user' => isset($_SESSION['user']),
-            'has_authenticated' => isset($_SESSION['authenticated']),
-            'user_value' => $_SESSION['user'] ?? 'not_set',
-            'authenticated_value' => $_SESSION['authenticated'] ?? 'not_set',
-            'login_time' => $_SESSION['login_time'] ?? 'not_set'
-        ]);
-        
+
+        $isProduction = ($_ENV['APP_ENV'] ?? 'production') === 'production';
+        if (!$isProduction) {
+            $this->logger->debug('getCurrentUser', [
+                'session_status' => session_status(),
+                'has_user' => isset($_SESSION['user']),
+                'has_authenticated' => isset($_SESSION['authenticated'] ?? false)
+            ]);
+        }
+
         // Check if user is logged in via session
-        if (isset($_SESSION['user']) && !empty($_SESSION['user']) && isset($_SESSION['authenticated']) && $_SESSION['authenticated']) {
-            // Check if session is not too old (24 hours)
+        if (isset($_SESSION['user']) && $_SESSION['user'] !== '' && isset($_SESSION['authenticated']) && $_SESSION['authenticated']) {
             if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) < 86400) {
-                $this->logger->info('User authenticated via session', ['user' => $_SESSION['user']]);
+                if (!$isProduction) {
+                    $this->logger->debug('User authenticated via session', ['user' => $_SESSION['user']]);
+                }
                 return $_SESSION['user'];
-            } else {
-                // Session expired, clear it
-                $this->logger->info('Session expired, clearing');
-                session_destroy();
-                return null;
             }
+            if (!$isProduction) {
+                $this->logger->debug('Session expired, clearing');
+            }
+            session_destroy();
+            return null;
         }
         
         // Check if user is logged in via HTTP Basic Auth
@@ -511,8 +516,8 @@ class AuthController
      */
     private function getUserIniFile(string $username): string
     {
-        $authIniFile = 'user_files/authini.inc';
-        
+        $authIniFile = $this->getUserFilesPath() . 'authini.inc';
+
         if (!file_exists($authIniFile)) {
             return 'allmon.ini';
         }

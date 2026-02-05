@@ -9,8 +9,6 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\DriverManager;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Contracts\Cache\CacheInterface;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use Psr\Container\ContainerInterface;
 use SupermonNg\Services\DatabaseGenerationService;
 use SupermonNg\Services\AllStarConfigService;
@@ -94,25 +92,6 @@ return [
             $_ENV['CACHE_TTL'] ?? 3600,
             'cache/'
         );
-    },
-    
-    // JWT Service
-    'jwt.service' => function () {
-        return new class($_ENV['JWT_SECRET'] ?? 'your-secret-key') {
-            private string $secret;
-            
-            public function __construct(string $secret) {
-                $this->secret = $secret;
-            }
-            
-            public function encode(array $payload): string {
-                return JWT::encode($payload, $this->secret, 'HS256');
-            }
-            
-            public function decode(string $token): array {
-                return (array) JWT::decode($token, new Key($this->secret, 'HS256'));
-            }
-        };
     },
     
     // AllStar Configuration Service

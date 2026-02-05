@@ -45,26 +45,18 @@ class AdminAuthMiddleware implements MiddlewareInterface
 
     private function hasAdminPermissions(string $user): bool
     {
-        // Include necessary files using optimized service
-        $this->includeService->includeCommonInc();
-        
-        // Check admin permissions from configuration
-        $adminUsers = [];
-        if (isset($GLOBALS['admin_users'])) {
-            $adminUsers = $GLOBALS['admin_users'];
-        }
-        
+        $this->includeService->ensureAuthGlobalsLoaded();
+        $adminUsers = $GLOBALS['admin_users'] ?? [];
         return in_array($user, $adminUsers, true);
     }
 
     private function createUnauthorizedResponse(): Response
     {
-        $response = new \GuzzleHttp\Psr7\Response();
+        $response = new \Slim\Psr7\Response();
         $response->getBody()->write(json_encode([
             'success' => false,
             'error' => 'Authentication required'
         ]));
-        
         return $response
             ->withStatus(401)
             ->withHeader('Content-Type', 'application/json');
@@ -72,12 +64,11 @@ class AdminAuthMiddleware implements MiddlewareInterface
 
     private function createForbiddenResponse(): Response
     {
-        $response = new \GuzzleHttp\Psr7\Response();
+        $response = new \Slim\Psr7\Response();
         $response->getBody()->write(json_encode([
             'success' => false,
             'error' => 'Admin permissions required'
         ]));
-        
         return $response
             ->withStatus(403)
             ->withHeader('Content-Type', 'application/json');

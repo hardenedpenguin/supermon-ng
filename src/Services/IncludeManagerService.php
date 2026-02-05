@@ -134,6 +134,20 @@ class IncludeManagerService
         return $this->includeFile($nodeInfoPath);
     }
 
+    /** Permission array names from authusers.inc (used to build valid_users and admin_users) */
+    private const PERMISSION_ARRAY_NAMES = [
+        'PERMUSER', 'CONNECTUSER', 'DISCUSER', 'MONUSER', 'LMONUSER', 'DTMFUSER',
+        'ASTLKUSER', 'RSTATUSER', 'BUBLUSER', 'DVSWITCHUSER', 'FAVUSER', 'CTRLUSER',
+        'CFGEDUSER', 'ASTRELUSER', 'ASTSTRUSER', 'ASTSTPUSER', 'FSTRESUSER',
+        'RBTUSER', 'UPDUSER', 'HWTOUSER', 'WIKIUSER', 'CSTATUSER', 'ASTATUSER',
+        'EXNUSER', 'ACTNUSER', 'ALLNUSER', 'DBTUSER', 'GPIOUSER', 'LLOGUSER',
+        'ASTLUSER', 'CLOGUSER', 'IRLPLOGUSER', 'WLOGUSER', 'WERRUSER', 'BANUSER',
+        'SYSINFUSER', 'SUSBUSER',
+    ];
+
+    /** Admin permission arrays - users in these are considered admin */
+    private const ADMIN_PERMISSION_NAMES = ['CTRLUSER', 'CFGEDUSER'];
+
     /**
      * Include auth files with caching
      */
@@ -154,6 +168,42 @@ class IncludeManagerService
         }
         
         return $success;
+    }
+
+    /**
+     * Ensure auth files are loaded and GLOBALS valid_users / admin_users are set.
+     * Call this before checking $GLOBALS['valid_users'] or $GLOBALS['admin_users'].
+     */
+    public function ensureAuthGlobalsLoaded(): void
+    {
+        $this->includeAuthFiles();
+
+        if (isset($GLOBALS['valid_users']) && is_array($GLOBALS['valid_users'])) {
+            return; // Already set (e.g. by previous call)
+        }
+
+        $validUsers = [];
+        $adminUsers = [];
+
+        foreach (self::PERMISSION_ARRAY_NAMES as $name) {
+            if (isset($GLOBALS[$name]) && is_array($GLOBALS[$name])) {
+                foreach ($GLOBALS[$name] as $user) {
+                    if (is_string($user) && $user !== '') {
+                        $validUsers[$user] = true;
+                    }
+                }
+                if (in_array($name, self::ADMIN_PERMISSION_NAMES, true)) {
+                    foreach ($GLOBALS[$name] as $user) {
+                        if (is_string($user) && $user !== '') {
+                            $adminUsers[$user] = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        $GLOBALS['valid_users'] = array_keys($validUsers);
+        $GLOBALS['admin_users'] = array_keys($adminUsers);
     }
 
     /**
