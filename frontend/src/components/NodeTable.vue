@@ -343,10 +343,13 @@ const headerColspan3 = computed(() => {
 const displayedConnectedNodes = computed(() => {
   if (!connectedNodes.value) return []
   
-  // Filter out node 1 if it has no info
-  const filteredNodes = connectedNodes.value.filter(node => 
-    node.node !== 1 || (node.info && node.info !== 'NO CONNECTION')
-  )
+  // Filter: only show actually connected nodes (ESTABLISHED or CONNECTING), not LINKED (indirect)
+  // Also filter out node 1 if it has no info
+  const filteredNodes = connectedNodes.value.filter(node => {
+    const isActuallyConnected = node.link === 'ESTABLISHED' || node.link === 'CONNECTING'
+    const node1Valid = node.node !== 1 || (node.info && node.info !== 'NO CONNECTION')
+    return isActuallyConnected && node1Valid
+  })
   
   // Apply display logic based on user preferences
 if (appStore.user?.preferences?.showAll) {
