@@ -414,7 +414,7 @@ class AuthController
             $this->logger->debug('getCurrentUser', [
                 'session_status' => session_status(),
                 'has_user' => isset($_SESSION['user']),
-                'has_authenticated' => isset($_SESSION['authenticated'] ?? false)
+                'has_authenticated' => isset($_SESSION['authenticated'])
             ]);
         }
 
