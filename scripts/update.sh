@@ -477,29 +477,16 @@ update_services() {
         print_status "WebSocket service file updated"
     fi
     
-    # Reload systemd and restart services
+    # Reload systemd and enable units (restarts happen in restart_services)
     systemctl daemon-reload
-    systemctl enable supermon-ng-backend
-    systemctl restart supermon-ng-backend
-    
-    # Enable and restart websocket service (if it exists)
-    if systemctl list-unit-files | grep -q "supermon-ng-websocket.service"; then
-        systemctl enable supermon-ng-websocket.service
-        systemctl restart supermon-ng-websocket.service
-        print_status "WebSocket service enabled and restarted"
-    else
-        print_warning "WebSocket service not found, skipping"
+    systemctl enable supermon-ng-backend 2>/dev/null || true
+    if systemctl list-unit-files 2>/dev/null | grep -q "supermon-ng-websocket.service"; then
+        systemctl enable supermon-ng-websocket.service 2>/dev/null || true
     fi
+    systemctl enable supermon-ng-node-status.timer 2>/dev/null || true
+    systemctl enable supermon-ng-database-update.timer 2>/dev/null || true
     
-    # Enable and start node status timer
-    systemctl enable supermon-ng-node-status.timer
-    systemctl restart supermon-ng-node-status.timer
-    
-    # Enable and start database auto-update timer
-    systemctl enable supermon-ng-database-update.timer
-    systemctl restart supermon-ng-database-update.timer
-    
-    print_status "All services updated, enabled, and started"
+    print_status "Service files updated and enabled"
 }
 
 # Function to update sudoers configuration
@@ -760,6 +747,19 @@ display_summary() {
     echo ""
 }
 
+# Restart services after all updates (so they run with new code/config)
+restart_services() {
+    print_status "Restarting services after update..."
+    systemctl daemon-reload
+    systemctl restart supermon-ng-backend 2>/dev/null || true
+    if systemctl list-unit-files 2>/dev/null | grep -q "supermon-ng-websocket.service"; then
+        systemctl restart supermon-ng-websocket.service 2>/dev/null || true
+    fi
+    systemctl restart supermon-ng-node-status.timer 2>/dev/null || true
+    systemctl restart supermon-ng-database-update.timer 2>/dev/null || true
+    print_status "Services restarted"
+}
+
 # Main update process
 main() {
     get_current_version
@@ -774,6 +774,7 @@ main() {
     update_frontend
     update_apache_config
     post_update_tasks
+    restart_services
     display_summary
 }
 

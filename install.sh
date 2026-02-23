@@ -533,40 +533,16 @@ else
     APACHE_AUTO_CONFIGURED=false
 fi
 
-# Enable and start services
-echo "🚀 Starting services..."
+# Reload systemd and enable units (services are started at the end after everything is installed)
+echo "🔧 Enabling systemd units..."
 systemctl daemon-reload
-
-# Enable and start backend service
-systemctl enable supermon-ng-backend
-systemctl start supermon-ng-backend
-
-# Enable and start websocket service (if it exists)
-if systemctl list-unit-files | grep -q "supermon-ng-websocket.service"; then
-    systemctl enable supermon-ng-websocket.service
-    systemctl start supermon-ng-websocket.service
-    echo "✅ WebSocket service enabled and started"
-else
-    echo "⚠️  WebSocket service not found, skipping"
+systemctl enable supermon-ng-backend 2>/dev/null || true
+if systemctl list-unit-files 2>/dev/null | grep -q "supermon-ng-websocket.service"; then
+    systemctl enable supermon-ng-websocket.service 2>/dev/null || true
 fi
-
-# Enable and start node status timer (if it exists)
-if systemctl list-unit-files | grep -q "supermon-ng-node-status.timer"; then
-    systemctl enable supermon-ng-node-status.timer
-    systemctl start supermon-ng-node-status.timer
-    echo "✅ Node status timer enabled and started"
-else
-    echo "⚠️  Node status timer not found, skipping"
-fi
-
-# Enable and start database auto-update timer (if it exists)
-if systemctl list-unit-files | grep -q "supermon-ng-database-update.timer"; then
-    systemctl enable supermon-ng-database-update.timer
-    systemctl start supermon-ng-database-update.timer
-    echo "✅ Database auto-update timer enabled and started"
-else
-    echo "⚠️  Database auto-update timer not found, skipping"
-fi
+systemctl enable supermon-ng-node-status.timer 2>/dev/null || true
+systemctl enable supermon-ng-database-update.timer 2>/dev/null || true
+echo "✅ Service files installed and enabled"
 
 # Make user management scripts executable
 echo "🔧 Setting script permissions..."
@@ -584,6 +560,19 @@ if [ -f "$APP_DIR/scripts/database-auto-update.php" ]; then
     chmod +x "$APP_DIR/scripts/database-auto-update.php"
     echo "✅ Made executable: scripts/database-auto-update.php"
 fi
+
+# Start services after everything is installed
+echo ""
+echo "🚀 Starting services..."
+systemctl daemon-reload
+systemctl start supermon-ng-backend 2>/dev/null || true
+if systemctl list-unit-files 2>/dev/null | grep -q "supermon-ng-websocket.service"; then
+    systemctl start supermon-ng-websocket.service 2>/dev/null || true
+    echo "✅ WebSocket service started"
+fi
+systemctl start supermon-ng-node-status.timer 2>/dev/null || true
+systemctl start supermon-ng-database-update.timer 2>/dev/null || true
+echo "✅ Services started"
 
 echo ""
 echo "🎉 Supermon-NG Installation Complete!"
@@ -614,6 +603,9 @@ echo "🔧 Service Management:"
 echo "   Start:  sudo systemctl start supermon-ng-backend"
 echo "   Stop:   sudo systemctl stop supermon-ng-backend"
 echo "   Status: sudo systemctl status supermon-ng-backend"
+echo ""
+echo "   After editing allmon.ini or username-allmon.ini, restart the WebSocket service"
+echo "   so it picks up node changes: sudo systemctl restart supermon-ng-websocket.service"
 echo ""
 echo "⏰ Scheduled Tasks:"
 systemctl is-active supermon-ng-node-status.timer > /dev/null 2>&1 && echo "   ✅ Node Status Updates: Every 3 minutes" || echo "   ⚠️  Node Status Updates: Not configured"
