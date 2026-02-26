@@ -1,5 +1,7 @@
 # Supermon-NG - Modern AllStar Link Management Dashboard
 
+![GitHub total downloads](https://img.shields.io/github/downloads/hardenedpenguin/supermon-ng/total?style=flat-square)
+
 <img src="supermon-ng.png" alt="Supermon-NG" width="200"/>
 
 A modern, responsive web-based management interface for AllStar Link nodes, built with Vue.js 3 and PHP 8.
