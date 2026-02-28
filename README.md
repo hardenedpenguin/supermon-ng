@@ -57,10 +57,10 @@ The installer automatically handles:
 
 1. **Configure Nodes**: Edit `/var/www/html/supermon-ng/user_files/allmon.ini`
    ```ini
-   [node_12345]
+   [12345]
    host=localhost:5038
-   username=admin
-   password=your_secure_password
+   user=admin
+   passwd=your_secure_password
    menu=yes
    system=Nodes
    default_node=12345
