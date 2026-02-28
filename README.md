@@ -25,7 +25,7 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 
 - **Operating System**: Debian 11+ or Ubuntu 20.04+ (ASL3+ compatible)
 - **PHP**: 8.0+ with extensions: `sqlite3`, `curl`, `mbstring`, `json`
-- **Apache**: 2.4+ with modules: `rewrite`, `proxy`, `proxy_http`, `proxy_wstunnel`, `headers`, `expires`
+- **Apache**: 2.4+ with modules: `rewrite`, `proxy`, `proxy_http`, `proxy_wstunnel`, `headers`, `expires`, `ssl`
 - **RAM**: 512MB minimum, 1GB recommended
 - **Storage**: 200MB free space
 - **AllStar Link**: ASL3+ installation with Asterisk

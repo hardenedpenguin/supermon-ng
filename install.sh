@@ -387,11 +387,14 @@ install_systemd_file \
     "/etc/systemd/system/supermon-ng-node-status.timer" \
     "Timer"
 
-# Install Apache if not present (unless skipping Apache configuration)
+# Install Apache and ssl-cert if not present (unless skipping Apache configuration)
 if [ "$SKIP_APACHE" = false ]; then
     if ! command -v apache2 &> /dev/null; then
         echo "📦 Installing Apache..."
-        apt-get install -y apache2
+        apt-get install -y apache2 ssl-cert
+    elif [ ! -f /etc/ssl/certs/ssl-cert-snakeoil.pem ]; then
+        echo "📦 Installing ssl-cert (system self-signed certificate)..."
+        apt-get install -y ssl-cert
     fi
 else
     echo "⏭️  Skipping Apache installation (--skip-apache flag)"
@@ -469,6 +472,62 @@ else
     ErrorLog \${APACHE_LOG_DIR}/supermon-ng_error.log
     CustomLog \${APACHE_LOG_DIR}/supermon-ng_access.log combined
 </VirtualHost>
+
+# HTTPS VirtualHost using system self-signed certificate (Debian/Ubuntu ssl-cert-snakeoil)
+<VirtualHost *:443>
+    DocumentRoot /var/www/html
+    
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/ssl-cert-snakeoil.pem
+    SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
+    
+    # Proxy configurations (must come before Alias directives)
+    ProxyPreserveHost On
+    
+    # Proxy supermon-ng API requests to backend (must come before Alias)
+    ProxyPass /supermon-ng/api http://localhost:8000/api
+    ProxyPassReverse /supermon-ng/api http://localhost:8000/api
+    
+    # WebSocket proxy for Supermon-NG nodes (must come before Alias directives)
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteCond %{HTTP:Connection} =Upgrade [NC]
+    RewriteRule ^/supermon-ng/ws/(.+)$ ws://localhost:8105/supermon-ng/ws/\$1 [P,L]
+    ProxyPassReverse /supermon-ng/ws/ ws://localhost:8105/supermon-ng/ws/
+    
+    # Alias for Supermon-NG application (after ProxyPass)
+    Alias /supermon-ng APP_DIR_PLACEHOLDER/public
+    
+    # Alias for user files
+    Alias /supermon-ng/user_files APP_DIR_PLACEHOLDER/user_files
+    
+    # Configure Supermon-NG directory
+    <Directory "APP_DIR_PLACEHOLDER/public">
+        AllowOverride All
+        Require all granted
+        DirectoryIndex index.html index.php
+        RewriteEngine On
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule ^ index.html [QSA,L]
+    </Directory>
+    
+    # Configure user files directory
+    <Directory "APP_DIR_PLACEHOLDER/user_files">
+        AllowOverride All
+        Require all granted
+    </Directory>
+    
+    # Configure main document root
+    <Directory "/var/www/html">
+        AllowOverride All
+        Require all granted
+        Options Indexes FollowSymLinks
+    </Directory>
+    
+    ErrorLog \${APACHE_LOG_DIR}/supermon-ng_ssl_error.log
+    CustomLog \${APACHE_LOG_DIR}/supermon-ng_ssl_access.log combined
+</VirtualHost>
 APACHE_EOF
     # Replace placeholder with actual path
     sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$APACHE_TEMPLATE"
@@ -480,9 +539,9 @@ if [ "$SKIP_APACHE" = false ]; then
     echo "🔧 Configuring Apache automatically..."
     APACHE_SITE_FILE="/etc/apache2/sites-available/supermon-ng.conf"
 
-    # Enable required Apache modules
+    # Enable required Apache modules (including mod_ssl for HTTPS)
     echo "📦 Enabling required Apache modules..."
-    a2enmod -q proxy proxy_http proxy_wstunnel rewrite headers substitute 2>/dev/null || {
+    a2enmod -q proxy proxy_http proxy_wstunnel rewrite headers substitute ssl 2>/dev/null || {
         echo "⚠️  Warning: Some Apache modules may not be available"
     }
 
