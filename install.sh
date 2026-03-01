@@ -85,10 +85,10 @@ if [ -f "frontend/package.json" ]; then
         fi
     fi
 
-    # Install Node.js based on Debian version
+    # Install Node.js and npm based on Debian version
     if [ "$DEBIAN_VERSION" = "13" ]; then
-        echo "   Using Debian 13 packages (Node.js 20.19.2)..."
-        apt-get install -y nodejs
+        echo "   Using Debian 13 packages..."
+        apt-get install -y nodejs npm
     elif [ "$DEBIAN_VERSION" = "12" ]; then
         echo "   Using NodeSource repository for Debian 12..."
         curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
@@ -99,9 +99,17 @@ if [ -f "frontend/package.json" ]; then
         apt-get install -y nodejs
     fi
 
-    # Verify Node.js version
+    # Ensure npm is available (NodeSource bundles it; Debian may need separate package)
+    if ! command -v npm &>/dev/null; then
+        echo "   Installing npm..."
+        apt-get install -y npm
+    fi
+
+    # Verify Node.js and npm
     NODE_VERSION=$(node --version)
+    NPM_VERSION=$(npm --version)
     echo "✅ Node.js version: $NODE_VERSION"
+    echo "✅ npm version: $NPM_VERSION"
 else
     echo "⏭️  Skipping Node.js installation (using pre-built frontend from release)"
 fi
