@@ -474,6 +474,9 @@ main() {
     
     # Rebuild frontend to ensure fresh build with no stale files
     if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then
+        if ! command -v node &>/dev/null || ! command -v npm &>/dev/null; then
+            error "Node.js and npm are required to build the frontend. Install Node.js 20.x to create a release."
+        fi
         log "Rebuilding frontend to ensure fresh build..."
         cd frontend
         

@@ -536,7 +536,10 @@ update_frontend() {
     
     # Check if we're in a development environment with frontend source
     if [ -d "$PROJECT_ROOT/frontend" ] && [ -f "$PROJECT_ROOT/frontend/package.json" ]; then
-        # Development mode - build from source
+        # Development mode - build from source (requires Node.js and npm)
+        if ! command -v node &>/dev/null || ! command -v npm &>/dev/null; then
+            print_error "Node.js and npm are required to build the frontend from source. Install Node.js 20.x, or update using a release tarball which includes pre-built frontend."
+        fi
         print_status "Building frontend from source..."
         cd "$PROJECT_ROOT/frontend"
         npm install

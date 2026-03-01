@@ -71,35 +71,40 @@ echo "📦 Installing system dependencies..."
 apt-get update
 apt-get install -y php php-sqlite3 php-curl php-mbstring php-xml git curl acl
 
-# Install Node.js 20.x (required for Vite)
-echo "📦 Installing Node.js 20.x..."
+# Install Node.js 20.x only when building frontend from source (git clone)
+# Release tarballs include pre-built frontend; no Node.js/npm needed
+if [ -f "frontend/package.json" ]; then
+    echo "📦 Installing Node.js 20.x (required for building frontend from source)..."
 
-# Detect Debian version
-DEBIAN_VERSION=""
-if [ -f /etc/os-release ]; then
-    . /etc/os-release
-    if [ "$ID" = "debian" ]; then
-        DEBIAN_VERSION=$(echo "$VERSION_ID" | cut -d. -f1)
+    # Detect Debian version
+    DEBIAN_VERSION=""
+    if [ -f /etc/os-release ]; then
+        . /etc/os-release
+        if [ "$ID" = "debian" ]; then
+            DEBIAN_VERSION=$(echo "$VERSION_ID" | cut -d. -f1)
+        fi
     fi
-fi
 
-# Install Node.js based on Debian version
-if [ "$DEBIAN_VERSION" = "13" ]; then
-    echo "   Using Debian 13 packages (Node.js 20.19.2)..."
-    apt-get install -y nodejs
-elif [ "$DEBIAN_VERSION" = "12" ]; then
-    echo "   Using NodeSource repository for Debian 12..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-    apt-get install -y nodejs
+    # Install Node.js based on Debian version
+    if [ "$DEBIAN_VERSION" = "13" ]; then
+        echo "   Using Debian 13 packages (Node.js 20.19.2)..."
+        apt-get install -y nodejs
+    elif [ "$DEBIAN_VERSION" = "12" ]; then
+        echo "   Using NodeSource repository for Debian 12..."
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y nodejs
+    else
+        echo "   Using NodeSource repository (non-Debian or unknown version)..."
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y nodejs
+    fi
+
+    # Verify Node.js version
+    NODE_VERSION=$(node --version)
+    echo "✅ Node.js version: $NODE_VERSION"
 else
-    echo "   Using NodeSource repository (non-Debian or unknown version)..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-    apt-get install -y nodejs
+    echo "⏭️  Skipping Node.js installation (using pre-built frontend from release)"
 fi
-
-# Verify Node.js version
-NODE_VERSION=$(node --version)
-echo "✅ Node.js version: $NODE_VERSION"
 
 # Function to configure log access using ACLs
 configure_logs() {
