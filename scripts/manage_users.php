@@ -27,6 +27,7 @@ if (!is_dir('user_files')) {
 // Ensure .htpasswd file exists
 if (!file_exists($htpasswdFile)) {
     file_put_contents($htpasswdFile, '');
+    chmod($htpasswdFile, 0644);
     echo "Created new .htpasswd file.\n";
 }
 

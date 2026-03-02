@@ -251,6 +251,8 @@ chmod -R 755 "$APP_DIR/cache"
 # user_files: 644 for config files, 755 only for executable scripts in sbin
 find "$APP_DIR/user_files" -type d -exec chmod 755 {} \; 2>/dev/null || true
 find "$APP_DIR/user_files" -type f -exec chmod 644 {} \; 2>/dev/null || true
+chmod 644 "$APP_DIR/user_files/.htaccess" 2>/dev/null || true
+chmod 644 "$APP_DIR/user_files/.htpasswd" 2>/dev/null || true
 for script in ast_node_status_update.py din ssinfo; do
     [ -f "$APP_DIR/user_files/sbin/$script" ] && chmod 755 "$APP_DIR/user_files/sbin/$script"
 done
