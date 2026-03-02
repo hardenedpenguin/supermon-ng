@@ -246,8 +246,14 @@ fi
 chown -R www-data:www-data "$APP_DIR"
 chmod -R 755 "$APP_DIR"
 chmod -R 755 "$APP_DIR/logs"
-chmod -R 755 "$APP_DIR/user_files"
 chmod -R 755 "$APP_DIR/cache"
+
+# user_files: 644 for config files, 755 only for executable scripts in sbin
+find "$APP_DIR/user_files" -type d -exec chmod 755 {} \; 2>/dev/null || true
+find "$APP_DIR/user_files" -type f -exec chmod 644 {} \; 2>/dev/null || true
+for script in ast_node_status_update.py din ssinfo; do
+    [ -f "$APP_DIR/user_files/sbin/$script" ] && chmod 755 "$APP_DIR/user_files/sbin/$script"
+done
 
 # Install PHP dependencies
 echo "📦 Installing PHP dependencies..."
@@ -618,11 +624,6 @@ echo "✅ Service files installed and enabled"
 
 # Make user management scripts executable
 echo "🔧 Setting script permissions..."
-if [ -f "$APP_DIR/user_files/set_password.sh" ]; then
-    chmod +x "$APP_DIR/user_files/set_password.sh"
-    echo "✅ Made executable: user_files/set_password.sh"
-fi
-
 if [ -f "$APP_DIR/scripts/manage_users.php" ]; then
     chmod +x "$APP_DIR/scripts/manage_users.php"
     echo "✅ Made executable: scripts/manage_users.php"

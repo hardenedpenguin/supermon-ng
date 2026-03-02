@@ -401,7 +401,13 @@ update_application() {
     chmod -R 755 "$APP_DIR/logs" 2>/dev/null || true
     chmod -R 755 "$APP_DIR/database" 2>/dev/null || true
     chmod -R 755 "$APP_DIR/cache" 2>/dev/null || true
-    chmod -R 755 "$APP_DIR/user_files" 2>/dev/null || true
+    
+    # user_files: 644 for config files, 755 only for executable scripts in sbin
+    find "$APP_DIR/user_files" -type d -exec chmod 755 {} \; 2>/dev/null || true
+    find "$APP_DIR/user_files" -type f -exec chmod 644 {} \; 2>/dev/null || true
+    for script in ast_node_status_update.py din ssinfo; do
+        [ -f "$APP_DIR/user_files/sbin/$script" ] && chmod 755 "$APP_DIR/user_files/sbin/$script"
+    done
     
     # Set permissions for config directory
     chmod -R 644 "$APP_DIR/config" 2>/dev/null || true
@@ -735,7 +741,6 @@ post_update_tasks() {
     # Update file permissions
     chown -R www-data:www-data "$APP_DIR"
     chmod +x "$APP_DIR/scripts"/*.sh 2>/dev/null || true
-    chmod +x "$APP_DIR/user_files/set_password.sh" 2>/dev/null || true
     chmod +x "$APP_DIR/scripts/manage_users.php" 2>/dev/null || true
     chmod +x "$APP_DIR/scripts/database-auto-update.php" 2>/dev/null || true
 }

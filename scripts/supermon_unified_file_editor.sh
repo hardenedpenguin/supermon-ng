@@ -4,15 +4,15 @@ set -eo pipefail
 
 declare -A WHITELISTED_FILES
 
-# Supermon-ng files
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/allmon.ini"]="www-data:www-data:755:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/authini.inc"]="www-data:www-data:755:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/authusers.inc"]="www-data:www-data:755:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/controlpanel.ini"]="www-data:www-data:755:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/favini.inc"]="www-data:www-data:755:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/favorites.ini"]="www-data:www-data:755:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/privatenodes.txt"]="www-data:www-data:755:"
-WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/global.inc"]="www-data:www-data:755:"
+# Supermon-ng files (config files use 644; only executable scripts need 755)
+WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/allmon.ini"]="www-data:www-data:644:"
+WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/authini.inc"]="www-data:www-data:644:"
+WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/authusers.inc"]="www-data:www-data:644:"
+WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/controlpanel.ini"]="www-data:www-data:644:"
+WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/favini.inc"]="www-data:www-data:644:"
+WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/favorites.ini"]="www-data:www-data:644:"
+WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/privatenodes.txt"]="www-data:www-data:644:"
+WHITELISTED_FILES["/var/www/html/supermon-ng/user_files/global.inc"]="www-data:www-data:644:"
 
 # Asterisk files
 WHITELISTED_FILES["/etc/asterisk/extensions.conf"]="asterisk:asterisk:644:asterisk -rx 'dialplan reload'"
