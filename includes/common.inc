@@ -43,19 +43,19 @@ $USERFILES="user_files";
  * @var string Title in header when logged in.
  */
 global $TITLE_LOGGED;
-$TITLE_LOGGED = "Supermon-ng V4.1.2 AllStar Manager";
+$TITLE_LOGGED = "Supermon-ng V4.1.3 AllStar Manager";
 
 /**
  * @var string Version date of the Supermon-ng software.
  */
 global $VERSION_DATE;
-$VERSION_DATE = "January 16, 2026";
+$VERSION_DATE = "March 7, 2026";
 
 /**
  * @var string Title in header when not logged in.
  */
 global $TITLE_NOT_LOGGED;
-$TITLE_NOT_LOGGED = "Supermon-ng V4.1.2 AllStar Monitor";
+$TITLE_NOT_LOGGED = "Supermon-ng V4.1.3 AllStar Monitor";
 
 /**
  * @var string Path to the webserver access log.

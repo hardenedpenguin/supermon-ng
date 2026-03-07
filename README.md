@@ -36,8 +36,8 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.2/supermon-ng-V4.1.2.tar.xz
-tar -xJf supermon-ng-V4.1.2.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.3/supermon-ng-V4.1.3.tar.xz
+tar -xJf supermon-ng-V4.1.3.tar.xz
 cd supermon-ng
 sudo ./install.sh
 ```
@@ -156,8 +156,8 @@ sudo sed -i 's/"anarchy"/"yourusername"/g' /var/www/html/supermon-ng/user_files/
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.2/supermon-ng-V4.1.2.tar.xz
-tar -xJf supermon-ng-V4.1.2.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.3/supermon-ng-V4.1.3.tar.xz
+tar -xJf supermon-ng-V4.1.3.tar.xz
 cd supermon-ng
 sudo ./scripts/update.sh
 ```
@@ -318,6 +318,19 @@ Include:
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 🆕 What's New in V4.1.3
+
+### Highlights
+- **HTTPS support**: Apache configured with system self-signed cert (ssl-cert-snakeoil); HTTP and HTTPS (port 443) served by default
+- **Install/update**: Node.js and npm only installed when building frontend from source (git); release tarball installs skip Node.js
+- **Security**: Tighter `user_files` permissions (0644 for config files, 0755 only for sbin scripts); `.htaccess` and `.htpasswd` explicitly 0644; `manage_users.php` creates `.htpasswd` with 0644
+- **Cleanup**: Removed unused `set_password.sh` wrapper; `create-release.sh` and `update.sh` check for Node.js/npm before building
+
+### Apache
+- **mod_ssl** and **ssl-cert** used for HTTPS VirtualHost; separate SSL logs for troubleshooting
+
+---
+
 ## 🆕 What's New in V4.1.1
 
 ### Major Features
@@ -357,4 +370,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Supermon-NG V4.1.1** - Bringing AllStar Link management into the modern era! 🚀📡
+**Supermon-NG V4.1.3** - Bringing AllStar Link management into the modern era! 🚀📡
