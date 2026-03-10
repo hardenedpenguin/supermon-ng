@@ -574,10 +574,13 @@ if [ "$SKIP_APACHE" = false ]; then
     echo "📝 Installing Apache site configuration..."
     cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
 
-    # Disable the default site to avoid conflicts
-    echo "🔗 Disabling default Apache site..."
+    # Disable the default sites so supermon-ng handles both :80 and :443
+    echo "🔗 Disabling default Apache sites..."
     a2dissite -q 000-default 2>/dev/null || {
         echo "⚠️  Warning: Failed to disable default site (may not exist)"
+    }
+    a2dissite -q default-ssl 2>/dev/null || {
+        echo "⚠️  Warning: Failed to disable default SSL site (may not exist)"
     }
     
     # Enable the supermon-ng site

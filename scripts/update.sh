@@ -708,10 +708,13 @@ APACHE_EOF
     # Ensure mod_ssl is enabled for HTTPS VirtualHost
     a2enmod -q ssl 2>/dev/null || print_warning "Could not enable mod_ssl (HTTPS may not work)"
     
-    # Disable the default site to avoid conflicts
-    print_status "Disabling default Apache site..."
+    # Disable the default sites so supermon-ng handles both :80 and :443
+    print_status "Disabling default Apache sites..."
     a2dissite -q 000-default 2>/dev/null || {
         print_warning "Failed to disable default site (may not exist)"
+    }
+    a2dissite -q default-ssl 2>/dev/null || {
+        print_warning "Failed to disable default SSL site (may not exist)"
     }
     
     # Enable the supermon-ng site
