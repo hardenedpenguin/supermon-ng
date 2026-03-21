@@ -2,7 +2,12 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
 
-/** Injects preload/modulepreload for critical JS and CSS to speed initial load */
+/**
+ * Injects modulepreload for the entry JS chunk only.
+ * We do not preload CSS: Vite already emits <link rel="stylesheet"> for the main bundle,
+ * and an extra rel=preload as=style duplicates fetch and triggers Chrome warnings
+ * ("preloaded but not used within a few seconds").
+ */
 function preloadPlugin() {
   return {
     name: 'preload-critical-assets',
@@ -10,9 +15,7 @@ function preloadPlugin() {
       order: 'post',
       handler(html: string) {
         const preloads: string[] = []
-        const cssHref = html.match(/<link[^>]+href="([^"]+\.css)"[^>]*>/)?.[1]
         const jsSrc = html.match(/<script[^>]+src="([^"]+\.js)"[^>]*>/)?.[1]
-        if (cssHref) preloads.push(`<link rel="preload" href="${cssHref}" as="style">`)
         if (jsSrc) preloads.push(`<link rel="modulepreload" href="${jsSrc}">`)
         if (preloads.length === 0) return html
         const headClose = html.indexOf('</head>')
