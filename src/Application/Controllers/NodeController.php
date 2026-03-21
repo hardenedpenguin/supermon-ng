@@ -11,6 +11,7 @@ use SupermonNg\Domain\Entities\Node;
 use SupermonNg\Services\AllStarConfigService;
 use SupermonNg\Services\AstdbCacheService;
 use SupermonNg\Services\IncludeManagerService;
+use SupermonNg\Services\UserPermissionService;
 use SupermonNg\Services\ValidationService;
 use Ramsey\Uuid\Uuid;
 use Exception;
@@ -21,17 +22,20 @@ class NodeController
     private AllStarConfigService $configService;
     private AstdbCacheService $astdbService;
     private IncludeManagerService $includeService;
+    private UserPermissionService $userPermissionService;
     
     public function __construct(
         LoggerInterface $logger, 
         AllStarConfigService $configService, 
         AstdbCacheService $astdbService,
-        IncludeManagerService $includeService
+        IncludeManagerService $includeService,
+        UserPermissionService $userPermissionService
     ) {
         $this->logger = $logger;
         $this->configService = $configService;
         $this->astdbService = $astdbService;
         $this->includeService = $includeService;
+        $this->userPermissionService = $userPermissionService;
     }
 
     public function list(Request $request, Response $response): Response
@@ -1475,28 +1479,7 @@ class NodeController
      */
     private function hasUserPermission(?string $user, string $permission): bool
     {
-        // Unauthenticated users: no permissions (security fix for overly permissive defaults)
-        if (!$user) {
-            return false;
-        }
-
-        // For authenticated users, check against authusers.inc
-        $authFile = 'user_files/authusers.inc';
-        
-        if (!file_exists($authFile)) {
-            // If no auth file exists, grant all permissions
-            return true;
-        }
-
-        // Include the auth file to get permission arrays
-        include $authFile;
-        
-        // Check if the permission array exists and user is in it
-        if (isset($$permission) && is_array($$permission)) {
-            return in_array($user, $$permission, true);
-        }
-        
-        return false;
+        return $this->userPermissionService->hasPermission($user, $permission);
     }
 
     /**

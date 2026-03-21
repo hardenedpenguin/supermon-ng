@@ -316,88 +316,47 @@ class AuthController
         return '$apr1$' . $salt . '$' . $tmp;
     }
 
-    private function getUserPermissions(string $user): array
+    /**
+     * All permission keys returned by /auth/me (must stay in sync with API enforcement).
+     *
+     * @return list<string>
+     */
+    private static function permissionNames(): array
     {
-        $authFile = $this->getUserFilesPath() . 'authusers.inc';
-
-        if (!file_exists($authFile)) {
-            // If no auth file exists, grant all permissions
-            return [
-                'PERMUSER' => true,
-                'CONNECTUSER' => true,
-                'DISCUSER' => true,
-                'MONUSER' => true,
-                'LMONUSER' => true,
-                'DTMFUSER' => true,
-                'ASTLKUSER' => true,
-                'RSTATUSER' => true,
-                'BUBLUSER' => true,
-                'DVSWITCHUSER' => true,
-                'FAVUSER' => true,
-                'CTRLUSER' => true,
-                'CFGEDUSER' => true,
-                'ASTRELUSER' => true,
-                'ASTSTRUSER' => true,
-                'ASTSTPUSER' => true,
-                'FSTRESUSER' => true,
-                'RBTUSER' => true,
-                'UPDUSER' => true,
-                'HWTOUSER' => true,
-                'WIKIUSER' => true,
-                'CSTATUSER' => true,
-                'ASTATUSER' => true,
-                'EXNUSER' => true,
-                'ACTNUSER' => true,
-                'ALLNUSER' => true,
-                'DBTUSER' => true,
-                'GPIOUSER' => true,
-                'LLOGUSER' => true,
-                'ASTLUSER' => true,
-                'CLOGUSER' => true,
-                'IRLPLOGUSER' => true,
-                'WLOGUSER' => true,
-                'WERRUSER' => true,
-                'BANUSER' => true,
-                'SYSINFUSER' => true,
-                'SUSBUSER' => true
-            ];
-        }
-
-        // Include the auth file to get permission arrays
-        include $authFile;
-        
-        $permissions = [];
-        $permissionNames = [
+        return [
             'PERMUSER', 'CONNECTUSER', 'DISCUSER', 'MONUSER', 'LMONUSER', 'DTMFUSER',
             'ASTLKUSER', 'RSTATUSER', 'BUBLUSER', 'DVSWITCHUSER', 'FAVUSER', 'CTRLUSER',
             'CFGEDUSER', 'ASTRELUSER', 'ASTSTRUSER', 'ASTSTPUSER', 'FSTRESUSER',
             'RBTUSER', 'UPDUSER', 'HWTOUSER', 'WIKIUSER', 'CSTATUSER',
             'ASTATUSER', 'EXNUSER', 'ACTNUSER', 'ALLNUSER',
             'DBTUSER', 'GPIOUSER', 'LLOGUSER', 'ASTLUSER', 'CLOGUSER', 'IRLPLOGUSER',
-            'WLOGUSER', 'WERRUSER', 'BANUSER', 'SYSINFUSER', 'SUSBUSER'
+            'WLOGUSER', 'WERRUSER', 'BANUSER', 'SYSINFUSER', 'SUSBUSER', 'SMLOGUSER',
         ];
-        
-        foreach ($permissionNames as $permission) {
-            $permissions[$permission] = $this->hasPermission($user, $permission, $authFile);
-        }
-        
-        return $permissions;
     }
-    
-    /**
-     * Check if user has a specific permission
-     */
-    private function hasPermission(string $user, string $permission, string $authFile): bool
+
+    private function getUserPermissions(string $user): array
     {
-        // Include the auth file to get permission arrays
-        include $authFile;
-        
-        // Check if the permission array exists and user is in it
-        if (isset($$permission) && is_array($$permission)) {
-            return in_array($user, $$permission, true);
+        $authFile = $this->getUserFilesPath() . 'authusers.inc';
+        $permissionNames = self::permissionNames();
+
+        if (!file_exists($authFile)) {
+            // If no auth file exists, grant all permissions
+            return array_fill_keys($permissionNames, true);
         }
-        
-        return false;
+
+        /** @noinspection PhpUnusedLocalVariableInspection */
+        include $authFile;
+
+        $permissions = [];
+        foreach ($permissionNames as $permission) {
+            if (isset($$permission) && is_array($$permission)) {
+                $permissions[$permission] = in_array($user, $$permission, true);
+            } else {
+                $permissions[$permission] = false;
+            }
+        }
+
+        return $permissions;
     }
 
     /**
@@ -447,90 +406,12 @@ class AuthController
     }
 
     /**
-     * Get default permissions when no user is logged in
-     * These permissions allow basic functionality using allmon.ini configuration
+     * Default permissions when no user is logged in — all false so the UI matches API enforcement
+     * (NodeController / ConfigController deny actions without authusers.inc membership).
      */
     private function getDefaultPermissions(): array
     {
-        return [
-            'CONNECTUSER' => true,
-            'DISCUSER' => true,
-            'MONUSER' => true,
-            'LMONUSER' => true,
-            'DTMFUSER' => false, // Disable sensitive features for anonymous users
-            'ASTLKUSER' => true,
-            'RSTATUSER' => true,
-            'BUBLUSER' => true,
-            'DVSWITCHUSER' => false, // Disable DVSwitch for anonymous users (requires configuration)
-            'FAVUSER' => true,
-            'CTRLUSER' => false, // Disable admin features for anonymous users
-            'CFGEDUSER' => true, // Allow config editor for unauthenticated users
-            'ASTRELUSER' => false,
-            'ASTSTRUSER' => false,
-            'ASTSTPUSER' => false,
-            'FSTRESUSER' => false,
-            'RBTUSER' => false,
-            'UPDUSER' => true,
-            'HWTOUSER' => true,
-            'WIKIUSER' => true,
-            'CSTATUSER' => true,
-            'ASTATUSER' => true,
-            'EXNUSER' => true,
-            'ACTNUSER' => true,
-            'ALLNUSER' => true,
-            'DBTUSER' => true,
-            'GPIOUSER' => false,
-            'LLOGUSER' => true,
-            'ASTLUSER' => true,
-            'IRLPUSER' => false,
-            'WLOGUSER' => true,
-            'WERRUSER' => true,
-            'BANUSER' => false,
-            'SYSINFUSER' => false
-        ];
-    }
-
-    /**
-     * Get no permissions when user is not authenticated
-     * This disables all functionality for unauthenticated users
-     */
-    private function getNoPermissions(): array
-    {
-        return [
-            'CONNECTUSER' => false,
-            'DISCUSER' => false,
-            'MONUSER' => false,
-            'LMONUSER' => false,
-            'DTMFUSER' => false,
-            'ASTLKUSER' => false,
-            'RSTATUSER' => false,
-            'BUBLUSER' => false,
-            'FAVUSER' => false,
-            'CTRLUSER' => false,
-            'CFGEDUSER' => false,
-            'ASTRELUSER' => false,
-            'ASTSTRUSER' => false,
-            'ASTSTPUSER' => false,
-            'FSTRESUSER' => false,
-            'RBTUSER' => false,
-            'UPDUSER' => false,
-            'HWTOUSER' => false,
-            'WIKIUSER' => false,
-            'CSTATUSER' => false,
-            'ASTATUSER' => false,
-            'EXNUSER' => false,
-            'ACTNUSER' => false,
-            'ALLNUSER' => false,
-            'DBTUSER' => false,
-            'GPIOUSER' => false,
-            'LLOGUSER' => false,
-            'ASTLUSER' => false,
-            'IRLPUSER' => false,
-            'WLOGUSER' => false,
-            'WERRUSER' => false,
-            'BANUSER' => false,
-            'SYSINFUSER' => false
-        ];
+        return array_fill_keys(self::permissionNames(), false);
     }
 
     /**

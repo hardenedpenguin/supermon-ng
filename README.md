@@ -290,6 +290,9 @@ sudo systemctl status supermon-ng-backend supermon-ng-websocket apache2
 - Secure password hashing
 - Limited sudo access for specific commands only
 - WebSocket connections validated and authenticated
+- `/api/system/*` actions (Asterisk reload/start/stop, fast restart, host reboot) require a logged-in user and the matching `authusers.inc` permission (`ASTRELUSER`, `ASTSTRUSER`, `ASTSTPUSER`, `FSTRESUSER`, `RBTUSER`)
+- Unauthenticated clients receive **no** feature permissions in `/auth/me` / bootstrap; grant capabilities via `authusers.inc` after login
+- `CORS_ORIGINS=*` does **not** reflect arbitrary `Origin` headers when credentials are enabled; list explicit origins or use `http://localhost:*` for development
 
 ## 🤝 Contributing
 

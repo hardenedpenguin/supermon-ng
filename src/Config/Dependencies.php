@@ -388,6 +388,11 @@ return [
     },
     
     // Controllers with dependency injection
+    \SupermonNg\Services\UserPermissionService::class => function () {
+        $path = $_ENV['USER_FILES_PATH'] ?? (dirname(__DIR__, 2) . '/user_files/');
+        return new \SupermonNg\Services\UserPermissionService($path);
+    },
+
     \SupermonNg\Application\Controllers\ConfigController::class => function (ContainerInterface $c) {
         try {
             $cacheService = $c->get(CacheService::class);
@@ -398,7 +403,8 @@ return [
         return new \SupermonNg\Application\Controllers\ConfigController(
             $c->get(LoggerInterface::class),
             $cacheService,
-            $c->get(\SupermonNg\Services\IncludeManagerService::class)
+            $c->get(\SupermonNg\Services\IncludeManagerService::class),
+            $c->get(\SupermonNg\Services\UserPermissionService::class)
         );
     },
     
@@ -407,7 +413,15 @@ return [
             $c->get(LoggerInterface::class),
             $c->get(\SupermonNg\Services\AllStarConfigService::class),
             $c->get(\SupermonNg\Services\AstdbCacheService::class),
-            $c->get(\SupermonNg\Services\IncludeManagerService::class)
+            $c->get(\SupermonNg\Services\IncludeManagerService::class),
+            $c->get(\SupermonNg\Services\UserPermissionService::class)
+        );
+    },
+
+    \SupermonNg\Application\Controllers\SystemController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\SystemController(
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\UserPermissionService::class)
         );
     },
     
@@ -447,7 +461,7 @@ return [
         return new \SupermonNg\Application\Controllers\DvswitchController(
             $c->get(LoggerInterface::class),
             $c->get(\SupermonNg\Services\DvswitchService::class),
-            $c->get(\SupermonNg\Application\Controllers\ConfigController::class)
+            $c->get(\SupermonNg\Services\UserPermissionService::class)
         );
     },
 

@@ -105,12 +105,17 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
 $app->add(function (Request $request, RequestHandlerInterface $handler): Response {
     $response = $handler->handle($request);
     
-    $corsOrigins = explode(',', $_ENV['CORS_ORIGINS'] ?? 'http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177');
+    $corsOrigins = array_map('trim', explode(',', $_ENV['CORS_ORIGINS'] ?? 'http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177'));
     $origin = $request->getHeaderLine('Origin');
-    
-    // Allow any localhost port for development
-    if (in_array($origin, $corsOrigins) || in_array('*', $corsOrigins) || 
-        (strpos($origin, 'http://localhost:') === 0 && strpos($origin, 'localhost:') !== false)) {
+    // Explicit whitelist match (* is not a valid browser Origin string, so it never matches $origin)
+    $explicitMatch = $origin !== '' && in_array($origin, $corsOrigins, true);
+    // Localhost any port for dev (safe reflected origin only for localhost)
+    $localhostDev = $origin !== '' && str_starts_with($origin, 'http://localhost:');
+
+    // Do not treat CORS_ORIGINS=* as "reflect any Origin" while Allow-Credentials is true (CSRF/session risk).
+    $allowThisOrigin = $explicitMatch || $localhostDev;
+
+    if ($allowThisOrigin && $origin !== '') {
         $response = $response->withHeader('Access-Control-Allow-Origin', $origin);
     }
     

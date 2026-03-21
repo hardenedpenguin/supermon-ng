@@ -97,9 +97,10 @@ $app->get('/api/csrf-token', function ($request, $response) {
         return $response->withHeader('Content-Type', 'application/json');
     } catch (\Exception $e) {
         error_log('CSRF token endpoint error: ' . $e->getMessage());
+        $isProd = ($_ENV['APP_ENV'] ?? 'production') === 'production';
         $response->getBody()->write(json_encode([
             'success' => false,
-            'message' => 'Server error: ' . $e->getMessage(),
+            'message' => $isProd ? 'Server error' : ('Server error: ' . $e->getMessage()),
             'csrf_token' => ''
         ]));
         return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
@@ -188,7 +189,8 @@ $registerSharedApiRoutes = function (RouteCollectorProxy $group): void {
     })->add(AdminAuthMiddleware::class);
 };
 
-// API v1 routes (subset: shared routes + v1-specific nodes/config/system)
+// API v1 routes (subset: shared routes + v1-specific nodes/config/system).
+// Note: /api/v1/nodes uses ApiAuthMiddleware (valid_users); legacy /api/nodes relies on per-handler permission checks + CSRF.
 $app->group('/api/v1', function (RouteCollectorProxy $group) use ($registerSharedApiRoutes): void {
     $registerSharedApiRoutes($group);
 

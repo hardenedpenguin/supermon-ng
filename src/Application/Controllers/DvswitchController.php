@@ -8,22 +8,23 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use SupermonNg\Services\DvswitchService;
+use SupermonNg\Services\UserPermissionService;
 use Exception;
 
 class DvswitchController
 {
     private LoggerInterface $logger;
     private DvswitchService $dvswitchService;
-    private ConfigController $configController;
+    private UserPermissionService $userPermissionService;
     
     public function __construct(
         LoggerInterface $logger,
         DvswitchService $dvswitchService,
-        ConfigController $configController
+        UserPermissionService $userPermissionService
     ) {
         $this->logger = $logger;
         $this->dvswitchService = $dvswitchService;
-        $this->configController = $configController;
+        $this->userPermissionService = $userPermissionService;
     }
     
     /**
@@ -62,26 +63,13 @@ class DvswitchController
      */
     private function hasPermission(?string $user): bool
     {
-        $this->logger->warning("Checking DVSwitch permission", [
-            'user' => $user ?? 'null',
-            'session_user' => $_SESSION['user'] ?? 'not set',
-            'php_auth_user' => $_SERVER['PHP_AUTH_USER'] ?? 'not set',
-            'remote_user' => $_SERVER['REMOTE_USER'] ?? 'not set'
-        ]);
-        
-        // Use reflection to call ConfigController's hasUserPermission method
-        $reflection = new \ReflectionClass($this->configController);
-        $method = $reflection->getMethod('hasUserPermission');
-        $method->setAccessible(true);
-        
-        $hasPermission = $method->invoke($this->configController, $user, 'DVSWITCHUSER');
-        
-        $this->logger->warning("DVSwitch permission check result", [
-            'user' => $user ?? 'null',
-            'has_permission' => $hasPermission
-        ]);
-        
-        return $hasPermission;
+        if (($_ENV['APP_ENV'] ?? 'production') !== 'production') {
+            $this->logger->debug('DVSwitch permission check', [
+                'user' => $user ?? 'null',
+            ]);
+        }
+
+        return $this->userPermissionService->hasPermission($user, 'DVSWITCHUSER');
     }
     
     /**
