@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/utils/api'
-import type { User, UserPreferences, LoginResponse, AuthState } from '@/types'
+import type { User, UserPreferences, LoginResponse, AuthState, UpdateCheckPayload } from '@/types'
 
 export const useAppStore = defineStore('app', () => {
   // State
@@ -16,6 +16,7 @@ export const useAppStore = defineStore('app', () => {
     systemInfo?: any
     databaseStatus?: any
     nodes?: { config: Record<string, any>; ini_file: string; default_node: string | null }
+    updateCheck?: UpdateCheckPayload | null
   } | null>(null)
 
   // Computed
@@ -54,7 +55,8 @@ export const useAppStore = defineStore('app', () => {
           auth: data.auth,
           systemInfo: data.systemInfo,
           databaseStatus: data.databaseStatus,
-          nodes: data.nodes
+          nodes: data.nodes,
+          updateCheck: data.updateCheck ?? null
         }
       } else {
         await checkAuth()

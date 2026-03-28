@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <UpdateBanner />
     <!-- Theme Toggle Button -->
     <div class="theme-toggle">
       <button @click="showThemeSelector = true" class="theme-toggle-btn" title="Theme Settings">
@@ -24,6 +25,7 @@ import { ref, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useTheme } from '@/composables/useTheme'
 import ThemeSelector from '@/components/ThemeSelector.vue'
+import UpdateBanner from '@/components/UpdateBanner.vue'
 
 const appStore = useAppStore()
 const { loadTheme } = useTheme()

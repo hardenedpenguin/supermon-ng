@@ -4,6 +4,8 @@ export interface SystemConfig {
   // Server information
   smServerName?: string
   version?: string
+  /** Normalized semver from common.inc (e.g. 4.1.3) */
+  appVersion?: string
   versionDate?: string
   phpVersion?: string
   

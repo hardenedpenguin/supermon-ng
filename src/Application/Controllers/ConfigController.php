@@ -11,6 +11,7 @@ use SupermonNg\Services\CacheService;
 
 use SupermonNg\Services\IncludeManagerService;
 use SupermonNg\Services\UserPermissionService;
+use SupermonNg\Services\VersionCheckService;
 
 class ConfigController
 {
@@ -609,8 +610,9 @@ class ConfigController
         
         $versionInfo = [
             'titleLogged' => $TITLE_LOGGED ?? null,
-            'titleNotLogged' => $TITLE_NOT_LOGGED ?? null, 
-            'versionDate' => $VERSION_DATE ?? null
+            'titleNotLogged' => $TITLE_NOT_LOGGED ?? null,
+            'versionDate' => $VERSION_DATE ?? null,
+            'appVersion' => VersionCheckService::parseSemverFromTitle($TITLE_LOGGED ?? null),
         ];
         
         return $versionInfo;
