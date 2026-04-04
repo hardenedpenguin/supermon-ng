@@ -186,6 +186,7 @@ $registerSharedApiRoutes = function (RouteCollectorProxy $group): void {
         $g->post('/backup', [AdminController::class, 'backup']);
         $g->post('/restore', [AdminController::class, 'restore']);
         $g->post('/clear-cache', [AdminController::class, 'clearCache']);
+        $g->post('/generate-local-allmon', [AdminController::class, 'generateLocalAllmon']);
     })->add(AdminAuthMiddleware::class);
 };
 

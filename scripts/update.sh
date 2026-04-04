@@ -538,6 +538,25 @@ update_dependencies() {
     sudo -u www-data composer install --no-dev --optimize-autoloader
 }
 
+# Generate allmon.ini only when absent (upgrades keep an existing file; fresh paths may ship without it)
+generate_local_allmon_if_missing() {
+    if [ ! -f "$APP_DIR/scripts/generate_local_allmon.php" ]; then
+        return 0
+    fi
+    if [ -f "$APP_DIR/user_files/allmon.ini" ]; then
+        return 0
+    fi
+    print_status "user_files/allmon.ini missing; generating from Asterisk config..."
+    if php "$APP_DIR/scripts/generate_local_allmon.php" --if-missing; then
+        if [ -f "$APP_DIR/user_files/allmon.ini" ]; then
+            chown www-data:www-data "$APP_DIR/user_files/allmon.ini" 2>/dev/null || true
+            chmod 644 "$APP_DIR/user_files/allmon.ini" 2>/dev/null || true
+        fi
+    else
+        print_warning "Could not auto-generate allmon.ini (Asterisk config unreadable or no nodes). Add user_files/allmon.ini manually or run: php $APP_DIR/scripts/generate_local_allmon.php --force"
+    fi
+}
+
 # Function to update frontend
 update_frontend() {
     print_status "Updating frontend..."
@@ -843,6 +862,7 @@ main() {
     update_services
     update_sudoers
     update_dependencies
+    generate_local_allmon_if_missing
     update_frontend
     update_apache_config
     post_update_tasks

@@ -435,6 +435,11 @@ validate_release() {
 
 # Main function
 main() {
+    # Allow running as ./scripts/create-release.sh (cwd may be scripts/)
+    local _script_dir
+    _script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    cd "$(cd "$_script_dir/.." && pwd)" || error "Could not cd to repository root"
+
     log "Starting Supermon-ng release creation..."
     
     # Extract version information
@@ -578,6 +583,7 @@ main() {
     mkdir -p "$release_dir/scripts"
     cp scripts/supermon_unified_file_editor.sh "$release_dir/scripts/"
     cp scripts/manage_users.php "$release_dir/scripts/"
+    cp scripts/generate_local_allmon.php "$release_dir/scripts/"
     cp scripts/update.sh "$release_dir/scripts/"
     cp scripts/version-check.sh "$release_dir/scripts/"
     cp scripts/performance-report.sh "$release_dir/scripts/" 2>/dev/null || true
@@ -624,7 +630,7 @@ main() {
     echo "   - Installation script (install.sh)"
     echo "   - Update system (scripts/update.sh, scripts/version-check.sh)"
     echo "   - Security configurations (sudoers.d/, systemd/)"
-    echo "   - Essential scripts (supermon_unified_file_editor.sh, manage_users.php)"
+    echo "   - Essential scripts (supermon_unified_file_editor.sh, manage_users.php, generate_local_allmon.php)"
     echo "   - Documentation and checksums"
     echo ""
     echo "📋 Excluded development files:"

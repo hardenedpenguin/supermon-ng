@@ -17,6 +17,7 @@ use SupermonNg\Services\AmiBatchService;
 use SupermonNg\Services\FileCacheService;
 use SupermonNg\Services\DatabaseOptimizationService;
 use SupermonNg\Services\AstdbCacheService;
+use SupermonNg\Services\LocalAllmonGeneratorService;
 
 return [
     // Logger
@@ -391,6 +392,23 @@ return [
     \SupermonNg\Services\UserPermissionService::class => function () {
         $path = $_ENV['USER_FILES_PATH'] ?? (dirname(__DIR__, 2) . '/user_files/');
         return new \SupermonNg\Services\UserPermissionService($path);
+    },
+
+    LocalAllmonGeneratorService::class => function (ContainerInterface $c) {
+        $userFiles = $_ENV['USER_FILES_PATH'] ?? (dirname(__DIR__, 2) . '/user_files/');
+        return new LocalAllmonGeneratorService(
+            $c->get(LoggerInterface::class),
+            $userFiles,
+            $_ENV['ASTERISK_RPT_CONF'] ?? '/etc/asterisk/rpt.conf',
+            $_ENV['ASTERISK_MANAGER_CONF'] ?? '/etc/asterisk/manager.conf'
+        );
+    },
+
+    \SupermonNg\Application\Controllers\AdminController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\AdminController(
+            $c->get(LoggerInterface::class),
+            $c->get(LocalAllmonGeneratorService::class)
+        );
     },
 
     \SupermonNg\Application\Controllers\ConfigController::class => function (ContainerInterface $c) {

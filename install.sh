@@ -268,6 +268,17 @@ else
     exit 1
 fi
 
+# Replace shipped example allmon.ini with one built from rpt.conf + manager.conf (requires root to read /etc/asterisk).
+# Existing allmon.ini is backed up to allmon.ini.bak.<timestamp> when present (--force).
+if [ -f "$APP_DIR/scripts/generate_local_allmon.php" ]; then
+    echo "📋 Local Allmon: generating user_files/allmon.ini from Asterisk config (replaces example template)..."
+    php "$APP_DIR/scripts/generate_local_allmon.php" --force || echo "   ⚠️  Generation failed; keeping existing user_files/allmon.ini. Fix Asterisk config or edit allmon.ini manually. Retry: sudo php $APP_DIR/scripts/generate_local_allmon.php --force"
+    if [ -f "$APP_DIR/user_files/allmon.ini" ]; then
+        chown www-data:www-data "$APP_DIR/user_files/allmon.ini" 2>/dev/null || true
+        chmod 644 "$APP_DIR/user_files/allmon.ini" 2>/dev/null || true
+    fi
+fi
+
 # Handle frontend installation (development vs production)
 echo "📦 Setting up frontend..."
 cd "$APP_DIR/frontend"
