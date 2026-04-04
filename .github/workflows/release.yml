@@ -44,10 +44,14 @@ jobs:
       - name: Update README.md download URLs to this release
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
-          # Update full release download URLs (e.g. .../download/V4.1.2/...V4.1.2.tar.xz -> .../download/V4.1.3/...V4.1.3.tar.xz)
-          sed -i "s|releases/download/[vV][0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*/supermon-ng-[vV][0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.tar\.xz|releases/download/${TAG}/supermon-ng-${TAG}.tar.xz|g" README.md
-          # Update standalone tarball filenames (e.g. tar -xJf supermon-ng-V4.1.2.tar.xz)
-          sed -i "s|supermon-ng-[vV][0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.tar\.xz|supermon-ng-${TAG}.tar.xz|g" README.md
+          # Full asset URLs: optional leading v/V on semver in path; tarball name may use V4.1.x
+          sed -i -E \
+            "s|(https://github.com/[^/]+/[^/]+/releases/download/)[Vv]?[0-9]+\.[0-9]+\.[0-9]+/(supermon-ng-)[Vv]?[0-9]+\.[0-9]+\.[0-9]+(\.tar\.xz)|\1${TAG}/\2${TAG}\3|g" \
+            README.md
+          # Standalone tarball filenames (e.g. tar -xJf supermon-ng-V4.1.2.tar.xz)
+          sed -i -E "s|supermon-ng-[Vv]?[0-9]+\.[0-9]+\.[0-9]+\.tar\.xz|supermon-ng-${TAG}.tar.xz|g" README.md
+          echo "::notice::README download URLs rewritten for ${TAG}"
+          grep -n "releases/download/${TAG}" README.md | head -5 || true
 
       - name: Create release tarball
         run: ./scripts/create-release.sh

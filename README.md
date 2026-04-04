@@ -36,8 +36,8 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.3/supermon-ng-V4.1.3.tar.xz
-tar -xJf supermon-ng-V4.1.3.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.4/supermon-ng-V4.1.4.tar.xz
+tar -xJf supermon-ng-V4.1.4.tar.xz
 cd supermon-ng
 sudo ./install.sh
 ```
@@ -157,8 +157,8 @@ sudo sed -i 's/"anarchy"/"yourusername"/g' /var/www/html/supermon-ng/user_files/
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.3/supermon-ng-V4.1.3.tar.xz
-tar -xJf supermon-ng-V4.1.3.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.4/supermon-ng-V4.1.4.tar.xz
+tar -xJf supermon-ng-V4.1.4.tar.xz
 cd supermon-ng
 sudo ./scripts/update.sh
 ```
@@ -269,12 +269,12 @@ sudo asterisk -rx "manager show connected"
 
 ```bash
 # Installation
-cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/v4.1.1/supermon-ng-V4.1.1.tar.xz
-tar -xJf supermon-ng-V4.1.1.tar.xz && cd supermon-ng && sudo ./install.sh
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.4/supermon-ng-V4.1.4.tar.xz
+tar -xJf supermon-ng-V4.1.4.tar.xz && cd supermon-ng && sudo ./install.sh
 
 # Update
-cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/v4.1.1/supermon-ng-V4.1.1.tar.xz
-tar -xJf supermon-ng-V4.1.1.tar.xz && cd supermon-ng && sudo ./scripts/update.sh
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.4/supermon-ng-V4.1.4.tar.xz
+tar -xJf supermon-ng-V4.1.4.tar.xz && cd supermon-ng && sudo ./scripts/update.sh
 
 # Check version
 sudo /var/www/html/supermon-ng/scripts/version-check.sh
@@ -324,6 +324,14 @@ Include:
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆕 What's New in V4.1.4
+
+### Highlights
+- **`allmon.ini`**: New installs auto-generate `user_files/allmon.ini` from Asterisk `rpt.conf` and `manager.conf` (ASL3+ node headers such as `[546053](tags)` supported); upgrades should use `update.sh` so an existing file is not overwritten
+- **Release tooling**: `create-release.sh` can be run from `scripts/`; GitHub Actions release workflow requests `contents: write` for uploads and generated release notes
+
+---
 
 ## 🆕 What's New in V4.1.3
 
@@ -377,4 +385,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Supermon-NG V4.1.3** - Bringing AllStar Link management into the modern era! 🚀📡
+**Supermon-NG V4.1.4** - Bringing AllStar Link management into the modern era! 🚀📡
