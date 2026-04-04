@@ -48,6 +48,7 @@ The installer automatically handles:
 - Security setup (sudoers, file permissions, ACLs)
 - Systemd services for backend, WebSocket, and node status updates
 - Frontend deployment
+- **`user_files/allmon.ini` on new installs**: Generated from your local Asterisk `rpt.conf` (node stanzas) and `manager.conf` (AMI). Any existing `allmon.ini` is backed up to `allmon.ini.bak.<timestamp>` before it is replaced.
 
 **Options:**
 - `--skip-apache`: Skip Apache configuration (for Nginx or custom setups)
@@ -55,7 +56,7 @@ The installer automatically handles:
 
 ### Initial Configuration
 
-1. **Configure Nodes**: Edit `/var/www/html/supermon-ng/user_files/allmon.ini`
+1. **Configure nodes (`allmon.ini`)**: Fresh installs already create `/var/www/html/supermon-ng/user_files/allmon.ini` from Asterisk. Open the file to verify AMI host, user, and node list; edit if your manager users or nodes differ from what was detected. To rebuild later: `sudo php /var/www/html/supermon-ng/scripts/generate_local_allmon.php --force` (backs up the current file first).
    ```ini
    [12345]
    host=localhost:5038
@@ -162,12 +163,15 @@ cd supermon-ng
 sudo ./scripts/update.sh
 ```
 
+**Upgrading and `allmon.ini`:** Use `update.sh` when moving to a newer release. It keeps your existing `user_files/allmon.ini` and only auto-generates that file if it is **missing** (for example after an incomplete copy). Do **not** run `install.sh` over an existing site to upgrade—`install.sh` is for fresh deployments and will regenerate `allmon.ini` from Asterisk (after backing up the previous file), which can replace a carefully edited configuration.
+
 **Options:**
 - `--skip-apache`: Preserve custom Apache configuration
 - `--force`: Update even if versions match
 
 The update script:
 - ✅ Preserves all user configuration files (`allmon.ini`, `authusers.inc`, `.htpasswd`, `dvswitch_config*.yml`, etc.)
+- ✅ Leaves `allmon.ini` unchanged when upgrading; only generates it if the file is not present
 - ✅ Creates automatic backups before updating
 - ✅ Updates system services and dependencies
 - ✅ Validates configuration and restarts services
