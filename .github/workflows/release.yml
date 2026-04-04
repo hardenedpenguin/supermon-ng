@@ -13,6 +13,11 @@ on:
     tags:
       - 'V*'
 
+# Default GITHUB_TOKEN is often read-only; releases + generate_release_notes need write access.
+permissions:
+  contents: write
+  pull-requests: read
+
 jobs:
   release:
     runs-on: ubuntu-latest
