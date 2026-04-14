@@ -153,10 +153,8 @@ def _format_alert_html(enabled_text, has_alerts, alerts, no_alerts_text="<span s
     if not has_alerts or not alerts:
         return f'"{enabled_text}<br>{no_alerts_text}"'
     compact = max_len is not None
-    if compact:
-        prefix = "<span style='color:SpringGreen'><b>SkywarnPlus-NG Enabled</b></span><br>"
-    else:
-        prefix = f"{enabled_text}<br>"
+    # Keep provider branding consistent regardless of compact mode.
+    prefix = f"{enabled_text}<br>"
     total = prefix
     first = True
     for alert in alerts[:5]:
@@ -446,19 +444,19 @@ if __name__ == "__main__":
     #  2) Otherwise (back-compat), prefer [canwarn_ng] when present; else fall back to [skywarnplus].
     #
     # Optional [general] ALERT_PRODUCT = "CANWarn-NG"|"SkywarnPlus-NG" controls the label in the dashboard.
+    # ALERT_PRODUCT is optional and (historically) controlled the label shown on the dashboard.
+    # When ALERT_PROVIDER is explicitly set, we prefer to match the selected provider's branding.
     product_name = config.get("general", "ALERT_PRODUCT", fallback="").strip()
     provider = config.get("general", "ALERT_PROVIDER", fallback="").strip().lower()
 
     if provider in ("canwarn", "canwarn-ng", "canwarn_ng"):
         master_enable = config.get("canwarn_ng", "MASTER_ENABLE", fallback="no").strip()
         api_url = config.get("canwarn_ng", "API_URL", fallback="http://localhost:8110").strip()
-        if not product_name:
-            product_name = "CANWarn-NG"
+        product_name = "CANWarn-NG"
     elif provider in ("skywarnplus", "skywarnplus-ng", "skywarnplus_ng"):
         master_enable = config.get("skywarnplus", "MASTER_ENABLE", fallback="no").strip()
         api_url = config.get("skywarnplus", "API_URL", fallback="http://localhost:8100").strip()
-        if not product_name:
-            product_name = "SkywarnPlus-NG"
+        product_name = "SkywarnPlus-NG"
     else:
         # Backward-compatible auto-detect
         if config.has_section("canwarn_ng"):

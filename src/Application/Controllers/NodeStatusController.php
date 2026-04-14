@@ -41,7 +41,7 @@ class NodeStatusController
             ]));
 
             return $response->withHeader('Content-Type', 'application/json');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('Error getting node status config: ' . $e->getMessage());
             
             $response->getBody()->write(json_encode([
@@ -107,7 +107,7 @@ class NodeStatusController
             ]));
 
             return $response->withHeader('Content-Type', 'application/json');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('Error updating node status config: ' . $e->getMessage());
             
             $response->getBody()->write(json_encode([
@@ -137,11 +137,11 @@ class NodeStatusController
             }
 
             // Try to execute via systemd service first (preferred method)
-            $systemdOutput = shell_exec("systemctl --no-pager status supermon-ng-node-status.service 2>/dev/null");
-            if (strpos($systemdOutput, 'supermon-ng-node-status.service') !== false) {
+            $systemdOutput = (string) shell_exec("/usr/bin/sudo -n /bin/systemctl --no-pager status supermon-ng-node-status.service 2>&1");
+            if ($systemdOutput !== '' && strpos($systemdOutput, 'supermon-ng-node-status.service') !== false) {
                 // Service exists, trigger it via systemctl
                 $command = "/usr/bin/sudo -n /bin/systemctl start supermon-ng-node-status.service 2>&1";
-                $output = shell_exec($command);
+                $output = (string) shell_exec($command);
                 
                 // Wait a moment for service to complete
                 sleep(2);
@@ -149,21 +149,21 @@ class NodeStatusController
                 // Get the actual script output from log file
                 $logFile = __DIR__ . '/../../../logs/node-status-update.log';
                 if (file_exists($logFile)) {
-                    $logContent = shell_exec("tail -20 " . escapeshellarg($logFile) . " 2>/dev/null");
+                    $logContent = (string) shell_exec("tail -20 " . escapeshellarg($logFile) . " 2>/dev/null");
                     if ($logContent) {
                         $output = "Node Status Update Results:\n" . trim($logContent);
                     }
                 }
                 
                 // Also get systemd service status
-                $serviceStatus = shell_exec("/usr/bin/sudo -n /bin/systemctl is-active supermon-ng-node-status.service 2>/dev/null");
-                if ($serviceStatus) {
+                $serviceStatus = (string) shell_exec("/usr/bin/sudo -n /bin/systemctl is-active supermon-ng-node-status.service 2>/dev/null");
+                if ($serviceStatus !== '') {
                     $output .= "\n\nService Status: " . trim($serviceStatus);
                 }
             } else {
                 // Fallback to direct script execution
                 $command = "/usr/bin/sudo -n " . escapeshellarg($scriptPath) . " 2>&1";
-                $output = shell_exec($command);
+                $output = (string) shell_exec($command);
             }
             
             $this->logger->info('Node status update triggered', ['output' => $output]);
@@ -175,7 +175,7 @@ class NodeStatusController
             ]));
 
             return $response->withHeader('Content-Type', 'application/json');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('Error triggering node status update: ' . $e->getMessage());
             
             $response->getBody()->write(json_encode([
@@ -194,8 +194,8 @@ class NodeStatusController
     {
         try {
             // Check if systemd service exists and is running
-            $serviceStatus = shell_exec('systemctl is-active supermon-ng-node-status 2>/dev/null');
-            $serviceEnabled = shell_exec('systemctl is-enabled supermon-ng-node-status 2>/dev/null');
+            $serviceStatus = (string) shell_exec('/usr/bin/sudo -n /bin/systemctl is-active supermon-ng-node-status.service 2>/dev/null');
+            $serviceEnabled = (string) shell_exec('/usr/bin/sudo -n /bin/systemctl is-enabled supermon-ng-node-status.service 2>/dev/null');
             
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -205,7 +205,7 @@ class NodeStatusController
             ]));
 
             return $response->withHeader('Content-Type', 'application/json');
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->logger->error('Error getting service status: ' . $e->getMessage());
             
             $response->getBody()->write(json_encode([
