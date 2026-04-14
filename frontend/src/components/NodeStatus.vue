@@ -92,26 +92,48 @@
 
             <!-- SkywarnPlus Configuration -->
             <div class="form-group">
-              <label class="checkbox-label">
-                <input 
-                  type="checkbox" 
-                  v-model="config.skywarnplus_enabled"
-                >
-                Enable SkywarnPlus Weather Alerts
-              </label>
+              <label for="alert_provider">Weather Alerts Provider:</label>
+              <select id="alert_provider" v-model="config.alert_provider" class="form-control">
+                <option value="skywarnplus">SkywarnPlus-NG</option>
+                <option value="canwarn_ng">CANWarn-NG</option>
+              </select>
             </div>
 
-            <div v-if="config.skywarnplus_enabled" class="skywarnplus-config">
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" v-model="config.alerts_enabled">
+                Enable Weather Alerts
+              </label>
+              <small class="form-text">
+                Select a provider above. CANWarn-NG is typically installed locally (e.g. in <code>../CANWarn</code>) and may be served via HTTP on port 8110.
+              </small>
+            </div>
+
+            <div v-if="config.alerts_enabled && config.alert_provider === 'skywarnplus'" class="skywarnplus-config">
               <div class="form-group">
                 <label for="api_url">API URL:</label>
                 <input 
                   type="url" 
                   id="api_url" 
-                  v-model="config.api_url" 
+                  v-model="config.skywarnplus_api_url" 
                   placeholder="http://10.0.0.5:8100"
                   class="form-control"
                 >
                 <small class="form-text">SkywarnPlus-NG API endpoint URL</small>
+              </div>
+            </div>
+
+            <div v-if="config.alerts_enabled && config.alert_provider === 'canwarn_ng'" class="skywarnplus-config">
+              <div class="form-group">
+                <label for="canwarn_api_url">API URL:</label>
+                <input
+                  type="url"
+                  id="canwarn_api_url"
+                  v-model="config.canwarn_api_url"
+                  placeholder="http://127.0.0.1:8110"
+                  class="form-control"
+                >
+                <small class="form-text">CANWarn-NG API endpoint URL</small>
               </div>
             </div>
 
@@ -160,8 +182,10 @@ export default {
       wx_code: '',
       wx_location: '',
       temp_unit: 'F',
-      skywarnplus_enabled: false,
-      api_url: ''
+      alert_provider: 'skywarnplus',
+      alerts_enabled: false,
+      skywarnplus_api_url: '',
+      canwarn_api_url: ''
     })
     
     const nodeNumbers = ref('')
@@ -177,13 +201,19 @@ export default {
         const response = await api.get('/node-status/config')
         if (response.data.success && response.data.config) {
           const cfg = response.data.config
+          const provider = (cfg.general?.ALERT_PROVIDER || '').toString().toLowerCase()
+          const alertProvider = provider === 'canwarn_ng' ? 'canwarn_ng' : 'skywarnplus'
+          const canwarnEnabled = cfg.canwarn_ng?.MASTER_ENABLE === 'yes'
+          const skyEnabled = cfg.skywarnplus?.MASTER_ENABLE === 'yes'
           config.value = {
             nodes: cfg.general?.NODE?.split(' ') || [],
             wx_code: cfg.general?.WX_CODE || '',
             wx_location: cfg.general?.WX_LOCATION || '',
             temp_unit: cfg.general?.TEMP_UNIT || 'F',
-            skywarnplus_enabled: cfg.skywarnplus?.MASTER_ENABLE === 'yes',
-            api_url: cfg.skywarnplus?.API_URL || ''
+            alert_provider: alertProvider,
+            alerts_enabled: canwarnEnabled || skyEnabled,
+            skywarnplus_api_url: cfg.skywarnplus?.API_URL || '',
+            canwarn_api_url: cfg.canwarn_ng?.API_URL || ''
           }
           nodeNumbers.value = config.value.nodes.join(' ')
         }
@@ -210,6 +240,8 @@ export default {
       try {
         const configData = {
           ...config.value,
+          skywarnplus_enabled: config.value.alerts_enabled && config.value.alert_provider === 'skywarnplus',
+          canwarn_enabled: config.value.alerts_enabled && config.value.alert_provider === 'canwarn_ng',
           nodes: nodeNumbers.value.split(' ').filter(n => n.trim())
         }
         
@@ -240,7 +272,9 @@ export default {
         }
       } catch (error) {
         console.error('Error triggering update:', error)
-        updateOutput.value = 'Error triggering update'
+        // Show backend-provided message when available (CSRF, sudo, etc.)
+        const maybeMsg = error?.response?.data?.message || error?.response?.data?.error
+        updateOutput.value = maybeMsg ? ('Error: ' + maybeMsg) : 'Error triggering update'
       } finally {
         updating.value = false
       }

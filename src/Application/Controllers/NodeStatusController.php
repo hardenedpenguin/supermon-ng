@@ -74,10 +74,25 @@ class NodeStatusController
             $iniContent .= "WX_CODE = " . ($data['wx_code'] ?? '') . "\n";
             $iniContent .= "WX_LOCATION = " . ($data['wx_location'] ?? '') . "\n";
             $iniContent .= "TEMP_UNIT = " . ($data['temp_unit'] ?? 'F') . "\n\n";
+
+            // Weather alerts provider selection (SkywarnPlus-NG or CANWarn-NG)
+            $provider = strtolower((string)($data['alert_provider'] ?? 'skywarnplus'));
+            if (!in_array($provider, ['skywarnplus', 'canwarn_ng'], true)) {
+                $provider = 'skywarnplus';
+            }
+            $iniContent .= "ALERT_PROVIDER = " . $provider . "\n";
+            if (!empty($data['alert_product'])) {
+                $iniContent .= "ALERT_PRODUCT = " . (string)$data['alert_product'] . "\n";
+            }
+            $iniContent .= "\n";
             
             $iniContent .= "[skywarnplus]\n";
             $iniContent .= "MASTER_ENABLE = " . ($data['skywarnplus_enabled'] ? 'yes' : 'no') . "\n";
-            $iniContent .= "API_URL = " . ($data['api_url'] ?? '') . "\n";
+            $iniContent .= "API_URL = " . ($data['skywarnplus_api_url'] ?? ($data['api_url'] ?? '')) . "\n\n";
+
+            $iniContent .= "[canwarn_ng]\n";
+            $iniContent .= "MASTER_ENABLE = " . (!empty($data['canwarn_enabled']) ? 'yes' : 'no') . "\n";
+            $iniContent .= "API_URL = " . ($data['canwarn_api_url'] ?? '') . "\n";
 
             // Write configuration file
             if (file_put_contents($configFile, $iniContent) === false) {

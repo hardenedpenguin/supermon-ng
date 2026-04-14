@@ -186,9 +186,9 @@ def _format_alert_html(enabled_text, has_alerts, alerts, no_alerts_text="<span s
     return f'"{total}"'
 
 
-def get_skywarnplus_alerts(api_url, master_enable, nodes=None):
+def get_alerts_from_api(api_url, master_enable, nodes=None, product_name="SkywarnPlus-NG"):
     """
-    Get alerts from SkywarnPlus-NG API.
+    Get alerts from SkywarnPlus-NG- or CANWarn-NG-style API.
 
     Uses per-node alerts (alerts_by_node) when the API provides them and nodes
     are configured, so each Supermon node shows alerts only for its counties.
@@ -208,7 +208,14 @@ def get_skywarnplus_alerts(api_url, master_enable, nodes=None):
         Dict mapping node -> formatted HTML string (including quoted wrapper).
         Fallback key "" used for nodes not in alerts_by_node when using global fallback.
     """
-    github_link = '<a href=\'https://github.com/hardenedpenguin/SkywarnPlus-NG\' style=\'color: inherit; text-decoration: none;\'>SkywarnPlus-NG</a>'
+    product = (product_name or "SkywarnPlus-NG").strip()
+    if product.lower() in ("canwarn-ng", "canwarn_ng", "canwarn"):
+        github_link = '<a href=\'https://github.com/hardenedpenguin/CANWarn\' style=\'color: inherit; text-decoration: none;\'>CANWarn-NG</a>'
+        enabled_label = "CANWarn-NG Enabled"
+    else:
+        github_link = '<a href=\'https://github.com/hardenedpenguin/SkywarnPlus-NG\' style=\'color: inherit; text-decoration: none;\'>SkywarnPlus-NG</a>'
+        enabled_label = "SkywarnPlus-NG Enabled"
+
     enabled_text = f'<span style=\'color: SpringGreen;\'><b><u>{github_link} Enabled</u></b></span>'
     disabled_text = f'<span style=\'color: darkorange;\'><b><u>{github_link} Disabled</u></b></span>'
     no_alerts_text = '<span style=\'color: #FF0000;\'>No Alerts</span>'
@@ -236,7 +243,7 @@ def get_skywarnplus_alerts(api_url, master_enable, nodes=None):
     if node_list:
         nodes_param = ",".join(str(n).strip() for n in node_list)
         status_url = f"{status_url}?nodes={nodes_param}"
-    print(f"[SkywarnPlus] GET {status_url}")
+    print(f"[{product}] GET {status_url}")
 
     try:
         from urllib.parse import urlparse
@@ -253,7 +260,7 @@ def get_skywarnplus_alerts(api_url, master_enable, nodes=None):
                     err_detail = parsed["error"]
             except Exception:
                 pass
-            msg = f"SkywarnPlus-NG API error: {status_url}"
+            msg = f"{product} API error: {status_url}"
             if err_detail:
                 msg += f" | {err_detail}"
             _log_skywarn_api_error(msg, status_code=response.status_code, body_snippet=body_snippet or err_detail)
@@ -273,7 +280,7 @@ def get_skywarnplus_alerts(api_url, master_enable, nodes=None):
             return {n: one for n in node_list} if node_list else {"": one}
 
         if not isinstance(data, dict):
-            _log_skywarn_api_error("SkywarnPlus-NG API returned non-dict response", body_snippet=str(type(data)))
+            _log_skywarn_api_error(f"{product} API returned non-dict response", body_snippet=str(type(data)))
             _debug_log("API non-dict response | returning API Error for all")
             one = f'"{enabled_text}<br>{error_text}"'
             return {n: one for n in node_list} if node_list else {"": one}
@@ -284,7 +291,7 @@ def get_skywarnplus_alerts(api_url, master_enable, nodes=None):
         if not isinstance(alerts, list):
             alerts = []
         abn_keys = list(alerts_by_node.keys()) if isinstance(alerts_by_node, dict) else []
-        print(f"[SkywarnPlus] API OK 200 | has_alerts={has_alerts} | alerts_by_node keys={abn_keys}")
+        print(f"[{product}] API OK 200 | has_alerts={has_alerts} | alerts_by_node keys={abn_keys}")
 
         _debug_log(f"API request={status_url} | has_alerts={has_alerts} | alerts_by_node keys={abn_keys} | alerts count={len(alerts)}")
 
@@ -322,7 +329,7 @@ def get_skywarnplus_alerts(api_url, master_enable, nodes=None):
     except requests.exceptions.Timeout:
         import traceback
         _log_skywarn_api_error(
-            f"SkywarnPlus-NG API timeout: {status_url}",
+            f"{product} API timeout: {status_url}",
             body_snippet=traceback.format_exc()
         )
         _debug_log(f"API TIMEOUT request={status_url} | returning API Timeout for all nodes")
@@ -331,7 +338,7 @@ def get_skywarnplus_alerts(api_url, master_enable, nodes=None):
     except requests.exceptions.ConnectionError as e:
         import traceback
         _log_skywarn_api_error(
-            f"SkywarnPlus-NG API offline / connection refused: {status_url} | {e!r}",
+            f"{product} API offline / connection refused: {status_url} | {e!r}",
             body_snippet=traceback.format_exc()
         )
         _debug_log(f"API CONNECTION ERROR request={status_url} | {e!r} | returning API Offline for all nodes")
@@ -340,7 +347,7 @@ def get_skywarnplus_alerts(api_url, master_enable, nodes=None):
     except Exception as e:
         import traceback
         _log_skywarn_api_error(
-            f"SkywarnPlus-NG unexpected error: {e!r}",
+            f"{product} unexpected error: {e!r}",
             body_snippet=traceback.format_exc()
         )
         _debug_log(f"API ERROR request={status_url} | {e!r} | returning API Error for all nodes")
@@ -430,9 +437,42 @@ if __name__ == "__main__":
     wx_location = config.get("general", "WX_LOCATION", fallback="")
     temp_unit = config.get("general", "TEMP_UNIT", fallback="F")
 
-    master_enable = config.get("skywarnplus", "MASTER_ENABLE", fallback="no").strip()
-    api_url = config.get("skywarnplus", "API_URL", fallback="http://localhost:8100").strip()
-    print(f"[NodeStatus] API_URL={api_url!r} MASTER_ENABLE={master_enable!r} NODES={nodes}")
+    # API source selection:
+    # - SkywarnPlus-NG: [skywarnplus] MASTER_ENABLE / API_URL
+    # - CANWarn-NG:     [canwarn_ng] MASTER_ENABLE / API_URL
+    #
+    # Selection precedence:
+    #  1) If [general] ALERT_PROVIDER is set, use that provider.
+    #  2) Otherwise (back-compat), prefer [canwarn_ng] when present; else fall back to [skywarnplus].
+    #
+    # Optional [general] ALERT_PRODUCT = "CANWarn-NG"|"SkywarnPlus-NG" controls the label in the dashboard.
+    product_name = config.get("general", "ALERT_PRODUCT", fallback="").strip()
+    provider = config.get("general", "ALERT_PROVIDER", fallback="").strip().lower()
+
+    if provider in ("canwarn", "canwarn-ng", "canwarn_ng"):
+        master_enable = config.get("canwarn_ng", "MASTER_ENABLE", fallback="no").strip()
+        api_url = config.get("canwarn_ng", "API_URL", fallback="http://localhost:8110").strip()
+        if not product_name:
+            product_name = "CANWarn-NG"
+    elif provider in ("skywarnplus", "skywarnplus-ng", "skywarnplus_ng"):
+        master_enable = config.get("skywarnplus", "MASTER_ENABLE", fallback="no").strip()
+        api_url = config.get("skywarnplus", "API_URL", fallback="http://localhost:8100").strip()
+        if not product_name:
+            product_name = "SkywarnPlus-NG"
+    else:
+        # Backward-compatible auto-detect
+        if config.has_section("canwarn_ng"):
+            master_enable = config.get("canwarn_ng", "MASTER_ENABLE", fallback="no").strip()
+            api_url = config.get("canwarn_ng", "API_URL", fallback="http://localhost:8110").strip()
+            if not product_name:
+                product_name = "CANWarn-NG"
+        else:
+            master_enable = config.get("skywarnplus", "MASTER_ENABLE", fallback="no").strip()
+            api_url = config.get("skywarnplus", "API_URL", fallback="http://localhost:8100").strip()
+            if not product_name:
+                product_name = "SkywarnPlus-NG"
+
+    print(f"[NodeStatus] ALERT_PRODUCT={product_name!r} API_URL={api_url!r} MASTER_ENABLE={master_enable!r} NODES={nodes}")
 
     cpu_up = get_uptime()
     cpu_load = get_cpu_load()
@@ -462,7 +502,7 @@ if __name__ == "__main__":
         exit(0)
 
     print(f"[NodeStatus] Updating {len(node_list)} node(s): {', '.join(node_list)}")
-    alerts_map = get_skywarnplus_alerts(api_url, master_enable, nodes=node_list)
+    alerts_map = get_alerts_from_api(api_url, master_enable, nodes=node_list, product_name=product_name)
     default_alert = alerts_map.get(node_list[0], "") if node_list else ""
 
     def _snippet(s: str, n: int = 72) -> str:

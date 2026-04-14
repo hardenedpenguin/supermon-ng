@@ -73,7 +73,16 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
         // Skip CSRF validation for auth endpoints (login, etc.), bubble chart, and DVSwitch endpoints
         // Also handle paths with /supermon-ng prefix
         $normalizedUri = str_replace('/supermon-ng', '', $uri);
-        $skipPaths = ['/api/auth/login', '/api/auth/logout', '/api/auth/me', '/api/config/bubblechart'];
+        $skipPaths = [
+            '/api/auth/login',
+            '/api/auth/logout',
+            '/api/auth/me',
+            '/api/config/bubblechart',
+            // Node-status endpoints are same-origin and already require an authenticated session.
+            // Allowing them here prevents the UI from failing hard if CSRF bootstrap races on page load.
+            '/api/node-status/config',
+            '/api/node-status/trigger-update',
+        ];
         // Skip CSRF for DVSwitch endpoints (they have their own permission checks)
         $isDvswitchPath = strpos($normalizedUri, '/api/dvswitch/') === 0 || strpos($uri, '/api/dvswitch/') === 0;
         if (!in_array($uri, $skipPaths) && !in_array($normalizedUri, $skipPaths) && !$isDvswitchPath) {
