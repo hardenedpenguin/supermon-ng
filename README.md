@@ -110,6 +110,8 @@ Edit `/var/www/html/supermon-ng/user_files/allmon.ini` to add your AllStar nodes
 **DVSwitch Mode Switcher:**
 - Copy `/var/www/html/supermon-ng/user_files/dvswitch_config.yml.example` to `dvswitch_config.yml`
 - Configure talkgroups for each mode (DMR, YSF, P25, D-STAR, NXDN)
+- **BM / TGIF credentials** belong in a top-level `credentials:` map (server file only). Each talkgroup row uses `profile:` plus `tg:` (the suffix after `!`). The API and browser only see aliases and opaque `smngtg1:` tune tokens, not passwords.
+- Optional **`network:`** on each row (e.g. `BrandMeister`, `TGIF`): when a mode lists more than one network name, the UI adds a **DMR network** (or **Network**) dropdown so operators pick BM vs TGIF before choosing the talkgroup.
 - For multi-node setups, configure `abinfo_file` or `abinfo_port` in `allmon.ini`:
   ```ini
   [1998]

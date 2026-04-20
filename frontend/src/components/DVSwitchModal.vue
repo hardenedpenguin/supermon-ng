@@ -19,6 +19,67 @@
         
         <!-- Node and Mode Selection -->
         <div v-if="!loading && !error" class="dvswitch-section">
+          <div v-if="presets.length" class="dvswitch-presets">
+            <div class="dvswitch-presets-header">
+              <span class="dvswitch-presets-title">Quick presets</span>
+              <button
+                type="button"
+                class="preset-save-button"
+                :disabled="!canSavePreset || switching"
+                title="Save current node, mode, and talkgroup as a preset"
+                @click="saveCurrentAsPreset"
+              >
+                Save preset
+              </button>
+            </div>
+            <div class="dvswitch-presets-chips">
+              <div
+                v-for="p in presets"
+                :key="p.id"
+                class="preset-chip-wrap"
+              >
+                <button
+                  type="button"
+                  class="preset-chip"
+                  :disabled="switching"
+                  :title="presetTooltip(p)"
+                  @click="applyPreset(p)"
+                >
+                  {{ p.name }}
+                </button>
+                <button
+                  type="button"
+                  class="preset-go"
+                  :disabled="switching"
+                  title="Load this preset and apply it to the node now"
+                  @click.stop="runPreset(p)"
+                >
+                  Go
+                </button>
+                <button
+                  type="button"
+                  class="preset-remove"
+                  :disabled="switching"
+                  aria-label="Remove preset"
+                  @click.stop="removePreset(p.id)"
+                >
+                  &times;
+                </button>
+              </div>
+            </div>
+          </div>
+          <p v-else class="dvswitch-presets-hint">
+            Choose a node and mode, then use Save preset for one-click shortcuts.
+            <button
+              type="button"
+              class="linklike"
+              :disabled="!canSavePreset || switching"
+              @click="saveCurrentAsPreset"
+            >
+              Save preset
+            </button>
+          </p>
+
           <!-- Node Selection -->
           <div class="dvswitch-input-section">
             <label for="dvswitch-node">Node:</label>
@@ -50,6 +111,25 @@
               </option>
             </select>
           </div>
+
+          <!-- DMR / multi-network: choose BrandMeister vs TGIF (from YAML `network` on each row) -->
+          <div v-if="selectedMode && networkFilterChoices.length >= 2" class="dvswitch-input-section">
+            <label for="dvswitch-network">{{ networkFilterLabel }}:</label>
+            <select
+              id="dvswitch-network"
+              v-model="selectedNetwork"
+              @change="onNetworkFilterChange"
+              :disabled="switching || loadingModes"
+            >
+              <option
+                v-for="opt in networkFilterChoices"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </option>
+            </select>
+          </div>
           
           <!-- Talkgroup Selection -->
           <div v-if="selectedMode" class="dvswitch-input-section">
@@ -61,8 +141,8 @@
               :disabled="switching"
             >
               <option value="">Select a talkgroup</option>
-              <option v-for="tg in talkgroups" :key="tg.tgid" :value="tg.tgid">
-                {{ tg.alias }} ({{ tg.tgid }})
+              <option v-for="tg in filteredTalkgroups" :key="tg.tgid" :value="tg.tgid">
+                {{ tg.alias }}<template v-if="(tg.network || '').trim()"> ({{ tg.network }})</template>
               </option>
               <option value="__CUSTOM__">Custom TG</option>
             </select>
@@ -80,31 +160,35 @@
             </div>
             
             <!-- TGIF Network Note -->
-            <div v-if="effectiveTalkgroup && effectiveTalkgroup.includes('tgif.network')" class="tgif-note">
-              <small>ℹ️ Note: TGIF Network requires a key-up (transmission) after switching talkgroups for the change to take effect on the network.</small>
+            <div v-if="selectedMode === 'DMR' && effectiveTalkgroup" class="tgif-note">
+              <small>ℹ️ Note: On some DMR networks (including TGIF), you may need a key-up (transmission) after tuning for the change to take effect on the network.</small>
             </div>
           </div>
           
           <!-- Action Buttons -->
           <div class="dvswitch-buttons">
-            <button 
-              @click="switchMode" 
+            <button
+              type="button"
+              @click="applySelection"
               :disabled="!selectedNode || !selectedMode || switching"
-              class="action-button"
+              class="action-button action-button-primary"
+              :title="applyButtonTitle"
             >
-              {{ switching ? 'Switching...' : 'Switch Mode' }}
+              {{ switching ? 'Applying…' : applyButtonLabel }}
             </button>
             
             <button 
               v-if="selectedNode && selectedMode && effectiveTalkgroup"
+              type="button"
               @click="switchTalkgroup" 
               :disabled="!effectiveTalkgroup || switching"
               class="action-button"
+              title="Tune only (no mode change). Use when you are already in this mode."
             >
-              {{ switching ? 'Switching...' : 'Switch Talkgroup' }}
+              {{ switching ? 'Switching…' : 'Tune only' }}
             </button>
             
-            <button @click="closeModal" class="cancel-button">Cancel</button>
+            <button type="button" @click="closeModal" class="cancel-button">Cancel</button>
           </div>
           
           <!-- Success Message -->
@@ -121,6 +205,9 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { api } from '@/utils/api'
 
+const STORAGE_PRESETS = 'supermon_dvswitch_presets_v1'
+const STORAGE_LAST = 'supermon_dvswitch_last_v1'
+
 interface Mode {
   name: string
   talkgroups: Talkgroup[]
@@ -129,12 +216,28 @@ interface Mode {
 interface Talkgroup {
   tgid: string
   alias: string
+  /** Optional label (e.g. BrandMeister, TGIF) for filtering when a mode lists multiple networks. */
+  network?: string
 }
 
 interface DvswitchNode {
   id: string
   host?: string
   system?: string
+}
+
+interface DvswitchPreset {
+  id: string
+  name: string
+  nodeId: string
+  mode: string
+  talkgroup: string
+  /** Set when presets were saved with a DMR/network filter active */
+  network?: string
+}
+
+interface LastByNode {
+  [nodeId: string]: { mode: string; talkgroup: string; network?: string }
 }
 
 const props = defineProps<{
@@ -153,11 +256,62 @@ const selectedNode = ref('')
 const selectedMode = ref('')
 const selectedTalkgroup = ref('')
 const customTalkgroup = ref('')
+/** When YAML supplies multiple `network` labels for one mode, user picks BM vs TGIF (etc.) before the TG list. */
+const selectedNetwork = ref('')
 const loading = ref(false)
 const loadingModes = ref(false)
 const switching = ref(false)
 const error = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
+const presets = ref<DvswitchPreset[]>([])
+/** When true, the next modes load skips restoring last-used mode/TG (e.g. when applying a preset). */
+const suppressRestoreOnce = ref(false)
+
+function loadPresetsFromStorage(): DvswitchPreset[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_PRESETS)
+    if (!raw) return []
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter(
+        (p): p is DvswitchPreset =>
+          typeof p === 'object' &&
+          p !== null &&
+          typeof (p as DvswitchPreset).id === 'string' &&
+          typeof (p as DvswitchPreset).name === 'string' &&
+          typeof (p as DvswitchPreset).nodeId === 'string' &&
+          typeof (p as DvswitchPreset).mode === 'string' &&
+          typeof (p as DvswitchPreset).talkgroup === 'string'
+      )
+      .map((p) => ({
+        ...p,
+        talkgroup: p.talkgroup ?? '',
+        network: typeof (p as DvswitchPreset).network === 'string' ? (p as DvswitchPreset).network : undefined,
+      }))
+  } catch {
+    return []
+  }
+}
+
+function persistPresets() {
+  try {
+    localStorage.setItem(STORAGE_PRESETS, JSON.stringify(presets.value))
+  } catch {
+    /* ignore quota */
+  }
+}
+
+function loadLastByNode(): LastByNode {
+  try {
+    const raw = localStorage.getItem(STORAGE_LAST)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw) as unknown
+    return typeof parsed === 'object' && parsed !== null ? (parsed as LastByNode) : {}
+  } catch {
+    return {}
+  }
+}
 
 // Computed property to get the effective talkgroup (either from dropdown or custom input)
 const effectiveTalkgroup = computed(() => {
@@ -167,6 +321,97 @@ const effectiveTalkgroup = computed(() => {
   return selectedTalkgroup.value
 })
 
+type NetworkChoice = { value: string; label: string }
+
+const networkFilterChoices = computed((): NetworkChoice[] => {
+  const list = talkgroups.value
+  const distinct = [
+    ...new Set(list.map((t) => (t.network || '').trim()).filter(Boolean)),
+  ].sort((a, b) => a.localeCompare(b))
+  const hasUnlabeled = list.some((t) => !(t.network || '').trim())
+  const choices: NetworkChoice[] = distinct.map((d) => ({ value: d, label: d }))
+  if (hasUnlabeled && distinct.length > 0) {
+    choices.push({ value: '__other__', label: 'Other' })
+  }
+  return choices.length >= 2 ? choices : []
+})
+
+const filteredTalkgroups = computed(() => {
+  if (networkFilterChoices.value.length < 2) {
+    return talkgroups.value
+  }
+  if (selectedNetwork.value === '__other__') {
+    return talkgroups.value.filter((t) => !(t.network || '').trim())
+  }
+  if (selectedNetwork.value === '') {
+    return talkgroups.value
+  }
+  return talkgroups.value.filter((t) => (t.network || '').trim() === selectedNetwork.value)
+})
+
+const networkFilterLabel = computed(() =>
+  selectedMode.value === 'DMR' ? 'DMR network' : 'Network',
+)
+
+function syncNetworkDefault(preferred?: string) {
+  const choices = networkFilterChoices.value
+  if (choices.length < 2) {
+    selectedNetwork.value = ''
+    return
+  }
+  const p = (preferred || '').trim()
+  if (p && choices.some((c) => c.value === p)) {
+    selectedNetwork.value = p
+    return
+  }
+  selectedNetwork.value = choices[0]?.value ?? ''
+}
+
+function persistLastForNode(nodeId: string, mode: string, talkgroup: string) {
+  if (!nodeId || !mode) return
+  try {
+    const map = loadLastByNode()
+    const entry: { mode: string; talkgroup: string; network?: string } = {
+      mode,
+      talkgroup: talkgroup.trim(),
+    }
+    if (networkFilterChoices.value.length >= 2 && selectedNetwork.value !== '') {
+      entry.network = selectedNetwork.value
+    }
+    map[nodeId] = entry
+    localStorage.setItem(STORAGE_LAST, JSON.stringify(map))
+  } catch {
+    /* ignore */
+  }
+}
+
+const canSavePreset = computed(
+  () => !!(selectedNode.value && selectedMode.value)
+)
+
+const applyButtonLabel = computed(() => {
+  if (effectiveTalkgroup.value) return 'Apply mode & talkgroup'
+  return 'Apply mode'
+})
+
+const applyButtonTitle = computed(() => {
+  if (effectiveTalkgroup.value) {
+    return 'Switch mode then tune in one step (single request to the server)'
+  }
+  return 'Switch to the selected mode'
+})
+
+function presetTooltip(p: DvswitchPreset): string {
+  const net = p.network ? ` [${p.network}]` : ''
+  const tg = p.talkgroup ? ` — ${p.talkgroup}` : ''
+  return `Node ${p.nodeId}, ${p.mode}${net}${tg}`
+}
+
+function onNetworkFilterChange() {
+  selectedTalkgroup.value = ''
+  customTalkgroup.value = ''
+}
+
 const closeModal = () => {
   emit('update:isVisible', false)
   // Reset state when closing
@@ -175,17 +420,131 @@ const closeModal = () => {
     selectedMode.value = ''
     selectedTalkgroup.value = ''
     customTalkgroup.value = ''
+    selectedNetwork.value = ''
     modes.value = []
     talkgroups.value = []
     error.value = null
     successMessage.value = null
+    suppressRestoreOnce.value = false
   }, 300)
+}
+
+async function fetchTalkgroupsForSelectedMode(preferredNetwork?: string): Promise<void> {
+  if (!selectedMode.value || !selectedNode.value) {
+    talkgroups.value = []
+    syncNetworkDefault()
+    return
+  }
+  loadingModes.value = true
+  error.value = null
+  try {
+    const response = await api.get(
+      `/dvswitch/node/${encodeURIComponent(selectedNode.value)}/mode/${encodeURIComponent(selectedMode.value)}/talkgroups`
+    )
+    if (response.data.success) {
+      talkgroups.value = response.data.data || []
+      syncNetworkDefault(preferredNetwork)
+    } else {
+      error.value = response.data.message || 'Failed to load talkgroups'
+    }
+  } catch (err: unknown) {
+    error.value =
+      (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+      'Error loading talkgroups'
+    console.error('Error loading talkgroups:', err)
+  } finally {
+    loadingModes.value = false
+  }
+}
+
+function setTalkgroupFromString(tg: string) {
+  const t = tg.trim()
+  if (!t) {
+    selectedTalkgroup.value = ''
+    customTalkgroup.value = ''
+    return
+  }
+  const match = talkgroups.value.find((x) => x.tgid === t)
+  if (match) {
+    selectedTalkgroup.value = match.tgid
+    customTalkgroup.value = ''
+  } else {
+    selectedTalkgroup.value = '__CUSTOM__'
+    customTalkgroup.value = t
+  }
+}
+
+async function restoreLastForCurrentNode(): Promise<void> {
+  const nodeId = selectedNode.value
+  if (!nodeId) return
+  const map = loadLastByNode()
+  const last = map[nodeId]
+  if (!last?.mode) return
+  if (!modes.value.some((m) => m.name === last.mode)) return
+  selectedMode.value = last.mode
+  await fetchTalkgroupsForSelectedMode(last.network)
+  setTalkgroupFromString(last.talkgroup || '')
+}
+
+async function applyPreset(p: DvswitchPreset) {
+  error.value = null
+  successMessage.value = null
+  const nodeOk = availableNodes.value.some((n) => n.id === p.nodeId)
+  if (!nodeOk) {
+    error.value = `Preset "${p.name}" uses node ${p.nodeId}, which is not available.`
+    return
+  }
+  suppressRestoreOnce.value = true
+  selectedNode.value = p.nodeId
+  await onNodeChange()
+  if (!modes.value.some((m) => m.name === p.mode)) {
+    error.value = `Preset "${p.name}" uses mode ${p.mode}, which is not on this node.`
+    return
+  }
+  selectedMode.value = p.mode
+  await fetchTalkgroupsForSelectedMode(p.network)
+  setTalkgroupFromString(p.talkgroup || '')
+}
+
+function saveCurrentAsPreset() {
+  if (!canSavePreset.value) return
+  const name = window.prompt('Preset name (shown on the button)', selectedMode.value)
+  if (name === null || name.trim() === '') return
+  const id =
+    typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `p-${Date.now()}`
+  const preset: DvswitchPreset = {
+    id,
+    name: name.trim(),
+    nodeId: selectedNode.value,
+    mode: selectedMode.value,
+    talkgroup: effectiveTalkgroup.value,
+  }
+  if (networkFilterChoices.value.length >= 2 && selectedNetwork.value) {
+    preset.network = selectedNetwork.value
+  }
+  presets.value = [...presets.value, preset]
+  persistPresets()
+  successMessage.value = `Saved preset "${name.trim()}"`
+}
+
+function removePreset(id: string) {
+  presets.value = presets.value.filter((p) => p.id !== id)
+  persistPresets()
+}
+
+async function runPreset(p: DvswitchPreset) {
+  await applyPreset(p)
+  if (error.value) return
+  await applySelection()
 }
 
 const loadNodes = async () => {
   loading.value = true
   error.value = null
-  
+  presets.value = loadPresetsFromStorage()
+
   try {
     const response = await api.get('/dvswitch/nodes')
     if (response.data.success) {
@@ -221,6 +580,7 @@ const onNodeChange = async () => {
   selectedMode.value = ''
   selectedTalkgroup.value = ''
   customTalkgroup.value = ''
+  selectedNetwork.value = ''
   modes.value = []
   talkgroups.value = []
   
@@ -241,6 +601,12 @@ const loadModes = async () => {
     const response = await api.get(`/dvswitch/node/${encodeURIComponent(selectedNode.value)}/modes`)
     if (response.data.success) {
       modes.value = response.data.data || []
+      const skipRestore = suppressRestoreOnce.value
+      if (skipRestore) {
+        suppressRestoreOnce.value = false
+      } else {
+        await restoreLastForCurrentNode()
+      }
     } else {
       error.value = response.data.message || 'Failed to load modes'
     }
@@ -257,25 +623,15 @@ const onModeChange = async () => {
     talkgroups.value = []
     selectedTalkgroup.value = ''
     customTalkgroup.value = ''
+    selectedNetwork.value = ''
+    syncNetworkDefault()
     return
   }
-  
-  loadingModes.value = true
-  error.value = null
-  
-  try {
-    const response = await api.get(`/dvswitch/node/${encodeURIComponent(selectedNode.value)}/mode/${encodeURIComponent(selectedMode.value)}/talkgroups`)
-    if (response.data.success) {
-      talkgroups.value = response.data.data || []
-    } else {
-      error.value = response.data.message || 'Failed to load talkgroups'
-    }
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Error loading talkgroups'
-    console.error('Error loading talkgroups:', err)
-  } finally {
-    loadingModes.value = false
-  }
+
+  selectedTalkgroup.value = ''
+  customTalkgroup.value = ''
+  selectedNetwork.value = ''
+  await fetchTalkgroupsForSelectedMode()
 }
 
 const onTalkgroupChange = () => {
@@ -285,29 +641,43 @@ const onTalkgroupChange = () => {
   }
 }
 
-const switchMode = async () => {
+const applySelection = async () => {
   if (!selectedMode.value || !selectedNode.value) return
-  
+
   switching.value = true
   error.value = null
   successMessage.value = null
-  
+
   try {
-    const response = await api.post(`/dvswitch/node/${encodeURIComponent(selectedNode.value)}/mode/${encodeURIComponent(selectedMode.value)}`)
+    const payload: { node: string; talkgroup?: string } = {
+      node: selectedNode.value,
+    }
+    if (effectiveTalkgroup.value) {
+      payload.talkgroup = effectiveTalkgroup.value
+    }
+    const response = await api.post(
+      `/dvswitch/node/${encodeURIComponent(selectedNode.value)}/mode/${encodeURIComponent(selectedMode.value)}`,
+      payload
+    )
     if (response.data.success) {
-      successMessage.value = response.data.data?.message || `Switched node ${selectedNode.value} to mode: ${selectedMode.value}`
-      // Update talkgroups after mode switch
+      successMessage.value =
+        response.data.data?.message ||
+        `Applied mode ${selectedMode.value}${effectiveTalkgroup.value ? ` and talkgroup ${effectiveTalkgroup.value}` : ''} on node ${selectedNode.value}`
       if (response.data.data?.talkgroups) {
         talkgroups.value = response.data.data.talkgroups
+        syncNetworkDefault(selectedNetwork.value)
       } else {
-        await onModeChange()
+        await fetchTalkgroupsForSelectedMode(selectedNetwork.value)
       }
+      persistLastForNode(selectedNode.value, selectedMode.value, effectiveTalkgroup.value)
     } else {
-      error.value = response.data.message || 'Failed to switch mode'
+      error.value = response.data.message || 'Failed to apply'
     }
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Error switching mode'
-    console.error('Error switching mode:', err)
+  } catch (err: unknown) {
+    error.value =
+      (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+      'Error applying DVSwitch settings'
+    console.error('Error applying DVSwitch:', err)
   } finally {
     switching.value = false
   }
@@ -328,6 +698,7 @@ const switchTalkgroup = async () => {
     })
     if (response.data.success) {
       successMessage.value = response.data.data?.message || `Switched node ${selectedNode.value} to talkgroup: ${tgid}`
+      persistLastForNode(selectedNode.value, selectedMode.value, tgid)
     } else {
       error.value = response.data.message || 'Failed to switch talkgroup'
     }
@@ -345,6 +716,16 @@ watch(() => props.isVisible, (newVal) => {
     loadNodes()
   }
 })
+
+watch(
+  () => [selectedNetwork.value, filteredTalkgroups.value, selectedTalkgroup.value] as const,
+  () => {
+    if (!selectedTalkgroup.value || selectedTalkgroup.value === '__CUSTOM__') return
+    if (!filteredTalkgroups.value.some((t) => t.tgid === selectedTalkgroup.value)) {
+      selectedTalkgroup.value = ''
+    }
+  },
+)
 
 onMounted(() => {
   if (props.isVisible) {
@@ -555,6 +936,140 @@ onMounted(() => {
 .tgif-note small {
   display: block;
   line-height: 1.4;
+}
+
+.dvswitch-presets {
+  margin-bottom: 8px;
+}
+
+.dvswitch-presets-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.dvswitch-presets-title {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.preset-save-button {
+  padding: 6px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--input-bg);
+  color: var(--text-color);
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.preset-save-button:hover:not(:disabled) {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.preset-save-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dvswitch-presets-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.preset-chip-wrap {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.preset-chip {
+  padding: 6px 10px;
+  border: none;
+  background: var(--table-header-bg);
+  color: var(--text-color);
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.preset-chip:hover:not(:disabled) {
+  background: var(--primary-color);
+  color: var(--background-color);
+}
+
+.preset-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.preset-go {
+  padding: 6px 8px;
+  border: none;
+  border-left: 1px solid var(--border-color);
+  background: var(--link-color);
+  color: var(--background-color);
+  font-size: 0.8em;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.preset-go:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.preset-go:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.preset-remove {
+  padding: 0 8px;
+  border: none;
+  border-left: 1px solid var(--border-color);
+  background: var(--border-color);
+  color: var(--text-color);
+  font-size: 1.1em;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.preset-remove:hover:not(:disabled) {
+  background: var(--error-color);
+  color: var(--background-color);
+}
+
+.dvswitch-presets-hint {
+  margin: 0 0 12px;
+  font-size: 0.9em;
+  color: var(--text-color);
+  opacity: 0.9;
+}
+
+.linklike {
+  margin-left: 6px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--link-color);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.linklike:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-button-primary {
+  font-weight: 600;
 }
 </style>
 

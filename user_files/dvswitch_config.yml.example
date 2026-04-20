@@ -1,45 +1,82 @@
 # DVSwitch Mode Configuration
-# Copy this file to dvswitch_config.yml and customize for your system
+# Copy this file to dvswitch_config.yml (or dvswitch_config_{nodeId}.yml) and customize.
 #
-# Per-node configuration:
-# - Create dvswitch_config_{nodeId}.yml for node-specific settings
-# - Configure abinfo_file or abinfo_port in allmon.ini for each node
+# Security: passwords and hotspot keys must NOT appear in talkgroup rows sent to the browser.
+# Define them once under `credentials`, then reference a profile with `profile` + `tg` per row.
+# The UI only receives opaque smngtg1:… tokens plus friendly aliases.
 #
-# Format:
-# modes:
-#   - MODE_NAME:
-#       talkgroups:
-#         - tgid: "talkgroup_id"
-#           alias: "Display Name"
+# Optional `network` on each row (e.g. BrandMeister, TGIF): when a mode has two or more distinct
+# network labels, the dashboard shows a "DMR network" (or "Network") picker before the talkgroup list.
+#
+# Per-node file: dvswitch_config_{nodeId}.yml overrides the global dvswitch_config.yml for that node.
+# Configure abinfo_file or abinfo_port in allmon.ini for each node.
+#
+# --- credentials (server-side only; never returned by the API) ---
+credentials:
+  brandmeister:
+    password: "YOUR_BM_HOTSPOT_PASSWORD"
+    server: "3102.repeater.net"
+    port: 62031
+  tgif:
+    password: "YOUR_TGIF_HOTSPOT_SECURITY_KEY"
+    server: "tgif.network"
+    port: 62031
 
+# --- modes ---
 modes:
   - DMR:
       talkgroups:
-        # TGIF Network Examples (replace YOURPASSWORD with your TGIF password):
-        - tgid: "YOURPASSWORD@tgif.network:62031!0"
-          alias: TGIF Worldwide
-        - tgid: "YOURPASSWORD@tgif.network:62031!1"
-          alias: TGIF Local
-        - tgid: "YOURPASSWORD@tgif.network:62031!2"
-          alias: TGIF Regional
-        - tgid: "YOURPASSWORD@tgif.network:62031!3"
-          alias: TGIF National
-        - tgid: "YOURPASSWORD@tgif.network:62031!4000"
-          alias: TGIF Disconnect
-        # BrandMeister Network Examples (replace YOURPASSWORD with your BrandMeister hostpost password):
-        - tgid: "YOURPASSWORD@3102.repeater.net:62031!91"
+        # BrandMeister: `tg` is the number after ! in the hotspot connection string
+        - profile: brandmeister
+          tg: "91"
           alias: BM WorldWide
-        - tgid: "YOURPASSWORD@3102.repeater.net:62031!3100"
+          network: BrandMeister
+        - profile: brandmeister
+          tg: "3100"
           alias: BM USA
-        - tgid: "YOURPASSWORD@3102.repeater.net:62031!3101"
+          network: BrandMeister
+        - profile: brandmeister
+          tg: "3101"
           alias: BM California
-        - tgid: "YOURPASSWORD@3102.repeater.net:62031!3102"
+          network: BrandMeister
+        - profile: brandmeister
+          tg: "3102"
           alias: BM Texas
-        - tgid: "YOURPASSWORD@3102.repeater.net:62031!4000"
+          network: BrandMeister
+        - profile: brandmeister
+          tg: "4000"
           alias: BM Disconnect
+          network: BrandMeister
+        # TGIF
+        - profile: tgif
+          tg: "0"
+          alias: TGIF Worldwide
+          network: TGIF
+        - profile: tgif
+          tg: "1"
+          alias: TGIF Local
+          network: TGIF
+        - profile: tgif
+          tg: "2"
+          alias: TGIF Regional
+          network: TGIF
+        - profile: tgif
+          tg: "3"
+          alias: TGIF National
+          network: TGIF
+        - profile: tgif
+          tg: "4000"
+          alias: TGIF Disconnect
+          network: TGIF
+        # BM private call example (trailing #)
+        - profile: brandmeister
+          tg: "310997#"
+          alias: BM Parrot (private)
+          network: BrandMeister
 
   - YSF:
       talkgroups:
+        # YSF reflectors usually have no password; legacy `tgid` is fine (no @ in value)
         - tgid: "register.ysfreflector.de:42020"
           alias: PARROT
         - tgid: "americalink.hamfm.com:42000"
@@ -50,10 +87,6 @@ modes:
           alias: YSF Reflector DE
         - tgid: "ysfreflector.com:42020"
           alias: YSF Reflector COM
-        - tgid: "register.ysfreflector.de:42020"
-          alias: YSF Reflector Register DE
-        - tgid: "register.ysfreflector.com:42020"
-          alias: YSF Reflector Register COM
 
   - P25:
       talkgroups:
@@ -112,3 +145,6 @@ modes:
         - tgid: "31088"
           alias: ColoradoHD
 
+# Legacy (discouraged): full connection strings in `tgid` still work on the server file only.
+# Any row whose `tgid` contains "@" is never sent to the browser; an opaque token is used instead.
+# Prefer `profile` + `tg` for BM/TGIF so passwords are not stored in every talkgroup line.

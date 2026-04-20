@@ -264,9 +264,10 @@ class DvswitchController
                 return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
             }
             
-            $body = $request->getParsedBody();
+            $body = $request->getParsedBody() ?? [];
             $nodeId = $body['node'] ?? $args['nodeId'] ?? '';
             $modeName = $args['mode'] ?? '';
+            $talkgroup = trim((string) ($body['talkgroup'] ?? ''));
             
             if (empty($nodeId)) {
                 $response->getBody()->write(json_encode([
@@ -284,7 +285,9 @@ class DvswitchController
                 return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
             
-            $result = $this->dvswitchService->switchMode($nodeId, $modeName, $currentUser);
+            $result = $talkgroup !== ''
+                ? $this->dvswitchService->switchModeWithOptionalTalkgroup($nodeId, $modeName, $talkgroup, $currentUser)
+                : $this->dvswitchService->switchMode($nodeId, $modeName, $currentUser);
             
             $response->getBody()->write(json_encode([
                 'success' => true,
@@ -314,6 +317,8 @@ class DvswitchController
      */
     public function switchTalkgroup(Request $request, Response $response, array $args): Response
     {
+        $nodeIdForLog = 'unknown';
+
         $this->logger->warning("switchTalkgroup endpoint called", [
             'session_status' => session_status(),
             'session_id' => session_id() ?: 'no session',
@@ -341,8 +346,9 @@ class DvswitchController
                 return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
             }
             
-            $body = $request->getParsedBody();
+            $body = $request->getParsedBody() ?? [];
             $nodeId = $body['node'] ?? '';
+            $nodeIdForLog = $nodeId !== '' ? $nodeId : 'unknown';
             $tgid = $args['tgid'] ?? '';
             
             if (empty($nodeId)) {
@@ -375,9 +381,9 @@ class DvswitchController
             
         } catch (Exception $e) {
             $this->logger->error('Error switching DVSwitch talkgroup', [
-                'node_id' => $body['node'] ?? 'unknown',
+                'node_id' => $nodeIdForLog,
                 'tgid' => $args['tgid'] ?? 'unknown',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             
             $response->getBody()->write(json_encode([

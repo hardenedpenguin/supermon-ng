@@ -2,6 +2,7 @@
 
 namespace SupermonNg\Services;
 
+use JsonException;
 use Psr\Log\LoggerInterface;
 use Exception;
 use Symfony\Component\Yaml\Yaml as SymfonyYaml;
@@ -18,8 +19,12 @@ class DvswitchService
     private string $userFilesPath;
     private string $dvswitchPath;
     private ?string $defaultConfigPath;
+
+    /** @var array<string, list<array{name: string, entries: list<array{alias: string, public_tgid: string, internal_tune: string, network: string}>}>> */
     private array $nodeModesCache = [];
-    
+
+    private const TALKGROUP_REF_PREFIX = 'smngtg1:';
+
     public function __construct(
         LoggerInterface $logger,
         AllStarConfigService $configService,
@@ -274,101 +279,322 @@ class DvswitchService
             return false;
         }
     }
-    
+
+    private function base64UrlEncode(string $raw): string
+    {
+        return rtrim(strtr(base64_encode($raw), '+/', '-_'), '=');
+    }
+
+    private function base64UrlDecode(string $data): string
+    {
+        $b64 = strtr($data, '-_', '+/');
+        $pad = strlen($b64) % 4;
+        if ($pad > 0) {
+            $b64 .= str_repeat('=', 4 - $pad);
+        }
+        $out = base64_decode($b64, true);
+
+        return is_string($out) ? $out : '';
+    }
+
     /**
-     * Load modes from YAML config file for a specific node
+     * @param mixed $credentialsYaml
+     * @return array<string, mixed>
      */
-    private function loadModesForNode(string $nodeId, ?string $username = null): array
+    private function normalizeCredentialsSection(mixed $credentialsYaml): array
+    {
+        if (!is_array($credentialsYaml)) {
+            return [];
+        }
+        $out = [];
+        foreach ($credentialsYaml as $name => $def) {
+            if (is_string($name) && is_array($def)) {
+                $out[$name] = $def;
+            }
+        }
+
+        return $out;
+    }
+
+    private function buildTuneStringFromProfile(string $profileName, string $tgSuffix, array $credentials): string
+    {
+        if (!isset($credentials[$profileName]) || !is_array($credentials[$profileName])) {
+            throw new Exception("DVSwitch config: unknown credential profile '{$profileName}'");
+        }
+        $c = $credentials[$profileName];
+        $password = trim((string) ($c['password'] ?? ''));
+        $server = trim((string) ($c['server'] ?? $c['host'] ?? ''));
+        $port = trim((string) ($c['port'] ?? '62031'));
+        if ($password === '' || $server === '') {
+            throw new Exception("DVSwitch config: incomplete credential profile '{$profileName}' (password and server required)");
+        }
+
+        return $password . '@' . $server . ':' . $port . '!' . $tgSuffix;
+    }
+
+    private function isSensitiveTuneString(string $internal): bool
+    {
+        return str_contains($internal, '@');
+    }
+
+    /**
+     * @param array<string, mixed> $tgRow
+     * @param array<string, mixed> $credentials
+     * @return array{internal_tune: string, public_tgid: string}
+     */
+    private function materializeTalkgroupRow(
+        array $tgRow,
+        array $credentials,
+        string $nodeId,
+        string $modeName,
+        int $index,
+    ): array {
+        if (isset($tgRow['profile']) && is_string($tgRow['profile'])) {
+            $tgPart = (string) ($tgRow['tg'] ?? $tgRow['tgid'] ?? '');
+            if ($tgPart === '') {
+                throw new Exception("DVSwitch config: profile row in mode {$modeName} requires 'tg' (talkgroup suffix after !)");
+            }
+            $internal = $this->buildTuneStringFromProfile($tgRow['profile'], $tgPart, $credentials);
+
+            return [
+                'internal_tune' => $internal,
+                'public_tgid' => $this->encodeTalkgroupRef($nodeId, $modeName, $index),
+            ];
+        }
+        if (isset($tgRow['tgid'])) {
+            $internal = (string) $tgRow['tgid'];
+            if ($internal === '') {
+                return ['internal_tune' => '', 'public_tgid' => ''];
+            }
+            $public = $this->isSensitiveTuneString($internal)
+                ? $this->encodeTalkgroupRef($nodeId, $modeName, $index)
+                : $internal;
+
+            return ['internal_tune' => $internal, 'public_tgid' => $public];
+        }
+        throw new Exception("DVSwitch config: talkgroup row in mode {$modeName} must use 'profile' + 'tg' or legacy 'tgid'");
+    }
+
+    private function encodeTalkgroupRef(string $nodeId, string $modeName, int $index): string
+    {
+        try {
+            $payload = json_encode(['n' => $nodeId, 'm' => $modeName, 'i' => $index], JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            throw new Exception('Failed to encode DVSwitch talkgroup reference');
+        }
+
+        return self::TALKGROUP_REF_PREFIX . $this->base64UrlEncode($payload);
+    }
+
+    /**
+     * @return array{node: string, mode: string, i: int}|null
+     */
+    private function decodeTalkgroupRef(string $ref): ?array
+    {
+        if (!str_starts_with($ref, self::TALKGROUP_REF_PREFIX)) {
+            return null;
+        }
+        $json = $this->base64UrlDecode(substr($ref, strlen(self::TALKGROUP_REF_PREFIX)));
+        if ($json === '') {
+            return null;
+        }
+        try {
+            $data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException) {
+            return null;
+        }
+        if (!is_array($data) || !isset($data['n'], $data['m']) || !array_key_exists('i', $data)) {
+            return null;
+        }
+
+        return [
+            'node' => (string) $data['n'],
+            'mode' => (string) $data['m'],
+            'i' => (int) $data['i'],
+        ];
+    }
+
+    /**
+     * Resolve a client-supplied tune token to the internal string used with dvswitch.sh.
+     * Accepts smngtg1: opaque refs, legacy full connection strings that match the server config, or plain targets (YSF, numeric TG, etc.).
+     *
+     * @throws Exception
+     */
+    private function resolveTuneTarget(string $nodeId, ?string $username, string $clientToken): string
+    {
+        $token = trim($clientToken);
+        if ($token === '') {
+            return '';
+        }
+        $ref = $this->decodeTalkgroupRef($token);
+        if ($ref !== null) {
+            if ($ref['node'] !== $nodeId) {
+                throw new Exception('Talkgroup reference does not match this node');
+            }
+            $enriched = $this->loadEnrichedModesForNode($nodeId, $username);
+            foreach ($enriched as $mode) {
+                if ($mode['name'] !== $ref['mode']) {
+                    continue;
+                }
+                if (!isset($mode['entries'][$ref['i']])) {
+                    throw new Exception('Invalid talkgroup reference (index out of range)');
+                }
+
+                return $mode['entries'][$ref['i']]['internal_tune'];
+            }
+            throw new Exception('Invalid talkgroup reference (mode not found)');
+        }
+
+        if (str_contains($token, '@')) {
+            foreach ($this->loadEnrichedModesForNode($nodeId, $username) as $mode) {
+                foreach ($mode['entries'] as $e) {
+                    if ($e['internal_tune'] === $token) {
+                        return $token;
+                    }
+                }
+            }
+            throw new Exception('Invalid talkgroup target');
+        }
+
+        return $token;
+    }
+
+    /**
+     * @return list<array{name: string, entries: list<array{alias: string, public_tgid: string, internal_tune: string}>}>
+     */
+    private function loadEnrichedModesForNode(string $nodeId, ?string $username = null): array
     {
         $cacheKey = "{$nodeId}_{$username}";
-        
-        // Check cache first
         if (isset($this->nodeModesCache[$cacheKey])) {
             return $this->nodeModesCache[$cacheKey];
         }
-        
+
         $configPath = $this->getConfigPathForNode($nodeId, $username);
-        $modes = [];
-        
-        try {
-            if (!file_exists($configPath)) {
-                $this->logger->debug('DVSwitch config not found', [
-                    'node_id' => $nodeId,
-                    'config_path' => $configPath
-                ]);
-                $this->nodeModesCache[$cacheKey] = [];
-                return [];
-            }
-            
-            $configContent = file_get_contents($configPath);
-            $config = SymfonyYaml::parse($configContent);
-            
-            $modes = $config['modes'] ?? [];
-            
-            $this->logger->debug('DVSwitch modes loaded', [
+        if (!file_exists($configPath)) {
+            $this->logger->debug('DVSwitch config not found', [
                 'node_id' => $nodeId,
-                'modes_count' => count($modes),
-                'config_path' => $configPath
+                'config_path' => $configPath,
             ]);
-        } catch (Exception $e) {
-            $this->logger->error('Error loading DVSwitch config', [
-                'node_id' => $nodeId,
-                'error' => $e->getMessage(),
-                'config_path' => $configPath
-            ]);
-            $modes = [];
+            $this->nodeModesCache[$cacheKey] = [];
+
+            return [];
         }
-        
-        $this->nodeModesCache[$cacheKey] = $modes;
-        return $modes;
+
+        try {
+            $yaml = SymfonyYaml::parseFile($configPath);
+        } catch (Exception $e) {
+            $this->logger->error('DVSwitch YAML parse failed', [
+                'node_id' => $nodeId,
+                'config_path' => $configPath,
+                'error' => $e->getMessage(),
+            ]);
+            $this->nodeModesCache[$cacheKey] = [];
+
+            return [];
+        }
+
+        if (!is_array($yaml)) {
+            $this->nodeModesCache[$cacheKey] = [];
+
+            return [];
+        }
+
+        $credentials = $this->normalizeCredentialsSection($yaml['credentials'] ?? []);
+        $modesYaml = $yaml['modes'] ?? null;
+        if (!is_array($modesYaml)) {
+            $this->nodeModesCache[$cacheKey] = [];
+
+            return [];
+        }
+
+        $enriched = [];
+        foreach ($modesYaml as $modeBlock) {
+            if (!is_array($modeBlock) || $modeBlock === []) {
+                continue;
+            }
+            $modeName = array_key_first($modeBlock);
+            if ($modeName === null) {
+                continue;
+            }
+            $details = $modeBlock[$modeName];
+            $talkRaw = is_array($details) && isset($details['talkgroups']) && is_array($details['talkgroups'])
+                ? $details['talkgroups']
+                : [];
+            $entries = [];
+            foreach ($talkRaw as $tgRow) {
+                if (!is_array($tgRow)) {
+                    continue;
+                }
+                $mat = $this->materializeTalkgroupRow($tgRow, $credentials, $nodeId, (string) $modeName, count($entries));
+                if ($mat['internal_tune'] === '') {
+                    continue;
+                }
+                $alias = trim((string) ($tgRow['alias'] ?? ''));
+                if ($alias === '') {
+                    $alias = $mat['public_tgid'];
+                }
+                $network = trim((string) ($tgRow['network'] ?? ''));
+                $entries[] = [
+                    'alias' => $alias,
+                    'public_tgid' => $mat['public_tgid'],
+                    'internal_tune' => $mat['internal_tune'],
+                    'network' => $network,
+                ];
+            }
+            $enriched[] = ['name' => (string) $modeName, 'entries' => $entries];
+        }
+
+        $this->nodeModesCache[$cacheKey] = $enriched;
+        $this->logger->debug('DVSwitch enriched modes loaded', [
+            'node_id' => $nodeId,
+            'modes_count' => count($enriched),
+            'config_path' => $configPath,
+        ]);
+
+        return $enriched;
     }
-    
+
     /**
      * Get all available modes for a specific node
      */
     public function getModes(string $nodeId, ?string $username = null): array
     {
-        $modes = $this->loadModesForNode($nodeId, $username);
-        
         $result = [];
-        foreach ($modes as $mode) {
-            $modeName = array_key_first($mode);
-            $talkgroups = $mode[$modeName]['talkgroups'] ?? [];
-            
+        foreach ($this->loadEnrichedModesForNode($nodeId, $username) as $mode) {
             $result[] = [
-                'name' => $modeName,
-                'talkgroups' => array_map(function($tg) {
-                    return [
-                        'tgid' => $tg['tgid'] ?? '',
-                        'alias' => $tg['alias'] ?? ''
-                    ];
-                }, $talkgroups)
+                'name' => $mode['name'],
+                'talkgroups' => array_map(
+                    static fn (array $e): array => [
+                        'tgid' => $e['public_tgid'],
+                        'alias' => $e['alias'],
+                        'network' => $e['network'] ?? '',
+                    ],
+                    $mode['entries']
+                ),
             ];
         }
-        
+
         return $result;
     }
-    
+
     /**
      * Get talkgroups for a specific mode and node
      */
     public function getTalkgroupsForMode(string $nodeId, string $modeName, ?string $username = null): array
     {
-        $modes = $this->loadModesForNode($nodeId, $username);
-        
-        foreach ($modes as $mode) {
-            $name = array_key_first($mode);
-            if ($name === $modeName) {
-                $talkgroups = $mode[$name]['talkgroups'] ?? [];
-                return array_map(function($tg) {
-                    return [
-                        'tgid' => $tg['tgid'] ?? '',
-                        'alias' => $tg['alias'] ?? ''
-                    ];
-                }, $talkgroups);
+        foreach ($this->loadEnrichedModesForNode($nodeId, $username) as $mode) {
+            if ($mode['name'] === $modeName) {
+                return array_map(
+                    static fn (array $e): array => [
+                        'tgid' => $e['public_tgid'],
+                        'alias' => $e['alias'],
+                        'network' => $e['network'] ?? '',
+                    ],
+                    $mode['entries']
+                );
             }
         }
-        
+
         return [];
     }
     
@@ -462,32 +688,61 @@ class DvswitchService
             'talkgroups' => $this->getTalkgroupsForMode($nodeId, $modeName, $username)
         ];
     }
+
+    /**
+     * Switch mode, then optionally tune to a talkgroup in one logical operation (single HTTP round-trip from the client).
+     *
+     * @throws Exception if mode switch fails, or if mode switched but tune fails (message notes partial success)
+     */
+    public function switchModeWithOptionalTalkgroup(string $nodeId, string $modeName, string $talkgroup, ?string $username = null): array
+    {
+        $modeResult = $this->switchMode($nodeId, $modeName, $username);
+        $tg = trim($talkgroup);
+        if ($tg === '') {
+            return $modeResult;
+        }
+
+        try {
+            $this->switchTalkgroup($nodeId, $tg, $username);
+        } catch (Exception $e) {
+            throw new Exception(
+                "Mode was set to {$modeName}, but talkgroup tune failed: {$e->getMessage()}"
+            );
+        }
+
+        return [
+            'success' => true,
+            'node_id' => $nodeId,
+            'mode' => $modeName,
+            'tgid' => $tg,
+            'message' => "Switched node {$nodeId} to mode {$modeName} and talkgroup {$tg}",
+            'talkgroups' => $modeResult['talkgroups'] ?? $this->getTalkgroupsForMode($nodeId, $modeName, $username),
+        ];
+    }
     
     /**
      * Switch to a specific talkgroup for a node
      */
     public function switchTalkgroup(string $nodeId, string $tgid, ?string $username = null): array
     {
-        $this->logger->warning("switchTalkgroup called", [
+        $clientToken = trim($tgid);
+        $this->logger->warning('switchTalkgroup called', [
             'node_id' => $nodeId,
-            'tgid' => $tgid,
-            'username' => $username ?? 'null'
+            'tgid' => str_contains($clientToken, '@') ? '[redacted]' : $clientToken,
+            'username' => $username ?? 'null',
         ]);
-        
-        // Extract talkgroup number from connection string format if needed
-        // Format: password@server:port!talkgroup or just talkgroup number
-        // STFU's txTg command expects just the talkgroup number
-        $originalTgid = $tgid;
-        if (strpos($tgid, '!') !== false) {
-            // Extract talkgroup from format: password@server:port!talkgroup
-            $parts = explode('!', $tgid);
-            $tgid = end($parts);
-            $this->logger->info('Extracted talkgroup from connection string', [
-                'original' => $originalTgid,
-                'extracted' => $tgid
+
+        $resolved = $this->resolveTuneTarget($nodeId, $username, $clientToken);
+
+        $execArg = $resolved;
+        if (str_contains($execArg, '!')) {
+            $parts = explode('!', $execArg);
+            $execArg = (string) end($parts);
+            $this->logger->info('Extracted talkgroup suffix for dvswitch.sh tune', [
+                'extracted' => $execArg,
             ]);
         }
-        
+
         if (!file_exists($this->dvswitchPath)) {
             throw new Exception("DVSwitch script not found at: {$this->dvswitchPath} for node {$nodeId}");
         }
@@ -503,52 +758,52 @@ class DvswitchService
         $dvswitchIni = $this->getDvswitchIniForNode($nodeId, $username);
         
         // Execute dvswitch.sh tune command with ABINFO and DVSWITCH_INI parameters
-        $command = 'ABINFO=' . escapeshellarg($abinfoFile) . ' DVSWITCH_INI=' . escapeshellarg($dvswitchIni) . ' ' . escapeshellarg($this->dvswitchPath) . ' tune ' . escapeshellarg($tgid);
-        
-        $this->logger->warning("DVSwitch command being executed", [
+        $command = 'ABINFO=' . escapeshellarg($abinfoFile) . ' DVSWITCH_INI=' . escapeshellarg($dvswitchIni) . ' ' . escapeshellarg($this->dvswitchPath) . ' tune ' . escapeshellarg($execArg);
+
+        $this->logger->warning('DVSwitch command being executed', [
             'node_id' => $nodeId,
-            'tgid' => $tgid,
+            'tgid' => $execArg,
             'username' => $username ?? 'null',
             'abinfo_file' => $abinfoFile,
             'dvswitch_ini' => $dvswitchIni,
-            'command' => $command
+            'command' => $command,
         ]);
-        
+
         $output = [];
         $returnVar = 0;
-        
+
         $this->logger->debug('Executing DVSwitch tune command', [
             'node_id' => $nodeId,
-            'tgid' => $tgid,
+            'tgid' => $execArg,
             'abinfo_file' => $abinfoFile,
-            'command' => $command
+            'command' => $command,
         ]);
-        
+
         exec($command . ' 2>&1', $output, $returnVar);
-        
+
         if ($returnVar !== 0) {
             $error = implode("\n", $output);
             $this->logger->error('DVSwitch talkgroup switch failed', [
                 'node_id' => $nodeId,
-                'tgid' => $tgid,
+                'tgid' => $execArg,
                 'command' => $command,
                 'error' => $error,
-                'return_code' => $returnVar
+                'return_code' => $returnVar,
             ]);
             throw new Exception("Failed to switch talkgroup: {$error}");
         }
-        
+
         $this->logger->info('DVSwitch talkgroup switched', [
             'node_id' => $nodeId,
-            'tgid' => $tgid,
-            'output' => implode("\n", $output)
+            'tgid' => $execArg,
+            'output' => implode("\n", $output),
         ]);
-        
+
         return [
             'success' => true,
             'node_id' => $nodeId,
-            'tgid' => $tgid,
-            'message' => "Switched node {$nodeId} to talkgroup: {$tgid}"
+            'tgid' => $execArg,
+            'message' => "Switched node {$nodeId} to talkgroup: {$execArg}",
         ];
     }
     
