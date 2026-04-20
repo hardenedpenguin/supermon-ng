@@ -59,6 +59,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Frontend build output (generated)
+frontend/dist/
+
 # Local development
 .env
 .env.local
