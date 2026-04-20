@@ -109,6 +109,8 @@ def get_disk_usage():
 
 def _debug_log(msg: str) -> None:
     """Append to /tmp/node_status_debug.log for debugging API → ALERT flow."""
+    if os.environ.get("SUPERMON_NODE_STATUS_DEBUG", "").lower() not in ("1", "true", "yes", "on"):
+        return
     from datetime import datetime
     try:
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -120,6 +122,8 @@ def _debug_log(msg: str) -> None:
 
 def _debug_log_clear() -> None:
     """Truncate debug log at start of run so we only see latest."""
+    if os.environ.get("SUPERMON_NODE_STATUS_DEBUG", "").lower() not in ("1", "true", "yes", "on"):
+        return
     try:
         with open("/tmp/node_status_debug.log", "w", encoding="utf-8") as f:
             f.write("")
