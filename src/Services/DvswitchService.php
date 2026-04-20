@@ -316,20 +316,51 @@ class DvswitchService
         return $out;
     }
 
+    /**
+     * Build internal tune string from a credential profile.
+     *
+     * Default format matches the common hotspot string used in legacy configs:
+     *   "{password}@{server}:{port}!{tg}"
+     *
+     * Profiles may override this with `format` (supports placeholders: {password}, {server}, {port}, {tg}).
+     */
     private function buildTuneStringFromProfile(string $profileName, string $tgSuffix, array $credentials): string
     {
         if (!isset($credentials[$profileName]) || !is_array($credentials[$profileName])) {
             throw new Exception("DVSwitch config: unknown credential profile '{$profileName}'");
         }
         $c = $credentials[$profileName];
-        $password = trim((string) ($c['password'] ?? ''));
-        $server = trim((string) ($c['server'] ?? $c['host'] ?? ''));
-        $port = trim((string) ($c['port'] ?? '62031'));
-        if ($password === '' || $server === '') {
-            throw new Exception("DVSwitch config: incomplete credential profile '{$profileName}' (password and server required)");
+
+        $format = trim((string) ($c['format'] ?? ''));
+        if ($format === '') {
+            $format = '{password}@{server}:{port}!{tg}';
         }
 
-        return $password . '@' . $server . ':' . $port . '!' . $tgSuffix;
+        $password = (string) ($c['password'] ?? '');
+        $server = (string) ($c['server'] ?? $c['host'] ?? '');
+        $port = (string) ($c['port'] ?? '62031');
+        $tg = (string) $tgSuffix;
+
+        // Only require fields that are actually referenced by the format.
+        if (str_contains($format, '{password}') && trim($password) === '') {
+            throw new Exception("DVSwitch config: credential profile '{$profileName}' requires password");
+        }
+        if (str_contains($format, '{server}') && trim($server) === '') {
+            throw new Exception("DVSwitch config: credential profile '{$profileName}' requires server");
+        }
+        if (str_contains($format, '{port}') && trim($port) === '') {
+            throw new Exception("DVSwitch config: credential profile '{$profileName}' requires port");
+        }
+        if (str_contains($format, '{tg}') && trim($tg) === '') {
+            throw new Exception("DVSwitch config: credential profile '{$profileName}' requires tg");
+        }
+
+        return strtr($format, [
+            '{password}' => trim($password),
+            '{server}' => trim($server),
+            '{port}' => trim($port),
+            '{tg}' => trim($tg),
+        ]);
     }
 
     private function isSensitiveTuneString(string $internal): bool
@@ -735,7 +766,9 @@ class DvswitchService
         $resolved = $this->resolveTuneTarget($nodeId, $username, $clientToken);
 
         $execArg = $resolved;
-        if (str_contains($execArg, '!')) {
+        // Only strip to the suffix for plain TG/reflector values.
+        // For hotspot connection strings like password@host:port!tg, dvswitch.sh needs the full string.
+        if (str_contains($execArg, '!') && !str_contains($execArg, '@')) {
             $parts = explode('!', $execArg);
             $execArg = (string) end($parts);
             $this->logger->info('Extracted talkgroup suffix for dvswitch.sh tune', [

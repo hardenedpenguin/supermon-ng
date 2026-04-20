@@ -112,6 +112,7 @@ Edit `/var/www/html/supermon-ng/user_files/allmon.ini` to add your AllStar nodes
 - Configure talkgroups for each mode (DMR, YSF, P25, D-STAR, NXDN)
 - **BM / TGIF credentials** belong in a top-level `credentials:` map (server file only). Each talkgroup row uses `profile:` plus `tg:` (the suffix after `!`). The API and browser only see aliases and opaque `smngtg1:` tune tokens, not passwords.
 - Optional **`network:`** on each row (e.g. `BrandMeister`, `TGIF`): when a mode lists more than one network name, the UI adds a **DMR network** (or **Network**) dropdown so operators pick BM vs TGIF before choosing the talkgroup.
+- You can add additional credential profiles the same way (for example **STFU**) so those credentials also never appear in the browser. Profiles may optionally define `format` if the internal tune string differs from `{password}@{server}:{port}!{tg}`.
 - For multi-node setups, configure `abinfo_file` or `abinfo_port` in `allmon.ini`:
   ```ini
   [1998]

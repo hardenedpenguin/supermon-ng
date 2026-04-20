@@ -21,6 +21,13 @@ credentials:
     password: "YOUR_TGIF_HOTSPOT_SECURITY_KEY"
     server: "tgif.network"
     port: 62031
+  stfu:
+    password: "YOUR_STFU_PASSWORD_OR_KEY"
+    server: "stfu.example.net"
+    port: 62031
+    # Optional: override how the internal tune string is constructed.
+    # Supported placeholders: {password}, {server}, {port}, {tg}
+    # format: "{password}@{server}:{port}!{tg}"
 
 # --- modes ---
 modes:
@@ -73,6 +80,11 @@ modes:
           tg: "310997#"
           alias: BM Parrot (private)
           network: BrandMeister
+        # STFU (example)
+        - profile: stfu
+          tg: "91"
+          alias: STFU WorldWide
+          network: STFU
 
   - YSF:
       talkgroups:

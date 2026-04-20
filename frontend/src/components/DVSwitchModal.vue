@@ -649,6 +649,7 @@ const applySelection = async () => {
   successMessage.value = null
 
   try {
+    const timeoutMs = 15000
     const payload: { node: string; talkgroup?: string } = {
       node: selectedNode.value,
     }
@@ -657,7 +658,8 @@ const applySelection = async () => {
     }
     const response = await api.post(
       `/dvswitch/node/${encodeURIComponent(selectedNode.value)}/mode/${encodeURIComponent(selectedMode.value)}`,
-      payload
+      payload,
+      { timeout: timeoutMs }
     )
     if (response.data.success) {
       successMessage.value =
@@ -692,10 +694,11 @@ const switchTalkgroup = async () => {
   successMessage.value = null
   
   try {
+    const timeoutMs = 15000
     const encodedTgid = encodeURIComponent(tgid)
     const response = await api.post(`/dvswitch/node/${encodeURIComponent(selectedNode.value)}/tune/${encodedTgid}`, {
       node: selectedNode.value
-    })
+    }, { timeout: timeoutMs })
     if (response.data.success) {
       successMessage.value = response.data.data?.message || `Switched node ${selectedNode.value} to talkgroup: ${tgid}`
       persistLastForNode(selectedNode.value, selectedMode.value, tgid)
