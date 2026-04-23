@@ -36,8 +36,8 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.4/supermon-ng-V4.1.4.tar.xz
-tar -xJf supermon-ng-V4.1.4.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.5/supermon-ng-V4.1.5.tar.xz
+tar -xJf supermon-ng-V4.1.5.tar.xz
 cd supermon-ng
 sudo ./install.sh
 ```
@@ -160,8 +160,8 @@ sudo sed -i 's/"anarchy"/"yourusername"/g' /var/www/html/supermon-ng/user_files/
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.4/supermon-ng-V4.1.4.tar.xz
-tar -xJf supermon-ng-V4.1.4.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.5/supermon-ng-V4.1.5.tar.xz
+tar -xJf supermon-ng-V4.1.5.tar.xz
 cd supermon-ng
 sudo ./scripts/update.sh
 ```
@@ -272,12 +272,12 @@ sudo asterisk -rx "manager show connected"
 
 ```bash
 # Installation
-cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.4/supermon-ng-V4.1.4.tar.xz
-tar -xJf supermon-ng-V4.1.4.tar.xz && cd supermon-ng && sudo ./install.sh
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.5/supermon-ng-V4.1.5.tar.xz
+tar -xJf supermon-ng-V4.1.5.tar.xz && cd supermon-ng && sudo ./install.sh
 
 # Update
-cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.4/supermon-ng-V4.1.4.tar.xz
-tar -xJf supermon-ng-V4.1.4.tar.xz && cd supermon-ng && sudo ./scripts/update.sh
+cd $HOME && wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.1.5/supermon-ng-V4.1.5.tar.xz
+tar -xJf supermon-ng-V4.1.5.tar.xz && cd supermon-ng && sudo ./scripts/update.sh
 
 # Check version
 sudo /var/www/html/supermon-ng/scripts/version-check.sh
@@ -327,6 +327,15 @@ Include:
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆕 What's New in V4.1.5
+
+### Highlights
+- **DVSwitch**: Improved mode switcher UX, more secure server-side handling for tune strings, and clearer `dvswitch_config.yml` guidance (including multi-network DMR rows)
+- **Node status**: CANWarn-NG support, improved `ast_node_status_update.py` execution, and related UI/controller updates
+- **Repository hygiene**: Stop tracking generated `frontend/dist/` output (still built for releases via `create-release.sh` / install paths)
+
+---
 
 ## 🆕 What's New in V4.1.4
 
@@ -388,4 +397,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Supermon-NG V4.1.4** - Bringing AllStar Link management into the modern era! 🚀📡
+**Supermon-NG V4.1.5** - Bringing AllStar Link management into the modern era! 🚀📡
