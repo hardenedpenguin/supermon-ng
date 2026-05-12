@@ -494,6 +494,9 @@ update_services() {
     systemctl enable supermon-ng-node-status.timer 2>/dev/null || true
     systemctl enable supermon-ng-database-update.timer 2>/dev/null || true
     
+    # Repair log ownership if anything ever created files as root (database timer runs as www-data).
+    chown -R www-data:www-data "$APP_DIR/logs" 2>/dev/null || true
+    
     print_status "Service files updated and enabled"
 }
 

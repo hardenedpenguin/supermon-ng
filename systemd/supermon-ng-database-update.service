@@ -4,7 +4,10 @@ After=network.target
 
 [Service]
 Type=oneshot
-User=root
+# Run as www-data so Monolog app-*.log and cache files match the PHP backend (supermon-ng-backend.service).
+# Running as root created root-owned log files and broke API logging with "Permission denied".
+User=www-data
+Group=www-data
 WorkingDirectory=APP_DIR_PLACEHOLDER
 ExecStart=/usr/bin/php APP_DIR_PLACEHOLDER/scripts/database-auto-update.php
 

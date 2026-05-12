@@ -638,6 +638,9 @@ systemctl enable supermon-ng-node-status.timer 2>/dev/null || true
 systemctl enable supermon-ng-database-update.timer 2>/dev/null || true
 echo "✅ Service files installed and enabled"
 
+# Application logs must stay owned by www-data (backend + database oneshot use the same user).
+chown -R "${WWW_USER}:${WWW_GROUP}" "$APP_DIR/logs" 2>/dev/null || true
+
 # Make user management scripts executable
 echo "🔧 Setting script permissions..."
 if [ -f "$APP_DIR/scripts/manage_users.php" ]; then
