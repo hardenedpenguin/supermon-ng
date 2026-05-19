@@ -97,11 +97,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watchEffect, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { sanitizeHtml } from '@/utils/sanitize'
-import BubbleChart from './BubbleChart.vue'
 import LsnodModal from './LsnodModal.vue'
+
+const BubbleChart = defineAsyncComponent(() => import('./BubbleChart.vue'))
 import type { ConnectedNode, Node } from '@/types/node'
 
 // Timer state for real-time updates

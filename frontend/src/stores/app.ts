@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/utils/api'
-import type { User, UserPreferences, LoginResponse, AuthState, UpdateCheckPayload } from '@/types'
+import type { User, UserPreferences, UpdateCheckPayload } from '@/types'
 
 export const useAppStore = defineStore('app', () => {
   // State

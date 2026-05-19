@@ -75,19 +75,13 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
         $normalizedUri = str_replace('/supermon-ng', '', $uri);
         $skipPaths = [
             '/api/v1/auth/login',
-            '/api/auth/login',
             '/api/v1/auth/logout',
-            '/api/auth/logout',
             '/api/v1/auth/me',
-            '/api/auth/me',
             '/api/v1/config/bubblechart',
-            '/api/config/bubblechart',
         ];
         // Skip CSRF for DVSwitch endpoints (they have their own permission checks)
         $isDvswitchPath = str_contains($normalizedUri, '/api/v1/dvswitch/')
-            || str_contains($uri, '/api/v1/dvswitch/')
-            || str_contains($normalizedUri, '/api/dvswitch/')
-            || str_contains($uri, '/api/dvswitch/');
+            || str_contains($uri, '/api/v1/dvswitch/');
         if (!in_array($uri, $skipPaths, true) && !in_array($normalizedUri, $skipPaths, true) && !$isDvswitchPath) {
             $parsedBody = $request->getParsedBody();
             $headerToken = $request->getHeaderLine('X-CSRF-Token');

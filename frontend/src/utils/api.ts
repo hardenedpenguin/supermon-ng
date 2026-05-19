@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { getCsrfService } from '@/services/CsrfTokenService'
-// import type { ApiResponse, ApiError } from '@/types'
 
 // Use the enhanced CSRF service
 const csrfService = getCsrfService()
@@ -117,175 +116,15 @@ api.interceptors.response.use(
   }
 )
 
-// API endpoints
+/** Node API paths used by realTime store (body: localnode, remotenode). */
 export const endpoints = {
-  // Auth
-  auth: {
-    login: '/auth/login',
-    logout: '/auth/logout',
-    me: '/auth/me',
-    check: '/auth/check'
-  },
-  
-  // Nodes (body: localnode, remotenode — matches backend POST /nodes/* routes)
   nodes: {
-    list: '/nodes',
-    get: (id: string) => `/nodes/${id}`,
     connect: '/nodes/connect',
     disconnect: '/nodes/disconnect',
     monitor: '/nodes/monitor',
     localMonitor: '/nodes/local-monitor',
-    dtmf: '/nodes/dtmf',
     websocketPorts: '/nodes/websocket/ports',
-    websocketPort: (id: string) => `/nodes/${id}/websocket/port`,
-    websocketToken: (id: string) => `/nodes/${id}/websocket/token`,
   },
-  
-  // System
-  system: {
-    info: '/system/info',
-    stats: '/system/stats',
-    reload: '/system/reload',
-    start: '/system/start',
-    stop: '/system/stop',
-    fastRestart: '/system/fast-restart',
-    reboot: '/system/reboot'
-  },
-  
-  // Database
-  database: {
-    status: '/database/status',
-    generate: '/database/generate',
-    search: '/database/search',
-    get: (id: string) => `/database/${id}`
-  },
-  
-  // ASTDB optimized endpoints (Phase 8)
-  astdb: {
-    stats: '/astdb/stats',
-    health: '/astdb/health',
-    search: '/astdb/search',
-    nodes: '/astdb/nodes',
-    node: (id: string) => `/astdb/node/${id}`,
-    clearCache: '/astdb/clear-cache'
-  },
-  
-  // Config
-  config: {
-    nodes: '/config/nodes',
-    user: '/config/user',
-    system: '/config/system',
-    menu: '/config/menu'
-  }
-}
-
-// Helper functions
-export const apiHelpers = {
-  // Node operations
-  async connectNode(nodeId: string, targetNode: string, perm: boolean = false) {
-    return api.post(endpoints.nodes.connect, {
-      localnode: nodeId,
-      remotenode: targetNode,
-      perm,
-    })
-  },
-
-  async disconnectNode(nodeId: string, targetNode: string) {
-    return api.post(endpoints.nodes.disconnect, {
-      localnode: nodeId,
-      remotenode: targetNode,
-    })
-  },
-
-  async monitorNode(nodeId: string, targetNode: string) {
-    return api.post(endpoints.nodes.monitor, {
-      localnode: nodeId,
-      remotenode: targetNode,
-    })
-  },
-
-  async localMonitorNode(nodeId: string, targetNode: string) {
-    return api.post(endpoints.nodes.localMonitor, {
-      localnode: nodeId,
-      remotenode: targetNode,
-    })
-  },
-
-  async executeDtmf(nodeId: string, dtmfCommand: string) {
-    return api.post(endpoints.nodes.dtmf, {
-      localnode: nodeId,
-      dtmf: dtmfCommand,
-    })
-  },
-  
-  // System operations
-  async reloadServices() {
-    return api.post(endpoints.system.reload)
-  },
-  
-  async startAsterisk() {
-    return api.post(endpoints.system.start)
-  },
-  
-  async stopAsterisk() {
-    return api.post(endpoints.system.stop)
-  },
-  
-  async fastRestart() {
-    return api.post(endpoints.system.fastRestart)
-  },
-  
-  async rebootServer() {
-    return api.post(endpoints.system.reboot)
-  },
-  
-  // Database operations
-  async getDatabaseStatus() {
-    return api.get(endpoints.database.status)
-  },
-  
-  async generateDatabase() {
-    return api.post(endpoints.database.generate)
-  },
-  
-  async searchDatabase(query: string, limit: number = 10) {
-    return api.get(endpoints.database.search, {
-      params: { q: query, limit }
-    })
-  },
-  
-  async getNodeFromDatabase(nodeId: string) {
-    return api.get(endpoints.database.get(nodeId))
-  },
-  
-  // ASTDB optimized operations (Phase 8)
-  async getAstdbStats() {
-    return api.get(endpoints.astdb.stats)
-  },
-  
-  async getAstdbHealth() {
-    return api.get(endpoints.astdb.health)
-  },
-  
-  async getAstdbNode(nodeId: string) {
-    return api.get(endpoints.astdb.node(nodeId))
-  },
-  
-  async getAstdbNodes(nodeIds: string[]) {
-    return api.get(endpoints.astdb.nodes, {
-      params: { nodes: nodeIds.join(',') }
-    })
-  },
-  
-  async searchAstdb(query: string, limit: number = 50) {
-    return api.get(endpoints.astdb.search, {
-      params: { q: query, limit }
-    })
-  },
-  
-  async clearAstdbCache() {
-    return api.post(endpoints.astdb.clearCache)
-  }
 }
 
 // Initialize CSRF token

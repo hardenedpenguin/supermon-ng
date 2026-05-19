@@ -32,47 +32,6 @@ class ConfigController
         $this->userPermissionService = $userPermissionService;
     }
 
-    public function list(Request $request, Response $response): Response
-    {
-        $this->logger->info('Config list request');
-        
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => 'Config list endpoint - to be implemented',
-            'timestamp' => date('c')
-        ]));
-
-        return $response->withHeader('Content-Type', 'application/json');
-    }
-
-    public function get(Request $request, Response $response, array $args): Response
-    {
-        $key = $args['key'] ?? null;
-        $this->logger->info("Config get request for key: $key");
-        
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => "Config get endpoint for key '$key' - to be implemented",
-            'timestamp' => date('c')
-        ]));
-
-        return $response->withHeader('Content-Type', 'application/json');
-    }
-
-    public function update(Request $request, Response $response, array $args): Response
-    {
-        $key = $args['key'] ?? null;
-        $this->logger->info("Config update request for key: $key");
-        
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'message' => "Config update endpoint for key '$key' - to be implemented",
-            'timestamp' => date('c')
-        ]));
-
-        return $response->withHeader('Content-Type', 'application/json');
-    }
-
     /**
      * Return nodes payload for bootstrap (same structure as /config/nodes data).
      */

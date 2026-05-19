@@ -13,10 +13,9 @@ use Psr\Container\ContainerInterface;
 use SupermonNg\Services\DatabaseGenerationService;
 use SupermonNg\Services\AllStarConfigService;
 use SupermonNg\Services\CacheService;
-use SupermonNg\Services\AmiBatchService;
 use SupermonNg\Services\FileCacheService;
-use SupermonNg\Services\DatabaseOptimizationService;
 use SupermonNg\Services\AstdbCacheService;
+use SupermonNg\Services\AMIHelperService;
 use SupermonNg\Services\LocalAllmonGeneratorService;
 
 return [
@@ -184,13 +183,6 @@ return [
         );
     },
     
-    // AMI Batch service
-    AmiBatchService::class => function (ContainerInterface $c) {
-        return new AmiBatchService(
-            $c->get(LoggerInterface::class)
-        );
-    },
-    
     // File Cache service
     FileCacheService::class => function (ContainerInterface $c) {
         return new FileCacheService(
@@ -199,28 +191,10 @@ return [
         );
     },
     
-    
-    // Database optimization service
-    DatabaseOptimizationService::class => function (ContainerInterface $c) {
-        return new DatabaseOptimizationService(
-            $c->get(LoggerInterface::class),
-            $c->get(CacheInterface::class),
-            $c->get(Connection::class)
-        );
-    },
-    
         // Configuration Cache service
         \SupermonNg\Services\ConfigurationCacheService::class => function (ContainerInterface $c) {
             return new \SupermonNg\Services\ConfigurationCacheService(
                 $c->get(LoggerInterface::class)
-            );
-        },
-        
-        // Lazy File Loader service
-        \SupermonNg\Services\LazyFileLoaderService::class => function (ContainerInterface $c) {
-            return new \SupermonNg\Services\LazyFileLoaderService(
-                $c->get(LoggerInterface::class),
-                $c->get(\SupermonNg\Services\ConfigurationCacheService::class)
             );
         },
         
@@ -239,64 +213,6 @@ return [
             );
         },
     
-    
-    // Performance monitoring controller
-    \SupermonNg\Application\Controllers\PerformanceController::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Application\Controllers\PerformanceController(
-            $c->get(LoggerInterface::class),
-            $c->get(\SupermonNg\Services\ConfigurationCacheService::class),
-            $c->get(\SupermonNg\Services\LazyFileLoaderService::class),
-            $c->get(\SupermonNg\Services\AstdbCacheService::class),
-            $c->get(\SupermonNg\Services\IncludeManagerService::class)
-        );
-    },
-    
-    // Database performance monitoring controller
-    \SupermonNg\Application\Controllers\DatabasePerformanceController::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Application\Controllers\DatabasePerformanceController(
-            $c->get(LoggerInterface::class),
-            $c->get(\SupermonNg\Services\DatabaseOptimizationService::class),
-            $c->get(\SupermonNg\Services\CacheOptimizationService::class)
-        );
-    },
-    
-    // HTTP performance monitoring controller
-    \SupermonNg\Application\Controllers\HttpPerformanceController::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Application\Controllers\HttpPerformanceController(
-            $c->get(LoggerInterface::class),
-            $c->get(\SupermonNg\Services\HttpOptimizationService::class),
-            $c->get(\SupermonNg\Services\MiddlewareOptimizationService::class)
-        );
-    },
-    
-    // Session performance monitoring controller
-    \SupermonNg\Application\Controllers\SessionPerformanceController::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Application\Controllers\SessionPerformanceController(
-            $c->get(LoggerInterface::class),
-            $c->get(\SupermonNg\Services\SessionOptimizationService::class),
-            $c->get(\SupermonNg\Services\AuthenticationOptimizationService::class),
-            $c->get(\SupermonNg\Services\HttpOptimizationService::class)
-        );
-    },
-    
-    // File I/O performance monitoring controller
-    \SupermonNg\Application\Controllers\FileIOPerformanceController::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Application\Controllers\FileIOPerformanceController(
-            $c->get(LoggerInterface::class),
-            $c->get(\SupermonNg\Services\ExternalProcessOptimizationService::class),
-            $c->get(\SupermonNg\Services\FileIOCachingService::class),
-            $c->get(\SupermonNg\Services\HttpOptimizationService::class)
-        );
-    },
-    
-    // Middleware with dependency injection
-    \SupermonNg\Application\Middleware\ApiAuthMiddleware::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Application\Middleware\ApiAuthMiddleware(
-            $c->get(LoggerInterface::class),
-            $c->get(\SupermonNg\Services\IncludeManagerService::class)
-        );
-    },
-    
     \SupermonNg\Application\Middleware\AdminAuthMiddleware::class => function (ContainerInterface $c) {
         return new \SupermonNg\Application\Middleware\AdminAuthMiddleware(
             $c->get(LoggerInterface::class),
@@ -309,82 +225,6 @@ return [
         return new AMIHelperService(
             $c->get(LoggerInterface::class),
             $c->get(\SupermonNg\Services\IncludeManagerService::class)
-        );
-    },
-    
-    // Database optimization service
-    \SupermonNg\Services\DatabaseOptimizationService::class => function (ContainerInterface $c) {
-        try {
-            $connection = $c->get(Connection::class);
-        } catch (\Exception $e) {
-            // Fallback to null if database connection is not available
-            $connection = null;
-        }
-        return new \SupermonNg\Services\DatabaseOptimizationService(
-            $c->get(LoggerInterface::class),
-            $c->get(CacheInterface::class),
-            $connection
-        );
-    },
-    
-    // Cache optimization service
-    \SupermonNg\Services\CacheOptimizationService::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Services\CacheOptimizationService(
-            $c->get(LoggerInterface::class),
-            $c->get(CacheInterface::class)
-        );
-    },
-    
-    // HTTP optimization service
-    \SupermonNg\Services\HttpOptimizationService::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Services\HttpOptimizationService(
-            $c->get(LoggerInterface::class)
-        );
-    },
-    
-    // Middleware optimization service
-    \SupermonNg\Services\MiddlewareOptimizationService::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Services\MiddlewareOptimizationService(
-            $c->get(LoggerInterface::class)
-        );
-    },
-    
-    // Session optimization service
-    \SupermonNg\Services\SessionOptimizationService::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Services\SessionOptimizationService(
-            $c->get(LoggerInterface::class),
-            $c->get(CacheInterface::class),
-            3600, // Session timeout
-            1800  // Max inactive time
-        );
-    },
-    
-    // Authentication optimization service
-    \SupermonNg\Services\AuthenticationOptimizationService::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Services\AuthenticationOptimizationService(
-            $c->get(LoggerInterface::class),
-            $c->get(CacheInterface::class),
-            5,    // Max login attempts
-            900   // Lockout duration
-        );
-    },
-    
-    // External process optimization service
-    \SupermonNg\Services\ExternalProcessOptimizationService::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Services\ExternalProcessOptimizationService(
-            $c->get(LoggerInterface::class),
-            $c->get(CacheInterface::class)
-        );
-    },
-    
-    // File I/O caching service
-    \SupermonNg\Services\FileIOCachingService::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Services\FileIOCachingService(
-            $c->get(LoggerInterface::class),
-            $c->get(CacheInterface::class),
-            10485760, // 10MB max memory cache
-            1048576,  // 1MB max file size
-            300       // 5 minutes default TTL
         );
     },
     
@@ -447,13 +287,6 @@ return [
         );
     },
 
-    \SupermonNg\Application\Controllers\SystemController::class => function (ContainerInterface $c) {
-        return new \SupermonNg\Application\Controllers\SystemController(
-            $c->get(LoggerInterface::class),
-            $c->get(\SupermonNg\Services\UserPermissionService::class)
-        );
-    },
-    
     \SupermonNg\Application\Controllers\NodeStatusController::class => function (ContainerInterface $c) {
         return new \SupermonNg\Application\Controllers\NodeStatusController(
             $c->get(LoggerInterface::class),

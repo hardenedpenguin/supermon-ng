@@ -4,17 +4,11 @@ use Slim\App;
 use Slim\Routing\RouteCollectorProxy;
 use SupermonNg\Application\Controllers\NodeController;
 use SupermonNg\Application\Controllers\AuthController;
-use SupermonNg\Application\Controllers\SystemController;
 use SupermonNg\Application\Controllers\DatabaseController;
 use SupermonNg\Application\Controllers\ConfigController;
 use SupermonNg\Application\Controllers\NodeStatusController;
 use SupermonNg\Application\Controllers\AdminController;
 use SupermonNg\Application\Controllers\AstdbController;
-use SupermonNg\Application\Controllers\PerformanceController;
-use SupermonNg\Application\Controllers\DatabasePerformanceController;
-use SupermonNg\Application\Controllers\HttpPerformanceController;
-use SupermonNg\Application\Controllers\SessionPerformanceController;
-use SupermonNg\Application\Controllers\FileIOPerformanceController;
 use SupermonNg\Application\Controllers\DvswitchController;
 use SupermonNg\Application\Controllers\BootstrapController;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
@@ -124,65 +118,7 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
             ->add(AdminAuthMiddleware::class);
     });
 
-    $group->group('/performance', function (RouteCollectorProxy $g): void {
-        $g->get('/metrics', [PerformanceController::class, 'getMetrics']);
-        $g->get('/config-stats', [PerformanceController::class, 'getConfigStats']);
-        $g->get('/file-stats', [PerformanceController::class, 'getFileStats']);
-        $g->post('/clear-caches', [PerformanceController::class, 'clearCaches']);
-        $g->post('/cleanup-cache', [PerformanceController::class, 'cleanupCache']);
-    })->add(AdminAuthMiddleware::class);
-
-    $group->group('/db-performance', function (RouteCollectorProxy $g): void {
-        $g->get('/metrics', [DatabasePerformanceController::class, 'getMetrics']);
-        $g->get('/database-stats', [DatabasePerformanceController::class, 'getDatabaseStats']);
-        $g->get('/cache-stats', [DatabasePerformanceController::class, 'getCacheStats']);
-        $g->post('/clear-query-cache', [DatabasePerformanceController::class, 'clearQueryCache']);
-        $g->post('/clear-all-caches', [DatabasePerformanceController::class, 'clearAllCaches']);
-        $g->post('/optimize-tables', [DatabasePerformanceController::class, 'optimizeTables']);
-        $g->post('/cleanup-memory-cache', [DatabasePerformanceController::class, 'cleanupMemoryCache']);
-    })->add(AdminAuthMiddleware::class);
-
-    $group->group('/http-performance', function (RouteCollectorProxy $g): void {
-        $g->get('/metrics', [HttpPerformanceController::class, 'getMetrics']);
-        $g->get('/http-stats', [HttpPerformanceController::class, 'getHttpStats']);
-        $g->get('/middleware-stats', [HttpPerformanceController::class, 'getMiddlewareStats']);
-        $g->get('/slow-middleware', [HttpPerformanceController::class, 'getSlowMiddleware']);
-        $g->get('/middleware-optimization', [HttpPerformanceController::class, 'getMiddlewareOptimization']);
-        $g->post('/reset-http-stats', [HttpPerformanceController::class, 'resetHttpStats']);
-        $g->post('/reset-middleware-stats', [HttpPerformanceController::class, 'resetMiddlewareStats']);
-        $g->get('/test-optimization', [HttpPerformanceController::class, 'testOptimization']);
-    })->add(AdminAuthMiddleware::class);
-
-    $group->group('/session-performance', function (RouteCollectorProxy $g): void {
-        $g->get('/metrics', [SessionPerformanceController::class, 'getMetrics']);
-        $g->get('/session-stats', [SessionPerformanceController::class, 'getSessionStats']);
-        $g->get('/auth-stats', [SessionPerformanceController::class, 'getAuthStats']);
-        $g->get('/test-authentication', [SessionPerformanceController::class, 'testAuthentication']);
-        $g->post('/cleanup-expired-sessions', [SessionPerformanceController::class, 'cleanupExpiredSessions']);
-        $g->post('/clear-auth-cache', [SessionPerformanceController::class, 'clearAuthCache']);
-        $g->post('/reset-session-stats', [SessionPerformanceController::class, 'resetSessionStats']);
-        $g->post('/reset-auth-stats', [SessionPerformanceController::class, 'resetAuthStats']);
-    })->add(AdminAuthMiddleware::class);
-
-    $group->group('/fileio-performance', function (RouteCollectorProxy $g): void {
-        $g->get('/metrics', [FileIOPerformanceController::class, 'getMetrics']);
-        $g->get('/external-process-stats', [FileIOPerformanceController::class, 'getExternalProcessStats']);
-        $g->get('/file-io-stats', [FileIOPerformanceController::class, 'getFileIOStats']);
-        $g->post('/clear-irlp-cache', [FileIOPerformanceController::class, 'clearIrlpCache']);
-        $g->post('/clear-file-io-caches', [FileIOPerformanceController::class, 'clearFileIOCaches']);
-        $g->post('/reset-external-process-stats', [FileIOPerformanceController::class, 'resetExternalProcessStats']);
-        $g->post('/reset-file-io-stats', [FileIOPerformanceController::class, 'resetFileIOStats']);
-        $g->get('/test-irlp-lookup', [FileIOPerformanceController::class, 'testIrlpLookup']);
-    })->add(AdminAuthMiddleware::class);
-
     $group->group('/admin', function (RouteCollectorProxy $g): void {
-        $g->get('/users', [AdminController::class, 'listUsers']);
-        $g->post('/users', [AdminController::class, 'createUser']);
-        $g->put('/users/{id}', [AdminController::class, 'updateUser']);
-        $g->delete('/users/{id}', [AdminController::class, 'deleteUser']);
-        $g->post('/backup', [AdminController::class, 'backup']);
-        $g->post('/restore', [AdminController::class, 'restore']);
-        $g->post('/clear-cache', [AdminController::class, 'clearCache']);
         $g->post('/generate-local-allmon', [AdminController::class, 'generateLocalAllmon']);
     })->add(AdminAuthMiddleware::class);
 
@@ -270,16 +206,6 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
         $g->get('/service-status', [NodeStatusController::class, 'getServiceStatus']);
         $g->put('/config', [NodeStatusController::class, 'updateConfig'])->add($requireAuth);
         $g->post('/trigger-update', [NodeStatusController::class, 'triggerUpdate'])->add($requireAuth);
-    });
-
-    $group->group('/system', function (RouteCollectorProxy $g): void {
-        $g->get('/info', [SystemController::class, 'info']);
-        $g->get('/stats', [SystemController::class, 'stats']);
-        $g->post('/reload', [SystemController::class, 'reload']);
-        $g->post('/start', [SystemController::class, 'start']);
-        $g->post('/stop', [SystemController::class, 'stop']);
-        $g->post('/fast-restart', [SystemController::class, 'fastRestart']);
-        $g->post('/reboot', [SystemController::class, 'reboot']);
     });
 });
 
