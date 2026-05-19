@@ -186,7 +186,7 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
         $g->post('/generate-local-allmon', [AdminController::class, 'generateLocalAllmon']);
     })->add(AdminAuthMiddleware::class);
 
-    $group->group('/nodes', function (RouteCollectorProxy $g): void {
+    $group->group('/nodes', function (RouteCollectorProxy $g) use ($requireAuth): void {
         $g->get('', [NodeController::class, 'list']);
         $g->get('/available', [NodeController::class, 'available']);
         $g->get('/ami/status', [NodeController::class, 'getAmiStatus'])->add($requireAuth);
