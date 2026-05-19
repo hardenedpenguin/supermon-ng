@@ -139,6 +139,7 @@ export const endpoints = {
     dtmf: '/nodes/dtmf',
     websocketPorts: '/nodes/websocket/ports',
     websocketPort: (id: string) => `/nodes/${id}/websocket/port`,
+    websocketToken: (id: string) => `/nodes/${id}/websocket/token`,
   },
   
   // System

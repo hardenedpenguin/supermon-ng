@@ -126,19 +126,18 @@ export const useRealTimeStore = defineStore('realTime', () => {
   }
 
   /**
-   * Get WebSocket URL for a node
+   * Get authenticated WebSocket URL for a node (includes short-lived token).
    */
-  const getWebSocketUrl = (nodeId: string): string => {
-    // Use the port from configuration or construct URL
-    const port = websocketPorts.value[nodeId]
-    if (port) {
-      // Construct WebSocket URL - Apache will proxy /supermon-ng/ws/{nodeId} to ws://localhost:{port}
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      const host = window.location.host
-      return `${protocol}//${host}/supermon-ng/ws/${nodeId}`
+  const getWebSocketUrl = async (nodeId: string): Promise<string> => {
+    try {
+      const response = await api.get(`/nodes/${encodeURIComponent(nodeId)}/websocket/token`)
+      if (response.data?.success && response.data?.ws_url) {
+        return response.data.ws_url as string
+      }
+    } catch (err) {
+      console.warn(`WebSocket token unavailable for node ${nodeId}:`, err)
     }
-    
-    // Fallback: construct URL based on node index (if ports not loaded yet)
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.host
     return `${protocol}//${host}/supermon-ng/ws/${nodeId}`
@@ -159,7 +158,7 @@ export const useRealTimeStore = defineStore('realTime', () => {
     
     // Connect to node's WebSocket
     try {
-      const wsUrl = getWebSocketUrl(nodeId)
+      const wsUrl = await getWebSocketUrl(nodeId)
       
       // Set up message handler
       const unsubscribeMessage = webSocketService.onNodeMessage(nodeId, (data: WebSocketMessage) => {
