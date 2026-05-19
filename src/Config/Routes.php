@@ -17,45 +17,49 @@ use SupermonNg\Application\Controllers\SessionPerformanceController;
 use SupermonNg\Application\Controllers\FileIOPerformanceController;
 use SupermonNg\Application\Controllers\DvswitchController;
 use SupermonNg\Application\Controllers\BootstrapController;
-use SupermonNg\Application\Middleware\ApiAuthMiddleware;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
+use SupermonNg\Application\Middleware\RequireAuthMiddleware;
 
 /** @var App $app */
 global $app;
 
-// Health check endpoint
+$requireAuth = RequireAuthMiddleware::class;
+
+// Health check (no version prefix)
 $app->get('/health', function ($request, $response) {
     $response->getBody()->write(json_encode([
         'status' => 'healthy',
         'timestamp' => date('c'),
-        'version' => $_ENV['API_VERSION'] ?? '1.0.0'
+        'version' => $_ENV['API_VERSION'] ?? '1.0.0',
     ]));
     return $response->withHeader('Content-Type', 'application/json');
 });
 
-// Simple test endpoint to verify basic functionality
-$app->get('/api/test', function ($request, $response) {
-    $response->getBody()->write(json_encode([
-        'success' => true,
-        'message' => 'API is working',
-        'timestamp' => date('c'),
-        'php_version' => PHP_VERSION,
-        'session_status' => session_status()
-    ]));
-    return $response->withHeader('Content-Type', 'application/json');
-});
+// Dev-only diagnostic (disabled in production)
+if (($_ENV['APP_ENV'] ?? 'production') !== 'production') {
+    $app->get('/api/v1/test', function ($request, $response) {
+        $response->getBody()->write(json_encode([
+            'success' => true,
+            'message' => 'API v1 is working',
+            'timestamp' => date('c'),
+            'php_version' => PHP_VERSION,
+            'session_status' => session_status(),
+        ]));
+        return $response->withHeader('Content-Type', 'application/json');
+    });
+}
 
-// CSRF token endpoint - MUST be before middleware that might interfere
-$app->get('/api/csrf-token', function ($request, $response) {
+// CSRF token — public, must run before state-changing routes
+$app->get('/api/v1/csrf-token', function ($request, $response) {
     try {
         if (session_status() === PHP_SESSION_NONE) {
             session_name('supermon61');
             $isSecure = false;
             $serverParams = $request->getServerParams();
-            if (($serverParams['HTTPS'] ?? '') === 'on' ||
-                ($serverParams['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ||
-                ($serverParams['HTTP_X_FORWARDED_SSL'] ?? '') === 'on' ||
-                ($serverParams['SERVER_PORT'] ?? '') == '443') {
+            if (($serverParams['HTTPS'] ?? '') === 'on'
+                || ($serverParams['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
+                || ($serverParams['HTTP_X_FORWARDED_SSL'] ?? '') === 'on'
+                || ($serverParams['SERVER_PORT'] ?? '') == '443') {
                 $isSecure = true;
             }
             session_set_cookie_params([
@@ -64,67 +68,60 @@ $app->get('/api/csrf-token', function ($request, $response) {
                 'domain' => '',
                 'secure' => $isSecure,
                 'httponly' => true,
-                'samesite' => 'Lax'
+                'samesite' => 'Lax',
             ]);
             session_start();
         }
         if (session_status() !== PHP_SESSION_ACTIVE) {
-            error_log('CSRF token endpoint: Session not active after start attempt');
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'message' => 'Session initialization failed',
-                'csrf_token' => ''
+                'csrf_token' => '',
             ]));
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
-        if (!isset($_SESSION['csrf_token']) || empty($_SESSION['csrf_token'])) {
+        if (empty($_SESSION['csrf_token'])) {
             $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
         }
         $token = $_SESSION['csrf_token'] ?? '';
-        if (empty($token)) {
-            error_log('CSRF token endpoint: Generated token is empty');
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => 'Failed to generate CSRF token',
-                'csrf_token' => ''
-            ]));
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
-        }
         $response->getBody()->write(json_encode([
             'success' => true,
-            'csrf_token' => $token
+            'csrf_token' => $token,
         ]));
         return $response->withHeader('Content-Type', 'application/json');
     } catch (\Exception $e) {
-        error_log('CSRF token endpoint error: ' . $e->getMessage());
         $isProd = ($_ENV['APP_ENV'] ?? 'production') === 'production';
         $response->getBody()->write(json_encode([
             'success' => false,
             'message' => $isProd ? 'Server error' : ('Server error: ' . $e->getMessage()),
-            'csrf_token' => ''
+            'csrf_token' => '',
         ]));
         return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
     }
 });
 
 /**
- * Register shared API route groups (auth base, astdb, performance, admin).
- * Used by both /api and /api/v1 to avoid duplication.
+ * All application API routes (v1 only).
  */
-$registerSharedApiRoutes = function (RouteCollectorProxy $group): void {
+$app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth): void {
+    $group->get('/bootstrap', [BootstrapController::class, 'get']);
+
     $group->group('/auth', function (RouteCollectorProxy $g): void {
         $g->post('/login', [AuthController::class, 'login']);
         $g->post('/logout', [AuthController::class, 'logout']);
         $g->get('/me', [AuthController::class, 'me']);
+        $g->get('/check', [AuthController::class, 'check']);
     });
 
+    // ASTDB read endpoints are public; cache clear requires admin
     $group->group('/astdb', function (RouteCollectorProxy $g): void {
         $g->get('/stats', [AstdbController::class, 'getStats']);
         $g->get('/health', [AstdbController::class, 'health']);
         $g->get('/search', [AstdbController::class, 'search']);
         $g->get('/nodes', [AstdbController::class, 'getNodes']);
         $g->get('/node/{id}', [AstdbController::class, 'getNode']);
-        $g->post('/clear-cache', [AstdbController::class, 'clearCache']);
+        $g->post('/clear-cache', [AstdbController::class, 'clearCache'])
+            ->add(AdminAuthMiddleware::class);
     });
 
     $group->group('/performance', function (RouteCollectorProxy $g): void {
@@ -133,7 +130,7 @@ $registerSharedApiRoutes = function (RouteCollectorProxy $group): void {
         $g->get('/file-stats', [PerformanceController::class, 'getFileStats']);
         $g->post('/clear-caches', [PerformanceController::class, 'clearCaches']);
         $g->post('/cleanup-cache', [PerformanceController::class, 'cleanupCache']);
-    });
+    })->add(AdminAuthMiddleware::class);
 
     $group->group('/db-performance', function (RouteCollectorProxy $g): void {
         $g->get('/metrics', [DatabasePerformanceController::class, 'getMetrics']);
@@ -143,7 +140,7 @@ $registerSharedApiRoutes = function (RouteCollectorProxy $group): void {
         $g->post('/clear-all-caches', [DatabasePerformanceController::class, 'clearAllCaches']);
         $g->post('/optimize-tables', [DatabasePerformanceController::class, 'optimizeTables']);
         $g->post('/cleanup-memory-cache', [DatabasePerformanceController::class, 'cleanupMemoryCache']);
-    });
+    })->add(AdminAuthMiddleware::class);
 
     $group->group('/http-performance', function (RouteCollectorProxy $g): void {
         $g->get('/metrics', [HttpPerformanceController::class, 'getMetrics']);
@@ -154,7 +151,7 @@ $registerSharedApiRoutes = function (RouteCollectorProxy $group): void {
         $g->post('/reset-http-stats', [HttpPerformanceController::class, 'resetHttpStats']);
         $g->post('/reset-middleware-stats', [HttpPerformanceController::class, 'resetMiddlewareStats']);
         $g->get('/test-optimization', [HttpPerformanceController::class, 'testOptimization']);
-    });
+    })->add(AdminAuthMiddleware::class);
 
     $group->group('/session-performance', function (RouteCollectorProxy $g): void {
         $g->get('/metrics', [SessionPerformanceController::class, 'getMetrics']);
@@ -165,7 +162,7 @@ $registerSharedApiRoutes = function (RouteCollectorProxy $group): void {
         $g->post('/clear-auth-cache', [SessionPerformanceController::class, 'clearAuthCache']);
         $g->post('/reset-session-stats', [SessionPerformanceController::class, 'resetSessionStats']);
         $g->post('/reset-auth-stats', [SessionPerformanceController::class, 'resetAuthStats']);
-    });
+    })->add(AdminAuthMiddleware::class);
 
     $group->group('/fileio-performance', function (RouteCollectorProxy $g): void {
         $g->get('/metrics', [FileIOPerformanceController::class, 'getMetrics']);
@@ -176,7 +173,7 @@ $registerSharedApiRoutes = function (RouteCollectorProxy $group): void {
         $g->post('/reset-external-process-stats', [FileIOPerformanceController::class, 'resetExternalProcessStats']);
         $g->post('/reset-file-io-stats', [FileIOPerformanceController::class, 'resetFileIOStats']);
         $g->get('/test-irlp-lookup', [FileIOPerformanceController::class, 'testIrlpLookup']);
-    });
+    })->add(AdminAuthMiddleware::class);
 
     $group->group('/admin', function (RouteCollectorProxy $g): void {
         $g->get('/users', [AdminController::class, 'listUsers']);
@@ -188,53 +185,11 @@ $registerSharedApiRoutes = function (RouteCollectorProxy $group): void {
         $g->post('/clear-cache', [AdminController::class, 'clearCache']);
         $g->post('/generate-local-allmon', [AdminController::class, 'generateLocalAllmon']);
     })->add(AdminAuthMiddleware::class);
-};
-
-// API v1 routes (subset: shared routes + v1-specific nodes/config/system).
-// Note: /api/v1/nodes uses ApiAuthMiddleware (valid_users); legacy /api/nodes relies on per-handler permission checks + CSRF.
-$app->group('/api/v1', function (RouteCollectorProxy $group) use ($registerSharedApiRoutes): void {
-    $registerSharedApiRoutes($group);
 
     $group->group('/nodes', function (RouteCollectorProxy $g): void {
         $g->get('', [NodeController::class, 'list']);
         $g->get('/available', [NodeController::class, 'available']);
-        $g->get('/{id}', [NodeController::class, 'get']);
-        $g->get('/{id}/status', [NodeController::class, 'status']);
-        $g->post('/{id}/connect', [NodeController::class, 'connect']);
-        $g->post('/{id}/disconnect', [NodeController::class, 'disconnect']);
-        $g->post('/{id}/monitor', [NodeController::class, 'monitor']);
-        $g->post('/{id}/local-monitor', [NodeController::class, 'localMonitor']);
-        $g->post('/{id}/dtmf', [NodeController::class, 'dtmf']);
-    })->add(ApiAuthMiddleware::class);
-
-    $group->group('/system', function (RouteCollectorProxy $g): void {
-        $g->get('/info', [SystemController::class, 'info']);
-        $g->get('/stats', [SystemController::class, 'stats']);
-        $g->get('/logs', [SystemController::class, 'getLogs']);
-        $g->get('/client-ip', [SystemController::class, 'getClientIP']);
-    });
-
-    $group->group('/config', function (RouteCollectorProxy $g): void {
-        $g->get('', [ConfigController::class, 'list']);
-        $g->get('/{key}', [ConfigController::class, 'get']);
-        $g->put('/{key}', [ConfigController::class, 'update']);
-    });
-});
-
-// API routes without version prefix (frontend uses this; single source for full route set)
-$app->group('/api', function (RouteCollectorProxy $group) use ($registerSharedApiRoutes): void {
-    $registerSharedApiRoutes($group);
-
-    $group->get('/bootstrap', [BootstrapController::class, 'get']);
-
-    $group->group('/auth', function (RouteCollectorProxy $g): void {
-        $g->get('/check', [AuthController::class, 'check']);
-    });
-
-    $group->group('/nodes', function (RouteCollectorProxy $g): void {
-        $g->get('', [NodeController::class, 'list']);
-        $g->get('/available', [NodeController::class, 'available']);
-        $g->get('/ami/status', [NodeController::class, 'getAmiStatus']);
+        $g->get('/ami/status', [NodeController::class, 'getAmiStatus'])->add($requireAuth);
         $g->get('/websocket/ports', [NodeController::class, 'getAllWebSocketPorts']);
         $g->get('/voter/status', [NodeController::class, 'voterStatus']);
         $g->get('/{id}', [NodeController::class, 'get']);
@@ -309,11 +264,11 @@ $app->group('/api', function (RouteCollectorProxy $group) use ($registerSharedAp
         $g->get('/{id}', [DatabaseController::class, 'get']);
     });
 
-    $group->group('/node-status', function (RouteCollectorProxy $g): void {
+    $group->group('/node-status', function (RouteCollectorProxy $g) use ($requireAuth): void {
         $g->get('/config', [NodeStatusController::class, 'getConfig']);
-        $g->put('/config', [NodeStatusController::class, 'updateConfig']);
-        $g->post('/trigger-update', [NodeStatusController::class, 'triggerUpdate']);
         $g->get('/service-status', [NodeStatusController::class, 'getServiceStatus']);
+        $g->put('/config', [NodeStatusController::class, 'updateConfig'])->add($requireAuth);
+        $g->post('/trigger-update', [NodeStatusController::class, 'triggerUpdate'])->add($requireAuth);
     });
 
     $group->group('/system', function (RouteCollectorProxy $g): void {
@@ -325,4 +280,23 @@ $app->group('/api', function (RouteCollectorProxy $group) use ($registerSharedAp
         $g->post('/fast-restart', [SystemController::class, 'fastRestart']);
         $g->post('/reboot', [SystemController::class, 'reboot']);
     });
+});
+
+// Legacy /api/* → 410 Gone (clients must use /api/v1)
+$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], '/api/{routes:.+}', function ($request, $response) {
+    $response->getBody()->write(json_encode([
+        'success' => false,
+        'error' => 'API version removed',
+        'message' => 'Use /api/v1/ instead of /api/',
+    ]));
+    return $response->withStatus(410)->withHeader('Content-Type', 'application/json');
+});
+
+$app->get('/api/csrf-token', function ($request, $response) {
+    $response->getBody()->write(json_encode([
+        'success' => false,
+        'error' => 'API version removed',
+        'message' => 'Use GET /api/v1/csrf-token',
+    ]));
+    return $response->withStatus(410)->withHeader('Content-Type', 'application/json');
 });

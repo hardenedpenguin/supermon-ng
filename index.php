@@ -7,7 +7,8 @@
  */
 
 // Check if this is an API request
-if (strpos($_SERVER['REQUEST_URI'], '/api/') === 0) {
+$requestUri = $_SERVER['REQUEST_URI'] ?? '';
+if (str_contains($requestUri, '/api/')) {
     // Route API requests to the backend
     require_once __DIR__ . '/public/index.php';
     exit;
