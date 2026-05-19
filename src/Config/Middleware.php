@@ -74,21 +74,24 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
         // Also handle paths with /supermon-ng prefix
         $normalizedUri = str_replace('/supermon-ng', '', $uri);
         $skipPaths = [
+            '/api/v1/auth/login',
             '/api/auth/login',
+            '/api/v1/auth/logout',
             '/api/auth/logout',
+            '/api/v1/auth/me',
             '/api/auth/me',
+            '/api/v1/config/bubblechart',
             '/api/config/bubblechart',
-            // Node-status endpoints are same-origin and already require an authenticated session.
-            // Allowing them here prevents the UI from failing hard if CSRF bootstrap races on page load.
-            '/api/node-status/config',
-            '/api/node-status/trigger-update',
         ];
         // Skip CSRF for DVSwitch endpoints (they have their own permission checks)
-        $isDvswitchPath = strpos($normalizedUri, '/api/dvswitch/') === 0 || strpos($uri, '/api/dvswitch/') === 0;
-        if (!in_array($uri, $skipPaths) && !in_array($normalizedUri, $skipPaths) && !$isDvswitchPath) {
+        $isDvswitchPath = str_contains($normalizedUri, '/api/v1/dvswitch/')
+            || str_contains($uri, '/api/v1/dvswitch/')
+            || str_contains($normalizedUri, '/api/dvswitch/')
+            || str_contains($uri, '/api/dvswitch/');
+        if (!in_array($uri, $skipPaths, true) && !in_array($normalizedUri, $skipPaths, true) && !$isDvswitchPath) {
             $parsedBody = $request->getParsedBody();
-            // For DELETE requests, body might be empty, so check header first
-            $token = $request->getHeaderLine('X-CSRF-Token') ?? ($parsedBody['csrf_token'] ?? '');
+            $headerToken = $request->getHeaderLine('X-CSRF-Token');
+            $token = $headerToken !== '' ? $headerToken : (is_array($parsedBody) ? ($parsedBody['csrf_token'] ?? '') : '');
             
             if (empty($token) || !isset($_SESSION['csrf_token']) ||
                 !hash_equals($_SESSION['csrf_token'], $token)) {
@@ -138,8 +141,8 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
 // Add error handling middleware (disable detailed errors in production)
 $isProduction = ($_ENV['APP_ENV'] ?? 'production') === 'production';
 $errorMiddleware = $app->addErrorMiddleware(
-    true,
-    !$isProduction, // Display error details only when not in production
+    !$isProduction,
+    !$isProduction,
     true
 );
 $errorMiddleware->setErrorHandler(

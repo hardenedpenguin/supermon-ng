@@ -389,6 +389,16 @@ return [
     },
     
     // Controllers with dependency injection
+    \SupermonNg\Services\SessionService::class => function () {
+        return new \SupermonNg\Services\SessionService();
+    },
+
+    \SupermonNg\Application\Middleware\RequireAuthMiddleware::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Middleware\RequireAuthMiddleware(
+            $c->get(\SupermonNg\Services\SessionService::class)
+        );
+    },
+
     \SupermonNg\Services\UserPermissionService::class => function () {
         $path = $_ENV['USER_FILES_PATH'] ?? (dirname(__DIR__, 2) . '/user_files/');
         return new \SupermonNg\Services\UserPermissionService($path);
@@ -432,7 +442,8 @@ return [
             $c->get(\SupermonNg\Services\AllStarConfigService::class),
             $c->get(\SupermonNg\Services\AstdbCacheService::class),
             $c->get(\SupermonNg\Services\IncludeManagerService::class),
-            $c->get(\SupermonNg\Services\UserPermissionService::class)
+            $c->get(\SupermonNg\Services\UserPermissionService::class),
+            $c->get(\SupermonNg\Services\SessionService::class)
         );
     },
 
@@ -443,6 +454,14 @@ return [
         );
     },
     
+    \SupermonNg\Application\Controllers\NodeStatusController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\NodeStatusController(
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\SessionService::class),
+            $c->get(\SupermonNg\Services\UserPermissionService::class)
+        );
+    },
+
     \SupermonNg\Application\Controllers\AuthController::class => function (ContainerInterface $c) {
         return new \SupermonNg\Application\Controllers\AuthController(
             $c->get(LoggerInterface::class)

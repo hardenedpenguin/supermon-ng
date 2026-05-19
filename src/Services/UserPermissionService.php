@@ -30,8 +30,8 @@ final class UserPermissionService
 
         $authFile = $this->authUsersFile();
         if (!is_readable($authFile)) {
-            // If no auth file exists, grant all permissions (legacy / dev behavior)
-            return true;
+            // Fail closed in production; allow open permissions only in non-production dev installs.
+            return ($_ENV['APP_ENV'] ?? 'production') !== 'production';
         }
 
         /** @noinspection PhpUnusedLocalVariableInspection */
