@@ -160,8 +160,9 @@ class WebSocketRouterService implements MessageComponentInterface
         // Extract node ID from path (e.g., /546051 or /supermon-ng/ws/546051)
         $nodeId = $this->extractNodeIdFromPath($path);
 
+        // Default true: read-only status WS is proxied on localhost; login still required for API changes.
         $allowUnauthenticated = filter_var(
-            $_ENV['WEBSOCKET_ALLOW_UNAUTHENTICATED'] ?? 'false',
+            $_ENV['WEBSOCKET_ALLOW_UNAUTHENTICATED'] ?? 'true',
             FILTER_VALIDATE_BOOLEAN
         );
         if (!$allowUnauthenticated) {

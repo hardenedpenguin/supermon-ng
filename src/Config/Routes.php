@@ -189,7 +189,7 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
     $group->group('/nodes', function (RouteCollectorProxy $g) use ($requireAuth): void {
         $g->get('', [NodeController::class, 'list']);
         $g->get('/available', [NodeController::class, 'available']);
-        $g->get('/ami/status', [NodeController::class, 'getAmiStatus'])->add($requireAuth);
+        $g->get('/ami/status', [NodeController::class, 'getAmiStatus']);
         $g->get('/websocket/ports', [NodeController::class, 'getAllWebSocketPorts']);
         $g->get('/voter/status', [NodeController::class, 'voterStatus']);
         $g->get('/{id}/websocket/token', [NodeController::class, 'getWebSocketToken'])->add($requireAuth);

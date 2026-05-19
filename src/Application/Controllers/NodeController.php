@@ -729,15 +729,9 @@ class NodeController
     {
         $this->logger->info('Fetching AMI status for nodes');
 
+        // Anonymous users may view node status (allmon.ini); login required only for changes.
         $currentUser = $this->getCurrentUser();
-        if (!$currentUser) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'error' => 'Authentication required'
-            ]));
-            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
-        }
-        
+
         try {
             // Get query parameters for node selection
             $queryParams = $request->getQueryParams();

@@ -72,8 +72,7 @@ api.interceptors.response.use(
       // Server responded with error status
       switch (error.response.status) {
         case 401:
-          // Unauthorized - redirect to login
-          window.location.href = '/supermon-ng/login'
+          // Anonymous read-only browsing is allowed; do not force login on 401.
           break
         case 403:
           // Check if it's a CSRF token error

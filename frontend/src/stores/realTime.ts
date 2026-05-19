@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api, endpoints } from '@/utils/api'
+import { useAppStore } from './app'
 import { useAstdbStore } from './astdb'
 import { useBatchRequests } from '@/services/BatchRequestService'
 import { webSocketService, type WebSocketMessage } from '@/services/WebSocketService'
@@ -128,7 +129,15 @@ export const useRealTimeStore = defineStore('realTime', () => {
   /**
    * Get authenticated WebSocket URL for a node (includes short-lived token).
    */
-  const getWebSocketUrl = async (nodeId: string): Promise<string> => {
+  const getWebSocketUrl = async (nodeId: string, authenticated: boolean): Promise<string> => {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const host = window.location.host
+    const baseUrl = `${protocol}//${host}/supermon-ng/ws/${nodeId}`
+
+    if (!authenticated) {
+      return baseUrl
+    }
+
     try {
       const response = await api.get(`/nodes/${encodeURIComponent(nodeId)}/websocket/token`)
       if (response.data?.success && response.data?.ws_url) {
@@ -138,9 +147,7 @@ export const useRealTimeStore = defineStore('realTime', () => {
       console.warn(`WebSocket token unavailable for node ${nodeId}:`, err)
     }
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = window.location.host
-    return `${protocol}//${host}/supermon-ng/ws/${nodeId}`
+    return baseUrl
   }
 
   /**
@@ -158,7 +165,8 @@ export const useRealTimeStore = defineStore('realTime', () => {
     
     // Connect to node's WebSocket
     try {
-      const wsUrl = await getWebSocketUrl(nodeId)
+      const appStore = useAppStore()
+      const wsUrl = await getWebSocketUrl(nodeId, appStore.isAuthenticated)
       
       // Set up message handler
       const unsubscribeMessage = webSocketService.onNodeMessage(nodeId, (data: WebSocketMessage) => {
