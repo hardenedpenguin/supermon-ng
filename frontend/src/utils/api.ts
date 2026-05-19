@@ -7,7 +7,7 @@ const csrfService = getCsrfService()
 
 // Create axios instance with adaptive timeout
 const api = axios.create({
-  baseURL: '/supermon-ng/api',
+  baseURL: '/supermon-ng/api/v1',
   timeout: 5000, // Reduced from 10s to 5s for better responsiveness
   withCredentials: true,
   headers: {
@@ -128,17 +128,17 @@ export const endpoints = {
     check: '/auth/check'
   },
   
-  // Nodes
+  // Nodes (body: localnode, remotenode — matches backend POST /nodes/* routes)
   nodes: {
     list: '/nodes',
     get: (id: string) => `/nodes/${id}`,
-    connect: (id: string) => `/nodes/${id}/connect`,
-    disconnect: (id: string) => `/nodes/${id}/disconnect`,
-    monitor: (id: string) => `/nodes/${id}/monitor`,
-    localMonitor: (id: string) => `/nodes/${id}/local-monitor`,
-    dtmf: (id: string) => `/nodes/${id}/dtmf`,
+    connect: '/nodes/connect',
+    disconnect: '/nodes/disconnect',
+    monitor: '/nodes/monitor',
+    localMonitor: '/nodes/local-monitor',
+    dtmf: '/nodes/dtmf',
     websocketPorts: '/nodes/websocket/ports',
-    websocketPort: (id: string) => `/nodes/${id}/websocket/port`
+    websocketPort: (id: string) => `/nodes/${id}/websocket/port`,
   },
   
   // System
@@ -183,38 +183,38 @@ export const endpoints = {
 export const apiHelpers = {
   // Node operations
   async connectNode(nodeId: string, targetNode: string, perm: boolean = false) {
-    return api.post(endpoints.nodes.connect(nodeId), {
+    return api.post(endpoints.nodes.connect, {
       localnode: nodeId,
       remotenode: targetNode,
-      perm
+      perm,
     })
   },
-  
+
   async disconnectNode(nodeId: string, targetNode: string) {
-    return api.post(endpoints.nodes.disconnect(nodeId), {
+    return api.post(endpoints.nodes.disconnect, {
       localnode: nodeId,
-      remotenode: targetNode
+      remotenode: targetNode,
     })
   },
-  
+
   async monitorNode(nodeId: string, targetNode: string) {
-    return api.post(endpoints.nodes.monitor(nodeId), {
+    return api.post(endpoints.nodes.monitor, {
       localnode: nodeId,
-      remotenode: targetNode
+      remotenode: targetNode,
     })
   },
-  
+
   async localMonitorNode(nodeId: string, targetNode: string) {
-    return api.post(endpoints.nodes.localMonitor(nodeId), {
+    return api.post(endpoints.nodes.localMonitor, {
       localnode: nodeId,
-      remotenode: targetNode
+      remotenode: targetNode,
     })
   },
-  
+
   async executeDtmf(nodeId: string, dtmfCommand: string) {
-    return api.post(endpoints.nodes.dtmf(nodeId), {
+    return api.post(endpoints.nodes.dtmf, {
       localnode: nodeId,
-      dtmf: dtmfCommand
+      dtmf: dtmfCommand,
     })
   },
   

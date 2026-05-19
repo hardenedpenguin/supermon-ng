@@ -38,7 +38,7 @@ export default defineConfig({
     port: 5179,
     host: true,
     proxy: {
-      '/supermon-ng/api': {
+      '/supermon-ng/api/v1': {
         target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false,

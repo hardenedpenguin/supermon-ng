@@ -63,12 +63,20 @@ export class BatchRequestService {
       }
     }
 
-    // Check if request is already pending
+    // Check if request is already pending — queue all waiters (do not overwrite handlers)
     if (this.pendingRequests.has(id)) {
       return new Promise((resolve, reject) => {
-        // Reuse existing promise
-        this.pendingRequests.get(id)!.resolve = resolve
-        this.pendingRequests.get(id)!.reject = reject
+        const pending = this.pendingRequests.get(id)!
+        const priorResolve = pending.resolve
+        const priorReject = pending.reject
+        pending.resolve = (value: unknown) => {
+          priorResolve(value)
+          resolve(value)
+        }
+        pending.reject = (err: unknown) => {
+          priorReject(err)
+          reject(err)
+        }
       })
     }
 

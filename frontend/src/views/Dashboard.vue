@@ -1220,7 +1220,7 @@ onBeforeMount(async () => {
   const timeoutId = setTimeout(() => controller.abort(), 50) // 50ms timeout - fail very fast
   
   try {
-    const response = await fetch('/supermon-ng/api/config/header-background', {
+    const response = await fetch('/supermon-ng/api/v1/config/header-background', {
       method: 'GET',
       cache: 'no-cache',
       signal: controller.signal
@@ -1228,7 +1228,7 @@ onBeforeMount(async () => {
     clearTimeout(timeoutId)
     if (response.ok) {
       // Custom header exists - set it immediately
-      headerBackground.value = '/supermon-ng/api/config/header-background'
+      headerBackground.value = '/supermon-ng/api/v1/config/header-background'
       return
     }
   } catch (e) {

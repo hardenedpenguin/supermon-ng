@@ -436,12 +436,12 @@ export const useRealTimeStore = defineStore('realTime', () => {
   }
 
   // Control functions
-  const connectNode = async (nodeId: string, perm: boolean = false) => {
+  const connectNode = async (localNode: string, remoteNode: string, perm: boolean = false) => {
     try {
-      await api.post(endpoints.nodes.connect(nodeId), {
-        localnode: nodeId,
-        remotenode: nodeId,
-        perm
+      await api.post(endpoints.nodes.connect, {
+        localnode: localNode,
+        remotenode: remoteNode,
+        perm,
       })
     } catch (error) {
       console.error('Connect error:', error)
@@ -449,11 +449,11 @@ export const useRealTimeStore = defineStore('realTime', () => {
     }
   }
 
-  const disconnectNode = async (nodeId: string) => {
+  const disconnectNode = async (localNode: string, remoteNode: string) => {
     try {
-      await api.post(endpoints.nodes.disconnect(nodeId), {
-        localnode: nodeId,
-        remotenode: nodeId
+      await api.post(endpoints.nodes.disconnect, {
+        localnode: localNode,
+        remotenode: remoteNode,
       })
     } catch (error) {
       console.error('Disconnect error:', error)
@@ -461,11 +461,11 @@ export const useRealTimeStore = defineStore('realTime', () => {
     }
   }
 
-  const monitorNode = async (nodeId: string) => {
+  const monitorNode = async (localNode: string, remoteNode: string) => {
     try {
-      await api.post(endpoints.nodes.monitor(nodeId), {
-        localnode: nodeId,
-        remotenode: nodeId
+      await api.post(endpoints.nodes.monitor, {
+        localnode: localNode,
+        remotenode: remoteNode,
       })
     } catch (error) {
       console.error('Monitor error:', error)
@@ -473,12 +473,12 @@ export const useRealTimeStore = defineStore('realTime', () => {
     }
   }
 
-  const permConnectNode = async (nodeId: string) => {
+  const permConnectNode = async (localNode: string, remoteNode: string) => {
     try {
-      await api.post(endpoints.nodes.connect(nodeId), {
-        localnode: nodeId,
-        remotenode: nodeId,
-        perm: true
+      await api.post(endpoints.nodes.connect, {
+        localnode: localNode,
+        remotenode: remoteNode,
+        perm: true,
       })
     } catch (error) {
       console.error('Perm connect error:', error)
@@ -486,11 +486,11 @@ export const useRealTimeStore = defineStore('realTime', () => {
     }
   }
 
-  const localMonitorNode = async (nodeId: string) => {
+  const localMonitorNode = async (localNode: string, remoteNode: string) => {
     try {
-      await api.post(endpoints.nodes.localMonitor(nodeId), {
-        localnode: nodeId,
-        remotenode: nodeId
+      await api.post(endpoints.nodes.localMonitor, {
+        localnode: localNode,
+        remotenode: remoteNode,
       })
     } catch (error) {
       console.error('Local monitor error:', error)
@@ -498,11 +498,11 @@ export const useRealTimeStore = defineStore('realTime', () => {
     }
   }
 
-  const monitorCmdNode = async (nodeId: string) => {
+  const monitorCmdNode = async (localNode: string, remoteNode: string) => {
     try {
-      await api.post(endpoints.nodes.monitor(nodeId), {
-        localnode: nodeId,
-        remotenode: nodeId
+      await api.post(endpoints.nodes.monitor, {
+        localnode: localNode,
+        remotenode: remoteNode,
       })
     } catch (error) {
       console.error('Monitor CMD error:', error)
