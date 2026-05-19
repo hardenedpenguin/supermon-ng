@@ -167,9 +167,10 @@ class WebSocketServerManager
     private function createRouterServer(): void
     {
         try {
+            $bindHost = $_ENV['WEBSOCKET_BIND_HOST'] ?? '127.0.0.1';
             $this->logger->info("Creating WebSocket router server", [
                 'port' => $this->basePort,
-                'bind_address' => '0.0.0.0'
+                'bind_address' => $bindHost,
             ]);
             
             $routerService = new WebSocketRouterService($this->logger, $this);
@@ -186,10 +187,9 @@ class WebSocketServerManager
             
             $this->logger->info("Creating IoServer", [
                 'port' => $this->basePort,
-                'host' => '0.0.0.0'
+                'host' => $bindHost,
             ]);
-            // Use new IoServer() instead of factory() to ensure proper loop integration
-            $socket = new \React\Socket\Server('0.0.0.0:' . $this->basePort, $this->loop);
+            $socket = new \React\Socket\Server($bindHost . ':' . $this->basePort, $this->loop);
             $server = new IoServer($httpServer, $socket, $this->loop);
             
             $this->routerServer = $server;

@@ -23,19 +23,22 @@ class NodeController
     private AstdbCacheService $astdbService;
     private IncludeManagerService $includeService;
     private UserPermissionService $userPermissionService;
+    private \SupermonNg\Services\SessionService $sessionService;
     
     public function __construct(
         LoggerInterface $logger, 
         AllStarConfigService $configService, 
         AstdbCacheService $astdbService,
         IncludeManagerService $includeService,
-        UserPermissionService $userPermissionService
+        UserPermissionService $userPermissionService,
+        \SupermonNg\Services\SessionService $sessionService
     ) {
         $this->logger = $logger;
         $this->configService = $configService;
         $this->astdbService = $astdbService;
         $this->includeService = $includeService;
         $this->userPermissionService = $userPermissionService;
+        $this->sessionService = $sessionService;
     }
 
     public function list(Request $request, Response $response): Response
@@ -140,13 +143,13 @@ class NodeController
             
         } catch (Exception $e) {
             $this->logger->error('Failed to fetch node list', ['error' => $e->getMessage()]);
-            
+
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'error' => 'Failed to load node configuration',
-                'message' => $e->getMessage()
+                'message' => \SupermonNg\Services\ApiResponseHelper::safeExceptionMessage($e),
             ]));
-            
+
             return $response
                 ->withStatus(500)
                 ->withHeader('Content-Type', 'application/json');
@@ -671,7 +674,7 @@ class NodeController
                 'success' => false,
                 'message' => "You are not authorized to perform the '$action' action."
             ]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -1290,36 +1293,37 @@ class NodeController
 
         try {
             $currentUser = $this->getCurrentUser();
-            $basePort = 8105; // Base port for WebSocket servers
-            
-            // Get all available nodes to determine index
+            $basePort = (int) ($_ENV['WEBSOCKET_BASE_PORT'] ?? 8105);
             $nodes = $this->configService->getAvailableNodes($currentUser);
-            
-            // Find node index
-            $nodeIndex = null;
-            foreach ($nodes as $index => $node) {
-                if ($node['id'] == $nodeId) {
-                    $nodeIndex = $index;
+
+            $found = false;
+            foreach ($nodes as $node) {
+                if ((string) $node['id'] === (string) $nodeId) {
+                    $found = true;
                     break;
                 }
             }
-            
-            if ($nodeIndex === null) {
+
+            if (!$found) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
-                    'error' => 'Node not found'
+                    'error' => 'Node not found',
                 ]));
                 return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
-            
-            // Calculate port: basePort + index
-            $port = $basePort + $nodeIndex;
-            
+
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $wsScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
+                ? 'wss'
+                : 'ws';
+
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'node' => $nodeId,
-                'port' => $port,
-                'ws_url' => "ws://" . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "/supermon-ng/ws/{$nodeId}"
+                'port' => $basePort,
+                'router' => true,
+                'ws_url' => "{$wsScheme}://{$host}/supermon-ng/ws/{$nodeId}",
             ]));
             
             return $response->withHeader('Content-Type', 'application/json');
@@ -1346,27 +1350,31 @@ class NodeController
     {
         try {
             $currentUser = $this->getCurrentUser();
-            $basePort = 8105; // Base port for WebSocket servers
-            
-            // Get all available nodes
+            $basePort = (int) ($_ENV['WEBSOCKET_BASE_PORT'] ?? 8105);
             $nodes = $this->configService->getAvailableNodes($currentUser);
-            
+
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $wsScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
+                ? 'wss'
+                : 'ws';
+
             $portConfig = [];
-            foreach ($nodes as $index => $node) {
+            foreach ($nodes as $node) {
                 $nodeId = $node['id'];
-                $port = $basePort + $index;
-                
                 $portConfig[$nodeId] = [
                     'node' => $nodeId,
-                    'port' => $port,
-                    'ws_url' => "ws://" . ($_SERVER['HTTP_HOST'] ?? 'localhost') . "/supermon-ng/ws/{$nodeId}"
+                    'port' => $basePort,
+                    'router' => true,
+                    'ws_url' => "{$wsScheme}://{$host}/supermon-ng/ws/{$nodeId}",
                 ];
             }
-            
+
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'base_port' => $basePort,
-                'nodes' => $portConfig
+                'router' => true,
+                'nodes' => $portConfig,
             ]));
             
             return $response->withHeader('Content-Type', 'application/json');
@@ -1390,27 +1398,7 @@ class NodeController
      */
     private function getCurrentUser(): ?string
     {
-        // Start session if not already started
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
-        // Check if user is logged in via session
-        if (isset($_SESSION['user']) && !empty($_SESSION['user'])) {
-            return $_SESSION['user'];
-        }
-        
-        // Check if user is logged in via HTTP Basic Auth
-        if (isset($_SERVER['PHP_AUTH_USER'])) {
-            return $_SERVER['PHP_AUTH_USER'];
-        }
-        
-        // Check if user is logged in via .htaccess/.htpasswd
-        if (isset($_SERVER['REMOTE_USER'])) {
-            return $_SERVER['REMOTE_USER'];
-        }
-        
-        return null;
+        return $this->sessionService->getCurrentUser();
     }
 
     /**

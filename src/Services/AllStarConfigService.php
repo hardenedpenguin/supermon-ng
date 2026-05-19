@@ -117,13 +117,13 @@ class AllStarConfigService
         $standardAllmonIni = $this->userFilesPath . 'allmon.ini';
         
         if (!$username) {
-            $this->logger->warning("No username provided, using standard allmon.ini", [
+            $this->logger->debug("No username provided, using standard allmon.ini", [
                 'ini_file' => $standardAllmonIni
             ]);
             return $standardAllmonIni;
         }
 
-        $this->logger->warning("Resolving INI file for username", [
+        $this->logger->debug("Resolving INI file for username", [
             'username' => $username,
             'auth_ini_file' => $this->authIniFile
         ]);
