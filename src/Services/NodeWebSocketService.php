@@ -7,6 +7,7 @@ use Ratchet\ConnectionInterface;
 use Psr\Log\LoggerInterface;
 use React\EventLoop\LoopInterface;
 use SupermonNg\Services\AstdbCacheService;
+use SupermonNg\Services\Ami\AmiXstatParserService;
 use Exception;
 
 /**
@@ -27,6 +28,7 @@ class NodeWebSocketService implements MessageComponentInterface
     private LoggerInterface $logger;
     private LoopInterface $loop;
     private AstdbCacheService $astdbService;
+    private AmiXstatParserService $amiParser;
     
     /** @var ConnectionInterface[] */
     private array $clients = [];
@@ -53,6 +55,7 @@ class NodeWebSocketService implements MessageComponentInterface
         $this->logger = $logger;
         $this->loop = $loop;
         $this->astdbService = $astdbService;
+        $this->amiParser = new AmiXstatParserService();
     }
     
     /**
@@ -242,8 +245,14 @@ class NodeWebSocketService implements MessageComponentInterface
                 "NODE" => $this->nodeId
             ]);
             
-            // Parse the AMI responses into structured data
-            $parsedData = $this->parseNodeAmiData($xstatResponse, $sawStatResponse !== false ? $sawStatResponse : '');
+            $parsed = $this->amiParser->parse(
+                $xstatResponse,
+                $sawStatResponse !== false ? $sawStatResponse : ''
+            );
+            $nodeIds = array_map(static fn (array $c) => (string) $c[0], $parsed->conns);
+            $infoMap = $nodeIds !== [] ? $this->astdbService->getMultipleNodeInfo($nodeIds) : [];
+            $resolveInfo = AmiXstatParserService::astdbInfoResolver($this->astdbService, $infoMap);
+            $parsedData = $this->amiParser->buildWebSocketPayload($parsed, $this->nodeId, $resolveInfo);
             
             // Build structured response
             $data = [
@@ -270,168 +279,6 @@ class NodeWebSocketService implements MessageComponentInterface
             ]);
             return null;
         }
-    }
-    
-    /**
-     * Parse XStat and SawStat responses into structured data
-     * Similar to NodeController::parseNodeAmiData but adapted for WebSocket service
-     */
-    private function parseNodeAmiData(string $rptStatus, string $sawStatus): array
-    {
-        $parsedVars = [];
-        $conns = [];
-        $keyups = [];
-        $modes = [];
-        $allLinkedNodes = [];
-        
-        // Parse XStat response for Var: lines
-        if (!empty($rptStatus)) {
-            $lines = explode("\n", $rptStatus);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                // Parse Var: lines
-                if (strpos($line, 'Var: ') === 0) {
-                    $varLine = substr($line, 5);
-                    if (strpos($varLine, '=') !== false) {
-                        list($key, $value) = explode('=', $varLine, 2);
-                        $parsedVars[trim($key)] = trim($value);
-                    }
-                }
-                
-                // Parse Conn: lines
-                if (strpos($line, 'Conn: ') === 0) {
-                    $connLine = substr($line, 6);
-                    $data = preg_split('/\s+/', $connLine);
-                    if (!empty($data[0])) {
-                        $conns[] = $data;
-                    }
-                }
-                
-                // Parse LinkedNodes
-                if (preg_match("/LinkedNodes: (.*)/", $line, $matches)) {
-                    $longRangeLinks = preg_split("/, /", trim($matches[1]));
-                    foreach ($longRangeLinks as $link) {
-                        if (!empty($link)) {
-                            $n_val = substr($link, 1);
-                            $connectionType = substr($link, 0, 1);
-                            $modes[$n_val]['mode'] = $connectionType;
-                            
-                            if (is_numeric($n_val) && intval($n_val) >= 2000) {
-                                $allLinkedNodes[] = $n_val;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Parse SawStat response for keyed timing data
-        if (!empty($sawStatus)) {
-            $lines = explode("\n", $sawStatus);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (empty($line)) continue;
-                
-                if (strpos($line, 'Conn: ') === 0) {
-                    $connLine = substr($line, 6);
-                    $data = preg_split('/\s+/', $connLine);
-                    if (isset($data[0]) && isset($data[1]) && isset($data[2]) && isset($data[3])) {
-                        $keyups[$data[0]] = [
-                            'node' => $data[0],
-                            'isKeyed' => $data[1],
-                            'keyed' => $data[2],
-                            'unkeyed' => $data[3]
-                        ];
-                    }
-                }
-            }
-        }
-        
-        // Build remote nodes array
-        $remoteNodes = [];
-        $ECHOLINK_NODE_THRESHOLD = 3000000;
-        
-        // Collect all node IDs first for batch lookup (like NodeController does)
-        $nodeIds = [];
-        foreach ($conns as $connData) {
-            $n = $connData[0];
-            if (!empty($n)) {
-                $nodeIds[] = (string)$n;
-            }
-        }
-        
-        // Batch lookup node info from ASTDB (more efficient than individual lookups)
-        $nodeInfoMap = [];
-        if (!empty($nodeIds)) {
-            $nodeInfoMap = $this->astdbService->getMultipleNodeInfo($nodeIds);
-        }
-        
-        foreach ($conns as $connData) {
-            $n = $connData[0];
-            if (empty($n)) continue;
-            
-            $ip = $connData[1] ?? '';
-            $port = $connData[2] ?? '';
-            $direction = $connData[3] ?? '';
-            $elapsed = $connData[4] ?? '';
-            $status = $connData[5] ?? '';
-            
-            $isEcholink = (is_numeric($n) && $n > $ECHOLINK_NODE_THRESHOLD && empty($ip));
-            
-            // Get node info from batch lookup map (ensure node ID is string for lookup)
-            $nodeIdStr = (string)$n;
-            $nodeInfo = $nodeInfoMap[$nodeIdStr] ?? null;
-            $info = "Node $n";
-            if ($nodeInfo) {
-                $info = trim(($nodeInfo['callsign'] ?? '') . ' ' . ($nodeInfo['description'] ?? '') . ' ' . ($nodeInfo['location'] ?? ''));
-            }
-            
-            $remoteNode = [
-                'node' => $n,
-                'info' => $info,
-                'ip' => $isEcholink ? "" : $ip,
-                'direction' => $isEcholink ? ($connData[2] ?? '') : $direction,
-                'elapsed' => $isEcholink ? ($connData[3] ?? '') : $elapsed,
-                'link' => $isEcholink ? ($connData[4] ?? 'UNKNOWN') : $status,
-                'keyed' => 'n/a',
-                'last_keyed' => '-1',
-                'mode' => $isEcholink ? 'Echolink' : 'Allstar'
-            ];
-            
-            // Handle Echolink connection status
-            if ($isEcholink && isset($modes[$n]['mode'])) {
-                $remoteNode['link'] = ($modes[$n]['mode'] == 'C') ? "CONNECTING" : "ESTABLISHED";
-            }
-            
-            // Use keyed timing data from SawStat
-            if (isset($keyups[$n])) {
-                $remoteNode['keyed'] = ($keyups[$n]['isKeyed'] == 1) ? 'yes' : 'no';
-                $remoteNode['last_keyed'] = $keyups[$n]['keyed'];
-            }
-            
-            // Set mode from LinkedNodes
-            if (isset($modes[$n])) {
-                $remoteNode['mode'] = $modes[$n]['mode'];
-            }
-            
-            $remoteNodes[] = $remoteNode;
-        }
-        
-        // Extract main node stats
-        $mainNodeCosKeyed = ($parsedVars['RPT_RXKEYED'] ?? '0') === '1' ? 1 : 0;
-        $mainNodeTxKeyed = ($parsedVars['RPT_TXKEYED'] ?? '0') === '1' ? 1 : 0;
-        
-        return [
-            'cos_keyed' => $mainNodeCosKeyed,
-            'tx_keyed' => $mainNodeTxKeyed,
-            'cpu_temp' => $parsedVars['cpu_temp'] ?? null,
-            'cpu_up' => $parsedVars['cpu_up'] ?? null,
-            'cpu_load' => $parsedVars['cpu_load'] ?? null,
-            'ALERT' => $parsedVars['ALERT'] ?? null,
-            'WX' => $parsedVars['WX'] ?? null,
-            'DISK' => $parsedVars['DISK'] ?? null,
-            'remote_nodes' => $remoteNodes
-        ];
     }
     
     /**

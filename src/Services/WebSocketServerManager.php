@@ -173,7 +173,8 @@ class WebSocketServerManager
                 'bind_address' => $bindHost,
             ]);
             
-            $routerService = new WebSocketRouterService($this->logger, $this);
+            $tokenService = new WebSocketTokenService();
+            $routerService = new WebSocketRouterService($this->logger, $this, $tokenService);
             
             // Create Ratchet server with router
             // WsServer handles WebSocket upgrades automatically

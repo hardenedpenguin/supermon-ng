@@ -9,6 +9,7 @@ use Ratchet\WebSocket\WsServer;
 use Ratchet\WebSocket\WsServerInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
+use SupermonNg\Services\WebSocketTokenService;
 use Exception;
 
 /**
@@ -25,16 +26,19 @@ class WebSocketRouterService implements MessageComponentInterface
 {
     private LoggerInterface $logger;
     private WebSocketServerManager $serverManager;
+    private WebSocketTokenService $tokenService;
     
     /** @var ConnectionInterface[] Map of connection resourceId => nodeId */
     private array $connectionNodeMap = [];
     
     public function __construct(
         LoggerInterface $logger,
-        WebSocketServerManager $serverManager
+        WebSocketServerManager $serverManager,
+        WebSocketTokenService $tokenService
     ) {
         $this->logger = $logger;
         $this->serverManager = $serverManager;
+        $this->tokenService = $tokenService;
         
         $this->logger->info("WebSocketRouterService constructed", [
             'nodes_available' => count($serverManager->getAllNodePorts())
@@ -145,18 +149,35 @@ class WebSocketRouterService implements MessageComponentInterface
         }
         
         if (!$request) {
-            $this->logger->warning("WebSocket connection without request object - cannot extract path", [
+            $this->logger->warning('WebSocket connection without request object - closing', [
                 'client_id' => $conn->resourceId,
                 'connection_class' => get_class($conn),
-                'available_properties' => array_keys(get_object_vars($conn))
             ]);
-            // Store connection temporarily - we'll route on first message
-            $this->connectionNodeMap[$conn->resourceId] = null;
+            $conn->close();
             return;
         }
         
         // Extract node ID from path (e.g., /546051 or /supermon-ng/ws/546051)
         $nodeId = $this->extractNodeIdFromPath($path);
+
+        $allowUnauthenticated = filter_var(
+            $_ENV['WEBSOCKET_ALLOW_UNAUTHENTICATED'] ?? 'false',
+            FILTER_VALIDATE_BOOLEAN
+        );
+        if (!$allowUnauthenticated) {
+            $query = $request->getUri()->getQuery();
+            parse_str($query, $queryParams);
+            $token = $queryParams['token'] ?? '';
+            if ($nodeId === null || $this->tokenService->validate($token, $nodeId) === null) {
+                $this->logger->info('WebSocket connection rejected: invalid or missing token', [
+                    'client_id' => $conn->resourceId,
+                    'node_id' => $nodeId,
+                    'path' => $path,
+                ]);
+                $conn->close();
+                return;
+            }
+        }
         
         if (!$nodeId) {
             // Log at INFO level - invalid connections are expected (health checks, wrong URLs, etc.)
@@ -217,21 +238,10 @@ class WebSocketRouterService implements MessageComponentInterface
     {
         $nodeId = $this->connectionNodeMap[$from->resourceId] ?? null;
         
-        // If node ID is null, this might be the first message with node identification
+        // Do not accept node id from first message (token must be validated on upgrade)
         if ($nodeId === null) {
-            try {
-                $data = json_decode($msg, true);
-                if (isset($data['node']) || isset($data['nodeId'])) {
-                    $nodeId = $data['node'] ?? $data['nodeId'];
-                    $this->connectionNodeMap[$from->resourceId] = $nodeId;
-                    $this->logger->info("WebSocket node identified from first message", [
-                        'client_id' => $from->resourceId,
-                        'node_id' => $nodeId
-                    ]);
-                }
-            } catch (Exception $e) {
-                // Not JSON, ignore
-            }
+            $from->close();
+            return;
         }
         
         if (!$nodeId) {

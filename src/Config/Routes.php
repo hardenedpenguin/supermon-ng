@@ -192,9 +192,10 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
         $g->get('/ami/status', [NodeController::class, 'getAmiStatus'])->add($requireAuth);
         $g->get('/websocket/ports', [NodeController::class, 'getAllWebSocketPorts']);
         $g->get('/voter/status', [NodeController::class, 'voterStatus']);
+        $g->get('/{id}/websocket/token', [NodeController::class, 'getWebSocketToken'])->add($requireAuth);
+        $g->get('/{id}/websocket/port', [NodeController::class, 'getWebSocketPort']);
         $g->get('/{id}', [NodeController::class, 'get']);
         $g->get('/{id}/status', [NodeController::class, 'status']);
-        $g->get('/{id}/websocket/port', [NodeController::class, 'getWebSocketPort']);
         $g->post('/connect', [NodeController::class, 'connect']);
         $g->post('/disconnect', [NodeController::class, 'disconnect']);
         $g->post('/monitor', [NodeController::class, 'monitor']);

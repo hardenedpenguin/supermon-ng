@@ -13,17 +13,23 @@ use SupermonNg\Services\AstdbCacheService;
 use SupermonNg\Services\IncludeManagerService;
 use SupermonNg\Services\UserPermissionService;
 use SupermonNg\Services\ValidationService;
+use SupermonNg\Services\Ami\AmiXstatParserService;
+use SupermonNg\Services\WebSocketTokenService;
+use SupermonNg\Application\Controllers\Concerns\JsonResponseTrait;
 use Ramsey\Uuid\Uuid;
 use Exception;
 
 class NodeController
 {
+    use JsonResponseTrait;
     private LoggerInterface $logger;
     private AllStarConfigService $configService;
     private AstdbCacheService $astdbService;
     private IncludeManagerService $includeService;
     private UserPermissionService $userPermissionService;
     private \SupermonNg\Services\SessionService $sessionService;
+    private AmiXstatParserService $amiParser;
+    private WebSocketTokenService $webSocketTokenService;
     
     public function __construct(
         LoggerInterface $logger, 
@@ -31,7 +37,9 @@ class NodeController
         AstdbCacheService $astdbService,
         IncludeManagerService $includeService,
         UserPermissionService $userPermissionService,
-        \SupermonNg\Services\SessionService $sessionService
+        \SupermonNg\Services\SessionService $sessionService,
+        ?AmiXstatParserService $amiParser = null,
+        ?WebSocketTokenService $webSocketTokenService = null
     ) {
         $this->logger = $logger;
         $this->configService = $configService;
@@ -39,6 +47,8 @@ class NodeController
         $this->includeService = $includeService;
         $this->userPermissionService = $userPermissionService;
         $this->sessionService = $sessionService;
+        $this->amiParser = $amiParser ?? new AmiXstatParserService();
+        $this->webSocketTokenService = $webSocketTokenService ?? new WebSocketTokenService();
     }
 
     public function list(Request $request, Response $response): Response
@@ -473,7 +483,7 @@ class NodeController
                 'success' => false,
                 'message' => 'Please provide a valid local node number.'
             ]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
         // Validate DTMF command
@@ -482,7 +492,7 @@ class NodeController
                 'success' => false,
                 'message' => 'Please provide a DTMF command.'
             ]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
 
         // Check user permissions
@@ -492,7 +502,7 @@ class NodeController
                 'success' => false,
                 'message' => 'You are not authorized to perform DTMF commands.'
             ]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -503,7 +513,7 @@ class NodeController
                     'success' => false,
                     'message' => "Configuration for local node $localNode not found."
                 ]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
             $fp = $this->connectToAmi($nodeConfig, $localNode);
@@ -512,7 +522,7 @@ class NodeController
                     'success' => false,
                     'message' => "Could not connect to Asterisk Manager for node $localNode."
                 ]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(502)->withHeader('Content-Type', 'application/json');
             }
 
             $commandResult = $this->executeDtmfCommand($fp, $localNode, $dtmfCommand);
@@ -547,7 +557,7 @@ class NodeController
                 'message' => 'Failed to execute DTMF command: ' . $e->getMessage()
             ]));
 
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -573,7 +583,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'RSTATUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to access RPT statistics.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         if ($node !== false) {
@@ -592,13 +602,13 @@ class NodeController
                 $nodeConfig = $this->loadNodeConfig($currentUser, $localnode);
                 if (!$nodeConfig) {
                     $response->getBody()->write(json_encode(['success' => false, 'message' => "Configuration for local node $localnode not found."]));
-                    return $response->withHeader('Content-Type', 'application/json');
+                    return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
                 }
 
                 $fp = $this->connectToAmi($nodeConfig, $localnode);
                 if (!$fp) {
                     $response->getBody()->write(json_encode(['success' => false, 'message' => "Could not connect to Asterisk Manager for node $localnode."]));
-                    return $response->withHeader('Content-Type', 'application/json');
+                    return $response->withStatus(502)->withHeader('Content-Type', 'application/json');
                 }
 
                 $statsResult = $this->executeRptStatsCommand($fp, $localnode);
@@ -619,13 +629,13 @@ class NodeController
             } catch (\Exception $e) {
                 $this->logger->error('Failed to retrieve RPT stats', ['local_node' => $localnode, 'error' => $e->getMessage()]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve RPT stats: ' . $e->getMessage()]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
             }
         }
 
         // No valid parameters
         $response->getBody()->write(json_encode(['success' => false, 'message' => 'No valid node specified. Please provide a node or localnode parameter.']));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
     }
 
     /**
@@ -654,68 +664,40 @@ class NodeController
         $permInput = $data['perm'] ?? null;
 
         if ($localNode === false) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => 'Please provide a valid local node number.'
-            ]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $this->jsonFail($response, 'Please provide a valid local node number.', 400);
         }
         if ($remoteNode === false) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => 'Please provide a valid remote node number.'
-            ]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $this->jsonFail($response, 'Please provide a valid remote node number.', 400);
         }
 
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, $this->getActionPermission($action))) {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => "You are not authorized to perform the '$action' action."
-            ]));
-            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
+            return $this->jsonFail($response, "You are not authorized to perform the '$action' action.", 403);
         }
 
         try {
             $nodeConfig = $this->loadNodeConfig($currentUser, $localNode);
             if (!$nodeConfig) {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => "Configuration for local node $localNode not found."
-                ]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $this->jsonFail($response, "Configuration for local node $localNode not found.", 404);
             }
 
             $fp = $this->connectToAmi($nodeConfig, $localNode);
             if (!$fp) {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => "Could not connect to Asterisk Manager for node $localNode."
-                ]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $this->jsonFail($response, "Could not connect to Asterisk Manager for node $localNode.", 502);
             }
 
             $actionResult = $this->processAction($action, $permInput, $localNode, $remoteNode, $currentUser);
             if (!$actionResult) {
                 $this->returnAmiConnection($fp, $nodeConfig);
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => "Invalid action or insufficient permissions for '$action'."
-                ]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $this->jsonFail($response, "Invalid action or insufficient permissions for '$action'.", 403);
             }
 
             $ilink = $actionResult['ilink'];
             $message = $actionResult['message'];
-
             $commandResult = $this->executeAmiCommand($fp, $ilink, $localNode, $remoteNode, $action);
-            
-            // Return connection to pool
             $this->returnAmiConnection($fp, $nodeConfig);
 
-            // Return success response
-            $response->getBody()->write(json_encode([
+            return $this->json($response, [
                 'success' => true,
                 'message' => $message,
                 'data' => [
@@ -724,26 +706,17 @@ class NodeController
                     'remote_node' => $remoteNode,
                     'ilink' => $ilink,
                     'ami_response' => $commandResult,
-                    'timestamp' => date('c')
-                ]
-            ]));
-
-            return $response->withHeader('Content-Type', 'application/json');
-
+                    'timestamp' => date('c'),
+                ],
+            ]);
         } catch (\Exception $e) {
             $this->logger->error('Failed to execute node action', [
                 'action' => $action,
                 'local_node' => $localNode,
                 'remote_node' => $remoteNode,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
-
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'message' => 'Failed to execute action: ' . $e->getMessage()
-            ]));
-
-            return $response->withHeader('Content-Type', 'application/json');
+            return $this->jsonFailException($response, 'Failed to execute action', $e, 500);
         }
     }
 
@@ -1073,195 +1046,64 @@ class NodeController
             $sawStatus = '';
         }
         
-        return $this->parseNodeAmiData($fp, $node, $rptStatus, $sawStatus);
+        $parsed = $this->amiParser->parse($rptStatus, $sawStatus);
+        $resolveInfo = static function (string $nodeNum) use ($fp): ?string {
+            $info = \getAstInfo($fp, $nodeNum);
+            return $info !== false && $info !== null ? (string) $info : null;
+        };
+
+        return $this->amiParser->buildControllerCurNodes($parsed, $node, $resolveInfo);
     }
 
     /**
-     * Parse node data from AMI responses (modernized from legacy parseNode function)
+     * Issue a short-lived WebSocket subscribe token for a node.
      */
-    private function parseNodeAmiData($fp, string $queriedNode, string $rptStatus, string $sawStatus): array
+    public function getWebSocketToken(Request $request, Response $response, array $args): Response
     {
-        $curNodes = [];
-        $parsedVars = [];
-        
-        // Parse XStat response
-        if (!empty($rptStatus)) {
-            $lines = explode("\n", $rptStatus);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                // Parse Var: lines
-                if (strpos($line, 'Var: ') === 0) {
-                    $varLine = substr($line, 5); // Remove 'Var: ' prefix
-                    if (strpos($varLine, '=') !== false) {
-                        list($key, $value) = explode('=', $varLine, 2);
-                        $parsedVars[trim($key)] = trim($value);
-                    }
-                }
-            }
+        $nodeId = ValidationService::validateNodeId($args['id'] ?? null);
+        if ($nodeId === false) {
+            return $this->jsonFail($response, 'Node ID required or invalid', 400);
         }
-        
-        // Parse XStat response for connected nodes (where the actual connection data is)
-        $conns = [];
-        
-        if (!empty($rptStatus)) {
-            $lines = explode("\n", $rptStatus);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (empty($line)) continue;
-                
-                // Parse connection data - format: "Conn: 546054 73.6.70.88 6 OUT 31:49:24 ESTABLISHED"
-                if (strpos($line, 'Conn: ') === 0) {
-                    $connLine = substr($line, 6); // Remove 'Conn: ' prefix
-                    $data = preg_split('/\s+/', $connLine);
-                    if (!empty($data[0])) {
-                        $conns[] = $data;
-                    }
-                }
-            }
-        }
-        
-        // Parse SawStat response for keyed timing data
-        $keyups = [];
-        
-        if (!empty($sawStatus)) {
-            $lines = explode("\n", $sawStatus);
-            foreach ($lines as $line) {
-                $line = trim($line);
-                if (empty($line)) continue;
-                
-                // Parse keyed data - format: "Conn: 546054 0 -1 -1"
-                if (strpos($line, 'Conn: ') === 0) {
-                    $connLine = substr($line, 6); // Remove 'Conn: ' prefix
-                    $data = preg_split('/\s+/', $connLine);
-                    if (isset($data[0]) && isset($data[1]) && isset($data[2]) && isset($data[3])) {
-                        $keyups[$data[0]] = [
-                            'node' => $data[0],
-                            'isKeyed' => $data[1],
-                            'keyed' => $data[2],
-                            'unkeyed' => $data[3]
-                        ];
-                    }
-                }
-            }
-        }
-        
-        // Parse modes from LinkedNodes in XStat response
-        $modes = [];
-        $allLinkedNodes = [];
-        if (!empty($rptStatus) && preg_match("/LinkedNodes: (.*)/", $rptStatus, $matches)) {
-            $longRangeLinks = preg_split("/, /", trim($matches[1]));
-            foreach ($longRangeLinks as $line) {
-                if (!empty($line)) {
-                    $n_val = substr($line, 1);
-                    $connectionType = substr($line, 0, 1);
-                    $modes[$n_val]['mode'] = $connectionType;
-                    
-                    // Add to all linked nodes list (filter out private nodes < 2000)
-                    if (is_numeric($n_val) && intval($n_val) >= 2000) {
-                        $allLinkedNodes[] = $n_val;
-                    }
-                }
-            }
-        }
-        
-        // Build node data structure
-        $mainNodeCosKeyed = ($parsedVars['RPT_RXKEYED'] ?? '0') === '1' ? 1 : 0;
-        $mainNodeTxKeyed = ($parsedVars['RPT_TXKEYED'] ?? '0') === '1' ? 1 : 0;
-        $mainNodeCpuTemp = $parsedVars['cpu_temp'] ?? null;
-        $mainNodeCpuUp = $parsedVars['cpu_up'] ?? null;
-        $mainNodeCpuLoad = $parsedVars['cpu_load'] ?? null;
-        $mainNodeALERT = $parsedVars['ALERT'] ?? null;
-        $mainNodeWX = $parsedVars['WX'] ?? null;
-        $mainNodeDISK = $parsedVars['DISK'] ?? null;
 
-        // Process connected nodes - first add direct connections
-        if (count($conns) > 0) {
-            foreach ($conns as $connData) {
-                $n = $connData[0];
-                if (empty($n)) continue;
+        $user = $this->getCurrentUser();
+        if ($user === null) {
+            return $this->jsonFail($response, 'Authentication required', 401);
+        }
 
-                // XStat format: [node, ip, port, direction, elapsed, status]
-                $ip = $connData[1] ?? '';
-                $port = $connData[2] ?? '';
-                $direction = $connData[3] ?? '';
-                $elapsed = $connData[4] ?? '';
-                $status = $connData[5] ?? '';
-
-                $isEcholink = (is_numeric($n) && $n > ECHOLINK_NODE_THRESHOLD && empty($ip));
-
-                $curNodes[$n]['node'] = $n;
-                $curNodes[$n]['info'] = \getAstInfo($fp, $n);
-                $curNodes[$n]['ip'] = $isEcholink ? "" : $ip;
-                $curNodes[$n]['direction'] = $isEcholink ? ($connData[2] ?? '') : $direction;
-                $curNodes[$n]['elapsed'] = $isEcholink ? ($connData[3] ?? '') : $elapsed;
-                $curNodes[$n]['link'] = $isEcholink ? ($connData[4] ?? 'UNKNOWN') : $status;
-                
-                // Handle Echolink connection status based on mode
-                if ($isEcholink) {
-                    if (isset($modes[$n]['mode'])) {
-                        $curNodes[$n]['link'] = ($modes[$n]['mode'] == 'C') ? "CONNECTING" : "ESTABLISHED";
-                    }
-                }
-                
-                $curNodes[$n]['keyed'] = 'n/a';
-                $curNodes[$n]['last_keyed'] = '-1';
-                
-                // Use keyed timing data from SawStat if available
-                if (isset($keyups[$n])) {
-                    $curNodes[$n]['keyed'] = ($keyups[$n]['isKeyed'] == 1) ? 'yes' : 'no';
-                    $curNodes[$n]['last_keyed'] = $keyups[$n]['keyed'];
-                }
-                
-                // Set mode from LinkedNodes data if available, otherwise use default
-                if (isset($modes[$n])) {
-                    $curNodes[$n]['mode'] = $modes[$n]['mode'];
-                } else {
-                    $curNodes[$n]['mode'] = $isEcholink ? 'Echolink' : 'Allstar';
-                }
+        $allowed = false;
+        foreach ($this->configService->getAvailableNodes($user) as $node) {
+            if ((string) $node['id'] === (string) $nodeId) {
+                $allowed = true;
+                break;
             }
         }
-        
-        // Also add nodes from LinkedNodes that aren't already in curNodes
-        // This handles connections that show up as T546050 in LinkedNodes but not in Conn: lines
-        foreach ($allLinkedNodes as $linkedNodeId) {
-            if (!isset($curNodes[$linkedNodeId])) {
-                // This is a linked node that wasn't in the direct connections
-                $curNodes[$linkedNodeId]['node'] = $linkedNodeId;
-                $curNodes[$linkedNodeId]['info'] = \getAstInfo($fp, $linkedNodeId);
-                $curNodes[$linkedNodeId]['ip'] = 'Indirect'; // Linked nodes don't have direct IP
-                $curNodes[$linkedNodeId]['direction'] = isset($modes[$linkedNodeId]) ? ($modes[$linkedNodeId]['mode'] == 'T' ? 'OUT' : 'IN') : 'unknown';
-                $curNodes[$linkedNodeId]['elapsed'] = 'unknown';
-                $curNodes[$linkedNodeId]['link'] = 'LINKED';
-                $curNodes[$linkedNodeId]['keyed'] = 'n/a';
-                $curNodes[$linkedNodeId]['last_keyed'] = '-1';
-                $curNodes[$linkedNodeId]['mode'] = isset($modes[$linkedNodeId]) ? $modes[$linkedNodeId]['mode'] : 'Allstar';
-                
-                // Use keyed timing data from SawStat if available
-                if (isset($keyups[$linkedNodeId])) {
-                    $curNodes[$linkedNodeId]['keyed'] = ($keyups[$linkedNodeId]['isKeyed'] == 1) ? 'yes' : 'no';
-                    $curNodes[$linkedNodeId]['last_keyed'] = $keyups[$linkedNodeId]['keyed'];
-                }
-            }
+
+        if (!$allowed) {
+            return $this->jsonFail($response, 'Node not found or not accessible', 404);
         }
-        
-        // Add local node stats
-        $localStatsKey = 1;
-        if (!isset($curNodes[$localStatsKey])) {
-            $curNodes[$localStatsKey] = [];
+
+        try {
+            $token = $this->webSocketTokenService->issue((string) $nodeId, $user);
+            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+            $wsScheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+                || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'
+                ? 'wss'
+                : 'ws';
+
+            return $this->json($response, [
+                'success' => true,
+                'node' => $nodeId,
+                'token' => $token,
+                'expires_in' => 120,
+                'ws_url' => "{$wsScheme}://{$host}/supermon-ng/ws/{$nodeId}?token={$token}",
+            ]);
+        } catch (\Throwable $e) {
+            $this->logger->error('Failed to issue WebSocket token', [
+                'node_id' => $nodeId,
+                'error' => $e->getMessage(),
+            ]);
+            return $this->jsonFail($response, 'Failed to issue WebSocket token', 500);
         }
-        
-        $curNodes[$localStatsKey]['node'] = $curNodes[$localStatsKey]['node'] ?? $queriedNode;
-        $curNodes[$localStatsKey]['info'] = $curNodes[$localStatsKey]['info'] ?? \getAstInfo($fp, $queriedNode);
-        $curNodes[$localStatsKey]['cos_keyed'] = $mainNodeCosKeyed;
-        $curNodes[$localStatsKey]['tx_keyed'] = $mainNodeTxKeyed;
-        $curNodes[$localStatsKey]['cpu_temp'] = $mainNodeCpuTemp;
-        $curNodes[$localStatsKey]['cpu_up'] = $mainNodeCpuUp;
-        $curNodes[$localStatsKey]['cpu_load'] = $mainNodeCpuLoad;
-        $curNodes[$localStatsKey]['ALERT'] = $mainNodeALERT;
-        $curNodes[$localStatsKey]['WX'] = $mainNodeWX;
-        $curNodes[$localStatsKey]['DISK'] = $mainNodeDISK;
-        
-        return $curNodes;
     }
     
     /**
@@ -1611,7 +1453,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'CSTATUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to access CPU statistics.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -1630,7 +1472,7 @@ class NodeController
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve CPU statistics', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve CPU statistics: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -1686,13 +1528,13 @@ class NodeController
             $config = $this->getUserConfig($currentUser);
             if (!isset($config[$localnode])) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Node configuration not found.']));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
             $amiConfig = $config[$localnode];
             if (!isset($amiConfig['host']) || !isset($amiConfig['user']) || !isset($amiConfig['passwd'])) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid AMI configuration for node.']));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
 
             // Connect to AMI and retrieve database
@@ -1714,7 +1556,7 @@ class NodeController
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve database contents', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve database contents: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -1777,7 +1619,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'EXNUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to access external nodes.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -1791,7 +1633,7 @@ class NodeController
                     'success' => false, 
                     'message' => 'External nodes file not found: ' . $extnodesPath
                 ]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
             $fileContent = file_get_contents($extnodesPath);
@@ -1801,7 +1643,7 @@ class NodeController
                     'success' => false, 
                     'message' => 'Failed to read external nodes file'
                 ]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
             }
 
             $response->getBody()->write(json_encode([
@@ -1818,7 +1660,7 @@ class NodeController
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve external nodes file', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve external nodes file: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -1848,7 +1690,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'FSTRESUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to perform fast restart operations.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         $data = $request->getParsedBody();
@@ -1856,7 +1698,7 @@ class NodeController
 
         if (empty($localnode)) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Local node parameter is required.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -1864,13 +1706,13 @@ class NodeController
             $config = $this->loadNodeConfig($currentUser, $localnode);
             if (!$config) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Node configuration not found.']));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
             $amiConfig = $config;
             if (!isset($amiConfig['host']) || !isset($amiConfig['user']) || !isset($amiConfig['passwd'])) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid AMI configuration for node.']));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
 
             // Connect to AMI and execute restart
@@ -1892,12 +1734,12 @@ class NodeController
                     'message' => $restartResult['message']
                 ]));
             }
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to execute fast restart', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to execute fast restart: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -1939,7 +1781,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'IRLPLOGUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to view IRLP logs.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -1953,7 +1795,7 @@ class NodeController
                     'success' => false,
                     'message' => 'IRLP log file not found: ' . $irlpLogPath
                 ]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
             $fileContent = file_get_contents($irlpLogPath);
@@ -1963,7 +1805,7 @@ class NodeController
                     'success' => false,
                     'message' => 'Failed to read IRLP log file'
                 ]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
             }
 
             $response->getBody()->write(json_encode([
@@ -1980,7 +1822,7 @@ class NodeController
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve IRLP log file', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve IRLP log file: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -1989,7 +1831,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'LLOGUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to view Linux system logs.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -2019,7 +1861,7 @@ class NodeController
                     'success' => false,
                     'message' => 'Failed to execute Linux log command - no output (return code: ' . $returnCode . ')'
                 ]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
             }
 
             $response->getBody()->write(json_encode([
@@ -2037,7 +1879,7 @@ class NodeController
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve Linux system log', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve Linux system log: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -2086,7 +1928,7 @@ class NodeController
             // Check authentication using modern system
             if (!$this->hasUserPermission($currentUser, 'BANUSER')) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to manage node access control lists.']));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
             }
 
             $data = $request->getParsedBody();
@@ -2095,14 +1937,14 @@ class NodeController
             if ($localnode === false) {
                 $this->logger->error('Invalid localnode parameter', ['localnode' => $data['localnode'] ?? null]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Valid local node parameter is required.']));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
 
             $config = $this->loadNodeConfig($currentUser, $localnode);
             if (!$config) {
                 $this->logger->error('Node configuration not found', ['localnode' => $localnode, 'user' => $currentUser]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => "Node configuration not found for node $localnode."]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
             // Establish AMI connection using modern config
@@ -2110,14 +1952,14 @@ class NodeController
             if ($fp === false) {
                 $this->logger->error('AMI connection failed', ['host' => $config['host']]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Could not connect to Asterisk Manager.']));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(502)->withHeader('Content-Type', 'application/json');
             }
 
             if (\SimpleAmiClient::login($fp, $config['user'], $config['passwd']) === false) {
                 \SimpleAmiClient::logoff($fp);
                 $this->logger->error('AMI authentication failed', ['host' => $config['host']]);
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Could not authenticate with Asterisk Manager.']));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(502)->withHeader('Content-Type', 'application/json');
             }
 
             // Get allowlist and denylist data using original functions
@@ -2145,7 +1987,7 @@ class NodeController
                 'trace' => $e->getTraceAsString()
             ]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Ban/Allow error: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -2189,7 +2031,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'BANUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to manage node access control lists.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         $data = $request->getParsedBody();
@@ -2201,22 +2043,22 @@ class NodeController
 
         if ($localnode === false) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Valid local node parameter is required.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
         if ($node === false) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Valid node number is required.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
         if (!in_array($listtype, ['allowlist', 'denylist'])) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid list type.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
         if (!in_array($deleteadd, ['add', 'delete'])) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid action.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -2224,13 +2066,13 @@ class NodeController
             $config = $this->getUserConfig($currentUser);
             if (!isset($config[$localnode])) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Node configuration not found.']));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
             $amiConfig = $config[$localnode];
             if (!isset($amiConfig['host']) || !isset($amiConfig['user']) || !isset($amiConfig['passwd'])) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid AMI configuration for node.']));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
 
             // Execute the ban/allow action
@@ -2261,12 +2103,12 @@ class NodeController
                     'message' => $result['message']
                 ]));
             }
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to execute ban/allow action', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to execute ban/allow action: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -2395,7 +2237,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'GPIOUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to control GPIO pins.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -2415,7 +2257,7 @@ class NodeController
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve GPIO status', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve GPIO status: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -2424,7 +2266,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'GPIOUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to control GPIO pins.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         $data = $request->getParsedBody();
@@ -2434,12 +2276,12 @@ class NodeController
         // Validate inputs
         if (!is_numeric($pin) || $pin < 0 || $pin > 40) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid GPIO pin number. Must be 0-40.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
         if (!in_array($state, ['input', 'output', 'up', 'down', '0', '1'])) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Invalid GPIO state.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -2466,12 +2308,12 @@ class NodeController
                     'message' => $result['message']
                 ]));
             }
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to execute GPIO command', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to execute GPIO command: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -2564,7 +2406,7 @@ class NodeController
         if (!$this->hasUserPermission($currentUser, 'RBTUSER')) {
             $this->logger->info('Reboot permission denied', ['user' => $currentUser]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to reboot the server.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -2586,7 +2428,7 @@ class NodeController
         } catch (\Exception $e) {
             $this->logger->error('Failed to execute reboot command', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to execute reboot command: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -2627,7 +2469,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'SMLOGUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to view Supermon logs.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -2650,12 +2492,12 @@ class NodeController
                     'message' => $result['message']
                 ]));
             }
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve Supermon log content', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve Supermon log content: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -2705,7 +2547,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'ASTATUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to view AllStar statistics.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -2714,7 +2556,7 @@ class NodeController
 
             if (empty($localnode)) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => 'Local node parameter is required.']));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
             }
 
             // Get node configuration
@@ -2722,7 +2564,7 @@ class NodeController
             
             if (!$config) {
                 $response->getBody()->write(json_encode(['success' => false, 'message' => "Node $localnode configuration not found."]));
-                return $response->withHeader('Content-Type', 'application/json');
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
             }
 
             // Retrieve statistics data
@@ -2738,7 +2580,7 @@ class NodeController
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve AllStar statistics', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve AllStar statistics: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -2908,7 +2750,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'WLOGUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to view web access logs.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -2931,12 +2773,12 @@ class NodeController
                     'message' => $result['message']
                 ]));
             }
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve web access log content', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve web access log content: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
@@ -3054,7 +2896,7 @@ class NodeController
         $currentUser = $this->getCurrentUser();
         if (!$this->hasUserPermission($currentUser, 'WERRUSER')) {
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'You are not authorized to view web error logs.']));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
         }
 
         try {
@@ -3077,12 +2919,12 @@ class NodeController
                     'message' => $result['message']
                 ]));
             }
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve web error log content', ['error' => $e->getMessage()]);
             $response->getBody()->write(json_encode(['success' => false, 'message' => 'Failed to retrieve web error log content: ' . $e->getMessage()]));
-            return $response->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
 
