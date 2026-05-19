@@ -292,12 +292,4 @@ $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'], '/api/{routes:.+
     ]));
     return $response->withStatus(410)->withHeader('Content-Type', 'application/json');
 });
-
-$app->get('/api/csrf-token', function ($request, $response) {
-    $response->getBody()->write(json_encode([
-        'success' => false,
-        'error' => 'API version removed',
-        'message' => 'Use GET /api/v1/csrf-token',
-    ]));
-    return $response->withStatus(410)->withHeader('Content-Type', 'application/json');
-});
+// Legacy GET /api/csrf-token is covered by /api/{routes:.+} above (410 + message to use /api/v1/csrf-token).

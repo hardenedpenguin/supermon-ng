@@ -147,24 +147,37 @@ $errorMiddleware = $app->addErrorMiddleware(
 );
 $errorMiddleware->setErrorHandler(
     \Throwable::class,
-    function (Request $request, \Throwable $exception, bool $displayErrorDetails) use ($app) {
-        $logger = $app->getContainer()->get(LoggerInterface::class);
-        $logger->error('Unhandled exception: ' . $exception->getMessage(), [
-            'file' => $exception->getFile(),
-            'line' => $exception->getLine(),
-            'trace' => $exception->getTraceAsString()
-        ]);
-        
+    function (
+        Request $request,
+        \Throwable $exception,
+        bool $displayErrorDetails,
+        bool $logErrors,
+        bool $logErrorDetails
+    ) use ($app): Response {
+        if ($logErrors) {
+            try {
+                $logger = $app->getContainer()->get(LoggerInterface::class);
+                $logger->error('Unhandled exception: ' . $exception->getMessage(), [
+                    'file' => $exception->getFile(),
+                    'line' => $exception->getLine(),
+                    'trace' => $logErrorDetails ? $exception->getTraceAsString() : '',
+                ]);
+            } catch (\Throwable) {
+                // Never fail the error response because logging failed
+            }
+        }
+
         $response = new \Slim\Psr7\Response();
         $response->getBody()->write(json_encode([
             'error' => 'Internal Server Error',
-            'message' => $displayErrorDetails ? $exception->getMessage() : 'An error occurred'
+            'message' => $displayErrorDetails ? $exception->getMessage() : 'An error occurred',
         ]));
-        
+
         return $response
             ->withStatus(500)
             ->withHeader('Content-Type', 'application/json');
-    }
+    },
+    true
 );
 
 // Add request logging middleware (optimized for production)
