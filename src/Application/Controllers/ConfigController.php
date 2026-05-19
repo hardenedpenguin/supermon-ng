@@ -672,7 +672,7 @@ class ConfigController
         foreach ($formats as $format) {
             $customBackgroundPath = "$userFilesDir/header-background.$format";
             if (file_exists($customBackgroundPath)) {
-                return "/supermon-ng/api/config/header-background";
+                return "/supermon-ng/api/v1/config/header-background";
             }
         }
         
