@@ -411,8 +411,9 @@ update_application() {
         [ -f "$APP_DIR/user_files/sbin/$script" ] && chmod 755 "$APP_DIR/user_files/sbin/$script"
     done
     
-    # Set permissions for config directory
-    chmod -R 644 "$APP_DIR/config" 2>/dev/null || true
+    # Config files 644; directories must stay executable for traversal
+    find "$APP_DIR/config" -type d -exec chmod 755 {} \; 2>/dev/null || true
+    find "$APP_DIR/config" -type f -exec chmod 644 {} \; 2>/dev/null || true
 }
 
 # Function to update system services
@@ -478,12 +479,6 @@ update_services() {
         "$PROJECT_ROOT/systemd/supermon-ng-node-status.timer" \
         "/etc/systemd/system/supermon-ng-node-status.timer" \
         "Timer"
-    
-    # Update WebSocket service
-    if [ -f "$APP_DIR/systemd/supermon-ng-websocket.service" ]; then
-        cp "$APP_DIR/systemd/supermon-ng-websocket.service" /etc/systemd/system/
-        print_status "WebSocket service file updated"
-    fi
     
     # Reload systemd and enable units (restarts happen in restart_services)
     systemctl daemon-reload
