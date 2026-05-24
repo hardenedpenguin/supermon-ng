@@ -447,7 +447,7 @@
             </div>
             
             <div class="color-item">
-              <label>Receiving Status</label>
+              <label>Link RX Keyed</label>
               <div class="color-picker-wrapper">
                 <input 
                   v-model="themeData.colors.statusReceiving" 
@@ -464,7 +464,24 @@
             </div>
             
             <div class="color-item">
-              <label>First Node Status</label>
+              <label>Link TX Keyed</label>
+              <div class="color-picker-wrapper">
+                <input 
+                  v-model="themeData.colors.statusTransmitting" 
+                  type="color" 
+                  class="color-picker"
+                />
+                <input 
+                  v-model="themeData.colors.statusTransmitting" 
+                  type="text" 
+                  class="color-input"
+                  placeholder="#e67e22"
+                />
+              </div>
+            </div>
+            
+            <div class="color-item">
+              <label>First Node Idle</label>
               <div class="color-picker-wrapper">
                 <input 
                   v-model="themeData.colors.statusFirstNode" 
@@ -529,9 +546,15 @@
                 </div>
               </div>
               <div class="status-preview-item" :style="{ backgroundColor: themeData.colors.statusReceiving, color: themeData.colors.text }">
-                <div>RX</div>
+                <div>RX Keyed</div>
                 <div class="contrast-indicator" :style="{ color: getContrastStatus(getContrastRatio(themeData.colors.statusReceiving, themeData.colors.text)).color }">
                   {{ getContrastStatus(getContrastRatio(themeData.colors.statusReceiving, themeData.colors.text)).status }}
+                </div>
+              </div>
+              <div class="status-preview-item" :style="{ backgroundColor: themeData.colors.statusTransmitting, color: themeData.colors.text }">
+                <div>TX Keyed</div>
+                <div class="contrast-indicator" :style="{ color: getContrastStatus(getContrastRatio(themeData.colors.statusTransmitting, themeData.colors.text)).color }">
+                  {{ getContrastStatus(getContrastRatio(themeData.colors.statusTransmitting, themeData.colors.text)).status }}
                 </div>
               </div>
               <div class="status-preview-item" :style="{ backgroundColor: themeData.colors.statusFirstNode, color: themeData.colors.text }">
@@ -640,6 +663,7 @@ const themeData = ref({
     statusCos: '#17a2b8',
     statusFullDuplex: '#e74c3c',
     statusReceiving: '#9b59b6',
+    statusTransmitting: '#e67e22',
     statusFirstNode: '#6c757d'
   }
 })
@@ -660,13 +684,13 @@ onMounted(() => {
     // Editing existing custom theme
     themeData.value = {
       label: props.editingTheme.label,
-      colors: { ...props.editingTheme.colors }
+      colors: { ...themeData.value.colors, ...props.editingTheme.colors }
     }
   } else if (props.baseTheme) {
     // Cloning a theme (built-in or custom) - pre-fill with base theme data but with modified label
     themeData.value = {
       label: `Custom ${props.baseTheme.label}`,
-      colors: { ...props.baseTheme.colors }
+      colors: { ...themeData.value.colors, ...props.baseTheme.colors }
     }
   }
 })

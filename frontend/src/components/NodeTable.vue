@@ -367,27 +367,20 @@ const showNodeCount = computed(() => {
 
 // Methods
 const getConnectedNodeClass = (node: ConnectedNode, index: number): string => {
-  // First connected node gets lighter header color, others get darker gColor
-  let className = ''
-  
-  if (index === 0) {
-    if (node.keyed === 'yes') {
-      className = node.mode === 'R' ? 'rxkColor' : 'rColor'
-    } else if (node.mode === 'C') {
-      className = 'cColor'
-    } else if (node.mode === 'R') {
-      className = 'rxColor'
-    } else {
-      className = 'firstNodeColor' // Lighter color for first connected node when idle (different from gColor)
-    }
-  } else {
-    // Subsequent nodes get darker gColor (idle state)
-    className = 'gColor'
+  // Per-link keyed state from AMI SawStat (keyups) — same source as classic supermon
+  if (node.keyed === 'yes') {
+    return node.mode === 'R' ? 'rxkColor' : 'txColor'
   }
-  
-
-  
-  return className
+  if (node.mode === 'C') {
+    return 'cColor'
+  }
+  if (node.mode === 'R') {
+    return 'rxColor'
+  }
+  if (index === 0) {
+    return 'firstNodeColor'
+  }
+  return 'gColor'
 }
 
 const getModeText = (mode: string): string => {
@@ -801,12 +794,12 @@ defineExpose({
 }
 
 /* Connected nodes table styling with custom theme support */
-.gridtable tr:not(.rColor):not(.cColor):not(.gColor):not(.tColor):not(.bColor):not(.lColor):not(.rxkColor):not(.firstNodeColor) {
+.gridtable tr:not(.rColor):not(.cColor):not(.gColor):not(.tColor):not(.bColor):not(.lColor):not(.rxkColor):not(.txColor):not(.rxColor):not(.firstNodeColor) {
   background-color: var(--table-bg) !important;
   color: var(--text-color) !important;
 }
 
-.gridtable tr:not(.rColor):not(.cColor):not(.gColor):not(.tColor):not(.bColor):not(.lColor):not(.rxkColor):not(.firstNodeColor) td {
+.gridtable tr:not(.rColor):not(.cColor):not(.gColor):not(.tColor):not(.bColor):not(.lColor):not(.rxkColor):not(.txColor):not(.rxColor):not(.firstNodeColor) td {
   background-color: var(--table-bg) !important;
   color: var(--text-color) !important;
   border-color: transparent !important;
@@ -869,6 +862,18 @@ defineExpose({
   background-color: var(--status-receiving) !important;
   font-weight: bold;
   color: var(--background-color) !important;
+}
+
+.gridtable tr.txColor td {
+  background-color: var(--status-transmitting) !important;
+  font-weight: bold;
+  color: var(--background-color) !important;
+}
+
+.gridtable tr.rxColor td {
+  background-color: var(--status-idle) !important;
+  font-weight: bold;
+  color: var(--local-node-text) !important;
 }
 
 .gridtable tr.firstNodeColor td {

@@ -33,6 +33,8 @@ interface LegacyTheme {
     statusCos: string
     statusFullDuplex: string
     statusReceiving: string
+    /** Connected link keyed (TX / transceive) — SawStat keyups */
+    statusTransmitting: string
     statusFirstNode: string
   }
   isCustom?: boolean
@@ -68,8 +70,9 @@ export const themes: LegacyTheme[] = [
       statusPtt: '#4a90e2',         // PTT-Keyed - bright blue
       statusCos: '#17a2b8',         // COS-Detected - teal (harmonious with dark theme)
       statusFullDuplex: '#e74c3c',  // Full-Duplex - red
-      statusReceiving: '#9b59b6',   // Receiving - purple
-      statusFirstNode: '#6c757d'    // First connected node - neutral gray
+      statusReceiving: '#9b59b6',   // Connected RX keyed
+      statusTransmitting: '#e67e22', // Connected TX / transceive keyed
+      statusFirstNode: '#6c757d'    // First connected node idle
     }
   },
   {
@@ -100,8 +103,9 @@ export const themes: LegacyTheme[] = [
       statusPtt: '#3498db',         // PTT-Keyed - blue
       statusCos: '#138496',         // COS-Detected - darker teal (harmonious with light theme)
       statusFullDuplex: '#c0392b',  // Full-Duplex - darker red
-      statusReceiving: '#8e44ad',   // Receiving - darker purple
-      statusFirstNode: '#6c757d'    // First connected node - neutral gray
+      statusReceiving: '#8e44ad',
+      statusTransmitting: '#d35400',
+      statusFirstNode: '#6c757d'
     }
   },
   {
@@ -132,8 +136,9 @@ export const themes: LegacyTheme[] = [
       statusPtt: '#60a5fa',         // PTT-Keyed - lighter blue
       statusCos: '#06b6d4',         // COS-Detected - cyan (harmonious with blue theme)
       statusFullDuplex: '#ef4444',  // Full-Duplex - red
-      statusReceiving: '#a855f7',   // Receiving - purple
-      statusFirstNode: '#6c757d'    // First connected node - neutral gray
+      statusReceiving: '#a855f7',
+      statusTransmitting: '#f39c12',
+      statusFirstNode: '#6c757d'
     }
   },
   {
@@ -164,8 +169,9 @@ export const themes: LegacyTheme[] = [
       statusPtt: '#34d399',         // PTT-Keyed - lighter green
       statusCos: '#0891b2',         // COS-Detected - teal-cyan (harmonious with green theme)
       statusFullDuplex: '#ef4444',  // Full-Duplex - red
-      statusReceiving: '#a855f7',   // Receiving - purple
-      statusFirstNode: '#6c757d'    // First connected node - neutral gray
+      statusReceiving: '#a855f7',
+      statusTransmitting: '#f59e0b',
+      statusFirstNode: '#6c757d'
     }
   },
   {
@@ -196,8 +202,9 @@ export const themes: LegacyTheme[] = [
       statusPtt: '#4a90a4',         // PTT-Keyed - darker teal
       statusCos: '#0d9488',         // COS-Detected - seafoam teal (perfectly harmonious)
       statusFullDuplex: '#a93226',  // Full-Duplex - dark red
-      statusReceiving: '#7d3c98',   // Receiving - dark purple
-      statusFirstNode: '#6c757d'    // First connected node - neutral gray
+      statusReceiving: '#7d3c98',
+      statusTransmitting: '#e67e22',
+      statusFirstNode: '#6c757d'
     }
   },
   {
@@ -228,11 +235,14 @@ export const themes: LegacyTheme[] = [
       statusPtt: '#00ffff',         // PTT-Keyed - bright cyan
       statusCos: '#00d4aa',         // COS-Detected - bright teal (harmonious with neon purple)
       statusFullDuplex: '#ff0066',  // Full-Duplex - bright magenta
-      statusReceiving: '#00ff88',   // Receiving - bright green
-      statusFirstNode: '#6c757d'    // First connected node - neutral gray
+      statusReceiving: '#00ff88',
+      statusTransmitting: '#ffaa00',
+      statusFirstNode: '#6c757d'
     }
   }
 ]
+
+const defaultStatusColors = themes[0].colors
 
 const currentTheme = ref<string>('dark')
 const isLoaded = ref(false)
@@ -286,39 +296,42 @@ export function useTheme() {
     const theme = allThemes.find(t => t.name === themeName)
     if (!theme) return
 
+    const colors = { ...defaultStatusColors, ...theme.colors }
+
     const root = document.documentElement
-    root.style.setProperty('--primary-color', theme.colors.primary)
-    root.style.setProperty('--text-color', theme.colors.text)
-    root.style.setProperty('--background-color', theme.colors.background)
-    root.style.setProperty('--container-bg', theme.colors.container)
-    root.style.setProperty('--border-color', theme.colors.border)
-    root.style.setProperty('--input-bg', theme.colors.input)
-    root.style.setProperty('--input-text', theme.colors.inputText)
-    root.style.setProperty('--table-header-bg', theme.colors.tableHeader)
-    root.style.setProperty('--table-bg', theme.colors.tableBg)
-    root.style.setProperty('--success-color', theme.colors.success)
-    root.style.setProperty('--warning-color', theme.colors.warning)
-    root.style.setProperty('--error-color', theme.colors.error)
-    root.style.setProperty('--link-color', theme.colors.link)
-    root.style.setProperty('--menu-background', theme.colors.menu)
+    root.style.setProperty('--primary-color', colors.primary)
+    root.style.setProperty('--text-color', colors.text)
+    root.style.setProperty('--background-color', colors.background)
+    root.style.setProperty('--container-bg', colors.container)
+    root.style.setProperty('--border-color', colors.border)
+    root.style.setProperty('--input-bg', colors.input)
+    root.style.setProperty('--input-text', colors.inputText)
+    root.style.setProperty('--table-header-bg', colors.tableHeader)
+    root.style.setProperty('--table-bg', colors.tableBg)
+    root.style.setProperty('--success-color', colors.success)
+    root.style.setProperty('--warning-color', colors.warning)
+    root.style.setProperty('--error-color', colors.error)
+    root.style.setProperty('--link-color', colors.link)
+    root.style.setProperty('--menu-background', colors.menu)
     
     // Apply local node table specific colors
-    root.style.setProperty('--local-node-bg', theme.colors.localNodeBg)
-    root.style.setProperty('--local-node-text', theme.colors.localNodeText)
-    root.style.setProperty('--local-node-border', theme.colors.localNodeBorder)
-    root.style.setProperty('--local-node-header', theme.colors.localNodeHeader)
-    root.style.setProperty('--local-node-header-text', theme.colors.localNodeHeaderText)
+    root.style.setProperty('--local-node-bg', colors.localNodeBg)
+    root.style.setProperty('--local-node-text', colors.localNodeText)
+    root.style.setProperty('--local-node-border', colors.localNodeBorder)
+    root.style.setProperty('--local-node-header', colors.localNodeHeader)
+    root.style.setProperty('--local-node-header-text', colors.localNodeHeaderText)
     
-    // Apply COS/PTT status colors
-    root.style.setProperty('--status-idle', theme.colors.statusIdle)
-    root.style.setProperty('--status-ptt', theme.colors.statusPtt)
-    root.style.setProperty('--status-cos', theme.colors.statusCos)
-    root.style.setProperty('--status-full-duplex', theme.colors.statusFullDuplex)
-    root.style.setProperty('--status-receiving', theme.colors.statusReceiving)
-    root.style.setProperty('--status-first-node', theme.colors.statusFirstNode)
+    // Apply COS/PTT and connected-link status colors
+    root.style.setProperty('--status-idle', colors.statusIdle)
+    root.style.setProperty('--status-ptt', colors.statusPtt)
+    root.style.setProperty('--status-cos', colors.statusCos)
+    root.style.setProperty('--status-full-duplex', colors.statusFullDuplex)
+    root.style.setProperty('--status-receiving', colors.statusReceiving)
+    root.style.setProperty('--status-transmitting', colors.statusTransmitting)
+    root.style.setProperty('--status-first-node', colors.statusFirstNode)
     
     // Generate and apply primary color shades for status indicators
-    const shades = generateShades(theme.colors.primary)
+    const shades = generateShades(colors.primary)
     root.style.setProperty('--primary-color-lighter', shades.lighter)
     root.style.setProperty('--primary-color-light', shades.light)
     root.style.setProperty('--primary-color-dark', shades.dark)
