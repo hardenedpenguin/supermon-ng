@@ -262,14 +262,84 @@ final class LocalAllmonGeneratorService
 
         $first = $nodeIds[0];
         $blocks[] = '';
-        $blocks[] = '[LsNodes]';
-        $blocks[] = 'url="/lsnod/' . $first . '"';
-        $blocks[] = 'menu=yes';
-        $blocks[] = '';
         $blocks[] = '[ASL3+]';
         $blocks[] = 'default_node=' . $first;
+        $blocks = array_merge($blocks, $this->defaultMenuIniLines($first));
 
         return implode("\n", $blocks) . "\n";
+    }
+
+    /**
+     * Default dashboard menu links appended to every generated allmon.ini.
+     * Trailing ">" on external URLs opens them in a new tab (see ConfigController menu loader).
+     *
+     * @return list<string>
+     */
+    private function defaultMenuIniLines(string $firstNodeId): array
+    {
+        return [
+            '',
+            '; --- Dashboard menu links (edit URLs/callsign/coordinates as needed) ---',
+            '',
+            '[LsNodes]',
+            'url="/lsnod/' . $firstNodeId . '"',
+            'menu=yes',
+            '',
+            '[DVSwitch]',
+            'url="http://DVSwitch.org/>"',
+            'menu=yes',
+            '',
+            '[D-Star]',
+            'url="http://www.DStarinfo.com/reflectors.aspx>"',
+            'menu=yes',
+            '',
+            '[Pi-Star]',
+            'url="http://PiStar.uk/>"',
+            'menu=yes',
+            '',
+            '[QRZ]',
+            'url="http://QRZ.com/db/W5GLE>"',
+            'menu=yes',
+            '',
+            '[ASL3]',
+            'url="https://allstarlink.org>"',
+            'menu=yes',
+            '',
+            '[NWS RADAR]',
+            'system=US-Tools',
+            'url="https://radar.weather.gov/>"',
+            'menu=yes',
+            '',
+            '[WINDFINDER]',
+            'system=US-Tools',
+            'url="https://www.windfinder.com/#5/30.0651/-95.198558/spot>"',
+            'menu=yes',
+            '',
+            '[WUNDERGROUND]',
+            'system=US-Tools',
+            'url="https://www.wunderground.com/wundermap>"',
+            'menu=yes',
+            '',
+            '[USGS]',
+            'system=US-Tools',
+            'url="https://earthquake.usgs.gov/earthquakes/map>"',
+            'menu=yes',
+            '',
+            '[FIRE INCIDENTS]',
+            'system=US-Tools',
+            'url="https://www.frontlinewildfire.com/texas-wildfire-map/>"',
+            'menu=yes',
+            '',
+            '[OCEAN BUOY DATA]',
+            'system=US-Tools',
+            'url="https://www.ndbc.noaa.gov/obs.shtml?lat=30.065171&lon=-95.198558&zoom=7&type=oceans&status=r&pgm=&op=&ls=nA>"',
+            'menu=yes',
+            '',
+            '[GOOGLE MAPS]',
+            'system=US-Tools',
+            'url="https://www.google.com/maps/place/Texas,+USA>"',
+            'menu=yes',
+        ];
     }
 
     private function iniValue(string $v): string

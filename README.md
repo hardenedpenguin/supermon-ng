@@ -48,7 +48,7 @@ The installer automatically handles:
 - Security setup (sudoers, file permissions, ACLs)
 - Systemd services for backend, WebSocket, and node status updates
 - Frontend deployment
-- **`user_files/allmon.ini` on new installs**: Generated from your local Asterisk `rpt.conf` (node stanzas) and `manager.conf` (AMI). Any existing `allmon.ini` is backed up to `allmon.ini.bak.<timestamp>` before it is replaced.
+- **`user_files/allmon.ini` on new installs**: Generated from your local Asterisk `rpt.conf` (node stanzas) and `manager.conf` (AMI), plus default dashboard menu links (LsNodes, DVSwitch, D-Star, Pi-Star, QRZ, ASL3, and US-Tools weather/map URLs). External URLs use a trailing `>` so they open in a new browser tab. Any existing `allmon.ini` is backed up to `allmon.ini.bak.<timestamp>` before it is replaced.
 
 **Options:**
 - `--skip-apache`: Skip Apache configuration (for Nginx or custom setups)
