@@ -18,15 +18,8 @@ if (str_contains($requestUri, '/api/')) {
 $vueIndexPath = __DIR__ . '/public/index.html';
 
 if (file_exists($vueIndexPath)) {
-    // Read and output the Vue app HTML
-    $content = file_get_contents($vueIndexPath);
-    
-    // Update asset paths to be relative to the root
-    $content = str_replace('src="/assets/', 'src="/public/assets/', $content);
-    $content = str_replace('href="/assets/', 'href="/public/assets/', $content);
-    $content = str_replace('href="/icons/', 'href="/public/icons/', $content);
-    
-    echo $content;
+    // Serve built SPA as-is (paths come from Vite base / APP_BASE_PATH at build time)
+    readfile($vueIndexPath);
 } else {
     // Fallback if Vue app is not built
     http_response_code(404);

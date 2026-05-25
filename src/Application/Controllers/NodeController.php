@@ -16,6 +16,7 @@ use SupermonNg\Services\ValidationService;
 use SupermonNg\Services\Ami\AmiXstatParserService;
 use SupermonNg\Services\WebSocketTokenService;
 use SupermonNg\Application\Controllers\Concerns\JsonResponseTrait;
+use SupermonNg\Support\AppBasePath;
 use Ramsey\Uuid\Uuid;
 use Exception;
 
@@ -1089,7 +1090,7 @@ class NodeController
                 'node' => $nodeId,
                 'token' => $token,
                 'expires_in' => 120,
-                'ws_url' => "{$wsScheme}://{$host}/supermon-ng/ws/{$nodeId}?token={$token}",
+                'ws_url' => "{$wsScheme}://{$host}" . AppBasePath::url("ws/{$nodeId}") . "?token={$token}",
             ]);
         } catch (\Throwable $e) {
             $this->logger->error('Failed to issue WebSocket token', [
@@ -1159,7 +1160,7 @@ class NodeController
                 'node' => $nodeId,
                 'port' => $basePort,
                 'router' => true,
-                'ws_url' => "{$wsScheme}://{$host}/supermon-ng/ws/{$nodeId}",
+                'ws_url' => "{$wsScheme}://{$host}" . AppBasePath::url("ws/{$nodeId}"),
             ]));
             
             return $response->withHeader('Content-Type', 'application/json');
@@ -1202,7 +1203,7 @@ class NodeController
                     'node' => $nodeId,
                     'port' => $basePort,
                     'router' => true,
-                    'ws_url' => "{$wsScheme}://{$host}/supermon-ng/ws/{$nodeId}",
+                    'ws_url' => "{$wsScheme}://{$host}" . AppBasePath::url("ws/{$nodeId}"),
                 ];
             }
 

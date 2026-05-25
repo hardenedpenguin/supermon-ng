@@ -35,9 +35,9 @@
       <!-- Custom Logo (if configured) -->
       <div v-if="systemInfo?.logoName" class="custom-logo" :style="customLogoStyle">
         <a v-if="systemInfo?.logoUrl" :href="getCleanUrl(systemInfo.logoUrl)" :target="shouldOpenInNewTab(systemInfo.logoUrl) ? '_blank' : '_self'">
-          <img :src="`/supermon-ng/user_files/${systemInfo.logoName}`" :style="{ width: systemInfo?.logoSize || '15%', border: '0px' }" alt="Custom Logo">
+          <img :src="appUrl(`user_files/${systemInfo.logoName}`)" :style="{ width: systemInfo?.logoSize || '15%', border: '0px' }" alt="Custom Logo">
         </a>
-        <img v-else :src="`/supermon-ng/user_files/${systemInfo.logoName}`" :style="{ width: systemInfo?.logoSize || '15%', border: '0px' }" alt="Custom Logo">
+        <img v-else :src="appUrl(`user_files/${systemInfo.logoName}`)" :style="{ width: systemInfo?.logoSize || '15%', border: '0px' }" alt="Custom Logo">
       </div>
 
       <!-- AllStar Logo (default or if no custom logo) -->
@@ -314,6 +314,7 @@ import { ref, computed, onMounted, onUnmounted, watch, nextTick, onBeforeMount, 
 import { useAppStore } from '@/stores/app'
 import { useRealTimeStore } from '@/stores/realTime'
 import { api } from '@/utils/api'
+import { appUrl } from '@/utils/basePath'
 import { sanitizeHtml } from '@/utils/sanitize'
 import type { Node as NodeType } from '@/types'
 import NodeTable from '@/components/NodeTable.vue'
@@ -1220,7 +1221,7 @@ onBeforeMount(async () => {
   const timeoutId = setTimeout(() => controller.abort(), 50) // 50ms timeout - fail very fast
   
   try {
-    const response = await fetch('/supermon-ng/api/v1/config/header-background', {
+    const response = await fetch(appUrl('api/v1/config/header-background'), {
       method: 'GET',
       cache: 'no-cache',
       signal: controller.signal
@@ -1228,7 +1229,7 @@ onBeforeMount(async () => {
     clearTimeout(timeoutId)
     if (response.ok) {
       // Custom header exists - set it immediately
-      headerBackground.value = '/supermon-ng/api/v1/config/header-background'
+      headerBackground.value = appUrl('api/v1/config/header-background')
       return
     }
   } catch (e) {
@@ -1259,7 +1260,7 @@ onMounted(async () => {
       if (systemInfo.value?.customHeaderBackground) {
         headerBackground.value = systemInfo.value.customHeaderBackground
       } else if (!headerBackground.value) {
-        headerBackground.value = '/supermon-ng/background.jpg'
+        headerBackground.value = appUrl('background.jpg')
       }
       if (systemInfo.value?.smServerName) {
         document.title = systemInfo.value.smServerName
@@ -1295,7 +1296,7 @@ onMounted(async () => {
         if (systemInfo.value?.customHeaderBackground) {
           headerBackground.value = systemInfo.value.customHeaderBackground
         } else if (!headerBackground.value) {
-          headerBackground.value = '/supermon-ng/background.jpg'
+          headerBackground.value = appUrl('background.jpg')
         }
         if (systemInfo.value?.smServerName) {
           document.title = systemInfo.value.smServerName

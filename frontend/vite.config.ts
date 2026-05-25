@@ -26,9 +26,47 @@ function preloadPlugin() {
   }
 }
 
+// Relative base: one production build serves / and /supermon-ng (runtime base in basePath.ts).
+// Dev proxy: optional VITE_APP_BASE_PATH or APP_BASE_PATH for local subdirectory testing.
+function devProxyBase(): string {
+  const raw = process.env.VITE_APP_BASE_PATH ?? process.env.APP_BASE_PATH ?? '/supermon-ng'
+  const trimmed = raw.trim()
+  if (trimmed === '' || trimmed === '/') {
+    return ''
+  }
+  return `/${trimmed.replace(/^\/+|\/+$/g, '')}`
+}
+
+const devPrefix = devProxyBase()
+const apiProxyPath = `${devPrefix}/api/v1`.replace(/\/+/g, '/') || '/api/v1'
+
+const devProxy = {
+  target: 'http://localhost:8000',
+  changeOrigin: true,
+  secure: false,
+  cookieDomainRewrite: 'localhost',
+  configure: (proxy: { on: (ev: string, fn: (...args: unknown[]) => void) => void }) => {
+    proxy.on('proxyReq', (proxyReq: { setHeader: (k: string, v: string) => void }, req: { method?: string; url?: string; headers: { cookie?: string } }) => {
+      if (req.headers.cookie) {
+        proxyReq.setHeader('Cookie', req.headers.cookie)
+      }
+    })
+    proxy.on('proxyRes', (_proxyRes: unknown, _req: unknown, res: { setHeader: (k: string, v: string | string[]) => void }) => {
+      return res
+    })
+  }
+}
+
+const serverProxy: Record<string, typeof devProxy> = {
+  [apiProxyPath]: devProxy
+}
+if (devPrefix) {
+  serverProxy['/api/v1'] = { target: 'http://localhost:8000', changeOrigin: true, secure: false, cookieDomainRewrite: 'localhost' }
+}
+
 export default defineConfig({
   plugins: [vue(), preloadPlugin()],
-  base: '/supermon-ng/',
+  base: './',
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src')
@@ -38,29 +76,7 @@ export default defineConfig({
     port: 5179,
     host: true,
     proxy: {
-      '/supermon-ng/api/v1': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false,
-        cookieDomainRewrite: 'localhost',
-        configure: (proxy, options) => {
-          proxy.on('proxyReq', (proxyReq, req, res) => {
-            console.log('🔐 Proxy request:', req.method, req.url)
-            // Forward cookies from browser to backend
-            if (req.headers.cookie) {
-              proxyReq.setHeader('Cookie', req.headers.cookie)
-            }
-          })
-          proxy.on('proxyRes', (proxyRes, req, res) => {
-            console.log('🔐 Proxy response:', proxyRes.statusCode, req.url)
-            console.log('🔐 Proxy cookies:', proxyRes.headers['set-cookie'])
-            // Forward cookies from backend to browser
-            if (proxyRes.headers['set-cookie']) {
-              res.setHeader('Set-Cookie', proxyRes.headers['set-cookie'])
-            }
-          })
-        }
-      },
+      ...serverProxy,
       '/server.php': {
         target: 'http://localhost:8000',
         changeOrigin: true,
@@ -71,7 +87,6 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: true,
-    // CSS for lazy-loaded components is emitted in their chunks (deferred until modal opens)
     rollupOptions: {
       output: {
         manualChunks: {

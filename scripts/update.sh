@@ -28,6 +28,27 @@ CONFIG_CHANGED=false
 USER_FILES_BACKUP_DIR=""
 
 echo -e "${BLUE}Supermon-NG Update Script${NC}"
+
+# Ensure $APP_DIR/.env exists; persist APP_BASE_PATH from the shell (sudo does not pass env vars by default)
+prepare_app_env() {
+    local env_file="$APP_DIR/.env"
+    if [ ! -f "$env_file" ] && [ -f "$PROJECT_ROOT/.env" ]; then
+        cp "$PROJECT_ROOT/.env" "$env_file"
+        print_status "Copied .env to $env_file"
+    fi
+    if [ ! -f "$env_file" ] && [ -f "$PROJECT_ROOT/.env.example" ]; then
+        cp "$PROJECT_ROOT/.env.example" "$env_file"
+        print_status "Created $env_file from .env.example"
+    fi
+    if [ -n "${APP_BASE_PATH:-}" ] && [ -f "$env_file" ]; then
+        if grep -q '^APP_BASE_PATH=' "$env_file"; then
+            sed -i "s|^APP_BASE_PATH=.*|APP_BASE_PATH=${APP_BASE_PATH}|" "$env_file"
+        else
+            echo "APP_BASE_PATH=${APP_BASE_PATH}" >> "$env_file"
+        fi
+        print_status "Saved APP_BASE_PATH=${APP_BASE_PATH} to $env_file"
+    fi
+}
 echo "=============================="
 
 # Function to print status messages
@@ -573,7 +594,7 @@ update_frontend() {
             source "$APP_DIR/.env" 2>/dev/null || true
             set +a
         fi
-        APP_BASE_PATH="${APP_BASE_PATH:-/}"
+        APP_BASE_PATH="${APP_BASE_PATH:-/supermon-ng}"
         export APP_BASE_PATH VITE_APP_BASE_PATH="$APP_BASE_PATH"
         print_status "APP_BASE_PATH=${APP_BASE_PATH}"
         npm install
@@ -586,6 +607,10 @@ update_frontend() {
     else
         # Frontend files are already in public directory from production files copy
         print_status "Frontend files already updated via production files copy..."
+    fi
+
+    if [ -f "$PROJECT_ROOT/scripts/configure-app-base-path.sh" ]; then
+        bash "$PROJECT_ROOT/scripts/configure-app-base-path.sh" "$APP_DIR"
     fi
 }
 
@@ -608,46 +633,23 @@ update_apache_config() {
         source "$APP_DIR/.env" 2>/dev/null || true
         set +a
     fi
-    APP_BASE_PATH="${APP_BASE_PATH:-/}"
+    APP_BASE_PATH="${APP_BASE_PATH:-/supermon-ng}"
     export APP_DIR APP_BASE_PATH
-    print_status "Regenerating Apache configuration template (APP_BASE_PATH=${APP_BASE_PATH})..."
+    if [ -f "$APP_DIR/.env" ]; then
+        SUPERMON_SERVER_NAME="$(grep -E '^SUPERMON_SERVER_NAME=' "$APP_DIR/.env" 2>/dev/null | cut -d= -f2- | tr -d '"' || true)"
+        SSL_CERT_NAME="$(grep -E '^SSL_CERT_NAME=' "$APP_DIR/.env" 2>/dev/null | cut -d= -f2- | tr -d '"' || true)"
+        export SUPERMON_SERVER_NAME SSL_CERT_NAME
+    fi
+    print_status "Regenerating Apache configuration template (APP_BASE_PATH=${APP_BASE_PATH}, ServerName=${SUPERMON_SERVER_NAME:-default})..."
     if [ ! -f "$PROJECT_ROOT/scripts/generate-apache-template.sh" ]; then
         print_error "Missing scripts/generate-apache-template.sh — use a full release tarball or git pull"
         exit 1
     fi
     chmod +x "$PROJECT_ROOT/scripts/generate-apache-template.sh"
     bash "$PROJECT_ROOT/scripts/generate-apache-template.sh" "$APACHE_TEMPLATE"
-    print_status "Apache configuration template regenerated"
-    
-    # Update Apache site configuration
-    # Note: No backup of system files - Apache config is managed by installation
-    cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
-    
-    # Ensure mod_ssl is enabled for HTTPS VirtualHost
-    a2enmod -q ssl 2>/dev/null || print_warning "Could not enable mod_ssl (HTTPS may not work)"
-    
-    # Disable the default sites so supermon-ng handles both :80 and :443
-    print_status "Disabling default Apache sites..."
-    a2dissite -q 000-default 2>/dev/null || {
-        print_warning "Failed to disable default site (may not exist)"
-    }
-    a2dissite -q default-ssl 2>/dev/null || {
-        print_warning "Failed to disable default SSL site (may not exist)"
-    }
-    
-    # Enable the supermon-ng site
-    print_status "Enabling supermon-ng Apache site..."
-    a2ensite -q supermon-ng 2>/dev/null || {
-        print_warning "Failed to enable Apache site automatically"
-    }
-    
-    # Test and restart Apache
-    if apache2ctl configtest >/dev/null 2>&1; then
-        systemctl restart apache2
-        print_status "Apache configuration updated successfully"
-    else
-        print_warning "Apache configuration test failed. Please check manually."
-    fi
+    print_status "Apache reference template written to $APACHE_TEMPLATE"
+    print_status "Leaving live site unchanged: $APACHE_SITE_FILE (operator/Certbot managed)"
+    print_status "To apply the generated template manually: diff $APACHE_TEMPLATE $APACHE_SITE_FILE"
 }
 
 # Function to run post-update tasks
@@ -752,6 +754,7 @@ restart_services() {
 
 # Main update process
 main() {
+    prepare_app_env
     get_current_version
     get_new_version
     compare_versions

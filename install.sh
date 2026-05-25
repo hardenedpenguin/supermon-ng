@@ -312,8 +312,16 @@ if [ -f "package.json" ]; then
     echo "🧹 Cleaning build directory..."
     rm -rf dist
     
-    # Build frontend
-    echo "🔨 Building frontend..."
+    # Build frontend (default /supermon-ng; APP_BASE_PATH=/ for dedicated vhost)
+    if [ -f "$INSTALLER_DIR/.env" ]; then
+        set -a
+        # shellcheck disable=SC1091
+        source "$INSTALLER_DIR/.env" 2>/dev/null || true
+        set +a
+    fi
+    APP_BASE_PATH="${APP_BASE_PATH:-/supermon-ng}"
+    export APP_BASE_PATH VITE_APP_BASE_PATH="$APP_BASE_PATH"
+    echo "🔨 Building frontend (APP_BASE_PATH=${APP_BASE_PATH})..."
     npm run build
     
     # Copy built files to public directory
@@ -432,138 +440,41 @@ else
     echo "⏭️  Skipping Apache installation (--skip-apache flag)"
 fi
 
-# Create Apache configuration template
+# Create Apache configuration template (APP_BASE_PATH from .env or /)
 APACHE_TEMPLATE="$APP_DIR/apache-config-template.conf"
-if [ -f "$APACHE_TEMPLATE" ]; then
-    echo "⚠️  Apache configuration template already exists. Skipping creation."
-    echo "   If you want to update the template, please remove it manually first:"
-    echo "   sudo rm $APACHE_TEMPLATE"
-else
-    echo "📝 Creating Apache configuration template..."
-    
-    cat > "$APACHE_TEMPLATE" << APACHE_EOF
-# Supermon-NG Apache Configuration Template
-# Copy this configuration to your Apache sites-available directory
+if [ -f "$APP_DIR/.env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    source "$APP_DIR/.env" 2>/dev/null || true
+    set +a
+elif [ -f "$INSTALLER_DIR/.env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    source "$INSTALLER_DIR/.env" 2>/dev/null || true
+    set +a
+fi
+APP_BASE_PATH="${APP_BASE_PATH:-/supermon-ng}"
+export APP_DIR APP_BASE_PATH
+if [ -f "$APP_DIR/.env" ]; then
+    SUPERMON_SERVER_NAME="$(grep -E '^SUPERMON_SERVER_NAME=' "$APP_DIR/.env" 2>/dev/null | cut -d= -f2- | tr -d '"' || true)"
+    SSL_CERT_NAME="$(grep -E '^SSL_CERT_NAME=' "$APP_DIR/.env" 2>/dev/null | cut -d= -f2- | tr -d '"' || true)"
+    export SUPERMON_SERVER_NAME SSL_CERT_NAME
+fi
+echo "📝 Creating Apache configuration template (APP_BASE_PATH=${APP_BASE_PATH})..."
+chmod +x "$INSTALLER_DIR/scripts/generate-apache-template.sh"
+bash "$INSTALLER_DIR/scripts/generate-apache-template.sh" "$APACHE_TEMPLATE"
+echo "✅ Apache configuration template created"
 
-<VirtualHost *:80>
-    DocumentRoot /var/www/html
-    
-    # Proxy configurations (must come before Alias directives)
-    ProxyPreserveHost On
-    
-    # Proxy supermon-ng API requests to backend (must come before Alias)
-    ProxyPass /supermon-ng/api http://localhost:8000/api
-    ProxyPassReverse /supermon-ng/api http://localhost:8000/api
-    
-    # WebSocket proxy for Supermon-NG nodes (must come before Alias directives)
-    # All WebSocket connections route to the single router server on port 8105
-    # The router extracts the node ID from the path and routes internally
-    # MUST use RewriteRule with [P] flag for WebSocket proxying to work correctly
-    # CRITICAL: The $1 in the target URL preserves the node ID from the path
-    # Without $1, connections will fail with "no valid node ID in path" errors
-    RewriteEngine On
-    RewriteCond %{HTTP:Upgrade} =websocket [NC]
-    RewriteCond %{HTTP:Connection} =Upgrade [NC]
-    RewriteRule ^/supermon-ng/ws/(.+)$ ws://localhost:8105/supermon-ng/ws/\$1 [P,L]
-    ProxyPassReverse /supermon-ng/ws/ ws://localhost:8105/supermon-ng/ws/
-    
-    # Alias for Supermon-NG application (after ProxyPass)
-    Alias /supermon-ng APP_DIR_PLACEHOLDER/public
-    
-    # Alias for user files
-    Alias /supermon-ng/user_files APP_DIR_PLACEHOLDER/user_files
-    
-    # Configure Supermon-NG directory
-    <Directory "APP_DIR_PLACEHOLDER/public">
-        AllowOverride All
-        Require all granted
-        
-        # Ensure index.html is served by default (Vue.js frontend)
-        DirectoryIndex index.html index.php
-        
-        # Handle Vue router (SPA) - rewrite all requests to index.html
-        RewriteEngine On
-        RewriteCond %{REQUEST_FILENAME} !-f
-        RewriteCond %{REQUEST_FILENAME} !-d
-        RewriteRule ^ index.html [QSA,L]
-    </Directory>
-    
-    # Configure user files directory
-    <Directory "APP_DIR_PLACEHOLDER/user_files">
-        AllowOverride All
-        Require all granted
-    </Directory>
-    
-    # Configure main document root
-    <Directory "/var/www/html">
-        AllowOverride All
-        Require all granted
-        Options Indexes FollowSymLinks
-    </Directory>
-    
-    ErrorLog \${APACHE_LOG_DIR}/supermon-ng_error.log
-    CustomLog \${APACHE_LOG_DIR}/supermon-ng_access.log combined
-</VirtualHost>
+# Install .env from example when missing
+if [ ! -f "$APP_DIR/.env" ] && [ -f "$INSTALLER_DIR/.env.example" ]; then
+    cp "$INSTALLER_DIR/.env.example" "$APP_DIR/.env"
+    echo "✅ Created $APP_DIR/.env from .env.example"
+fi
 
-# HTTPS VirtualHost using system self-signed certificate (Debian/Ubuntu ssl-cert-snakeoil)
-<VirtualHost *:443>
-    DocumentRoot /var/www/html
-    
-    SSLEngine on
-    SSLCertificateFile /etc/ssl/certs/ssl-cert-snakeoil.pem
-    SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
-    
-    # Proxy configurations (must come before Alias directives)
-    ProxyPreserveHost On
-    
-    # Proxy supermon-ng API requests to backend (must come before Alias)
-    ProxyPass /supermon-ng/api http://localhost:8000/api
-    ProxyPassReverse /supermon-ng/api http://localhost:8000/api
-    
-    # WebSocket proxy for Supermon-NG nodes (must come before Alias directives)
-    RewriteEngine On
-    RewriteCond %{HTTP:Upgrade} =websocket [NC]
-    RewriteCond %{HTTP:Connection} =Upgrade [NC]
-    RewriteRule ^/supermon-ng/ws/(.+)$ ws://localhost:8105/supermon-ng/ws/\$1 [P,L]
-    ProxyPassReverse /supermon-ng/ws/ ws://localhost:8105/supermon-ng/ws/
-    
-    # Alias for Supermon-NG application (after ProxyPass)
-    Alias /supermon-ng APP_DIR_PLACEHOLDER/public
-    
-    # Alias for user files
-    Alias /supermon-ng/user_files APP_DIR_PLACEHOLDER/user_files
-    
-    # Configure Supermon-NG directory
-    <Directory "APP_DIR_PLACEHOLDER/public">
-        AllowOverride All
-        Require all granted
-        DirectoryIndex index.html index.php
-        RewriteEngine On
-        RewriteCond %{REQUEST_FILENAME} !-f
-        RewriteCond %{REQUEST_FILENAME} !-d
-        RewriteRule ^ index.html [QSA,L]
-    </Directory>
-    
-    # Configure user files directory
-    <Directory "APP_DIR_PLACEHOLDER/user_files">
-        AllowOverride All
-        Require all granted
-    </Directory>
-    
-    # Configure main document root
-    <Directory "/var/www/html">
-        AllowOverride All
-        Require all granted
-        Options Indexes FollowSymLinks
-    </Directory>
-    
-    ErrorLog \${APACHE_LOG_DIR}/supermon-ng_ssl_error.log
-    CustomLog \${APACHE_LOG_DIR}/supermon-ng_ssl_access.log combined
-</VirtualHost>
-APACHE_EOF
-    # Replace placeholder with actual path
-    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$APACHE_TEMPLATE"
-    echo "✅ Apache configuration template created"
+# Apply APP_BASE_PATH to index.html + .htaccess (universal release tarball)
+if [ -f "$INSTALLER_DIR/scripts/configure-app-base-path.sh" ]; then
+    chmod +x "$INSTALLER_DIR/scripts/configure-app-base-path.sh"
+    bash "$INSTALLER_DIR/scripts/configure-app-base-path.sh" "$APP_DIR"
 fi
 
 # Automatically install and configure Apache site (unless skipping)

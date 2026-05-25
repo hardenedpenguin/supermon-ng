@@ -1,12 +1,13 @@
 import axios from 'axios'
 import { getCsrfService } from '@/services/CsrfTokenService'
+import { appUrl } from '@/utils/basePath'
 
 // Use the enhanced CSRF service
 const csrfService = getCsrfService()
 
 // Create axios instance with adaptive timeout
 const api = axios.create({
-  baseURL: '/supermon-ng/api/v1',
+  baseURL: appUrl('api/v1'),
   timeout: 5000, // Reduced from 10s to 5s for better responsiveness
   withCredentials: true,
   headers: {

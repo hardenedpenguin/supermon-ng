@@ -1,7 +1,11 @@
 #!/bin/bash
 
 # Supermon-ng Release Script
-# Creates a release tarball with proper versioning and documentation
+# Creates a release tarball with proper versioning and documentation.
+#
+# One tarball for all installs. Frontend uses relative assets + runtime base path.
+# Set APP_BASE_PATH in .env on the target host, then run install.sh or update.sh
+# (configures index.html meta + .htaccess RewriteBase + Apache template).
 
 set -e
 
@@ -441,6 +445,8 @@ main() {
     cd "$(cd "$_script_dir/.." && pwd)" || error "Could not cd to repository root"
 
     log "Starting Supermon-ng release creation..."
+
+    log "Universal release (APP_BASE_PATH configured on target via .env + install/update)"
     
     # Extract version information
     local version=$(extract_version)
@@ -495,8 +501,7 @@ main() {
             npm install
         fi
         
-        # Build frontend
-        log "Building frontend..."
+        log "Building frontend (relative base; APP_BASE_PATH applied at install/update)..."
         npm run build
         
         cd ..
@@ -567,6 +572,16 @@ main() {
     if [ -f "public/.htaccess" ]; then
         cp public/.htaccess "$release_dir/public/" 2>/dev/null || true
     fi
+
+    cat > "$release_dir/BUILD_INFO.txt" << EOF
+Supermon-ng release build metadata
+Version: ${version}
+Built: $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+Frontend: universal build (relative assets, runtime URL base)
+After install: set APP_BASE_PATH in .env then run scripts/update.sh
+  /supermon-ng = subdirectory (default in .env.example)
+  /           = dedicated vhost (e.g. sm.example.com at site root)
+EOF
     
     # Documentation
     cp README.md "$release_dir/" 2>/dev/null || true
@@ -587,6 +602,8 @@ main() {
     cp scripts/update.sh "$release_dir/scripts/"
     cp scripts/version-check.sh "$release_dir/scripts/"
     cp scripts/generate-apache-template.sh "$release_dir/scripts/"
+    cp scripts/patch-public-htaccess.sh "$release_dir/scripts/"
+    cp scripts/configure-app-base-path.sh "$release_dir/scripts/"
     cp scripts/database-auto-update.php "$release_dir/scripts/" 2>/dev/null || true
     chmod +x "$release_dir/scripts/"*.sh 2>/dev/null || true
     cp .env.example "$release_dir/" 2>/dev/null || true

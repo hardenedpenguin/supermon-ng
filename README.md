@@ -75,7 +75,31 @@ The installer automatically handles:
 
 3. **Set Permissions**: Edit `/var/www/html/supermon-ng/user_files/authusers.inc` to grant permissions to your user
 
-4. **Access Dashboard**: Open `http://your-server-ip/supermon-ng/` in your browser
+4. **Access Dashboard**: Open `https://your-host/supermon-ng/` (default). For a dedicated vhost at the site root, set `APP_BASE_PATH=/` in `.env` and run `sudo ./scripts/update.sh`.
+
+### URL base path (`APP_BASE_PATH`)
+
+One release tarball supports both layouts. Set in `/var/www/html/supermon-ng/.env`, then run `update.sh` (patches the UI, `.htaccess`, and Apache template):
+
+| Value | Use case | Example URL |
+|-------|----------|-------------|
+| `/supermon-ng` (default) | App under the main site document root | `https://host/supermon-ng/` |
+| `/` | Dedicated Apache vhost at site root | `https://sm.example.com/` |
+
+```bash
+# Example: dedicated vhost at https://sm.example.com/ (values belong in .env — sudo does not pass shell exports)
+sudo tee /var/www/html/supermon-ng/.env <<'EOF'
+APP_ENV=production
+APP_BASE_PATH=/
+SUPERMON_SERVER_NAME=sm.example.com
+SSL_CERT_NAME=example.com
+EOF
+cd /var/www/html/supermon-ng && sudo ./scripts/update.sh --skip-apache
+# Merge apache-config-template.conf into your live vhost, then reload Apache:
+sudo apache2ctl configtest && sudo systemctl reload apache2
+```
+
+`update.sh` updates the app and writes a reference `apache-config-template.conf` only — it does **not** replace your live `/etc/apache2/sites-available/supermon-ng.conf` (keep Certbot/operator SSL and vhost settings there). Use `--skip-apache` on hosts where Apache is hand-maintained.
 
 ## ⚙️ Configuration
 

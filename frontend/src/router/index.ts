@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { viteBaseUrl } from '@/utils/basePath'
 
 const routes = [
   {
@@ -15,12 +16,12 @@ const routes = [
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
-    redirect: '/'
+    redirect: { name: 'Dashboard' }
   }
 ]
 
 const router = createRouter({
-  history: createWebHistory('/supermon-ng'),
+  history: createWebHistory(viteBaseUrl()),
   routes
 })
 

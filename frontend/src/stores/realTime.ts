@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api, endpoints } from '@/utils/api'
+import { appUrl } from '@/utils/basePath'
 import { useAppStore } from './app'
 import { useAstdbStore } from './astdb'
 import { useBatchRequests } from '@/services/BatchRequestService'
@@ -132,7 +133,7 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const getWebSocketUrl = async (nodeId: string, authenticated: boolean): Promise<string> => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.host
-    const baseUrl = `${protocol}//${host}/supermon-ng/ws/${nodeId}`
+    const baseUrl = `${protocol}//${host}${appUrl(`ws/${nodeId}`)}`
 
     if (!authenticated) {
       return baseUrl

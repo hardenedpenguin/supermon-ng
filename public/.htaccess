@@ -1,4 +1,6 @@
 RewriteEngine On
+# RewriteBase set by scripts/configure-app-base-path.sh from APP_BASE_PATH in .env
+RewriteBase /
 
 # Cache control for assets - allow caching but with revalidation
 <FilesMatch "\.(js|css)$">
@@ -12,16 +14,16 @@ RewriteEngine On
     Header set Expires "0"
 </FilesMatch>
 
-# Serve Vue app for root and non-API requests
+# Serve Vue app for non-API requests (/api and /supermon-ng/api when proxied at vhost)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} !^/api/
+RewriteCond %{REQUEST_URI} !/api/
 RewriteRule ^ index.html [QSA,L]
 
-# Route API requests to PHP backend
+# Route API requests to PHP backend (dedicated vhost with DocumentRoot = public)
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_URI} ^/api/
+RewriteCond %{REQUEST_URI} /api/
 RewriteRule ^ index.php [QSA,L]
 
 

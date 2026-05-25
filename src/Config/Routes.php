@@ -13,6 +13,7 @@ use SupermonNg\Application\Controllers\DvswitchController;
 use SupermonNg\Application\Controllers\BootstrapController;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
 use SupermonNg\Application\Middleware\RequireAuthMiddleware;
+use SupermonNg\Support\AppBasePath;
 
 /** @var App $app */
 global $app;
@@ -58,7 +59,7 @@ $app->get('/api/v1/csrf-token', function ($request, $response) {
             }
             session_set_cookie_params([
                 'lifetime' => 86400,
-                'path' => '/supermon-ng',
+                'path' => AppBasePath::cookiePath(),
                 'domain' => '',
                 'secure' => $isSecure,
                 'httponly' => true,

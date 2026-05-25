@@ -12,6 +12,7 @@ use SupermonNg\Services\CacheService;
 use SupermonNg\Services\IncludeManagerService;
 use SupermonNg\Services\UserPermissionService;
 use SupermonNg\Services\VersionCheckService;
+use SupermonNg\Support\AppBasePath;
 
 class ConfigController
 {
@@ -631,12 +632,12 @@ class ConfigController
         foreach ($formats as $format) {
             $customBackgroundPath = "$userFilesDir/header-background.$format";
             if (file_exists($customBackgroundPath)) {
-                return "/supermon-ng/api/v1/config/header-background";
+                return AppBasePath::url('api/v1/config/header-background');
             }
         }
         
         // If no custom header found, return default background
-        return "/supermon-ng/background.jpg";
+        return AppBasePath::url('background.jpg');
     }
 
     /**

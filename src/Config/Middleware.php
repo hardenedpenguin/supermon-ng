@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Psr\Log\LoggerInterface;
+use SupermonNg\Support\AppBasePath;
 
 /** @var App $app */
 global $app;
@@ -34,7 +35,7 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
 
         session_set_cookie_params([
             'lifetime' => 86400, // 24 hours (86400 seconds) - match auth controller timeout
-            'path' => '/supermon-ng',
+            'path' => AppBasePath::cookiePath(),
             'domain' => '',
             'secure' => $isSecure,
             'httponly' => true,
@@ -71,8 +72,7 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
         $uri = $request->getUri()->getPath();
         
         // Skip CSRF validation for auth endpoints (login, etc.), bubble chart, and DVSwitch endpoints
-        // Also handle paths with /supermon-ng prefix
-        $normalizedUri = str_replace('/supermon-ng', '', $uri);
+        $normalizedUri = AppBasePath::stripPrefix($uri);
         $skipPaths = [
             '/api/v1/auth/login',
             '/api/v1/auth/logout',
