@@ -586,7 +586,10 @@ main() {
     cp scripts/generate_local_allmon.php "$release_dir/scripts/"
     cp scripts/update.sh "$release_dir/scripts/"
     cp scripts/version-check.sh "$release_dir/scripts/"
+    cp scripts/generate-apache-template.sh "$release_dir/scripts/"
     cp scripts/database-auto-update.php "$release_dir/scripts/" 2>/dev/null || true
+    chmod +x "$release_dir/scripts/"*.sh 2>/dev/null || true
+    cp .env.example "$release_dir/" 2>/dev/null || true
     
     # Static assets
     cp *.jpg "$release_dir/" 2>/dev/null || true
