@@ -1,47 +1,39 @@
 <template>
-  <div id="menu" v-if="menuItems && Object.keys(menuItems).length > 0">
+  <div id="menu" v-if="menuSections.length > 0">
     <ul>
-      <!-- Main menu items (horizontal) - integrated directly -->
-      <li 
-        v-for="item in (menuItems.mainItems || [])" 
-        :key="item.name"
-      >
-        <a 
-          href="#"
-          @click="handleMenuClick(item, $event)"
-        >
-          {{ item.name }}
-        </a>
-      </li>
-      
-      <!-- Dropdown menus for other systems -->
-      <li 
-        v-for="(items, systemName) in getSystemMenus()" 
-        :key="systemName"
-        class="dropdown"
-      >
-        <a href="#" class="dropbtn">{{ systemName }}</a>
-        <div class="dropdown-content">
-          <a 
-            v-for="item in items" 
-            :key="item.name"
+      <template v-for="section in menuSections" :key="sectionKey(section)">
+        <li v-if="section.type === 'link'">
+          <a
             href="#"
-            @click="handleMenuClick(item, $event)"
+            @click="handleMenuClick(section, $event)"
           >
-            {{ item.name }}
+            {{ section.name }}
           </a>
-        </div>
-      </li>
+        </li>
+        <li v-else class="dropdown">
+          <a href="#" class="dropbtn">{{ section.label }}</a>
+          <div class="dropdown-content">
+            <a
+              v-for="item in section.items"
+              :key="item.name"
+              href="#"
+              @click="handleMenuClick(item, $event)"
+            >
+              {{ item.name }}
+            </a>
+          </div>
+        </li>
+      </template>
     </ul>
   </div>
-  
+
   <!-- URL Modal for external links -->
   <UrlModal
     v-model:isVisible="showUrlModal"
     :url="currentUrl"
     :title="currentUrlTitle"
   />
-  
+
   <!-- Lsnod Modal for lsnod data -->
   <LsnodModal
     v-model:isVisible="showLsnodModal"
@@ -62,12 +54,26 @@ interface MenuItem {
   targetBlank: boolean
 }
 
-interface MenuItems {
-  [systemName: string]: MenuItem[]
+interface MenuLinkSection extends MenuItem {
+  type: 'link'
+}
+
+interface MenuDropdownSection {
+  type: 'dropdown'
+  label: string
+  items: MenuItem[]
+}
+
+type MenuSection = MenuLinkSection | MenuDropdownSection
+
+/** Legacy API shape before ordered sections */
+interface LegacyMenuItems {
+  mainItems?: MenuItem[]
+  [systemName: string]: MenuItem[] | undefined
 }
 
 const appStore = useAppStore()
-const menuItems = ref<MenuItems>({})
+const menuSections = ref<MenuSection[]>([])
 const isLoading = ref(false)
 
 // URL Modal state
@@ -79,15 +85,58 @@ const currentUrlTitle = ref('')
 const showLsnodModal = ref(false)
 const currentLsnodNodeId = ref('')
 
+const sectionKey = (section: MenuSection): string => {
+  if (section.type === 'link') {
+    return `link-${section.name}`
+  }
+  return `dropdown-${section.label}`
+}
+
+const legacyToSections = (legacy: LegacyMenuItems): MenuSection[] => {
+  const sections: MenuSection[] = []
+  const nodeLabels = new Set(['nodes', 'display groups'])
+  const nodeGroups: MenuDropdownSection[] = []
+  const rest: MenuSection[] = []
+
+  for (const [key, items] of Object.entries(legacy)) {
+    if (key === 'mainItems' || !Array.isArray(items)) {
+      continue
+    }
+    const dropdown: MenuDropdownSection = {
+      type: 'dropdown',
+      label: key,
+      items,
+    }
+    if (nodeLabels.has(key.toLowerCase())) {
+      nodeGroups.push(dropdown)
+    } else {
+      rest.push(dropdown)
+    }
+  }
+
+  if (legacy.mainItems?.length) {
+    for (const item of legacy.mainItems) {
+      rest.push({ type: 'link', ...item })
+    }
+  }
+
+  return [...nodeGroups, ...rest]
+}
+
+const applyMenuData = (data: { sections?: MenuSection[] } & LegacyMenuItems) => {
+  if (data.sections?.length) {
+    menuSections.value = data.sections
+    return
+  }
+  menuSections.value = legacyToSections(data)
+}
+
 const loadMenu = async () => {
   try {
     isLoading.value = true
     const response = await api.get('/config/menu')
-    if (response.data.success) {
-      // Only update menu items if we got valid data
-      if (response.data.data && Object.keys(response.data.data).length > 0) {
-        menuItems.value = response.data.data
-      }
+    if (response.data.success && response.data.data) {
+      applyMenuData(response.data.data)
     }
   } catch (error) {
     console.error('Failed to load menu:', error)
@@ -101,63 +150,40 @@ const emit = defineEmits<{
 }>()
 
 const handleMenuClick = (item: MenuItem, event: Event) => {
-  // Prevent default link behavior
   event.preventDefault()
-  
-  // Handle internal navigation if needed
+
   if (item.url.startsWith('link.php') || item.url.startsWith('voter.php')) {
-    // Parse node selection from URL
     const urlParams = new URLSearchParams(item.url.split('?')[1])
     const nodes = urlParams.get('nodes')
     if (nodes) {
       emit('nodeSelection', nodes)
     }
   } else if (item.url.startsWith('/lsnod/')) {
-    // Handle lsnod URLs - open in modal
     const nodeId = item.url.replace('/lsnod/', '')
     currentLsnodNodeId.value = nodeId
     showLsnodModal.value = true
   } else if (item.url.startsWith('http')) {
-    // External links - check if they should open in new tab or modal
     if (item.targetBlank) {
-      // Open in new tab/window as intended
       window.open(item.url, '_blank', 'noopener,noreferrer')
     } else {
-      // Open in modal for internal dashboard experience
       currentUrl.value = item.url
       currentUrlTitle.value = item.name
       showUrlModal.value = true
     }
-  } else {
-    // For other internal links, just emit the nodeSelection if it's a node-related URL
-    // This handles cases where the URL might contain node information in other formats
-    if (item.url.includes('nodes=')) {
-      const urlParams = new URLSearchParams(item.url.split('?')[1])
-      const nodes = urlParams.get('nodes')
-      if (nodes) {
-        emit('nodeSelection', nodes)
-      }
+  } else if (item.url.includes('nodes=')) {
+    const urlParams = new URLSearchParams(item.url.split('?')[1])
+    const nodes = urlParams.get('nodes')
+    if (nodes) {
+      emit('nodeSelection', nodes)
     }
   }
-}
-
-const getSystemMenus = () => {
-  const systemMenus: MenuItems = {}
-  for (const [key, value] of Object.entries(menuItems.value)) {
-    if (key !== 'mainItems') {
-      systemMenus[key] = value
-    }
-  }
-  return systemMenus
 }
 
 onMounted(() => {
   loadMenu()
 })
 
-// Watch for authentication changes and reload menu with a small delay
 watch(() => appStore.isAuthenticated, () => {
-  // Add a small delay to prevent menu flash when authentication state changes
   setTimeout(() => {
     loadMenu()
   }, 100)
@@ -166,19 +192,17 @@ watch(() => appStore.isAuthenticated, () => {
 
 <style scoped>
 #menu {
-  width: calc(100% + 40px); /* Match header width - extend beyond dashboard padding */
-  margin-left: -20px; /* Offset the dashboard padding */
-  margin-right: -20px; /* Offset the dashboard padding */
+  width: calc(100% + 40px);
+  margin-left: -20px;
+  margin-right: -20px;
   background-color: var(--menu-background, #2a2a2a);
   border-radius: 5px;
   margin-bottom: 20px;
   display: flex;
   justify-content: center;
   align-items: center;
-  /* Ensure dropdown overlays subsequent content */
   position: relative;
   z-index: 100;
-  /* Allow dropdown to extend beyond menu boundaries */
   overflow: visible;
   box-sizing: border-box;
 }
@@ -233,7 +257,6 @@ watch(() => appStore.isAuthenticated, () => {
   min-width: 160px;
   box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.3));
   border: 1px solid var(--border-color, #404040);
-  /* Lift dropdown above buttons/content below */
   z-index: 999;
   border-radius: 5px;
   top: 100%;
@@ -256,9 +279,6 @@ watch(() => appStore.isAuthenticated, () => {
   display: block;
 }
 
-/* No responsive design - mobile displays exactly like desktop */
-
-/* Print Menu Styles */
 @media print {
   #menu {
     display: none;

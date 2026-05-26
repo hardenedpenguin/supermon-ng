@@ -650,31 +650,18 @@ watch(systemInfo, (newSystemInfo) => {
 }, { immediate: true })
 
 // Methods
-const onNodeChange = () => {
-  
-  // Ensure selectedNode is always a string for processing
+const onNodeChange = async () => {
   const selectedNodeStr = String(selectedNode.value)
-  
+
   if (selectedNodeStr.includes(',')) {
-    // Handle group selection
     const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
-
-    
-    // Start monitoring each node in the group
-    nodeIds.forEach(nodeId => {
-
-      realTimeStore.startMonitoring(nodeId)
-    })
-    
-    // Set the first node as the default local node for operations
+    await Promise.all(nodeIds.map((nodeId) => realTimeStore.startMonitoring(nodeId)))
     if (nodeIds.length > 0) {
       selectedLocalNode.value = nodeIds[0]
     }
   } else {
-    // Handle single node selection
-
     selectedLocalNode.value = selectedNodeStr
-    realTimeStore.startMonitoring(selectedNodeStr)
+    await realTimeStore.startMonitoring(selectedNodeStr)
   }
 }
 
@@ -1098,28 +1085,16 @@ const systeminfo = async () => {
 const handleLoginSuccess = async () => {
   showLoginModal.value = false
   await appStore.checkAuth()
-  
-  // Refetch configuration data after login to get user's personal default node
+
+  // Reload node list from user-specific allmon.ini (e.g. anarchy-allmon.ini with remote hosts)
+  realTimeStore.clearCache()
+  await realTimeStore.initialize()
+
   try {
     const nodesResponse = await api.get('/config/nodes')
     if (nodesResponse.data.success && nodesResponse.data.data?.default_node) {
-      const defaultNode = nodesResponse.data.data.default_node
-    
-        
-        // Set the default node as selected
-        selectedNode.value = defaultNode
-        
-        // Start monitoring the default node(s)
-        if (defaultNode.includes(',')) {
-          // Group mode - monitor each node individually
-          const nodeIds = defaultNode.split(',').map((id: string) => id.trim())
-          for (const nodeId of nodeIds) {
-            await realTimeStore.startMonitoring(nodeId)
-          }
-        } else {
-          // Single node mode
-          await realTimeStore.startMonitoring(defaultNode)
-        }
+      selectedNode.value = nodesResponse.data.data.default_node
+      await onNodeChange()
     }
   } catch (error) {
     // Configuration refetch error handled
@@ -1128,28 +1103,16 @@ const handleLoginSuccess = async () => {
 
 const handleLogout = async () => {
   await appStore.logout()
-  
-  // Refetch configuration data after logout to get new default node
+
+  realTimeStore.reset()
+  realTimeStore.clearCache()
+  await realTimeStore.initialize()
+
   try {
     const nodesResponse = await api.get('/config/nodes')
     if (nodesResponse.data.success && nodesResponse.data.data?.default_node) {
-      const defaultNode = nodesResponse.data.data.default_node
-    
-        
-        // Set the default node as selected
-        selectedNode.value = defaultNode
-        
-        // Start monitoring the default node(s)
-        if (defaultNode.includes(',')) {
-          // Group mode - monitor each node individually
-          const nodeIds = defaultNode.split(',').map((id: string) => id.trim())
-          for (const nodeId of nodeIds) {
-            await realTimeStore.startMonitoring(nodeId)
-          }
-        } else {
-          // Single node mode
-          await realTimeStore.startMonitoring(defaultNode)
-        }
+      selectedNode.value = nodesResponse.data.data.default_node
+      await onNodeChange()
     }
   } catch (error) {
     // Configuration refetch error handled
@@ -1168,7 +1131,7 @@ const openDonatePopup = () => {
     }
     
     selectedNode.value = nodeId
-    onNodeChange()
+    await onNodeChange()
   }
 
   // Handle node click from NodeTable (for quick target node selection)

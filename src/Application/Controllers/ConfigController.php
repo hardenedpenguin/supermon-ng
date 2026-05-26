@@ -894,7 +894,7 @@ class ConfigController
         
         if (!file_exists($iniFile)) {
             $this->logger->warning("INI file not found", ['file' => $iniFile]);
-            return [];
+            return ['sections' => []];
         }
 
         // Try to get cached INI file data
@@ -909,7 +909,7 @@ class ConfigController
             $config = parse_ini_file($iniFile, true);
             if ($config === false) {
                 $this->logger->error("Failed to parse INI file", ['file' => $iniFile]);
-                return [];
+                return ['sections' => []];
             }
             // Cache the parsed INI file data
             if ($this->cacheService !== null) {
@@ -922,29 +922,25 @@ class ConfigController
         
         if (empty($config)) {
             $this->logger->warning("INI file is empty or invalid", ['file' => $iniFile]);
-            return [];
+            return ['sections' => []];
         }
 
-        $systems = [];
-        
+        $sections = [];
+        $groupIndex = [];
+
         foreach ($config as $name => $data) {
-            $this->logger->info("Processing config section", ['name' => $name, 'data' => $data]);
-            
             // Skip if menu is not enabled (check for both "yes" and "1")
             if (!isset($data['menu']) || ($data['menu'] !== "yes" && $data['menu'] !== "1" && $data['menu'] !== 1)) {
-                $this->logger->info("Skipping section - menu not enabled", ['name' => $name, 'menu' => $data['menu'] ?? 'not set']);
                 continue;
             }
 
             // Skip break sections
             if (strtolower((string)$name) == 'break') {
-                $this->logger->info("Skipping break section", ['name' => $name]);
                 continue;
             }
 
-            // Determine system name - only use system field if it exists, otherwise add to main menu
+            // Determine system name - only use system field if it exists, otherwise top-level link
             $sysName = isset($data['system']) ? $data['system'] : null;
-            $this->logger->info("Menu item system assignment", ['name' => $name, 'system' => $sysName, 'data_system' => $data['system'] ?? 'not set']);
 
             // Determine URL
             $url = '';
@@ -964,32 +960,61 @@ class ConfigController
                 $url = substr($url, 0, -1);
             }
 
+            $item = [
+                'name' => $name,
+                'url' => $url,
+                'targetBlank' => $targetBlank,
+            ];
+
             if ($sysName) {
-                // Item has a system field, add to that system
-                $systems[$sysName][] = [
-                    'name' => $name,
-                    'url' => $url,
-                    'targetBlank' => $targetBlank
-                ];
-            } else {
-                // Item has no system field, add directly to main menu items
-                if (!isset($systems['mainItems'])) {
-                    $systems['mainItems'] = [];
+                if (!isset($groupIndex[$sysName])) {
+                    $groupIndex[$sysName] = count($sections);
+                    $sections[] = [
+                        'type' => 'dropdown',
+                        'label' => $sysName,
+                        'items' => [],
+                    ];
                 }
-                $systems['mainItems'][] = [
-                    'name' => $name,
-                    'url' => $url,
-                    'targetBlank' => $targetBlank
-                ];
+                $sections[$groupIndex[$sysName]]['items'][] = $item;
+            } else {
+                $sections[] = array_merge(['type' => 'link'], $item);
             }
         }
 
+        $menu = ['sections' => $this->orderMenuSections($sections)];
+
         // Cache the processed menu items
         if ($this->cacheService !== null) {
-            $this->cacheService->cacheMenuItems($cacheKey, $systems);
+            $this->cacheService->cacheMenuItems($cacheKey, $menu);
         }
 
-        return $systems;
+        return $menu;
+    }
+
+    /**
+     * Node/display groups first (INI order), then remaining entries left-to-right in INI order.
+     */
+    private function orderMenuSections(array $sections): array
+    {
+        $nodeGroups = [];
+        $rest = [];
+
+        foreach ($sections as $section) {
+            if ($section['type'] === 'dropdown' && $this->isNodeMenuGroup($section['label'])) {
+                $nodeGroups[] = $section;
+            } else {
+                $rest[] = $section;
+            }
+        }
+
+        return array_merge($nodeGroups, $rest);
+    }
+
+    private function isNodeMenuGroup(string $systemName): bool
+    {
+        $normalized = strtolower(trim($systemName));
+
+        return $normalized === 'nodes' || $normalized === 'display groups';
     }
 
     /**

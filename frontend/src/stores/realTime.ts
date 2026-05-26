@@ -31,6 +31,31 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const messageHandlers = new Map<string, () => void>()
   const stateHandlers = new Map<string, () => void>()
 
+  /** Poll AMI over HTTP (required for remote hosts and when WebSocket/AMI on 8105 is unavailable). */
+  let amiPollTimer: ReturnType<typeof setInterval> | null = null
+  const AMI_POLL_INTERVAL_MS = 3000
+
+  const syncAmiPolling = () => {
+    if (monitoringNodes.value.length === 0) {
+      if (amiPollTimer) {
+        clearInterval(amiPollTimer)
+        amiPollTimer = null
+      }
+      return
+    }
+    if (amiPollTimer) {
+      return
+    }
+    amiPollTimer = setInterval(() => {
+      if (monitoringNodes.value.length > 0) {
+        void fetchNodeData()
+      } else if (amiPollTimer) {
+        clearInterval(amiPollTimer)
+        amiPollTimer = null
+      }
+    }, AMI_POLL_INTERVAL_MS)
+  }
+
   // Computed
   const isMonitoring = computed(() => monitoringNodes.value.length > 0)
 
@@ -197,6 +222,9 @@ export const useRealTimeStore = defineStore('realTime', () => {
       // Keep node in monitoringNodes so we still poll AMI (fetchNodeData). Otherwise
       // nodes with WebSocket failures never get status updates and stay "offline".
     }
+
+    syncAmiPolling()
+    await fetchNodeData()
   }
 
   /**
@@ -228,6 +256,8 @@ export const useRealTimeStore = defineStore('realTime', () => {
     if (monitoringNodes.value.length === 0) {
       isConnected.value = false
     }
+
+    syncAmiPolling()
   }
 
   /**
@@ -371,10 +401,10 @@ export const useRealTimeStore = defineStore('realTime', () => {
                 info: amiNode.info
               }
             } else {
-              // Add new node with AMI data
+              // Add new node with AMI data (e.g. remote node selected before /nodes list refresh)
               nodes.value.push({
-                id: parseInt(nodeId),
-                node_number: parseInt(nodeId),
+                id: nodeId,
+                node_number: parseInt(nodeId, 10) || nodeId,
                 callsign: 'N/A',
                 description: amiNode.info,
                 location: 'N/A',
@@ -519,6 +549,11 @@ export const useRealTimeStore = defineStore('realTime', () => {
   }
 
   const reset = () => {
+    if (amiPollTimer) {
+      clearInterval(amiPollTimer)
+      amiPollTimer = null
+    }
+
     // Disconnect all WebSocket connections
     monitoringNodes.value.forEach(nodeId => {
       stopMonitoring(nodeId)

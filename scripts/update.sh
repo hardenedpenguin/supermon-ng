@@ -251,6 +251,12 @@ update_application() {
     TEMP_DIR="/tmp/supermon-ng-update-$(date +%Y%m%d_%H%M%S)"
     mkdir -p "$TEMP_DIR"
     
+    # Preserve installed environment configuration (must survive APP_DIR replacement)
+    if [ -f "$APP_DIR/.env" ]; then
+        print_status "Preserving installed .env"
+        cp "$APP_DIR/.env" "$TEMP_DIR/.env"
+    fi
+
     # Copy only production files to temporary directory
     print_status "Preparing new files..."
     

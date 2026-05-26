@@ -269,6 +269,14 @@ const headerStatusClass = computed(() => {
 
 const headerStatusText = computed(() => {
   if (!nodeData.value) return ''
+
+  if (nodeData.value.status === 'offline' || nodeData.value.is_online === false) {
+    const info = nodeData.value.info || nodeData.value.description
+    if (info && info !== 'unknown' && !String(info).startsWith('Node ')) {
+      return String(info)
+    }
+    return 'AMI connection failed'
+  }
   
   const cosKeyed = nodeData.value.cos_keyed || 0
   const txKeyed = nodeData.value.tx_keyed || 0
