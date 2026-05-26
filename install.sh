@@ -257,12 +257,19 @@ for script in ast_node_status_update.py din ssinfo; do
     [ -f "$APP_DIR/user_files/sbin/$script" ] && chmod 755 "$APP_DIR/user_files/sbin/$script"
 done
 
-# Install PHP dependencies
+# Install PHP dependencies (writable Composer cache under /var/cache/supermon-ng)
 echo "📦 Installing PHP dependencies..."
-cd "$APP_DIR"
 if [ -f "composer.json" ]; then
-    # Run composer as www-data user to avoid security warnings
-    sudo -u www-data composer install --no-dev --optimize-autoloader
+    COMPOSER_INSTALL_SCRIPT="$APP_DIR/scripts/composer-install-production.sh"
+    if [ ! -f "$COMPOSER_INSTALL_SCRIPT" ] && [ -f "$INSTALLER_DIR/scripts/composer-install-production.sh" ]; then
+        COMPOSER_INSTALL_SCRIPT="$INSTALLER_DIR/scripts/composer-install-production.sh"
+    fi
+    if [ -f "$COMPOSER_INSTALL_SCRIPT" ]; then
+        bash "$COMPOSER_INSTALL_SCRIPT" "$APP_DIR"
+    else
+        echo "❌ Error: scripts/composer-install-production.sh not found."
+        exit 1
+    fi
 else
     echo "❌ Error: composer.json not found. Make sure all files were extracted properly."
     exit 1

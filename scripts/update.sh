@@ -559,8 +559,15 @@ update_sudoers() {
 # Function to update PHP dependencies
 update_dependencies() {
     print_status "Updating PHP dependencies..."
-    cd "$APP_DIR"
-    sudo -u www-data composer install --no-dev --optimize-autoloader
+    local composer_script="$PROJECT_ROOT/scripts/composer-install-production.sh"
+    if [ ! -f "$composer_script" ]; then
+        composer_script="$APP_DIR/scripts/composer-install-production.sh"
+    fi
+    if [ ! -f "$composer_script" ]; then
+        print_error "Missing scripts/composer-install-production.sh"
+        exit 1
+    fi
+    bash "$composer_script" "$APP_DIR"
 }
 
 # Generate allmon.ini only when absent (upgrades keep an existing file; fresh paths may ship without it)

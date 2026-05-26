@@ -44,5 +44,12 @@
             "name": "Supermon-ng Team"
         }
     ],
-    "minimum-stability": "stable"
+    "minimum-stability": "stable",
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "audit": {
+            "abandoned": "ignore"
+        }
+    }
 }

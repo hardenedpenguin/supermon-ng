@@ -604,6 +604,7 @@ EOF
     cp scripts/generate-apache-template.sh "$release_dir/scripts/"
     cp scripts/patch-public-htaccess.sh "$release_dir/scripts/"
     cp scripts/configure-app-base-path.sh "$release_dir/scripts/"
+    cp scripts/composer-install-production.sh "$release_dir/scripts/"
     cp scripts/database-auto-update.php "$release_dir/scripts/" 2>/dev/null || true
     chmod +x "$release_dir/scripts/"*.sh 2>/dev/null || true
     cp .env.example "$release_dir/" 2>/dev/null || true
