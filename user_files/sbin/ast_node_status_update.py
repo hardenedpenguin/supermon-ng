@@ -35,13 +35,34 @@ def get_cpu_load():
             return f'"Load Average: {load_match.group(1)}"'
     return None
 
-def get_cpu_temperature(temp_unit):
-    temp_c = None
+def _read_cpu_temp_celsius():
+    """Read CPU/SoC temperature in Celsius from hwmon or thermal zone."""
+    import glob
 
-    if os.path.exists("/sys/class/thermal/thermal_zone0/temp") and os.access("/sys/class/thermal/thermal_zone0/temp", os.R_OK):
-        temp_raw = run_command("cat /sys/class/thermal/thermal_zone0/temp")
-        if temp_raw and temp_raw.isdigit():
-            temp_c = int(temp_raw) / 1000
+    for path in sorted(glob.glob("/sys/class/hwmon/hwmon*/temp1_input")):
+        try:
+            with open(path, encoding="utf-8") as f:
+                temp_raw = f.read().strip()
+            if temp_raw.isdigit():
+                return int(temp_raw) / 1000
+        except OSError:
+            continue
+
+    thermal_path = "/sys/class/thermal/thermal_zone0/temp"
+    if os.path.exists(thermal_path) and os.access(thermal_path, os.R_OK):
+        try:
+            with open(thermal_path, encoding="utf-8") as f:
+                temp_raw = f.read().strip()
+            if temp_raw.isdigit():
+                return int(temp_raw) / 1000
+        except OSError:
+            pass
+
+    return None
+
+
+def get_cpu_temperature(temp_unit):
+    temp_c = _read_cpu_temp_celsius()
 
     if temp_c is not None:
         temp_unit_upper = temp_unit.upper()
