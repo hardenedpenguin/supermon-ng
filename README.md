@@ -127,9 +127,10 @@ Edit `/var/www/html/supermon-ng/user_files/allmon.ini` to add your AllStar nodes
 - Enable timer: `sudo systemctl enable supermon-ng-node-status.timer && sudo systemctl start supermon-ng-node-status.timer`
 - **Weather Alerts**: Only SkywarnPlus-NG is supported for weather alerts displayed in node tables
   - Configure `API_URL` in `node_info.ini` to point to your SkywarnPlus-NG instance
-- **Weather and System Info Display**: Requires `saytime_weather` module to be loaded in Asterisk
-  - Weather and system information will only display in node tables if `saytime_weather` is available
-  - Install and configure `saytime_weather` module for your Asterisk installation
+- **Weather and System Info Display**: Requires `saytime_weather` (or [saytime_weather_rb](https://github.com/hardenedpenguin/saytime_weather_rb)) with `weather.rb` on the node
+  - Postal/airport code: set `WX_CODE` and `WX_LOCATION` in `node_info.ini` (or the Node Status UI)
+  - **GPS**: set `WX_USE_GPS = yes` to call `weather.rb --gps` via gpsd (no zip required). gpsd supplies coordinates only; if `WX_LOCATION` is unset, Supermon reverse-geocodes the fix (OpenStreetMap Nominatim) for a city/state label, else shows coordinates
+  - Optional `gps_fallback_location` in `/etc/asterisk/local/weather.ini` when the receiver has no fix
 
 **DVSwitch Mode Switcher:**
 - Copy `/var/www/html/supermon-ng/user_files/dvswitch_config.yml.example` to `dvswitch_config.yml`

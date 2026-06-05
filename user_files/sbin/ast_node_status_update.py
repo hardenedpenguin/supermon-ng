@@ -3,6 +3,7 @@
 import os
 import subprocess
 import re
+import time
 import configparser
 import requests
 import json
@@ -96,23 +97,226 @@ def get_cpu_temperature(temp_unit):
     else:
         return '"N/A"'
 
-def get_weather(wx_code, wx_location):
-    if not wx_code or not wx_location:
+def _config_flag_yes(value):
+    return str(value or "").strip().lower() in ("yes", "1", "true", "on")
+
+
+def _weather_config_path():
+    return os.environ.get("WEATHER_CONFIG", "/etc/asterisk/local/weather.ini")
+
+
+def _weather_ini_location_source():
+    """Return location_source from weather.ini (postal or gps), if readable."""
+    path = _weather_config_path()
+    if not os.path.isfile(path):
+        return ""
+    try:
+        ini = configparser.ConfigParser()
+        ini.read(path)
+        for section in ("weather", "DEFAULT"):
+            if ini.has_section(section) and ini.has_option(section, "location_source"):
+                return ini.get(section, "location_source", fallback="").strip().lower()
+        if ini.has_option("DEFAULT", "location_source"):
+            return ini.get("DEFAULT", "location_source", fallback="").strip().lower()
+    except Exception:
+        pass
+    return ""
+
+
+def _is_placeholder_wx_code(wx_code):
+    code = str(wx_code or "").strip().lower()
+    if not code:
+        return True
+    if code in ("00000", "000000", "none", "n/a", "na", "unset", "placeholder"):
+        return True
+    return bool(re.fullmatch(r"0+", code))
+
+
+def _is_placeholder_wx_location(wx_location):
+    loc = str(wx_location or "").strip().lower()
+    if not loc:
+        return True
+    return loc in ("city, state", "city state", "n/a", "na", "none", "unset")
+
+
+def run_weather_command(argv):
+    """Run a weather script; return stdout text or None (no exception spam)."""
+    try:
+        process = subprocess.run(argv, capture_output=True, text=True, check=True)
+        out = process.stdout.strip()
+        return out if out else None
+    except subprocess.CalledProcessError as e:
+        err = (e.stderr or e.stdout or "").strip()
+        hint = err.split("\n", 1)[0][:240] if err else str(e)
+        print(f"[NodeStatus] Weather lookup failed ({' '.join(argv)}): {hint}")
+        return None
+    except FileNotFoundError:
+        print(f"[NodeStatus] Weather command not found: {argv[0]}")
+        return None
+
+
+def resolve_weather_gps(wx_use_gps, wx_code):
+    """True when node status should call weather.rb --gps."""
+    if wx_use_gps:
+        return True
+    if _weather_ini_location_source() != "gps":
+        return False
+    # weather.ini GPS mode: use --gps unless Supermon has a real postal/airport code set
+    return _is_placeholder_wx_code(wx_code)
+
+
+def _saytime_tmp_dir():
+    return os.environ.get("SAYTIME_TMP", "/tmp")
+
+
+def _read_saytime_gps_fix():
+    """Read lat/lon written by saytime weather.rb from gpsd (saytime-gps-fix.json)."""
+    path = os.path.join(_saytime_tmp_dir(), "saytime-gps-fix.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        lat = float(data["lat"])
+        lon = float(data["lon"])
+        if abs(lat) < 0.0001 and abs(lon) < 0.0001:
+            return None, None
+        return lat, lon
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+        return None, None
+
+
+def _format_nominatim_address(address):
+    """Build a short place name from Nominatim reverse-geocode address parts."""
+    if not isinstance(address, dict):
+        return None
+    locality = (
+        address.get("city")
+        or address.get("town")
+        or address.get("village")
+        or address.get("hamlet")
+        or address.get("municipality")
+        or address.get("suburb")
+    )
+    region = address.get("state") or address.get("region") or address.get("county")
+    parts = [p for p in (locality, region) if p]
+    if parts:
+        return ", ".join(parts)
+    country = address.get("country")
+    return country if country else None
+
+
+def _load_gps_place_cache():
+    path = os.path.join(_saytime_tmp_dir(), "supermon-gps-place-cache.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _save_gps_place_cache(cache):
+    path = os.path.join(_saytime_tmp_dir(), "supermon-gps-place-cache.json")
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(cache, f)
+    except OSError:
+        pass
+
+
+def _reverse_geocode_place_name(lat, lon, max_age_seconds=30 * 24 * 3600):
+    """Resolve city/region from coordinates (gpsd has no place names). Uses Nominatim + cache."""
+    key = f"{round(lat, 4)},{round(lon, 4)}"
+    cache = _load_gps_place_cache()
+    entry = cache.get(key)
+    if isinstance(entry, dict) and entry.get("name"):
+        age = time.time() - float(entry.get("ts", 0))
+        if max_age_seconds <= 0 or age <= max_age_seconds:
+            return entry["name"]
+
+    url = (
+        "https://nominatim.openstreetmap.org/reverse"
+        f"?lat={lat}&lon={lon}&format=json&zoom=12&addressdetails=1"
+    )
+    headers = {
+        "User-Agent": "Supermon-NG/1.0 (AllStar node status; amateur radio dashboard)",
+    }
+    try:
+        response = requests.get(url, timeout=10, headers=headers)
+        if response.status_code != 200:
+            return None
+        data = response.json()
+        name = _format_nominatim_address(data.get("address"))
+        if not name:
+            display = (data.get("display_name") or "").strip()
+            if display:
+                name = ", ".join(display.split(", ")[:2])
+        if name:
+            cache[key] = {"name": name, "ts": time.time()}
+            _save_gps_place_cache(cache)
+            return name
+    except requests.RequestException:
+        return None
+    return None
+
+
+def _gps_display_label(wx_location):
+    """Dashboard label for GPS weather: custom WX_LOCATION, reverse-geocoded place, or coords."""
+    custom = (wx_location or "").strip()
+    if custom and not _is_placeholder_wx_location(custom):
+        return custom
+
+    lat, lon = _read_saytime_gps_fix()
+    if lat is not None and lon is not None:
+        place = _reverse_geocode_place_name(lat, lon)
+        if place:
+            return place
+        return f"GPS {lat:.4f}, {lon:.4f}"
+
+    return "GPS"
+
+
+def get_weather(wx_code, wx_location, use_gps=False):
+    """Fetch weather text for the node WX variable.
+
+    When use_gps is True, calls saytime_weather_rb weather.rb --gps v (gpsd).
+    Otherwise uses wx_code (postal, ICAO, lat,lon, etc.) with legacy scripts as fallback.
+    """
+    wx_code = str(wx_code or "").strip()
+    label = (wx_location or "").strip()
+
+    if use_gps:
+        weather_rb = "/usr/sbin/weather.rb"
+        if os.access(weather_rb, os.X_OK):
+            print("[NodeStatus] Weather: GPS (weather.rb --gps)")
+            wx_raw = run_weather_command([weather_rb, "--gps", "v"])
+            label = _gps_display_label(wx_location)
+            if label != "GPS":
+                print(f"[NodeStatus] GPS place label: {label}")
+            if wx_raw:
+                return f'"<b>{label}   ({wx_raw})</b>"'
+        else:
+            print("[NodeStatus] GPS weather requested but /usr/sbin/weather.rb not found or not executable")
         return '" "'
-    
-    # Array of weather scripts to try in order
+
+    if _is_placeholder_wx_code(wx_code) or _is_placeholder_wx_location(label):
+        print(
+            "[NodeStatus] Weather skipped: set a real WX_CODE and WX_LOCATION, "
+            "enable WX_USE_GPS=yes, or set location_source=gps in weather.ini"
+        )
+        return '" "'
+
     weather_scripts = [
         "/usr/sbin/weather.rb",
         "/usr/sbin/weather.pl",
-        "/usr/local/sbin/weather.sh"
+        "/usr/local/sbin/weather.sh",
     ]
-    
+
     for weather_script in weather_scripts:
         if os.access(weather_script, os.X_OK):
-            wx_raw = run_command(f"{weather_script} \"{wx_code}\" v")
+            wx_raw = run_weather_command([weather_script, wx_code, "v"])
             if wx_raw:
-                return f'"<b>{wx_location}   ({wx_raw})</b>"'
-    
+                return f'"<b>{label}   ({wx_raw})</b>"'
+
     return '" "'
 
 def get_disk_usage():
@@ -458,6 +662,8 @@ if __name__ == "__main__":
     nodes = config.get("general", "NODE", fallback="").split()
     wx_code = config.get("general", "WX_CODE", fallback="")
     wx_location = config.get("general", "WX_LOCATION", fallback="")
+    wx_use_gps = _config_flag_yes(config.get("general", "WX_USE_GPS", fallback="no"))
+    wx_use_gps = resolve_weather_gps(wx_use_gps, wx_code)
     temp_unit = config.get("general", "TEMP_UNIT", fallback="F")
 
     # API source selection:
@@ -500,7 +706,9 @@ if __name__ == "__main__":
     cpu_up = get_uptime()
     cpu_load = get_cpu_load()
     cpu_temp_dsp = get_cpu_temperature(temp_unit)
-    wx = get_weather(wx_code, wx_location)
+    if wx_use_gps:
+        print("[NodeStatus] WX_USE_GPS=yes or weather.ini location_source=gps")
+    wx = get_weather(wx_code, wx_location, use_gps=wx_use_gps)
     disk_usage_info = get_disk_usage()
 
     node_list = []

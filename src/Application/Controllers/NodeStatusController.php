@@ -92,6 +92,7 @@ class NodeStatusController
 
             $iniContent = "[general]\n";
             $iniContent .= "NODE = " . implode(' ', $data['nodes']) . "\n";
+            $iniContent .= "WX_USE_GPS = " . (!empty($data['wx_use_gps']) ? 'yes' : 'no') . "\n";
             $iniContent .= "WX_CODE = " . ($data['wx_code'] ?? '') . "\n";
             $iniContent .= "WX_LOCATION = " . ($data['wx_location'] ?? '') . "\n";
             $iniContent .= "TEMP_UNIT = " . ($data['temp_unit'] ?? 'F') . "\n\n";

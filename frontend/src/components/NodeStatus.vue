@@ -61,6 +61,17 @@
 
             <!-- Weather Configuration -->
             <div class="form-group">
+              <label class="checkbox-label">
+                <input type="checkbox" v-model="config.wx_use_gps">
+                Use GPS location (saytime <code>weather.rb --gps</code>, requires gpsd)
+              </label>
+              <small class="form-text">
+                When enabled, weather is fetched from gpsd coordinates instead of a postal or airport code.
+                Set a display label below; optional <code>gps_fallback_location</code> in <code>/etc/asterisk/local/weather.ini</code> if the receiver has no fix.
+              </small>
+            </div>
+
+            <div v-if="!config.wx_use_gps" class="form-group">
               <label for="wx_code">Weather Code:</label>
               <input 
                 type="text" 
@@ -69,6 +80,7 @@
                 placeholder="77511"
                 class="form-control"
               >
+              <small class="form-text">Postal code, ICAO/IATA airport code, or <code>lat,lon</code></small>
             </div>
 
             <div class="form-group">
@@ -180,6 +192,7 @@ export default {
     const config = ref({
       nodes: [],
       wx_code: '',
+      wx_use_gps: false,
       wx_location: '',
       temp_unit: 'F',
       alert_provider: 'skywarnplus',
@@ -208,6 +221,7 @@ export default {
           config.value = {
             nodes: cfg.general?.NODE?.split(' ') || [],
             wx_code: cfg.general?.WX_CODE || '',
+            wx_use_gps: (cfg.general?.WX_USE_GPS || '').toString().toLowerCase() === 'yes',
             wx_location: cfg.general?.WX_LOCATION || '',
             temp_unit: cfg.general?.TEMP_UNIT || 'F',
             alert_provider: alertProvider,
