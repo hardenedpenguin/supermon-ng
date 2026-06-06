@@ -8,6 +8,7 @@ css/custom.css
 *.log.*
 user_files/*.log
 logs-*.log
+logs/
 
 # Cache and temporary directories
 cache/
@@ -59,8 +60,10 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Frontend build output (generated)
+# Frontend build output (generated; release/install builds via vite)
 frontend/dist/
+public/assets/
+public/index.html
 
 # Local development
 .env
@@ -92,4 +95,8 @@ mobile-apps/android/*.hprof.index
 
 # Android development setup script
 setup-android-env.sh
-user_files/sbin/__pycache__/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
