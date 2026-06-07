@@ -272,7 +272,8 @@ return [
             $c->get(LoggerInterface::class),
             $cacheService,
             $c->get(\SupermonNg\Services\IncludeManagerService::class),
-            $c->get(\SupermonNg\Services\UserPermissionService::class)
+            $c->get(\SupermonNg\Services\UserPermissionService::class),
+            $c->get(\SupermonNg\Services\SessionService::class)
         );
     },
     
@@ -305,7 +306,9 @@ return [
         return new \SupermonNg\Application\Controllers\DatabaseController(
             $c->get(LoggerInterface::class),
             $c->get(\SupermonNg\Services\DatabaseGenerationService::class),
-            $c->get(\SupermonNg\Services\AstdbCacheService::class)
+            $c->get(\SupermonNg\Services\AstdbCacheService::class),
+            $c->get(\SupermonNg\Services\SessionService::class),
+            $c->get(\SupermonNg\Services\UserPermissionService::class)
         );
     },
     

@@ -44,6 +44,10 @@ class NodeStatusController
      */
     public function getConfig(Request $request, Response $response): Response
     {
+        if ($denied = $this->requireSysInfUser($response)) {
+            return $denied;
+        }
+
         try {
             $configFile = __DIR__ . '/../../../user_files/sbin/node_info.ini';
 
@@ -204,6 +208,10 @@ class NodeStatusController
      */
     public function getServiceStatus(Request $request, Response $response): Response
     {
+        if ($denied = $this->requireSysInfUser($response)) {
+            return $denied;
+        }
+
         try {
             $serviceStatus = (string) shell_exec('/usr/bin/sudo -n /bin/systemctl is-active supermon-ng-node-status.service 2>/dev/null');
             $serviceEnabled = (string) shell_exec('/usr/bin/sudo -n /bin/systemctl is-enabled supermon-ng-node-status.service 2>/dev/null');

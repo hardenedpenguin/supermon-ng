@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace SupermonNg\Application\Controllers;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
-use SupermonNg\Services\DatabaseGenerationService;
+use SupermonNg\Services\ApiResponseHelper;
 use SupermonNg\Services\AstdbCacheService;
+use SupermonNg\Services\DatabaseGenerationService;
+use SupermonNg\Services\SessionService;
+use SupermonNg\Services\UserPermissionService;
 
 /**
  * Controller for database-related API endpoints
@@ -16,15 +21,33 @@ class DatabaseController
     private LoggerInterface $logger;
     private DatabaseGenerationService $databaseService;
     private AstdbCacheService $astdbService;
-    
+    private SessionService $sessionService;
+    private UserPermissionService $userPermissionService;
+
     public function __construct(
         LoggerInterface $logger,
         DatabaseGenerationService $databaseService,
-        AstdbCacheService $astdbService
+        AstdbCacheService $astdbService,
+        SessionService $sessionService,
+        UserPermissionService $userPermissionService
     ) {
         $this->logger = $logger;
         $this->databaseService = $databaseService;
         $this->astdbService = $astdbService;
+        $this->sessionService = $sessionService;
+        $this->userPermissionService = $userPermissionService;
+    }
+
+    private function requireDbtUser(Response $response): ?Response
+    {
+        $user = $this->sessionService->getCurrentUser();
+        if ($user === null) {
+            return ApiResponseHelper::error($response, 'Authentication required', 401);
+        }
+        if (!$this->userPermissionService->hasPermission($user, 'DBTUSER')) {
+            return ApiResponseHelper::error($response, 'You are not authorized to manage the database.', 403);
+        }
+        return null;
     }
     
     /**
@@ -88,6 +111,10 @@ class DatabaseController
      */
     public function generate(Request $request, Response $response): Response
     {
+        if ($denied = $this->requireDbtUser($response)) {
+            return $denied;
+        }
+
         $this->logger->info('Starting database generation');
         
         $body = $request->getParsedBody() ?? [];
@@ -121,6 +148,10 @@ class DatabaseController
      */
     public function autoUpdate(Request $request, Response $response): Response
     {
+        if ($denied = $this->requireDbtUser($response)) {
+            return $denied;
+        }
+
         $this->logger->info('Checking for automatic database update');
         
         $success = $this->databaseService->checkAndPerformAutomaticUpdate();
@@ -151,6 +182,10 @@ class DatabaseController
      */
     public function forceUpdate(Request $request, Response $response): Response
     {
+        if ($denied = $this->requireDbtUser($response)) {
+            return $denied;
+        }
+
         $this->logger->info('Forcing immediate database update');
         
         $success = $this->databaseService->forceUpdate();

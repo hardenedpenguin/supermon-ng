@@ -8,8 +8,8 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use SupermonNg\Services\CacheService;
-
 use SupermonNg\Services\IncludeManagerService;
+use SupermonNg\Services\SessionService;
 use SupermonNg\Services\UserPermissionService;
 use SupermonNg\Services\VersionCheckService;
 use SupermonNg\Support\AppBasePath;
@@ -20,17 +20,20 @@ class ConfigController
     private ?CacheService $cacheService;
     private IncludeManagerService $includeService;
     private UserPermissionService $userPermissionService;
-    
+    private SessionService $sessionService;
+
     public function __construct(
         LoggerInterface $logger,
         ?CacheService $cacheService,
         IncludeManagerService $includeService,
-        UserPermissionService $userPermissionService
+        UserPermissionService $userPermissionService,
+        SessionService $sessionService
     ) {
         $this->logger = $logger;
         $this->cacheService = $cacheService;
         $this->includeService = $includeService;
         $this->userPermissionService = $userPermissionService;
+        $this->sessionService = $sessionService;
     }
 
     /**
@@ -840,33 +843,7 @@ class ConfigController
 
     private function getCurrentUser(): ?string
     {
-        // Start session if not already started
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
-        // Check if user is logged in via session
-        $this->logger->info("Checking session for user", ['session_user' => $_SESSION['user'] ?? 'not set', 'session_id' => session_id()]);
-        
-        if (isset($_SESSION['user']) && !empty($_SESSION['user']) && isset($_SESSION['authenticated']) && $_SESSION['authenticated']) {
-            // Check if session is not too old (24 hours)
-            if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) < 86400) {
-                return $_SESSION['user'];
-            } else {
-                // Session expired, clear it
-                session_destroy();
-                return null;
-            }
-        }
-        
-        // Check if there's a user in the request headers (for API calls)
-        $headers = getallheaders();
-        if (isset($headers['X-User']) && !empty($headers['X-User'])) {
-            return $headers['X-User'];
-        }
-        
-        // No user logged in
-        return null;
+        return $this->sessionService->getCurrentUser();
     }
 
     private function loadMenuItems(?string $username): array

@@ -18,6 +18,9 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const monitoringNodes = ref<string[]>([])
   const lastUpdateTime = ref<number>(0)
   const websocketPorts = ref<Record<string, number>>({})
+  type NodeMonitoringMode = 'live' | 'polling' | 'connecting' | 'offline'
+  /** Reactive per-node connection mode for UI (webSocketService state is not reactive). */
+  const wsMonitoringModes = ref<Record<string, NodeMonitoringMode>>({})
 
   // Services
   const { batchInitialization, clearCache } = useBatchRequests({
@@ -34,26 +37,107 @@ export const useRealTimeStore = defineStore('realTime', () => {
   /** Poll AMI over HTTP (required for remote hosts and when WebSocket/AMI on 8105 is unavailable). */
   let amiPollTimer: ReturnType<typeof setInterval> | null = null
   const AMI_POLL_INTERVAL_MS = 3000
+  const WS_RETRY_EVERY_N_POLLS = 10
+  let amiPollCount = 0
+  const monitoringPromises = new Map<string, Promise<void>>()
+  const wsUrlByNode = new Map<string, string>()
 
-  const syncAmiPolling = () => {
-    if (monitoringNodes.value.length === 0) {
-      if (amiPollTimer) {
-        clearInterval(amiPollTimer)
-        amiPollTimer = null
+  const setWsMonitoringMode = (nodeId: string, mode: NodeMonitoringMode) => {
+    const key = String(nodeId)
+    if (wsMonitoringModes.value[key] !== mode) {
+      wsMonitoringModes.value = { ...wsMonitoringModes.value, [key]: mode }
+    }
+  }
+
+  const refreshWsMonitoringMode = (nodeId: string) => {
+    const key = String(nodeId)
+    const wsState = webSocketService.getNodeState(key)
+    if (wsState?.connected) {
+      setWsMonitoringMode(key, 'live')
+    } else if (wsState?.connecting) {
+      setWsMonitoringMode(key, 'connecting')
+    } else if (monitoringNodes.value.includes(key)) {
+      setWsMonitoringMode(key, 'polling')
+    } else {
+      const next = { ...wsMonitoringModes.value }
+      delete next[key]
+      wsMonitoringModes.value = next
+    }
+  }
+
+  const retryWebSocketsForMonitoring = async () => {
+    const appStore = useAppStore()
+    for (const nodeId of monitoringNodes.value) {
+      if (webSocketService.isNodeConnected(nodeId)) {
+        setWsMonitoringMode(nodeId, 'live')
+        continue
       }
+      const state = webSocketService.getNodeState(nodeId)
+      if (state?.connecting) {
+        continue
+      }
+
+      let wsUrl = wsUrlByNode.get(nodeId)
+      if (!wsUrl) {
+        wsUrl = await getWebSocketUrl(nodeId, appStore.isAuthenticated)
+        wsUrlByNode.set(nodeId, wsUrl)
+      }
+
+      webSocketService.resetReconnectAttempts(nodeId)
+      try {
+        setWsMonitoringMode(nodeId, 'connecting')
+        await webSocketService.connectToNode(nodeId, wsUrl)
+        isConnected.value = true
+        error.value = null
+        setWsMonitoringMode(nodeId, 'live')
+        reconcileAmiPolling()
+      } catch (err) {
+        console.warn(`WebSocket retry failed for node ${nodeId}:`, err)
+        refreshWsMonitoringMode(nodeId)
+        reconcileAmiPolling()
+      }
+    }
+  }
+
+  /** True when at least one monitored node has no live WebSocket (needs HTTP AMI). */
+  const anyNodeNeedsAmiFallback = (): boolean =>
+    monitoringNodes.value.some((id) => !webSocketService.isNodeConnected(id))
+
+  const stopAmiPollTimer = () => {
+    if (amiPollTimer) {
+      clearInterval(amiPollTimer)
+      amiPollTimer = null
+    }
+    amiPollCount = 0
+  }
+
+  const onAmiFallbackTick = () => {
+    if (monitoringNodes.value.length === 0 || !anyNodeNeedsAmiFallback()) {
+      stopAmiPollTimer()
+      return
+    }
+    void fetchNodeData()
+    amiPollCount++
+    if (amiPollCount >= WS_RETRY_EVERY_N_POLLS) {
+      amiPollCount = 0
+      void retryWebSocketsForMonitoring()
+    }
+  }
+
+  /**
+   * Start HTTP AMI polling only while WebSocket is unavailable for monitored node(s).
+   * When all nodes are live on WS, polling stops — WS pushes updates (~1s server-side).
+   */
+  const reconcileAmiPolling = () => {
+    if (monitoringNodes.value.length === 0 || !anyNodeNeedsAmiFallback()) {
+      stopAmiPollTimer()
       return
     }
     if (amiPollTimer) {
       return
     }
-    amiPollTimer = setInterval(() => {
-      if (monitoringNodes.value.length > 0) {
-        void fetchNodeData()
-      } else if (amiPollTimer) {
-        clearInterval(amiPollTimer)
-        amiPollTimer = null
-      }
-    }, AMI_POLL_INTERVAL_MS)
+    void fetchNodeData()
+    amiPollTimer = setInterval(onAmiFallbackTick, AMI_POLL_INTERVAL_MS)
   }
 
   // Computed
@@ -180,76 +264,147 @@ export const useRealTimeStore = defineStore('realTime', () => {
    * Start monitoring a node via WebSocket
    */
   const startMonitoring = async (nodeId: string) => {
-    if (!monitoringNodes.value.includes(nodeId)) {
-      monitoringNodes.value.push(nodeId)
-    }
-    
-    // If WebSocket ports not loaded, fetch them
-    if (Object.keys(websocketPorts.value).length === 0) {
-      await fetchWebSocketPorts()
-    }
-    
-    // Connect to node's WebSocket
-    try {
-      const appStore = useAppStore()
-      const wsUrl = await getWebSocketUrl(nodeId, appStore.isAuthenticated)
-      
-      // Set up message handler
-      const unsubscribeMessage = webSocketService.onNodeMessage(nodeId, (data: WebSocketMessage) => {
-        updateNodeFromWebSocket(data)
-      })
-      messageHandlers.set(nodeId, unsubscribeMessage)
-      
-      // Set up state change handler
-      const unsubscribeState = webSocketService.onNodeStateChange(nodeId, (state) => {
-        if (state.connected) {
-          isConnected.value = true
-          error.value = null
-        } else if (state.error) {
-          error.value = `WebSocket error for node ${nodeId}: ${state.error}`
-        }
-      })
-      stateHandlers.set(nodeId, unsubscribeState)
-      
-      // Connect to WebSocket
-      await webSocketService.connectToNode(nodeId, wsUrl)
-      
-      isConnected.value = true
-      error.value = null
-    } catch (err) {
-      console.error(`Error connecting to WebSocket for node ${nodeId}:`, err)
-      error.value = `Failed to connect to node ${nodeId}`
-      // Keep node in monitoringNodes so we still poll AMI (fetchNodeData). Otherwise
-      // nodes with WebSocket failures never get status updates and stay "offline".
+    const nodeKey = String(nodeId).trim()
+    if (!nodeKey) {
+      return
     }
 
-    syncAmiPolling()
-    await fetchNodeData()
+    if (!monitoringNodes.value.includes(nodeKey)) {
+      monitoringNodes.value.push(nodeKey)
+    }
+
+    if (webSocketService.isNodeConnected(nodeKey)) {
+      setWsMonitoringMode(nodeKey, 'live')
+      reconcileAmiPolling()
+      return
+    }
+
+    const inflight = monitoringPromises.get(nodeKey)
+    if (inflight) {
+      await inflight
+      return
+    }
+
+    const task = (async () => {
+      if (Object.keys(websocketPorts.value).length === 0) {
+        await fetchWebSocketPorts()
+      }
+
+      try {
+        const appStore = useAppStore()
+        const wsUrl = await getWebSocketUrl(nodeKey, appStore.isAuthenticated)
+        wsUrlByNode.set(nodeKey, wsUrl)
+
+        if (!messageHandlers.has(nodeKey)) {
+          const unsubscribeMessage = webSocketService.onNodeMessage(nodeKey, (data: WebSocketMessage) => {
+            updateNodeFromWebSocket(data)
+          })
+          messageHandlers.set(nodeKey, unsubscribeMessage)
+        }
+
+        if (!stateHandlers.has(nodeKey)) {
+          const unsubscribeState = webSocketService.onNodeStateChange(nodeKey, (state) => {
+            refreshWsMonitoringMode(nodeKey)
+            reconcileAmiPolling()
+            if (state.connected) {
+              isConnected.value = true
+              error.value = null
+            } else if (state.error) {
+              error.value = `WebSocket error for node ${nodeKey}: ${state.error}`
+            }
+          })
+          stateHandlers.set(nodeKey, unsubscribeState)
+        }
+
+        if (webSocketService.isNodeConnected(nodeKey)) {
+          setWsMonitoringMode(nodeKey, 'live')
+          return
+        }
+
+        setWsMonitoringMode(nodeKey, 'connecting')
+        await webSocketService.connectToNode(nodeKey, wsUrl)
+
+        isConnected.value = true
+        error.value = null
+        setWsMonitoringMode(nodeKey, 'live')
+      } catch (err) {
+        console.error(`Error connecting to WebSocket for node ${nodeKey}:`, err)
+        error.value = `Failed to connect to node ${nodeKey}`
+        refreshWsMonitoringMode(nodeKey)
+      }
+
+      reconcileAmiPolling()
+      if (anyNodeNeedsAmiFallback()) {
+        await fetchNodeData()
+      }
+    })()
+
+    monitoringPromises.set(nodeKey, task)
+    try {
+      await task
+    } finally {
+      monitoringPromises.delete(nodeKey)
+    }
   }
 
   /**
    * Stop monitoring a node
    */
+  /**
+   * Keep monitoring only the selected node(s); stop WebSocket/poll for deselected nodes.
+   */
+  const syncMonitoringForSelection = async (nodeIds: string[]) => {
+    const desired = [...new Set(nodeIds.map((id) => String(id).trim()).filter(Boolean))]
+    const current = [...monitoringNodes.value]
+
+    for (const nodeId of current) {
+      if (!desired.includes(nodeId)) {
+        stopMonitoring(nodeId)
+      }
+    }
+
+    await Promise.all(desired.map((nodeId) => startMonitoring(nodeId)))
+  }
+
+  const getNodeMonitoringMode = (nodeId: string): NodeMonitoringMode => {
+    const key = String(nodeId)
+    const cached = wsMonitoringModes.value[key]
+    if (cached) {
+      return cached
+    }
+    if (monitoringNodes.value.includes(key)) {
+      return 'polling'
+    }
+    return 'offline'
+  }
+
   const stopMonitoring = (nodeId: string) => {
-    const index = monitoringNodes.value.indexOf(nodeId)
+    const nodeKey = String(nodeId).trim()
+    const index = monitoringNodes.value.indexOf(nodeKey)
     if (index > -1) {
       monitoringNodes.value.splice(index, 1)
     }
+
+    wsUrlByNode.delete(nodeKey)
+
+    const nextModes = { ...wsMonitoringModes.value }
+    delete nextModes[nodeKey]
+    wsMonitoringModes.value = nextModes
     
     // Disconnect WebSocket
-    webSocketService.disconnectFromNode(nodeId)
+    webSocketService.disconnectFromNode(nodeKey)
     
     // Clean up handlers
-    const messageUnsubscribe = messageHandlers.get(nodeId)
+    const messageUnsubscribe = messageHandlers.get(nodeKey)
     if (messageUnsubscribe) {
       messageUnsubscribe()
-      messageHandlers.delete(nodeId)
+      messageHandlers.delete(nodeKey)
     }
     
-    const stateUnsubscribe = stateHandlers.get(nodeId)
+    const stateUnsubscribe = stateHandlers.get(nodeKey)
     if (stateUnsubscribe) {
       stateUnsubscribe()
-      stateHandlers.delete(nodeId)
+      stateHandlers.delete(nodeKey)
     }
     
     // Update connection status
@@ -257,7 +412,7 @@ export const useRealTimeStore = defineStore('realTime', () => {
       isConnected.value = false
     }
 
-    syncAmiPolling()
+    reconcileAmiPolling()
   }
 
   /**
@@ -267,6 +422,7 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const updateNodeFromWebSocket = (data: WebSocketMessage) => {
     try {
       const nodeId = String(data.node)
+      setWsMonitoringMode(nodeId, 'live')
       const existingNodeIndex = nodes.value.findIndex(n => String(n.id) === String(nodeId))
       
       // Map WebSocket data to Node structure (only update fields that are provided)
@@ -439,10 +595,12 @@ export const useRealTimeStore = defineStore('realTime', () => {
         }))
       }
       
+      lastUpdateTime.value = Date.now()
       error.value = null
-    } catch (err) {
+    } catch (err: unknown) {
       // Suppress timeout errors for real-time data fetching
-      if (err.code !== 'ECONNABORTED') {
+      const errCode = (err as { code?: string })?.code
+      if (errCode !== 'ECONNABORTED') {
         console.error('Error fetching node data:', err)
         error.value = 'Failed to fetch node data'
         isConnected.value = false
@@ -549,10 +707,10 @@ export const useRealTimeStore = defineStore('realTime', () => {
   }
 
   const reset = () => {
-    if (amiPollTimer) {
-      clearInterval(amiPollTimer)
-      amiPollTimer = null
-    }
+    stopAmiPollTimer()
+    monitoringPromises.clear()
+    wsUrlByNode.clear()
+    wsMonitoringModes.value = {}
 
     // Disconnect all WebSocket connections
     monitoringNodes.value.forEach(nodeId => {
@@ -578,6 +736,7 @@ export const useRealTimeStore = defineStore('realTime', () => {
     monitoringNodes,
     lastUpdateTime,
     websocketPorts,
+    wsMonitoringModes,
     
     // Computed
     isMonitoring,
@@ -586,6 +745,8 @@ export const useRealTimeStore = defineStore('realTime', () => {
     initialize,
     startMonitoring,
     stopMonitoring,
+    syncMonitoringForSelection,
+    getNodeMonitoringMode,
     fetchNodeData,
     updateNodeFromWebSocket,
     getNodeById,

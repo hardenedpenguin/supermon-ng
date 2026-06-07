@@ -193,18 +193,18 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
         $g->post('/configeditor/save', [ConfigController::class, 'saveConfigFile']);
     });
 
-    $group->group('/database', function (RouteCollectorProxy $g): void {
+    $group->group('/database', function (RouteCollectorProxy $g) use ($requireAuth): void {
         $g->get('/status', [DatabaseController::class, 'status']);
-        $g->post('/generate', [DatabaseController::class, 'generate']);
-        $g->post('/auto-update', [DatabaseController::class, 'autoUpdate']);
-        $g->post('/force-update', [DatabaseController::class, 'forceUpdate']);
+        $g->post('/generate', [DatabaseController::class, 'generate'])->add($requireAuth);
+        $g->post('/auto-update', [DatabaseController::class, 'autoUpdate'])->add($requireAuth);
+        $g->post('/force-update', [DatabaseController::class, 'forceUpdate'])->add($requireAuth);
         $g->get('/search', [DatabaseController::class, 'search']);
         $g->get('/{id}', [DatabaseController::class, 'get']);
     });
 
     $group->group('/node-status', function (RouteCollectorProxy $g) use ($requireAuth): void {
-        $g->get('/config', [NodeStatusController::class, 'getConfig']);
-        $g->get('/service-status', [NodeStatusController::class, 'getServiceStatus']);
+        $g->get('/config', [NodeStatusController::class, 'getConfig'])->add($requireAuth);
+        $g->get('/service-status', [NodeStatusController::class, 'getServiceStatus'])->add($requireAuth);
         $g->put('/config', [NodeStatusController::class, 'updateConfig'])->add($requireAuth);
         $g->post('/trigger-update', [NodeStatusController::class, 'triggerUpdate'])->add($requireAuth);
     });

@@ -51,6 +51,8 @@
     <!-- Menu Component -->
     <Menu @node-selection="handleNodeSelection" />
 
+    <ConnectionStatus :node-ids="activeMonitoringNodeIds" />
+
     <!-- Date and Time Display -->
     <div v-if="showDateTime" class="datetime-display">
       {{ currentDateTime }}
@@ -320,6 +322,7 @@ import type { Node as NodeType } from '@/types'
 import NodeTable from '@/components/NodeTable.vue'
 import LoginForm from '@/components/LoginForm.vue'
 import Menu from '@/components/Menu.vue'
+import ConnectionStatus from '@/components/ConnectionStatus.vue'
 const DisplayConfig = defineAsyncComponent(() => import('@/components/DisplayConfig.vue'))
 const AddFavorite = defineAsyncComponent(() => import('@/components/AddFavorite.vue'))
 const DeleteFavorite = defineAsyncComponent(() => import('@/components/DeleteFavorite.vue'))
@@ -650,19 +653,35 @@ watch(systemInfo, (newSystemInfo) => {
 }, { immediate: true })
 
 // Methods
-const onNodeChange = async () => {
-  const selectedNodeStr = String(selectedNode.value)
-
+const activeMonitoringNodeIds = computed(() => {
+  const selectedNodeStr = String(selectedNode.value || '').trim()
+  if (!selectedNodeStr) {
+    return [...realTimeStore.monitoringNodes]
+  }
   if (selectedNodeStr.includes(',')) {
-    const nodeIds = selectedNodeStr.split(',').map(id => id.trim())
-    await Promise.all(nodeIds.map((nodeId) => realTimeStore.startMonitoring(nodeId)))
+    return selectedNodeStr.split(',').map((id) => id.trim()).filter(Boolean)
+  }
+  return [selectedNodeStr]
+})
+
+const onNodeChange = async () => {
+  const selectedNodeStr = String(selectedNode.value).trim()
+  if (!selectedNodeStr) {
+    return
+  }
+
+  let nodeIds: string[]
+  if (selectedNodeStr.includes(',')) {
+    nodeIds = selectedNodeStr.split(',').map((id) => id.trim()).filter(Boolean)
     if (nodeIds.length > 0) {
       selectedLocalNode.value = nodeIds[0]
     }
   } else {
+    nodeIds = [selectedNodeStr]
     selectedLocalNode.value = selectedNodeStr
-    await realTimeStore.startMonitoring(selectedNodeStr)
   }
+
+  await realTimeStore.syncMonitoringForSelection(nodeIds)
 }
 
 const connect = async () => {
@@ -1233,14 +1252,7 @@ onMounted(async () => {
     const defaultNode = boot.nodes?.default_node
     if (defaultNode) {
       selectedNode.value = defaultNode
-      if (defaultNode.includes(',')) {
-        const nodeIds = defaultNode.split(',').map((id: string) => id.trim())
-        for (const nodeId of nodeIds) {
-          await realTimeStore.startMonitoring(nodeId)
-        }
-      } else {
-        await realTimeStore.startMonitoring(defaultNode)
-      }
+      await onNodeChange()
       await nextTick()
       isLoadingDefaultNodes.value = false
     } else {
@@ -1274,22 +1286,8 @@ onMounted(async () => {
         const defaultNode = nodesResponse.data.data.default_node
     
         
-        // Set the default node as selected
         selectedNode.value = defaultNode
-        
-        // Start monitoring the default node(s)
-        if (defaultNode.includes(',')) {
-          // Group mode - monitor each node individually
-          const nodeIds = defaultNode.split(',').map((id: string) => id.trim())
-          for (const nodeId of nodeIds) {
-            await realTimeStore.startMonitoring(nodeId)
-          }
-        } else {
-          // Single node mode
-          await realTimeStore.startMonitoring(defaultNode)
-        }
-        
-        // Force a reactive update to ensure displayedNodes recomputes
+        await onNodeChange()
         await nextTick()
         
         // Small delay to ensure the default node is properly set
@@ -1301,8 +1299,7 @@ onMounted(async () => {
         if (realTimeStore.nodes.length > 0) {
           const firstNode = realTimeStore.nodes[0]
           selectedNode.value = String(firstNode.id)
-      
-          await realTimeStore.startMonitoring(String(firstNode.id))
+          await onNodeChange()
         }
       }
       

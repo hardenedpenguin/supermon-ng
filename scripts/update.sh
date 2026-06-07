@@ -241,11 +241,14 @@ create_backup() {
 update_application() {
     print_status "Updating application files..."
     
-    # Stop services
+    # Stop services and timers (avoid oneshots firing while APP_DIR is replaced)
     print_status "Stopping services..."
     systemctl stop supermon-ng-backend 2>/dev/null || true
     systemctl stop supermon-ng-websocket.service 2>/dev/null || true
     systemctl stop supermon-ng-node-status.timer 2>/dev/null || true
+    systemctl stop supermon-ng-database-update.timer 2>/dev/null || true
+    systemctl stop supermon-ng-node-status.service 2>/dev/null || true
+    systemctl stop supermon-ng-database-update.service 2>/dev/null || true
     
     # Create temporary directory for new files
     TEMP_DIR="/tmp/supermon-ng-update-$(date +%Y%m%d_%H%M%S)"

@@ -52,6 +52,8 @@ class WebSocketService {
   private stateHandlers: Map<string, Set<ConnectionStateHandler>> = new Map()
   private reconnectTimers: Map<string, NodeJS.Timeout> = new Map()
   private pingTimers: Map<string, NodeJS.Timeout> = new Map()
+  private connectPromises: Map<string, Promise<void>> = new Map()
+  private wsUrls: Map<string, string> = new Map()
   
   private readonly MAX_RECONNECT_ATTEMPTS = 10
   private readonly INITIAL_RECONNECT_DELAY = 1000 // 1 second
@@ -63,18 +65,66 @@ class WebSocketService {
    * Connect to a node's WebSocket server
    */
   async connectToNode(nodeId: string, wsUrl: string): Promise<void> {
-    // Disconnect if already connected
-    if (this.connections.has(nodeId)) {
+    this.wsUrls.set(nodeId, wsUrl)
+
+    const existing = this.connections.get(nodeId)
+    if (existing?.readyState === WebSocket.OPEN && this.wsUrls.get(nodeId) === wsUrl) {
+      return
+    }
+
+    const inflight = this.connectPromises.get(nodeId)
+    if (inflight) {
+      return inflight
+    }
+
+    const promise = this.openConnection(nodeId, wsUrl)
+    this.connectPromises.set(nodeId, promise)
+    try {
+      await promise
+    } finally {
+      this.connectPromises.delete(nodeId)
+    }
+  }
+
+  /**
+   * Clear reconnect backoff so polling fallback can try WebSocket again.
+   */
+  resetReconnectAttempts(nodeId: string): void {
+    const state = this.connectionStates.get(nodeId)
+    if (state) {
+      this.updateConnectionState(nodeId, {
+        ...state,
+        reconnectAttempts: 0,
+        error: null,
+      })
+    }
+  }
+
+  /**
+   * Retry WebSocket using the last URL for this node.
+   */
+  async retryConnection(nodeId: string): Promise<void> {
+    const wsUrl = this.wsUrls.get(nodeId)
+    if (!wsUrl) {
+      return
+    }
+    this.resetReconnectAttempts(nodeId)
+    return this.connectToNode(nodeId, wsUrl)
+  }
+
+  private async openConnection(nodeId: string, wsUrl: string): Promise<void> {
+    const existing = this.connections.get(nodeId)
+    if (existing && existing.readyState !== WebSocket.CLOSED) {
       this.disconnectFromNode(nodeId)
     }
 
-    // Initialize connection state
+    const priorState = this.connectionStates.get(nodeId)
     this.connectionStates.set(nodeId, {
       connected: false,
       connecting: true,
       error: null,
-      reconnectAttempts: 0,
-      lastMessageTime: 0
+      reconnectAttempts: priorState?.reconnectAttempts ?? 0,
+      lastMessageTime: priorState?.lastMessageTime ?? 0,
     })
     this.notifyStateChange(nodeId)
 
@@ -205,9 +255,17 @@ class WebSocketService {
       this.connections.delete(nodeId)
     }
 
-    // Update state
-    this.connectionStates.delete(nodeId)
-    this.notifyStateChange(nodeId)
+    // Keep state entry so UI can show offline/polling until reconnect
+    const state = this.connectionStates.get(nodeId)
+    if (state) {
+      this.updateConnectionState(nodeId, {
+        ...state,
+        connected: false,
+        connecting: false,
+      })
+    } else {
+      this.notifyStateChange(nodeId)
+    }
   }
 
   /**
