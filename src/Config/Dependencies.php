@@ -17,6 +17,11 @@ use SupermonNg\Services\FileCacheService;
 use SupermonNg\Services\AstdbCacheService;
 use SupermonNg\Services\AMIHelperService;
 use SupermonNg\Services\LocalAllmonGeneratorService;
+use SupermonNg\Services\AppPathService;
+use SupermonNg\Services\SystemHealthService;
+use SupermonNg\Services\ConfigBackupService;
+use SupermonNg\Services\SetupService;
+use SupermonNg\Services\ConfigImportService;
 
 return [
     // Logger
@@ -244,6 +249,36 @@ return [
         return new \SupermonNg\Services\UserPermissionService($path);
     },
 
+    AppPathService::class => function () {
+        return new AppPathService();
+    },
+
+    SystemHealthService::class => function (ContainerInterface $c) {
+        return new SystemHealthService($c->get(LoggerInterface::class));
+    },
+
+    ConfigBackupService::class => function (ContainerInterface $c) {
+        return new ConfigBackupService(
+            $c->get(LoggerInterface::class),
+            $c->get(AppPathService::class)
+        );
+    },
+
+    ConfigImportService::class => function (ContainerInterface $c) {
+        return new ConfigImportService(
+            $c->get(LoggerInterface::class),
+            $c->get(AppPathService::class)
+        );
+    },
+
+    SetupService::class => function (ContainerInterface $c) {
+        return new SetupService(
+            $c->get(LoggerInterface::class),
+            $c->get(AppPathService::class),
+            $c->get(LocalAllmonGeneratorService::class)
+        );
+    },
+
     LocalAllmonGeneratorService::class => function (ContainerInterface $c) {
         $userFiles = $_ENV['USER_FILES_PATH'] ?? (dirname(__DIR__, 2) . '/user_files/');
         return new LocalAllmonGeneratorService(
@@ -257,7 +292,25 @@ return [
     \SupermonNg\Application\Controllers\AdminController::class => function (ContainerInterface $c) {
         return new \SupermonNg\Application\Controllers\AdminController(
             $c->get(LoggerInterface::class),
-            $c->get(LocalAllmonGeneratorService::class)
+            $c->get(LocalAllmonGeneratorService::class),
+            $c->get(ConfigBackupService::class),
+            $c->get(ConfigImportService::class)
+        );
+    },
+
+    \SupermonNg\Application\Controllers\SetupController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\SetupController(
+            $c->get(LoggerInterface::class),
+            $c->get(SetupService::class)
+        );
+    },
+
+    \SupermonNg\Application\Controllers\SystemHealthController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\SystemHealthController(
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\SessionService::class),
+            $c->get(\SupermonNg\Services\UserPermissionService::class),
+            $c->get(SystemHealthService::class)
         );
     },
 

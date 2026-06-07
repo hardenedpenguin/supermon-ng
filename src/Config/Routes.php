@@ -11,6 +11,8 @@ use SupermonNg\Application\Controllers\AdminController;
 use SupermonNg\Application\Controllers\AstdbController;
 use SupermonNg\Application\Controllers\DvswitchController;
 use SupermonNg\Application\Controllers\BootstrapController;
+use SupermonNg\Application\Controllers\SetupController;
+use SupermonNg\Application\Controllers\SystemHealthController;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
 use SupermonNg\Application\Middleware\RequireAuthMiddleware;
 use SupermonNg\Support\AppBasePath;
@@ -119,8 +121,23 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
             ->add(AdminAuthMiddleware::class);
     });
 
+    $group->group('/setup', function (RouteCollectorProxy $g): void {
+        $g->get('/status', [SetupController::class, 'getStatus']);
+        $g->post('/admin', [SetupController::class, 'createAdmin']);
+        $g->post('/generate-allmon', [SetupController::class, 'generateAllmon']);
+        $g->post('/complete', [SetupController::class, 'complete']);
+    });
+
+    $group->group('/system', function (RouteCollectorProxy $g) use ($requireAuth): void {
+        $g->get('/health', [SystemHealthController::class, 'getHealth'])->add($requireAuth);
+    });
+
     $group->group('/admin', function (RouteCollectorProxy $g): void {
         $g->post('/generate-local-allmon', [AdminController::class, 'generateLocalAllmon']);
+        $g->get('/config/export', [AdminController::class, 'exportConfig']);
+        $g->post('/config/import', [AdminController::class, 'importConfig']);
+        $g->post('/import/allscan-favorites', [AdminController::class, 'importAllScanFavorites']);
+        $g->post('/import/allmon3-nodes', [AdminController::class, 'importAllmon3Nodes']);
     })->add(AdminAuthMiddleware::class);
 
     $group->group('/nodes', function (RouteCollectorProxy $g) use ($requireAuth): void {

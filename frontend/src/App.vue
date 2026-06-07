@@ -12,6 +12,7 @@
     <router-view />
 
     <ToastContainer />
+    <SetupWizard />
 
     <!-- Theme Selector Modal -->
     <div v-if="showThemeSelector" class="modal-overlay" @click="showThemeSelector = false">
@@ -29,6 +30,7 @@ import { useTheme } from '@/composables/useTheme'
 import ThemeSelector from '@/components/ThemeSelector.vue'
 import UpdateBanner from '@/components/UpdateBanner.vue'
 import ToastContainer from '@/components/ToastContainer.vue'
+import SetupWizard from '@/components/SetupWizard.vue'
 
 const appStore = useAppStore()
 const { loadTheme } = useTheme()

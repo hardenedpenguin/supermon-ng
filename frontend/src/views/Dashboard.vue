@@ -80,6 +80,9 @@
       <input v-if="systemInfo?.dvmUrl" type="button" class="submit" value="Digital Dashboard" @click="openDigitalDashboard">
       <input v-if="appStore.isAuthenticated && appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="Node Status" @click="openNodeStatus">
       <input v-if="appStore.isAuthenticated && appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="System Info" @click="systeminfo">
+      <input v-if="appStore.isAuthenticated && appStore.hasPermission('SYSINFUSER')" type="button" class="submit" value="Service Health" @click="showServiceHealthModal = true">
+      <input v-if="appStore.isAuthenticated && appStore.hasPermission('CFGEDUSER')" type="button" class="submit" value="Config Backup" @click="showConfigBackupModal = true">
+      <input v-if="appStore.isAuthenticated && displayedNodes.length > 0" type="button" class="submit" value="Link Map" @click="showLinkMapModal = true">
     </p>
 
     <!-- Node Tables (mimics link.php structure) -->
@@ -232,6 +235,9 @@
     
     <!-- SystemInfo Modal -->
     <SystemInfo v-model:open="showSystemInfoModal" />
+    <ServiceHealth v-model:open="showServiceHealthModal" />
+    <ConfigBackup v-model:open="showConfigBackupModal" />
+    <LinkMap v-model:open="showLinkMapModal" :node-ids="activeMonitoringNodeIds.map(String)" />
 
     <!-- Digital Dashboard Modal -->
     <DigitalDashboard
@@ -290,6 +296,9 @@ const WebErrLog = defineAsyncComponent(() => import('@/components/WebErrLog.vue'
 const Voter = defineAsyncComponent(() => import('@/components/Voter.vue'))
 const ConfigEditor = defineAsyncComponent(() => import('@/components/ConfigEditor.vue'))
 const SystemInfo = defineAsyncComponent(() => import('@/components/SystemInfo.vue'))
+const ServiceHealth = defineAsyncComponent(() => import('@/components/ServiceHealth.vue'))
+const ConfigBackup = defineAsyncComponent(() => import('@/components/ConfigBackup.vue'))
+const LinkMap = defineAsyncComponent(() => import('@/components/LinkMap.vue'))
 const DigitalDashboard = defineAsyncComponent(() => import('@/components/DigitalDashboard.vue'))
 const NodeStatus = defineAsyncComponent(() => import('@/components/NodeStatus.vue'))
 
@@ -366,6 +375,9 @@ const showWebErrLogModal = ref(false)
 const showVoterModal = ref(false)
 const showConfigEditorModal = ref(false)
 const showSystemInfoModal = ref(false)
+const showServiceHealthModal = ref(false)
+const showConfigBackupModal = ref(false)
+const showLinkMapModal = ref(false)
 const showDvswitchModal = ref(false)
 
 
