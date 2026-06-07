@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 # Script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-APP_DIR="/var/www/html/supermon-ng"
+APP_DIR="${SUPERMON_INSTALL_DIR:-/var/www/html/supermon-ng}"
 
 # Version information
 CURRENT_VERSION=""

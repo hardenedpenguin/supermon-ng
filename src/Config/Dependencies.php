@@ -334,7 +334,8 @@ return [
         return new \SupermonNg\Application\Controllers\DvswitchController(
             $c->get(LoggerInterface::class),
             $c->get(\SupermonNg\Services\DvswitchService::class),
-            $c->get(\SupermonNg\Services\UserPermissionService::class)
+            $c->get(\SupermonNg\Services\UserPermissionService::class),
+            $c->get(\SupermonNg\Services\SessionService::class)
         );
     },
 

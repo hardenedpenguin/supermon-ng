@@ -107,8 +107,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watchEffect, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import { computed, ref, watch, watchEffect, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import { useAppStore } from '@/stores/app'
+import { useRealTimeStore } from '@/stores/realTime'
 import { sanitizeHtml } from '@/utils/sanitize'
 import LsnodModal from './LsnodModal.vue'
 
@@ -129,6 +130,7 @@ const canAddFavorite = computed(() => appStore.hasPermission('FAVUSER'))
 
 // Store
 const appStore = useAppStore()
+const realTimeStore = useRealTimeStore()
 
 // Props
 interface Props {
@@ -436,8 +438,7 @@ const openLsnodModal = () => {
   showLsnodModal.value = true
 }
 
-// Update node data from real-time store
-const updateNodeData = (data: Node | null) => {
+const applyNodeData = (data: Node | null) => {
   nodeData.value = data
   
   if (data && data.remote_nodes) {
@@ -501,10 +502,13 @@ const updateNodeData = (data: Node | null) => {
   }
 }
 
-// Refresh data method for parent component
-const refreshData = () => {
-  // This will be called by the parent when new data is available
-}
+watch(
+  () => realTimeStore.getNodeById(props.node.id),
+  (data) => {
+    applyNodeData((data as Node | undefined) ?? null)
+  },
+  { immediate: true, deep: true }
+)
 
 // Watch for header status details changes
 watchEffect(() => {
@@ -664,11 +668,6 @@ onUnmounted(() => {
   nodeTimers.value.clear()
 })
 
-// Expose methods for parent component
-defineExpose({
-  updateNodeData,
-  refreshData
-})
 </script>
 
 <style scoped>

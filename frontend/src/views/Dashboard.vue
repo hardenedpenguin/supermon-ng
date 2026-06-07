@@ -61,83 +61,18 @@
     <!-- Welcome Message -->
     <div v-if="welcomeMessage" class="welcome-message" v-html="sanitizeHtml(welcomeMessage)"></div>
 
-    <!-- Control Panel (matches original link.php structure exactly) -->
-    <div v-if="hasControlPermissions" id="connect_form" style="text-align: center;">
-      <!-- Node Selection (matches original layout exactly) -->
-      <div v-if="displayedNodes.length > 0">
-        <!-- Local node dropdown (only show if multiple nodes) -->
-        <select v-if="displayedNodes.length > 1" v-model="selectedLocalNode" class="submit">
-          <option v-for="node in displayedNodes" :key="String(node.id)" :value="String(node.id)" class="submit">
-            {{ node.id }} => {{ (node as NodeType).info || (node as NodeType).description || 'Node not in database' }}
-          </option>
-        </select>
-        
-        <!-- Hidden input for single node -->
-        <input v-else-if="displayedNodes.length === 1" type="hidden" v-model="selectedLocalNode">
-        
-        <!-- Hidden input for single node (matches original) -->
-        <input v-else class="submit" type="hidden" :value="displayedNodes[0]">
-        
-        <!-- Node Input and Permission Controls -->
-        <input
-          v-model="targetNode"
-          type="text"
-          class="submit"
-          placeholder="Node to connect/DTMF"
-        />
-        
-        <label v-if="appStore.hasPermission('PERMUSER')" class="perm-label">
-          Perm <input type="checkbox" v-model="permConnect" />
-        </label>
-        <br>
-      </div>
-      
-      <!-- Primary Control Buttons (matches original order exactly) -->
-      <input type="button" class="submit" value="Connect" @click="connect">
-      <input type="button" class="submit" value="Disconnect" @click="disconnect">
-      <input v-if="appStore.hasPermission('MONUSER')" type="button" class="submit" value="Monitor" @click="monitor">
-      <input v-if="appStore.hasPermission('LMONUSER')" type="button" class="submit" value="Local Monitor" @click="localmonitor">
-      <input type="button" class="submit" value="Voter" @click="showVoterModal = true">
-      
-      <!-- Secondary Control Buttons (matches original order exactly) -->
-      <input v-if="appStore.hasPermission('DTMFUSER')" type="button" class="submit" value="DTMF" @click="dtmf">
-      <input v-if="appStore.hasPermission('ASTLKUSER')" type="button" class="submit" value="Lookup" @click="astlookup">
-      <input v-if="appStore.hasPermission('RSTATUSER')" type="button" class="submit" value="Rpt Stats" @click="rptstats">
-      <input v-if="appStore.hasPermission('BUBLUSER')" type="button" class="submit" value="Bubble" @click="bubble">
-      <input v-if="appStore.hasPermission('CTRLUSER')" type="button" class="submit" value="Control Panel" @click="showControlPanelModal = true">
-      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Favorites" @click="showFavoritesModal = true">
-      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Add Favorite" @click="openAddFavoriteModal">
-      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Delete Favorite" @click="showDeleteFavoriteModal = true">
-      
-      <!-- Configuration Editor Section -->
-      <hr class="button-separator">
-      <input v-if="appStore.hasPermission('CFGEDUSER')" type="button" class="submit" value="Configuration Editor" @click="configeditor">
-      <input v-if="appStore.hasPermission('HWTOUSER')" type="button" class="submit" value="AllStar How To's" @click="openHelp">
-      <input v-if="appStore.hasPermission('WIKIUSER')" type="button" class="submit" value="AllStar Wiki" @click="openWiki">
-      <input v-if="appStore.hasPermission('CSTATUSER')" type="button" class="submit" value="CPU Status" @click="cpustats">
-      <input v-if="appStore.hasPermission('ASTATUSER')" type="button" class="submit" value="AllStar Status" @click="aststats">
-      <input v-if="appStore.hasPermission('ACTNUSER')" type="button" class="submit" value="Active Nodes" @click="openActiveNodes">
-      <input v-if="appStore.hasPermission('ALLNUSER')" type="button" class="submit" value="All Nodes" @click="openAllNodes">
-      
-      <!-- Database Section -->
-      <input v-if="appStore.hasPermission('DBTUSER')" type="button" class="submit" value="Database" @click="database">
-      <input v-if="appStore.hasPermission('LLOGUSER')" type="button" class="submit" value="Linux Log" @click="linuxlog">
-      <input v-if="appStore.hasPermission('ASTLUSER')" type="button" class="submit" value="AST Log" @click="astlog">
-      <input v-if="appStore.hasPermission('WLOGUSER')" type="button" class="submit" value="Web Access Log" @click="webacclog">
-      <input v-if="appStore.hasPermission('WERRUSER')" type="button" class="submit" value="Web Error Log" @click="weberrlog">
-      
-      <!-- System Control Buttons -->
-      <input v-if="appStore.hasPermission('ASTRELUSER')" type="button" class="submit" value="IAX2/Module RELOAD" @click="astreload">
-      <input v-if="appStore.hasPermission('ASTSTRUSER')" type="button" class="submit" value="AST START" @click="astaron">
-      <input v-if="appStore.hasPermission('ASTSTPUSER')" type="button" class="submit" value="AST STOP" @click="astaroff">
-      <input v-if="appStore.hasPermission('FSTRESUSER')" type="button" class="submit" value="RESTART" @click="fastrestart">
-      <input v-if="appStore.hasPermission('RBTUSER')" type="button" class="submit" value="Server REBOOT" @click="reboot">
-      
-      <!-- Additional System Buttons -->
-      <input v-if="appStore.hasPermission('GPIOUSER')" type="button" class="submit" value="GPIO" @click="openpigpio">
-      <input v-if="appStore.hasPermission('BANUSER')" type="button" class="submit" value="Access List" @click="openbanallow">
-      <input v-if="appStore.hasPermission('DVSWITCHUSER')" type="button" class="submit" value="DVSwitch Mode" @click="showDvswitchModal = true">
-    </div>
+    <DashboardConnectPanel
+      v-if="hasControlPermissions"
+      :displayed-nodes="displayedNodes"
+      :target-node="targetNode"
+      :selected-local-node="selectedLocalNode"
+      :perm-connect="permConnect"
+      v-bind="nodeControls"
+      @update:target-node="targetNode = $event"
+      @update:selected-local-node="selectedLocalNode = $event"
+      @update:perm-connect="permConnect = $event"
+      @action="handleControlAction"
+    />
 
     <!-- Bottom Utility Buttons (matches original exactly) -->
     <p class="button-container">
@@ -160,7 +95,6 @@
           :show-detail="true"
           :astdb="realTimeStore.astdb"
           :config="realTimeStore.nodeConfig"
-          :ref="el => { if (el) nodeTableRefs[index] = el }"
           @node-click="handleNodeClick"
           @add-favorite="handleAddFavoriteFromLink"
         />
@@ -326,8 +260,9 @@ import NodeTable from '@/components/NodeTable.vue'
 import LoginForm from '@/components/LoginForm.vue'
 import Menu from '@/components/Menu.vue'
 import ConnectionStatus from '@/components/ConnectionStatus.vue'
+import DashboardConnectPanel from '@/components/DashboardConnectPanel.vue'
 import { useToast } from '@/composables/useToast'
-import { apiErrorMessage } from '@/utils/errors'
+import { useNodeControls } from '@/composables/useNodeControls'
 const DisplayConfig = defineAsyncComponent(() => import('@/components/DisplayConfig.vue'))
 const AddFavorite = defineAsyncComponent(() => import('@/components/AddFavorite.vue'))
 const DeleteFavorite = defineAsyncComponent(() => import('@/components/DeleteFavorite.vue'))
@@ -434,7 +369,6 @@ const showSystemInfoModal = ref(false)
 const showDvswitchModal = ref(false)
 
 
-const nodeTableRefs = ref<any[]>([])
 const systemInfo = ref<any>(null)
 const headerBackground = ref<string | null>(null)
 const showDigitalDashboardModal = ref(false)
@@ -526,6 +460,15 @@ const displayedNodes = computed((): NodeType[] => {
     ...node,
     id: String(node.id)
   }))
+})
+
+const nodeControls = useNodeControls({
+  targetNode,
+  selectedLocalNode,
+  permConnect,
+  selectedNode,
+  displayedNodes,
+  availableNodes,
 })
 
 const headerBackgroundUrl = computed(() => {
@@ -693,146 +636,92 @@ const onNodeChange = async () => {
   await realTimeStore.syncMonitoringForSelection(nodeIds)
 }
 
-const connect = async () => {
-  if (!targetNode.value || !selectedLocalNode.value) {
-    toast.warning('Select a local node and target node first.')
-    return
-  }
-
-  try {
-    const response = await api.post('/nodes/connect', {
-      localnode: selectedLocalNode.value,
-      remotenode: targetNode.value,
-      perm: permConnect.value ? 'on' : null
-    })
-
-    if (response.data.success) {
-      const permLabel = permConnect.value ? ' (permanent)' : ''
-      toast.success(`Connected ${selectedLocalNode.value} → ${targetNode.value}${permLabel}`)
-      await realTimeStore.fetchNodeData()
-    } else {
-      toast.error(response.data.message || 'Connect failed')
-    }
-  } catch (error) {
-    toast.error(apiErrorMessage(error, 'Connect failed'))
-  }
-}
-
-const disconnect = async () => {
-  if (!targetNode.value || !selectedLocalNode.value) {
-    toast.warning('Select a local node and target node first.')
-    return
-  }
-
-  try {
-    const response = await api.post('/nodes/disconnect', {
-      localnode: selectedLocalNode.value,
-      remotenode: targetNode.value,
-      perm: null
-    })
-
-    if (response.data.success) {
-      toast.success(`Disconnected ${targetNode.value} from ${selectedLocalNode.value}`)
-      await realTimeStore.fetchNodeData()
-    } else {
-      toast.error(response.data.message || 'Disconnect failed')
-    }
-  } catch (error) {
-    toast.error(apiErrorMessage(error, 'Disconnect failed'))
-  }
-}
-
-const monitor = async () => {
-  if (!targetNode.value || !selectedLocalNode.value) {
-    toast.warning('Select a local node and target node first.')
-    return
-  }
-  try {
-    const response = await api.post('/nodes/monitor', {
-      localnode: selectedLocalNode.value,
-      remotenode: targetNode.value,
-      perm: null
-    })
-
-    if (response.data.success) {
-      toast.success(`Monitoring ${targetNode.value} on ${selectedLocalNode.value}`)
-      await realTimeStore.fetchNodeData()
-    } else {
-      toast.error(response.data.message || 'Monitor failed')
-    }
-  } catch (error) {
-    toast.error(apiErrorMessage(error, 'Monitor failed'))
-  }
-}
-
-const localmonitor = async () => {
-  if (!targetNode.value || !selectedLocalNode.value) {
-    toast.warning('Select a local node and target node first.')
-    return
-  }
-  try {
-    const response = await api.post('/nodes/local-monitor', {
-      localnode: selectedLocalNode.value,
-      remotenode: targetNode.value,
-      perm: null
-    })
-
-    if (response.data.success) {
-      toast.success(`Local monitor ${targetNode.value} on ${selectedLocalNode.value}`)
-      await realTimeStore.fetchNodeData()
-    } else {
-      toast.error(response.data.message || 'Local monitor failed')
-    }
-  } catch (error) {
-    toast.error(apiErrorMessage(error, 'Local monitor failed'))
-  }
-}
-
-// Additional button methods to match link.php
-const dtmf = async () => {
-  // Always prompt user for DTMF command first
-  const dtmfCommand = prompt('Enter DTMF command:')
-  if (!dtmfCommand || dtmfCommand.trim() === '') {
-    return
-  }
-  
-  // Determine which node to use for DTMF command
-  let nodeToUse: string | null = null
-  
-  // First, check if we have a local node selected
-  if (selectedLocalNode.value) {
-    nodeToUse = selectedLocalNode.value
-  } else if (selectedNode.value) {
-    // If no local node but we have a selected node, use it
-    nodeToUse = String(selectedNode.value).split(',')[0] // Use first node if it's a group
-  } else if (displayedNodes.value.length === 1) {
-    // If only one node is displayed, use it
-    nodeToUse = String(displayedNodes.value[0].id)
-  } else if (availableNodes.value.length === 1) {
-    // If only one node is available in total, use it
-    nodeToUse = String(availableNodes.value[0].id)
-  }
-  
-  // If we still don't have a node, show error
-  if (!nodeToUse) {
-    toast.warning('No local node selected. Please select a node first.')
-    return
-  }
-
-  try {
-    const response = await api.post('/nodes/dtmf', {
-      localnode: nodeToUse,
-      dtmf: dtmfCommand.trim()
-    })
-
-    if (response.data.success) {
-      toast.success(`DTMF sent on node ${nodeToUse}`)
-      await realTimeStore.fetchNodeData()
-    } else {
-      toast.error(response.data.message || 'DTMF failed')
-    }
-  } catch (error) {
-    toast.error(apiErrorMessage(error, 'DTMF failed'))
+const handleControlAction = (action: string) => {
+  switch (action) {
+    case 'voter':
+      showVoterModal.value = true
+      break
+    case 'astlookup':
+      astlookup()
+      break
+    case 'rptstats':
+      rptstats()
+      break
+    case 'bubble':
+      bubble()
+      break
+    case 'control-panel':
+      showControlPanelModal.value = true
+      break
+    case 'favorites':
+      showFavoritesModal.value = true
+      break
+    case 'add-favorite':
+      openAddFavoriteModal()
+      break
+    case 'delete-favorite':
+      showDeleteFavoriteModal.value = true
+      break
+    case 'configeditor':
+      configeditor()
+      break
+    case 'open-help':
+      openHelp()
+      break
+    case 'open-wiki':
+      openWiki()
+      break
+    case 'cpustats':
+      cpustats()
+      break
+    case 'aststats':
+      aststats()
+      break
+    case 'open-active-nodes':
+      openActiveNodes()
+      break
+    case 'open-all-nodes':
+      openAllNodes()
+      break
+    case 'database':
+      database()
+      break
+    case 'linuxlog':
+      linuxlog()
+      break
+    case 'astlog':
+      astlog()
+      break
+    case 'webacclog':
+      webacclog()
+      break
+    case 'weberrlog':
+      weberrlog()
+      break
+    case 'astreload':
+      astreload()
+      break
+    case 'astaron':
+      astaron()
+      break
+    case 'astaroff':
+      astaroff()
+      break
+    case 'fastrestart':
+      fastrestart()
+      break
+    case 'reboot':
+      reboot()
+      break
+    case 'openpigpio':
+      openpigpio()
+      break
+    case 'openbanallow':
+      openbanallow()
+      break
+    case 'dvswitch':
+      showDvswitchModal.value = true
+      break
   }
 }
 
@@ -956,24 +845,18 @@ const astaroff = async () => {
   }
 }
 
-  const fastrestart = async () => {
-    try {
-  
-      
-      // Use selectedLocalNode if available, otherwise use selectedNode
-      if (selectedLocalNode.value) {
-        showFastRestartModal.value = true
-      } else if (selectedNode.value) {
-        showFastRestartModal.value = true
-      } else {
-        alert('Please select a node first to perform fast restart.')
-        return
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-      alert(`Failed to open FastRestart: ${errorMessage}`)
+const fastrestart = async () => {
+  try {
+    if (selectedLocalNode.value || selectedNode.value) {
+      showFastRestartModal.value = true
+    } else {
+      alert('Please select a node first to perform fast restart.')
     }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    alert(`Failed to open FastRestart: ${errorMessage}`)
   }
+}
 
 const reboot = async () => {
   try {
@@ -1363,78 +1246,6 @@ onUnmounted(() => {
   // WebSocket connections are cleaned up automatically when stopMonitoring() is called
 })
 
-// Watch for node table refs updates
-watch(nodeTableRefs, (newRefs) => {
-  if (Array.isArray(newRefs)) {
-    nextTick(() => {
-      newRefs.forEach(ref => {
-        if (ref && typeof ref.refreshData === 'function') {
-          ref.refreshData()
-        }
-      })
-    })
-  }
-}, { deep: true })
-
-// Watch for real-time store updates and update NodeTable components
-watch(() => realTimeStore.nodes, (newNodes) => {
-  nextTick(() => {
-    nodeTableRefs.value.forEach((ref, index) => {
-      if (ref && typeof ref.updateNodeData === 'function') {
-        const nodeId = displayedNodes.value[index] ? String(displayedNodes.value[index].id) : undefined
-        if (nodeId) {
-          const nodeData = newNodes.find(n => String(n.id) === String(nodeId))
-          if (nodeData) {
-            ref.updateNodeData(nodeData)
-          }
-        }
-      }
-    })
-  })
-}, { deep: true })
-
-// Watch for displayed nodes changes and update NodeTable components
-// TEMPORARILY DISABLED TO DEBUG GROUP MODE ISSUE
-/*
-watch(displayedNodes, (newDisplayedNodes) => {
-  
-  
-  // Only set default node if we don't have any selection AND we have multiple nodes
-  // This prevents overriding group selections
-  if (newDisplayedNodes.length > 1 && !selectedNode.value) {
-    nextTick(() => {
-      // Create a group selection from all displayed nodes
-      const nodeIds = newDisplayedNodes.map(node => node.id).join(',')
-      selectedNode.value = nodeIds
-  
-      // Trigger onNodeChange to update target node and start monitoring
-      onNodeChange()
-    })
-  } else if (newDisplayedNodes.length > 1 && selectedNode.value) {
-    // If we have a selection and multiple displayed nodes, check if it's a group selection
-    const selectedNodeStr = String(selectedNode.value)
-    if (!selectedNodeStr.includes(',')) {
-      // If current selection is not a group, but we have multiple displayed nodes,
-      // this might be a case where we need to create a group selection
-      // But we should be careful not to override existing group selections
-  
-    } else {
-      
-    }
-  }
-  
-  nextTick(() => {
-    newDisplayedNodes.forEach((node, index) => {
-      if (nodeTableRefs.value[index] && typeof nodeTableRefs.value[index].updateNodeData === 'function') {
-        const nodeData = realTimeStore.nodes.find(n => String(n.id) === String(node.id))
-        if (nodeData) {
-          nodeTableRefs.value[index].updateNodeData(nodeData)
-        }
-      }
-    })
-  })
-}, { deep: true })
-*/
 </script>
 
 <style scoped>

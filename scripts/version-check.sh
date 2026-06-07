@@ -9,7 +9,7 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-APP_DIR="/var/www/html/supermon-ng"
+APP_DIR="${SUPERMON_INSTALL_DIR:-/var/www/html/supermon-ng}"
 
 echo -e "${BLUE}Supermon-NG Version Information${NC}"
 echo "================================"

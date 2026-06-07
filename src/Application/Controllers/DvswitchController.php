@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
 use SupermonNg\Services\DvswitchService;
+use SupermonNg\Services\SessionService;
 use SupermonNg\Services\UserPermissionService;
 use Exception;
 
@@ -16,46 +17,23 @@ class DvswitchController
     private LoggerInterface $logger;
     private DvswitchService $dvswitchService;
     private UserPermissionService $userPermissionService;
+    private SessionService $sessionService;
     
     public function __construct(
         LoggerInterface $logger,
         DvswitchService $dvswitchService,
-        UserPermissionService $userPermissionService
+        UserPermissionService $userPermissionService,
+        SessionService $sessionService
     ) {
         $this->logger = $logger;
         $this->dvswitchService = $dvswitchService;
         $this->userPermissionService = $userPermissionService;
+        $this->sessionService = $sessionService;
     }
     
-    /**
-     * Get currently logged in user
-     */
     private function getCurrentUser(): ?string
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
-        // Check if user is logged in via session (must be authenticated)
-        if (isset($_SESSION['user']) && !empty($_SESSION['user']) && isset($_SESSION['authenticated']) && $_SESSION['authenticated']) {
-            // Check if session is not too old (24 hours)
-            if (isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) < 86400) {
-                return $_SESSION['user'];
-            } else {
-                // Session expired
-                return null;
-            }
-        }
-        
-        if (isset($_SERVER['PHP_AUTH_USER'])) {
-            return $_SERVER['PHP_AUTH_USER'];
-        }
-        
-        if (isset($_SERVER['REMOTE_USER'])) {
-            return $_SERVER['REMOTE_USER'];
-        }
-        
-        return null;
+        return $this->sessionService->getCurrentUser();
     }
     
     /**
