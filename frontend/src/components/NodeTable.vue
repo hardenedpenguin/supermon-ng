@@ -40,13 +40,23 @@
             :key="`${node.id}-${index}`"
             :class="getConnectedNodeClass(connectedNode, index)"
           >
-            <td 
-              class="nodeNum" 
-              align="center"
-              @click="handleNodeClick(connectedNode.node)"
-              :title="`Click to set ${connectedNode.node} as target node`"
-            >
-              {{ connectedNode.node }}
+            <td class="nodeNum" align="center">
+              <span
+                class="node-num-link"
+                @click="handleNodeClick(connectedNode.node)"
+                :title="`Click to set ${connectedNode.node} as target node`"
+              >
+                {{ connectedNode.node }}
+              </span>
+              <button
+                v-if="canAddFavorite"
+                type="button"
+                class="add-favorite-btn"
+                title="Add to favorites"
+                @click.stop="handleAddFavorite(connectedNode.node)"
+              >
+                ★
+              </button>
             </td>
             <td>{{ connectedNode.info || connectedNode.ip || 'Unknown' }}</td>
             <td v-if="showDetail" align="center">
@@ -112,7 +122,10 @@ const nodeTimers = ref<Map<string, { elapsedBase: number | null, elapsedTimestam
 // Emits
 const emit = defineEmits<{
   'node-click': [nodeId: string, localNodeId: string]
+  'add-favorite': [nodeId: string, localNodeId: string]
 }>()
+
+const canAddFavorite = computed(() => appStore.hasPermission('FAVUSER'))
 
 // Store
 const appStore = useAppStore()
@@ -409,6 +422,10 @@ const scrollToTop = () => {
 const handleNodeClick = (nodeId: string) => {
   // Emit event to parent component with both the clicked node and the local node (table owner)
   emit('node-click', nodeId, props.node.id)
+}
+
+const handleAddFavorite = (nodeId: string) => {
+  emit('add-favorite', nodeId, props.node.id)
 }
 
 const openBubbleChartModal = () => {
@@ -900,5 +917,25 @@ defineExpose({
 .node-table-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.node-num-link {
+  cursor: pointer;
+}
+
+.add-favorite-btn {
+  margin-left: 0.25rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+  opacity: 0.85;
+  padding: 0 0.15rem;
+}
+
+.add-favorite-btn:hover {
+  opacity: 1;
 }
 </style>

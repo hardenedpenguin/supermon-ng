@@ -4,12 +4,12 @@
 
 <img src="supermon-ng.png" alt="Supermon-NG" width="200"/> <img src="supermon-ng-1.png" alt="Supermon-NG" width="200"/>
 
-A modern, responsive web-based management interface for AllStar Link nodes, built with Vue.js 3 and PHP 8.
+A modern, responsive web-based management interface for AllStar Link nodes, built with Vue.js 3 and PHP 8.1+.
 
 ## ✨ Features
 
 - **Modern Vue.js 3 Frontend** - Responsive, fast, and intuitive interface
-- **WebSocket Real-time Updates** - Live node status updates via WebSocket (no polling)
+- **WebSocket Real-time Updates** - Live node status via WebSocket, with HTTP AMI fallback when WS is unavailable
 - **DVSwitch Mode Switcher** - Switch between DMR, YSF, P25, D-STAR, and NXDN modes
 - **Real-time Node Monitoring** - Live status updates, connections, and statistics
 - **Node Status Management** - Automated Asterisk variable updates
@@ -24,7 +24,7 @@ A modern, responsive web-based management interface for AllStar Link nodes, buil
 ## 📋 System Requirements
 
 - **Operating System**: Debian 11+ or Ubuntu 20.04+ (ASL3+ compatible)
-- **PHP**: 8.0+ with extensions: `sqlite3`, `curl`, `mbstring`, `json`
+- **PHP**: 8.1+ with extensions: `sqlite3`, `curl`, `mbstring`, `json`, `dom`, `xml` (for development/CI tests)
 - **Apache**: 2.4+ with modules: `rewrite`, `proxy`, `proxy_http`, `proxy_wstunnel`, `headers`, `expires`, `ssl`
 - **RAM**: 512MB minimum, 1GB recommended
 - **Storage**: 200MB free space
@@ -204,6 +204,7 @@ The update script:
 - ✅ Updates system services and dependencies
 - ✅ Validates configuration and restarts services
 - ✅ Preserves WebSocket and DVSwitch configurations
+- ✅ Stops database-update and node-status timers during the file swap to avoid upgrade races
 
 **Check Current Version:**
 ```bash
@@ -234,10 +235,13 @@ sudo systemctl restart apache2
 ### Log Files
 
 - **Apache**: `/var/log/apache2/supermon-ng_error.log`, `/var/log/apache2/supermon-ng_access.log`
+- **Application**: `/var/www/html/supermon-ng/logs/app-YYYY-MM-DD.log` (PHP API errors and warnings)
 - **Backend**: `sudo journalctl -u supermon-ng-backend -f`
 - **WebSocket**: `sudo journalctl -u supermon-ng-websocket -f`
-- **Node Status**: `/var/log/supermon-ng-node-status.log`
+- **Node Status**: `/var/log/supermon-ng-node-status.log` (also `journalctl -u node-status.service` on some installs)
 - **Asterisk**: `/var/log/asterisk/messages`
+
+The dashboard shows a **connection status** bar (`Live (WebSocket)` vs `Polling (AMI fallback)`) under the header when monitoring a node. Hard-refresh the browser after upgrades so the latest frontend bundle loads.
 
 ### Configuration Files
 
@@ -265,14 +269,17 @@ sudo systemctl enable supermon-ng-backend
 sudo journalctl -u supermon-ng-backend -f
 ```
 
-**WebSocket not connecting:**
+**WebSocket not connecting / stuck on AMI fallback:**
 ```bash
 sudo systemctl status supermon-ng-websocket
 sudo systemctl restart supermon-ng-websocket
 sudo journalctl -u supermon-ng-websocket -f
 sudo apache2ctl configtest
 # Ensure proxy_wstunnel module is enabled: sudo a2enmod proxy_wstunnel
+# Check Apache access log for 101 (upgrade OK) vs 503/301 on /supermon-ng/ws/
+sudo grep "ws/" /var/log/apache2/supermon-ng_access.log | tail -10
 ```
+Hard-refresh the dashboard after a WebSocket service restart. HTTP AMI polling runs only while WebSocket is down.
 
 **Permission issues:**
 ```bash

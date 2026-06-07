@@ -56,13 +56,20 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="favorite in favorites" :key="`${favorite.section}-${favorite.index}`">
+                  <tr
+                    v-for="favorite in favorites"
+                    :key="`${favorite.section}-${favorite.index}`"
+                    :class="{ 'favorite-row--linked': isFavoriteLinked(favorite) }"
+                  >
                     <td>
                       <span :class="['section-badge', favorite.section === 'general' ? 'general' : 'node']">
                         {{ favorite.section }}
                       </span>
                     </td>
-                    <td>{{ favorite.label }}</td>
+                    <td>
+                      {{ favorite.label }}
+                      <span v-if="isFavoriteLinked(favorite)" class="linked-badge">Linked</span>
+                    </td>
                     <td>
                       <div class="command-preview">
                         {{ favorite.command }}
@@ -135,6 +142,8 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { api } from '@/utils/api'
 import type { AxiosErrorResponse } from '@/types/api'
 import { getCsrfService } from '@/services/CsrfTokenService'
+import { useRealTimeStore } from '@/stores/realTime'
+import { useToast } from '@/composables/useToast'
 import AddFavorite from './AddFavorite.vue'
 
 interface Props {
@@ -158,6 +167,8 @@ interface ExecuteResult {
 }
 
 const props = defineProps<Props>()
+const realTimeStore = useRealTimeStore()
+const toast = useToast()
 const emit = defineEmits<{
   'update:open': [value: boolean]
   'command-executed': [result: ExecuteResult]
@@ -173,6 +184,37 @@ const fileName = ref('')
 const showAddFavoriteModal = ref(false)
 const selectedNodeForAdd = ref('')
 const availableNodes = ref<any[]>([])
+
+const nodeHasTargetLinked = (localNodeId: string, targetNodeId: string): boolean => {
+  const local = realTimeStore.getNodeById(localNodeId)
+  if (!local) {
+    return false
+  }
+  const connections = local.connected_nodes || local.remote_nodes || []
+  return connections.some((conn) => String(conn.node) === String(targetNodeId))
+}
+
+const isFavoriteLinked = (favorite: Favorite): boolean => {
+  const target = favorite.target_node
+  if (!target) {
+    return false
+  }
+
+  if (favorite.section === 'general') {
+    if (props.localNode) {
+      return nodeHasTargetLinked(props.localNode, target)
+    }
+    return realTimeStore.nodes.some((node) =>
+      nodeHasTargetLinked(String(node.id || node.node_number), target)
+    )
+  }
+
+  if (favorite.node) {
+    return nodeHasTargetLinked(String(favorite.node), target)
+  }
+
+  return false
+}
 
 const title = computed(() => {
   if (result.value && result.value.success) {
@@ -280,6 +322,12 @@ const executeFavoriteCommand = async (favorite: Favorite, node: string) => {
       message: response.data.message,
       executed_label: favorite.label
     }
+
+    if (response.data.success) {
+      toast.success(result.value.message || `Executed: ${favorite.label}`)
+    } else {
+      toast.error(result.value.message || `Failed: ${favorite.label}`)
+    }
     
     emit('command-executed', result.value)
   } catch (err: unknown) {
@@ -289,6 +337,7 @@ const executeFavoriteCommand = async (favorite: Favorite, node: string) => {
       message: axiosError.response?.data?.message || 'Failed to execute command',
       executed_label: favorite.label
     }
+    toast.error(result.value.message)
   } finally {
     saving.value = false
   }
@@ -306,14 +355,13 @@ interface FavoriteResult {
 
 const handleFavoriteAdded = (favoriteResult: FavoriteResult) => {
   if (favoriteResult.success) {
-    // Reload favorites after adding
     loadFavorites()
-    // Show success message
     result.value = {
       success: true,
       message: favoriteResult.message,
       executed_label: favoriteResult.label
     }
+    toast.success(favoriteResult.message || 'Favorite added')
   }
 }
 
@@ -513,6 +561,21 @@ onMounted(() => {
 
 .favorites-table tr:hover {
   background-color: #1f2937;
+}
+
+.favorites-table tr.favorite-row--linked td {
+  background-color: rgba(40, 167, 69, 0.12);
+}
+
+.linked-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(40, 167, 69, 0.25);
+  color: #9ae6b4;
 }
 
 .section-badge {

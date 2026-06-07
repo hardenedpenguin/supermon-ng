@@ -106,7 +106,7 @@
       <input v-if="appStore.hasPermission('BUBLUSER')" type="button" class="submit" value="Bubble" @click="bubble">
       <input v-if="appStore.hasPermission('CTRLUSER')" type="button" class="submit" value="Control Panel" @click="showControlPanelModal = true">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Favorites" @click="showFavoritesModal = true">
-      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Add Favorite" @click="showAddFavoriteModal = true">
+      <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Add Favorite" @click="openAddFavoriteModal">
       <input v-if="appStore.hasPermission('FAVUSER')" type="button" class="submit" value="Delete Favorite" @click="showDeleteFavoriteModal = true">
       
       <!-- Configuration Editor Section -->
@@ -162,6 +162,7 @@
           :config="realTimeStore.nodeConfig"
           :ref="el => { if (el) nodeTableRefs[index] = el }"
           @node-click="handleNodeClick"
+          @add-favorite="handleAddFavoriteFromLink"
         />
       </div>
     </div>
@@ -196,7 +197,9 @@
     <!-- Add Favorite Modal -->
     <AddFavorite 
       v-model:isVisible="showAddFavoriteModal"
-      :node-number="targetNode"
+      :node-number="addFavoriteTarget || targetNode"
+      :local-node="addFavoriteLocal || selectedLocalNode"
+      :prefer-node-specific="addFavoriteNodeSpecific"
       @favorite-added="handleFavoriteAdded"
     />
 
@@ -323,6 +326,8 @@ import NodeTable from '@/components/NodeTable.vue'
 import LoginForm from '@/components/LoginForm.vue'
 import Menu from '@/components/Menu.vue'
 import ConnectionStatus from '@/components/ConnectionStatus.vue'
+import { useToast } from '@/composables/useToast'
+import { apiErrorMessage } from '@/utils/errors'
 const DisplayConfig = defineAsyncComponent(() => import('@/components/DisplayConfig.vue'))
 const AddFavorite = defineAsyncComponent(() => import('@/components/AddFavorite.vue'))
 const DeleteFavorite = defineAsyncComponent(() => import('@/components/DeleteFavorite.vue'))
@@ -398,6 +403,10 @@ const loadDisplaySettingsFromCookies = () => {
 const showLoginModal = ref(false)
 const showDisplayConfigModal = ref(false)
 const showAddFavoriteModal = ref(false)
+const addFavoriteTarget = ref('')
+const addFavoriteLocal = ref('')
+const addFavoriteNodeSpecific = ref(false)
+const toast = useToast()
 const showDeleteFavoriteModal = ref(false)
 const showFavoritesModal = ref(false)
 const showAstLogModal = ref(false)
@@ -685,80 +694,97 @@ const onNodeChange = async () => {
 }
 
 const connect = async () => {
-  if (!targetNode.value || !selectedLocalNode.value) return
-  
+  if (!targetNode.value || !selectedLocalNode.value) {
+    toast.warning('Select a local node and target node first.')
+    return
+  }
+
   try {
     const response = await api.post('/nodes/connect', {
       localnode: selectedLocalNode.value,
       remotenode: targetNode.value,
       perm: permConnect.value ? 'on' : null
     })
-    
+
     if (response.data.success) {
-      // Refresh node data after successful connection
+      const permLabel = permConnect.value ? ' (permanent)' : ''
+      toast.success(`Connected ${selectedLocalNode.value} → ${targetNode.value}${permLabel}`)
       await realTimeStore.fetchNodeData()
     } else {
-      // Connect failed - error already shown to user
+      toast.error(response.data.message || 'Connect failed')
     }
   } catch (error) {
-    // Connect error - error already shown to user
+    toast.error(apiErrorMessage(error, 'Connect failed'))
   }
 }
 
 const disconnect = async () => {
-  if (!targetNode.value || !selectedLocalNode.value) return
-  
+  if (!targetNode.value || !selectedLocalNode.value) {
+    toast.warning('Select a local node and target node first.')
+    return
+  }
+
   try {
     const response = await api.post('/nodes/disconnect', {
       localnode: selectedLocalNode.value,
       remotenode: targetNode.value,
       perm: null
     })
-    
+
     if (response.data.success) {
-      // Refresh node data after successful disconnection
+      toast.success(`Disconnected ${targetNode.value} from ${selectedLocalNode.value}`)
       await realTimeStore.fetchNodeData()
+    } else {
+      toast.error(response.data.message || 'Disconnect failed')
     }
   } catch (error) {
-    // Disconnect error handled
+    toast.error(apiErrorMessage(error, 'Disconnect failed'))
   }
 }
 
 const monitor = async () => {
-  if (!targetNode.value || !selectedLocalNode.value) return
+  if (!targetNode.value || !selectedLocalNode.value) {
+    toast.warning('Select a local node and target node first.')
+    return
+  }
   try {
     const response = await api.post('/nodes/monitor', {
       localnode: selectedLocalNode.value,
       remotenode: targetNode.value,
       perm: null
     })
-    
-    if (response.data.success) {
 
-      // Refresh node data after successful monitoring
+    if (response.data.success) {
+      toast.success(`Monitoring ${targetNode.value} on ${selectedLocalNode.value}`)
       await realTimeStore.fetchNodeData()
+    } else {
+      toast.error(response.data.message || 'Monitor failed')
     }
   } catch (error) {
-    // Monitor error handled
+    toast.error(apiErrorMessage(error, 'Monitor failed'))
   }
 }
 
 const localmonitor = async () => {
-  if (!targetNode.value || !selectedLocalNode.value) return
+  if (!targetNode.value || !selectedLocalNode.value) {
+    toast.warning('Select a local node and target node first.')
+    return
+  }
   try {
     const response = await api.post('/nodes/local-monitor', {
       localnode: selectedLocalNode.value,
       remotenode: targetNode.value,
       perm: null
     })
-    
-    if (response.data.success) {
 
-      // Refresh node data after successful local monitoring
+    if (response.data.success) {
+      toast.success(`Local monitor ${targetNode.value} on ${selectedLocalNode.value}`)
       await realTimeStore.fetchNodeData()
+    } else {
+      toast.error(response.data.message || 'Local monitor failed')
     }
   } catch (error) {
-    // Local monitor error handled
+    toast.error(apiErrorMessage(error, 'Local monitor failed'))
   }
 }
 
@@ -789,25 +815,24 @@ const dtmf = async () => {
   
   // If we still don't have a node, show error
   if (!nodeToUse) {
-    alert('No local node selected. Please select a node first.')
+    toast.warning('No local node selected. Please select a node first.')
     return
   }
-  
+
   try {
     const response = await api.post('/nodes/dtmf', {
       localnode: nodeToUse,
       dtmf: dtmfCommand.trim()
     })
-    
-    if (response.data.success) {
 
-      // Show success message to user
-      
-      // Refresh node data after successful DTMF command
+    if (response.data.success) {
+      toast.success(`DTMF sent on node ${nodeToUse}`)
       await realTimeStore.fetchNodeData()
+    } else {
+      toast.error(response.data.message || 'DTMF failed')
     }
   } catch (error) {
-    // DTMF error handled
+    toast.error(apiErrorMessage(error, 'DTMF failed'))
   }
 }
 
@@ -1153,6 +1178,20 @@ const openDonatePopup = () => {
     await onNodeChange()
   }
 
+const openAddFavoriteModal = () => {
+  addFavoriteTarget.value = targetNode.value || ''
+  addFavoriteLocal.value = selectedLocalNode.value || ''
+  addFavoriteNodeSpecific.value = false
+  showAddFavoriteModal.value = true
+}
+
+const handleAddFavoriteFromLink = (nodeId: string, localNodeId: string) => {
+  addFavoriteTarget.value = nodeId
+  addFavoriteLocal.value = localNodeId
+  addFavoriteNodeSpecific.value = true
+  showAddFavoriteModal.value = true
+}
+
   // Handle node click from NodeTable (for quick target node selection)
   const handleNodeClick = (nodeId: string, localNodeId: string) => {
     // Set the clicked node as the target node
@@ -1177,15 +1216,17 @@ const openDonatePopup = () => {
   }
 
   // Handle favorite added
-  const handleFavoriteAdded = (_result: any) => {
-    // Could show a notification or refresh the page
-    
+  const handleFavoriteAdded = (result: { success?: boolean; message?: string }) => {
+    if (result?.success) {
+      toast.success(result.message || 'Favorite added')
+    }
   }
 
   // Handle favorite deleted
-  const handleFavoriteDeleted = (_result: any) => {
-    // Could show a notification or refresh the page
-    
+  const handleFavoriteDeleted = (result: { success?: boolean; message?: string }) => {
+    if (result?.success) {
+      toast.success(result.message || 'Favorite deleted')
+    }
   }
 
   // Handle command executed

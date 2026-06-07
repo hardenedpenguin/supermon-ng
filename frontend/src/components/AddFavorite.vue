@@ -144,6 +144,10 @@ const props = defineProps({
   localNode: {
     type: String,
     default: ''
+  },
+  preferNodeSpecific: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -183,8 +187,14 @@ watch(() => addToGeneral.value, async (isGeneral) => {
 // Watch for modal visibility
 watch(() => props.isVisible, async (visible) => {
   if (visible) {
+    addToGeneral.value = !props.preferNodeSpecific
+
     // Always load available nodes when modal opens
     await loadAvailableNodes()
+
+    if (props.preferNodeSpecific && props.localNode) {
+      sourceNode.value = props.localNode
+    }
     
     // Load node info if a specific node is provided
     if (props.nodeNumber) {

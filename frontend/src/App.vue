@@ -11,6 +11,8 @@
     <!-- Main App Content -->
     <router-view />
 
+    <ToastContainer />
+
     <!-- Theme Selector Modal -->
     <div v-if="showThemeSelector" class="modal-overlay" @click="showThemeSelector = false">
       <div class="modal-content" @click.stop>
@@ -26,6 +28,7 @@ import { useAppStore } from '@/stores/app'
 import { useTheme } from '@/composables/useTheme'
 import ThemeSelector from '@/components/ThemeSelector.vue'
 import UpdateBanner from '@/components/UpdateBanner.vue'
+import ToastContainer from '@/components/ToastContainer.vue'
 
 const appStore = useAppStore()
 const { loadTheme } = useTheme()
