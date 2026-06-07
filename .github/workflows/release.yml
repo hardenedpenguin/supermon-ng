@@ -2,7 +2,7 @@
 #
 # Before tagging:
 #   1. Bump version and VERSION_DATE in includes/common.inc (TITLE_LOGGED, TITLE_NOT_LOGGED).
-#   2. Commit, then: git tag -a V4.1.x -m "Release V4.1.x - ..." && git push && git push origin V4.1.x
+#   2. Commit, then: git tag -a V4.2.0 -m "Release V4.2.0 - ..." && git push && git push origin V4.2.0
 # This workflow: verifies common.inc matches tag, updates README.md download URLs to this release,
 # runs create-release.sh (tarball includes updated README), uploads assets.
 
