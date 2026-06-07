@@ -623,14 +623,14 @@ systemctl is-active supermon-ng-database-update.timer > /dev/null 2>&1 && echo "
 echo ""
 echo "📝 Next steps:"
 if [ "$APACHE_AUTO_CONFIGURED" = true ]; then
-    echo "   1. Configure your AMI settings in $APP_DIR/user_files/"
-    echo "   2. Set up your node configurations"
-    echo "   3. Access the web interface to complete setup"
+    echo "   1. Open the web interface — the setup wizard will guide you through:"
+    echo "      admin account, site identity (global.inc), and node configuration"
+    echo "   2. Adjust AMI settings in $APP_DIR/user_files/ if needed"
 else
     echo "   1. Complete Apache configuration (see instructions above)"
-    echo "   2. Configure your AMI settings in $APP_DIR/user_files/"
-    echo "   3. Set up your node configurations"
-    echo "   4. Access the web interface to complete setup"
+    echo "   2. Open the web interface — the setup wizard will guide you through:"
+    echo "      admin account, site identity (global.inc), and node configuration"
+    echo "   3. Adjust AMI settings in $APP_DIR/user_files/ if needed"
 fi
 
 echo ""

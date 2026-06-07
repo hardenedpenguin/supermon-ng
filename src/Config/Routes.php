@@ -123,7 +123,9 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
 
     $group->group('/setup', function (RouteCollectorProxy $g): void {
         $g->get('/status', [SetupController::class, 'getStatus']);
+        $g->get('/global-config', [SetupController::class, 'getGlobalConfig']);
         $g->post('/admin', [SetupController::class, 'createAdmin']);
+        $g->post('/global-config', [SetupController::class, 'saveGlobalConfig']);
         $g->post('/generate-allmon', [SetupController::class, 'generateAllmon']);
         $g->post('/complete', [SetupController::class, 'complete']);
     });

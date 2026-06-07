@@ -11,7 +11,8 @@ final class SetupService
     public function __construct(
         private readonly LoggerInterface $logger,
         private readonly AppPathService $paths,
-        private readonly LocalAllmonGeneratorService $allmonGenerator
+        private readonly LocalAllmonGeneratorService $allmonGenerator,
+        private readonly GlobalIncService $globalIncService
     ) {
     }
 
@@ -23,22 +24,25 @@ final class SetupService
         $userFiles = $this->paths->userFiles();
         $htpasswd = $userFiles . '.htpasswd';
         $setupFlag = $userFiles . '.setup_complete';
+        $globalSavedFlag = $userFiles . '.setup_global_saved';
         $userCount = $this->countHtpasswdUsers($htpasswd);
         $nodeCount = $this->countAllmonNodes($userFiles . 'allmon.ini');
+        $setupComplete = is_file($setupFlag);
+        $globalWizardDone = is_file($globalSavedFlag);
 
-        $needsSetup = false;
+        $needsSetup = !$setupComplete;
         $reasons = [];
 
-        if ($userCount === 0) {
-            $needsSetup = true;
-            $reasons[] = 'no_users';
-        }
-        if ($nodeCount === 0) {
-            $needsSetup = true;
-            $reasons[] = 'no_nodes';
-        }
-        if (!is_file($setupFlag) && ($userCount === 0 || $nodeCount === 0)) {
-            $needsSetup = true;
+        if ($needsSetup) {
+            if ($userCount === 0) {
+                $reasons[] = 'no_users';
+            }
+            if (!$globalWizardDone) {
+                $reasons[] = 'no_global_config';
+            }
+            if ($nodeCount === 0) {
+                $reasons[] = 'no_nodes';
+            }
         }
 
         return [
@@ -46,9 +50,39 @@ final class SetupService
             'reasons' => $reasons,
             'user_count' => $userCount,
             'node_count' => $nodeCount,
-            'setup_complete' => is_file($setupFlag),
+            'global_configured' => $this->globalIncService->isConfigured(),
+            'global_wizard_done' => $globalWizardDone,
+            'wizard_step' => $this->wizardStep($userCount, $nodeCount, $globalWizardDone, $setupComplete),
+            'setup_complete' => $setupComplete,
             'can_generate_allmon' => is_readable('/etc/asterisk/rpt.conf'),
         ];
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    public function getGlobalConfig(): array
+    {
+        return $this->globalIncService->read();
+    }
+
+    /**
+     * @param array<string, mixed> $config
+     * @return array{success: bool, message: string}
+     */
+    public function saveGlobalConfig(array $config): array
+    {
+        if (is_file($this->paths->userFiles() . '.setup_complete')) {
+            return ['success' => false, 'message' => 'Setup is already complete'];
+        }
+
+        $result = $this->globalIncService->write($config);
+        if ($result['success']) {
+            $flag = $this->paths->userFiles() . '.setup_global_saved';
+            file_put_contents($flag, json_encode(['saved_at' => date('c')], JSON_PRETTY_PRINT));
+        }
+
+        return $result;
     }
 
     /**
@@ -57,7 +91,7 @@ final class SetupService
     public function createAdminUser(string $username, string $password): array
     {
         $status = $this->getStatus();
-        if (!$status['needs_setup'] && $status['user_count'] > 0) {
+        if ($status['setup_complete']) {
             return ['success' => false, 'message' => 'Setup is already complete'];
         }
 
@@ -110,6 +144,24 @@ final class SetupService
         file_put_contents($flag, json_encode(['completed_at' => date('c')], JSON_PRETTY_PRINT));
 
         return ['success' => true, 'message' => 'Setup marked complete'];
+    }
+
+    private function wizardStep(int $userCount, int $nodeCount, bool $globalWizardDone, bool $setupComplete): int
+    {
+        if ($setupComplete) {
+            return 0;
+        }
+        if ($userCount === 0) {
+            return 1;
+        }
+        if (!$globalWizardDone) {
+            return 2;
+        }
+        if ($nodeCount === 0) {
+            return 3;
+        }
+
+        return 4;
     }
 
     private function countHtpasswdUsers(string $path): int

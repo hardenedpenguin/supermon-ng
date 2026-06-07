@@ -82,41 +82,74 @@ final class SystemHealthService
      */
     private function checkBackendHttp(): array
     {
-        $url = $_ENV['BACKEND_HEALTH_URL'] ?? 'http://127.0.0.1:8000/health';
-
-        try {
-            $context = stream_context_create([
-                'http' => [
-                    'timeout' => 3,
-                    'ignore_errors' => true,
-                ],
-            ]);
-            $body = @file_get_contents($url, false, $context);
-            if ($body === false) {
-                return [
-                    'ok' => false,
-                    'state' => 'unreachable',
-                    'hint' => 'Check supermon-ng-backend.service and port 8000',
-                ];
-            }
-
-            $decoded = json_decode($body, true);
-            $ok = is_array($decoded) && ($decoded['status'] ?? '') === 'healthy';
-
+        // php -S is single-threaded: an HTTP loopback from inside a request deadlocks.
+        if (PHP_SAPI === 'cli-server') {
             return [
-                'ok' => $ok,
-                'state' => $ok ? 'healthy' : 'unhealthy',
-                'hint' => $ok ? null : 'Backend /health did not return healthy',
-            ];
-        } catch (\Throwable $e) {
-            $this->logger->warning('Backend health check failed', ['error' => $e->getMessage()]);
-
-            return [
-                'ok' => false,
-                'state' => 'error',
-                'hint' => 'Backend health check failed',
+                'ok' => true,
+                'state' => 'healthy',
             ];
         }
+
+        $port = (int) ($_ENV['BACKEND_PORT'] ?? 8000);
+        $body = $this->fetchHealthViaSocket('::1', $port)
+            ?? $this->fetchHealthViaSocket('127.0.0.1', $port);
+
+        if ($body !== null) {
+            $decoded = json_decode($body, true);
+            if (is_array($decoded) && ($decoded['status'] ?? '') === 'healthy') {
+                return [
+                    'ok' => true,
+                    'state' => 'healthy',
+                ];
+            }
+        }
+
+        if (!empty($_ENV['BACKEND_HEALTH_URL'])) {
+            try {
+                $context = stream_context_create([
+                    'http' => ['timeout' => 3, 'ignore_errors' => true],
+                ]);
+                $remote = @file_get_contents((string) $_ENV['BACKEND_HEALTH_URL'], false, $context);
+                if ($remote !== false) {
+                    $decoded = json_decode($remote, true);
+                    if (is_array($decoded) && ($decoded['status'] ?? '') === 'healthy') {
+                        return ['ok' => true, 'state' => 'healthy'];
+                    }
+                }
+            } catch (\Throwable $e) {
+                $this->logger->warning('Backend health URL probe failed', ['error' => $e->getMessage()]);
+            }
+        }
+
+        return [
+            'ok' => false,
+            'state' => 'unreachable',
+            'hint' => 'Check supermon-ng-backend.service (php -S localhost:8000)',
+        ];
+    }
+
+    private function fetchHealthViaSocket(string $host, int $port): ?string
+    {
+        $target = $host === '::1'
+            ? "tcp://[::1]:{$port}"
+            : "tcp://{$host}:{$port}";
+
+        $socket = @stream_socket_client($target, $errno, $errstr, 2.0);
+        if ($socket === false) {
+            return null;
+        }
+
+        fwrite($socket, "GET /health HTTP/1.0\r\nHost: localhost\r\nConnection: close\r\n\r\n");
+        $response = stream_get_contents($socket);
+        fclose($socket);
+
+        if (!is_string($response) || $response === '') {
+            return null;
+        }
+
+        $parts = explode("\r\n\r\n", $response, 2);
+
+        return $parts[1] ?? null;
     }
 
     /**

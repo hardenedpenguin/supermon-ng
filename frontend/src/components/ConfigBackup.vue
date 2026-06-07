@@ -48,6 +48,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import axios from 'axios'
+import type { AxiosError } from 'axios'
 import { api } from '@/utils/api'
 import { appUrl } from '@/utils/basePath'
 import { getCsrfService } from '@/services/CsrfTokenService'
@@ -74,14 +75,39 @@ const setMessage = (text: string, type: 'success' | 'error' = 'success') => {
   messageType.value = type
 }
 
+const readApiErrorMessage = async (err: unknown): Promise<string> => {
+  const axiosError = err as AxiosError<Blob | { message?: string; error?: string }>
+  const data = axiosError.response?.data
+  if (data instanceof Blob) {
+    try {
+      const text = await data.text()
+      const parsed = JSON.parse(text) as { message?: string; error?: string }
+      return parsed.message || parsed.error || 'Export failed'
+    } catch {
+      return 'Export failed'
+    }
+  }
+  if (data && typeof data === 'object') {
+    return data.message || data.error || 'Export failed'
+  }
+  return 'Export failed'
+}
+
 const exportConfig = async () => {
   exporting.value = true
   message.value = ''
   try {
-    const response = await axios.get(appUrl('api/v1/admin/config/export'), {
+    const response = await api.get('/admin/config/export', {
       responseType: 'blob',
-      withCredentials: true,
+      timeout: 60000,
     })
+
+    const contentType = String(response.headers['content-type'] || '')
+    if (!contentType.includes('zip')) {
+      setMessage(await readApiErrorMessage({ response: { data: response.data } }), 'error')
+      return
+    }
+
     const blob = new Blob([response.data], { type: 'application/zip' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -93,8 +119,7 @@ const exportConfig = async () => {
     URL.revokeObjectURL(url)
     setMessage('Backup downloaded')
   } catch (err: unknown) {
-    const axiosError = err as AxiosErrorResponse
-    setMessage(axiosError.response?.data?.message || 'Export failed', 'error')
+    setMessage(await readApiErrorMessage(err), 'error')
   } finally {
     exporting.value = false
   }

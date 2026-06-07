@@ -34,20 +34,13 @@ class AdminAuthMiddleware implements MiddlewareInterface
         }
 
         // Check if user has admin permissions
-        if (!$this->hasAdminPermissions($user)) {
+        if (!$this->includeService->userHasAdminPermission($user)) {
             $this->logger->warning('Admin Auth middleware - user lacks admin permissions', ['user' => $user]);
             return $this->createForbiddenResponse();
         }
 
         $this->logger->info('Admin Auth middleware - user authorized', ['user' => $user]);
         return $handler->handle($request);
-    }
-
-    private function hasAdminPermissions(string $user): bool
-    {
-        $this->includeService->ensureAuthGlobalsLoaded();
-        $adminUsers = $GLOBALS['admin_users'] ?? [];
-        return in_array($user, $adminUsers, true);
     }
 
     private function createUnauthorizedResponse(): Response

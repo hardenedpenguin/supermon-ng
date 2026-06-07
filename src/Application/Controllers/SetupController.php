@@ -29,7 +29,7 @@ final class SetupController
     public function createAdmin(Request $request, Response $response): Response
     {
         $status = $this->setupService->getStatus();
-        if (!$status['needs_setup'] && $status['user_count'] > 0) {
+        if ($status['setup_complete']) {
             return ApiResponseHelper::error($response, 'Setup is already complete', 403);
         }
 
@@ -38,6 +38,26 @@ final class SetupController
         $password = (string) ($body['password'] ?? '');
 
         $result = $this->setupService->createAdminUser($username, $password);
+        if (!$result['success']) {
+            return ApiResponseHelper::error($response, $result['message'], 400);
+        }
+
+        return ApiResponseHelper::json($response, $result);
+    }
+
+    public function getGlobalConfig(Request $request, Response $response): Response
+    {
+        return ApiResponseHelper::json($response, [
+            'success' => true,
+            'data' => $this->setupService->getGlobalConfig(),
+        ]);
+    }
+
+    public function saveGlobalConfig(Request $request, Response $response): Response
+    {
+        $body = $this->parseJson($request);
+        $result = $this->setupService->saveGlobalConfig($body);
+
         if (!$result['success']) {
             return ApiResponseHelper::error($response, $result['message'], 400);
         }

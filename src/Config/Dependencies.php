@@ -22,6 +22,7 @@ use SupermonNg\Services\SystemHealthService;
 use SupermonNg\Services\ConfigBackupService;
 use SupermonNg\Services\SetupService;
 use SupermonNg\Services\ConfigImportService;
+use SupermonNg\Services\GlobalIncService;
 
 return [
     // Logger
@@ -271,11 +272,16 @@ return [
         );
     },
 
+    GlobalIncService::class => function (ContainerInterface $c) {
+        return new GlobalIncService($c->get(AppPathService::class));
+    },
+
     SetupService::class => function (ContainerInterface $c) {
         return new SetupService(
             $c->get(LoggerInterface::class),
             $c->get(AppPathService::class),
-            $c->get(LocalAllmonGeneratorService::class)
+            $c->get(LocalAllmonGeneratorService::class),
+            $c->get(GlobalIncService::class)
         );
     },
 

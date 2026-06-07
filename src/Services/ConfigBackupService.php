@@ -52,8 +52,8 @@ final class ConfigBackupService
 
         foreach (self::ROOT_FILES as $file) {
             $full = $userFiles . $file;
-            if (is_file($full)) {
-                $zip->addFile($full, 'user_files/' . $file);
+            if (is_file($full) && is_readable($full)) {
+                $this->addFileToZip($zip, $full, 'user_files/' . $file);
             }
         }
 
@@ -61,16 +61,16 @@ final class ConfigBackupService
         $this->addDirectoryToZip($zip, $userFiles . 'sbin', 'user_files/sbin');
 
         foreach (glob($userFiles . 'dvswitch_config*.yml') ?: [] as $yml) {
-            $zip->addFile($yml, 'user_files/' . basename($yml));
+            $this->addFileToZip($zip, $yml, 'user_files/' . basename($yml));
         }
 
         foreach (glob($userFiles . '*-allmon.ini') ?: [] as $ini) {
-            $zip->addFile($ini, 'user_files/' . basename($ini));
+            $this->addFileToZip($zip, $ini, 'user_files/' . basename($ini));
         }
 
         $envFile = $this->paths->envFile();
         if (is_file($envFile) && is_readable($envFile)) {
-            $zip->addFile($envFile, '.env');
+            $this->addFileToZip($zip, $envFile, '.env');
         }
 
         $manifest = [
@@ -79,7 +79,11 @@ final class ConfigBackupService
             'files' => self::ROOT_FILES,
         ];
         $zip->addFromString('manifest.json', json_encode($manifest, JSON_PRETTY_PRINT));
-        $zip->close();
+        if (!$zip->close()) {
+            @unlink($zipPath);
+
+            return ['success' => false, 'message' => 'Could not finalize zip archive'];
+        }
 
         $filename = 'supermon-ng-config-' . date('Ymd-His') . '.zip';
 
@@ -194,7 +198,21 @@ final class ConfigBackupService
             }
             $path = $file->getPathname();
             $relative = substr($path, strlen($dir) + 1);
-            $zip->addFile($path, $zipPrefix . '/' . $relative);
+            $this->addFileToZip($zip, $path, $zipPrefix . '/' . $relative);
         }
+    }
+
+    private function addFileToZip(ZipArchive $zip, string $path, string $zipName): void
+    {
+        if (!is_readable($path)) {
+            return;
+        }
+
+        $contents = file_get_contents($path);
+        if ($contents === false) {
+            return;
+        }
+
+        $zip->addFromString($zipName, $contents);
     }
 }

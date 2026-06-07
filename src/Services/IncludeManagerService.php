@@ -148,6 +148,9 @@ class IncludeManagerService
     /** Admin permission arrays - users in these are considered admin */
     private const ADMIN_PERMISSION_NAMES = ['CTRLUSER', 'CFGEDUSER'];
 
+    /** @var array<string, list<string>>|null */
+    private static ?array $parsedPermissionArrays = null;
+
     /**
      * Include auth files with caching
      */
@@ -176,27 +179,27 @@ class IncludeManagerService
      */
     public function ensureAuthGlobalsLoaded(): void
     {
-        $this->includeAuthFiles();
-
-        if (isset($GLOBALS['valid_users']) && is_array($GLOBALS['valid_users'])) {
-            return; // Already set (e.g. by previous call)
+        if (isset($GLOBALS['valid_users'], $GLOBALS['admin_users'])
+            && is_array($GLOBALS['valid_users'])
+            && is_array($GLOBALS['admin_users'])
+            && self::$parsedPermissionArrays !== null) {
+            return;
         }
 
+        $arrays = $this->getPermissionArrays();
         $validUsers = [];
         $adminUsers = [];
 
         foreach (self::PERMISSION_ARRAY_NAMES as $name) {
-            if (isset($GLOBALS[$name]) && is_array($GLOBALS[$name])) {
-                foreach ($GLOBALS[$name] as $user) {
-                    if (is_string($user) && $user !== '') {
-                        $validUsers[$user] = true;
-                    }
+            foreach ($arrays[$name] ?? [] as $user) {
+                if ($user !== '') {
+                    $validUsers[$user] = true;
                 }
-                if (in_array($name, self::ADMIN_PERMISSION_NAMES, true)) {
-                    foreach ($GLOBALS[$name] as $user) {
-                        if (is_string($user) && $user !== '') {
-                            $adminUsers[$user] = true;
-                        }
+            }
+            if (in_array($name, self::ADMIN_PERMISSION_NAMES, true)) {
+                foreach ($arrays[$name] ?? [] as $user) {
+                    if ($user !== '') {
+                        $adminUsers[$user] = true;
                     }
                 }
             }
@@ -204,6 +207,64 @@ class IncludeManagerService
 
         $GLOBALS['valid_users'] = array_keys($validUsers);
         $GLOBALS['admin_users'] = array_keys($adminUsers);
+    }
+
+    public function userHasAdminPermission(string $user): bool
+    {
+        $this->ensureAuthGlobalsLoaded();
+
+        return in_array($user, $GLOBALS['admin_users'] ?? [], true);
+    }
+
+    /**
+     * @return array<string, list<string>>
+     */
+    public function getPermissionArrays(): array
+    {
+        if (self::$parsedPermissionArrays !== null) {
+            return self::$parsedPermissionArrays;
+        }
+
+        $authUsersPath = $this->authUsersPath();
+        $arrays = [];
+        foreach (self::PERMISSION_ARRAY_NAMES as $name) {
+            $arrays[$name] = [];
+        }
+
+        if (is_file($authUsersPath)) {
+            $content = file_get_contents($authUsersPath);
+            if ($content !== false) {
+                foreach (self::PERMISSION_ARRAY_NAMES as $name) {
+                    $arrays[$name] = $this->parsePermissionArray($content, $name);
+                }
+            }
+        }
+
+        self::$parsedPermissionArrays = $arrays;
+
+        return $arrays;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function parsePermissionArray(string $content, string $name): array
+    {
+        $pattern = '/\$' . preg_quote($name, '/') . '\s*=\s*array\s*\((.*?)\)\s*;/s';
+        if (!preg_match($pattern, $content, $matches)) {
+            return [];
+        }
+
+        preg_match_all('/"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)"/', $matches[1], $users);
+
+        return array_values(array_filter($users[1] ?? [], static fn (string $user): bool => $user !== ''));
+    }
+
+    private function authUsersPath(): string
+    {
+        $userFiles = $_ENV['USER_FILES_PATH'] ?? (__DIR__ . '/../../user_files');
+
+        return rtrim((string) $userFiles, '/') . '/authusers.inc';
     }
 
     /**
