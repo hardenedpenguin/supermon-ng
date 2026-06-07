@@ -19,6 +19,8 @@ final class ConfigBackupService
         'controlpanel.ini',
         'global.inc',
         '.htpasswd',
+        '.setup_complete',
+        '.setup_global_saved',
     ];
 
     public function __construct(

@@ -311,6 +311,8 @@ update_application() {
             "controlpanel.ini"     # Control panel settings - NEVER replace
             "global.inc"           # Global user configuration - NEVER replace
             ".htpasswd"            # Apache authentication file - NEVER replace
+            ".setup_complete"      # Setup wizard completion flag - NEVER replace
+            ".setup_global_saved"  # Setup wizard global.inc step flag - NEVER replace
         )
         
         # List of user customization files that should ALWAYS be preserved

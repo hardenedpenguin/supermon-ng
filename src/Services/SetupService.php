@@ -30,6 +30,18 @@ final class SetupService
         $setupComplete = is_file($setupFlag);
         $globalWizardDone = is_file($globalSavedFlag);
 
+        if (!$setupComplete && $this->shouldAutoCompleteSetup($userCount, $nodeCount, $globalWizardDone)) {
+            $this->markComplete();
+            if (!$globalWizardDone) {
+                file_put_contents(
+                    $globalSavedFlag,
+                    json_encode(['saved_at' => date('c'), 'auto' => true], JSON_PRETTY_PRINT)
+                );
+            }
+            $setupComplete = true;
+            $globalWizardDone = true;
+        }
+
         $needsSetup = !$setupComplete;
         $reasons = [];
 
@@ -142,8 +154,22 @@ final class SetupService
     {
         $flag = $this->paths->userFiles() . '.setup_complete';
         file_put_contents($flag, json_encode(['completed_at' => date('c')], JSON_PRETTY_PRINT));
+        chmod($flag, 0644);
 
         return ['success' => true, 'message' => 'Setup marked complete'];
+    }
+
+    private function shouldAutoCompleteSetup(int $userCount, int $nodeCount, bool $globalWizardDone): bool
+    {
+        if ($userCount === 0 || $nodeCount === 0) {
+            return false;
+        }
+
+        if ($globalWizardDone) {
+            return true;
+        }
+
+        return $this->globalIncService->isConfigured();
     }
 
     private function wizardStep(int $userCount, int $nodeCount, bool $globalWizardDone, bool $setupComplete): int

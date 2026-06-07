@@ -8,6 +8,7 @@ css/custom.css
 *.log.*
 user_files/*.log
 user_files/.setup_complete
+user_files/.setup_global_saved
 logs-*.log
 logs/
 

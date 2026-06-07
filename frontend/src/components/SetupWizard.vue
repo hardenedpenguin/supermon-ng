@@ -237,7 +237,7 @@ const loadStatus = async (options: { syncStep?: boolean } = {}) => {
     const response = await api.get('/setup/status')
     if (response.data.success) {
       status.value = response.data.data
-      visible.value = !!status.value?.needs_setup
+      visible.value = !!status.value?.needs_setup && !status.value?.setup_complete
       await loadGlobalConfig()
       if (syncStep) {
         applyStepFromStatus(false)
@@ -323,6 +323,10 @@ const finish = async () => {
   busy.value = true
   try {
     await api.post('/setup/complete')
+    if (status.value) {
+      status.value.setup_complete = true
+      status.value.needs_setup = false
+    }
     visible.value = false
     await appStore.initialize()
   } catch (err: unknown) {
