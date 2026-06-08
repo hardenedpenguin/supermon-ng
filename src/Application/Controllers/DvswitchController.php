@@ -372,5 +372,53 @@ class DvswitchController
             return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
         }
     }
+
+    /**
+     * Restart MMDVM_Bridge and Analog_Bridge systemd units.
+     */
+    public function restartBridges(Request $request, Response $response): Response
+    {
+        try {
+            $currentUser = $this->getCurrentUser();
+
+            if (!$this->hasPermission($currentUser)) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'You are not authorized to use DVSwitch mode switching.',
+                ]));
+
+                return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
+            }
+
+            if ($this->dvswitchService->getNodesWithDvswitch($currentUser) === []) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'No nodes with DVSwitch configured found.',
+                ]));
+
+                return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+            }
+
+            $result = $this->dvswitchService->restartBridgeServices();
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => $result,
+            ]));
+
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (Exception $e) {
+            $this->logger->error('Error restarting DVSwitch bridge services', [
+                'error' => $e->getMessage(),
+            ]);
+
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ]));
+
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
+    }
 }
 

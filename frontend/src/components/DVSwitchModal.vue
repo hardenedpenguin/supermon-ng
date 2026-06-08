@@ -170,7 +170,7 @@
             <button
               type="button"
               @click="applySelection"
-              :disabled="!selectedNode || !selectedMode || switching"
+              :disabled="!selectedNode || !selectedMode || switching || restartingBridges"
               class="action-button action-button-primary"
               :title="applyButtonTitle"
             >
@@ -181,11 +181,22 @@
               v-if="selectedNode && selectedMode && effectiveTalkgroup"
               type="button"
               @click="switchTalkgroup" 
-              :disabled="!effectiveTalkgroup || switching"
+              :disabled="!effectiveTalkgroup || switching || restartingBridges"
               class="action-button"
               title="Tune only (no mode change). Use when you are already in this mode."
             >
               {{ switching ? 'Switching…' : 'Tune only' }}
+            </button>
+
+            <button
+              v-if="availableNodes.length"
+              type="button"
+              @click="restartBridges"
+              :disabled="switching || restartingBridges"
+              class="action-button action-button-warning"
+              title="Restart MMDVM_Bridge and Analog_Bridge (digital audio may drop briefly)"
+            >
+              {{ restartingBridges ? 'Restarting…' : 'Restart bridges' }}
             </button>
             
             <button type="button" @click="closeModal" class="cancel-button">Cancel</button>
@@ -261,6 +272,7 @@ const selectedNetwork = ref('')
 const loading = ref(false)
 const loadingModes = ref(false)
 const switching = ref(false)
+const restartingBridges = ref(false)
 const error = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
 const presets = ref<DvswitchPreset[]>([])
@@ -713,6 +725,37 @@ const switchTalkgroup = async () => {
   }
 }
 
+const restartBridges = async () => {
+  if (
+    !window.confirm(
+      'Restart MMDVM_Bridge and Analog_Bridge? Digital audio may drop briefly.',
+    )
+  ) {
+    return
+  }
+
+  restartingBridges.value = true
+  error.value = null
+  successMessage.value = null
+
+  try {
+    const response = await api.post('/dvswitch/restart-bridges', {}, { timeout: 30000 })
+    if (response.data.success) {
+      successMessage.value =
+        response.data.data?.message || 'Bridge services restarted.'
+    } else {
+      error.value = response.data.message || 'Failed to restart bridge services.'
+    }
+  } catch (err: unknown) {
+    error.value =
+      (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
+      'Error restarting bridge services.'
+    console.error('Error restarting DVSwitch bridges:', err)
+  } finally {
+    restartingBridges.value = false
+  }
+}
+
 // Load nodes when modal opens
 watch(() => props.isVisible, (newVal) => {
   if (newVal) {
@@ -1073,6 +1116,15 @@ onMounted(() => {
 
 .action-button-primary {
   font-weight: 600;
+}
+
+.action-button-warning {
+  background-color: #b45309;
+  color: #fff;
+}
+
+.action-button-warning:hover:not(:disabled) {
+  filter: brightness(1.08);
 }
 </style>
 

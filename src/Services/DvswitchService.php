@@ -861,5 +861,73 @@ class DvswitchService
         
         return $nodesWithDvswitch;
     }
+
+    /**
+     * Restart MMDVM_Bridge and Analog_Bridge systemd units via privileged wrapper script.
+     *
+     * @return array{success: bool, services: list<array{status: string, service: string, detail: string}>, message: string}
+     */
+    public function restartBridgeServices(): array
+    {
+        $script = $this->userFilesPath . 'sbin/dvswitch-bridge-restart.sh';
+        if (!is_file($script) || !is_executable($script)) {
+            throw new Exception('DVSwitch bridge restart script is missing or not executable.');
+        }
+
+        $output = [];
+        $exitCode = 1;
+        $command = '/usr/bin/sudo -n ' . escapeshellarg($script) . ' 2>&1';
+        exec($command, $output, $exitCode);
+
+        $services = [];
+        foreach ($output as $line) {
+            $line = trim($line);
+            if ($line === '' || !preg_match('/^(ok|skip|fail):([^:]+):(.+)$/', $line, $matches)) {
+                continue;
+            }
+            $services[] = [
+                'status' => $matches[1],
+                'service' => $matches[2],
+                'detail' => $matches[3],
+            ];
+        }
+
+        $restarted = array_values(array_filter(
+            $services,
+            static fn (array $row): bool => $row['status'] === 'ok'
+        ));
+        $failed = array_values(array_filter(
+            $services,
+            static fn (array $row): bool => $row['status'] === 'fail'
+        ));
+
+        if ($restarted !== []) {
+            $names = implode(', ', array_column($restarted, 'service'));
+            $message = "Restarted: {$names}.";
+            if ($failed !== []) {
+                $message .= ' Some services failed to restart.';
+            }
+            $this->logger->info('DVSwitch bridge services restarted', [
+                'services' => $services,
+                'exit_code' => $exitCode,
+            ]);
+
+            return [
+                'success' => true,
+                'services' => $services,
+                'message' => $message,
+            ];
+        }
+
+        if ($services === [] && $output !== []) {
+            throw new Exception('Bridge restart failed: ' . implode("\n", $output));
+        }
+
+        if ($failed !== []) {
+            throw new Exception('Failed to restart bridge services.');
+        }
+
+        throw new Exception('No DVSwitch bridge services (mmdvm_bridge, analog_bridge) found on this system.');
+    }
 }
 

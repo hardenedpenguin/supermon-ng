@@ -183,6 +183,7 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
         $g->get('/node/{nodeId}/mode/{mode}/talkgroups', [DvswitchController::class, 'getTalkgroups']);
         $g->post('/node/{nodeId}/mode/{mode}', [DvswitchController::class, 'switchMode']);
         $g->post('/node/{nodeId}/tune/{tgid}', [DvswitchController::class, 'switchTalkgroup']);
+        $g->post('/restart-bridges', [DvswitchController::class, 'restartBridges']);
     });
 
     $group->group('/config', function (RouteCollectorProxy $g): void {
