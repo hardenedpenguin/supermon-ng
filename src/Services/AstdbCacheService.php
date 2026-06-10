@@ -437,24 +437,40 @@ class AstdbCacheService
     /**
      * Get cache statistics for monitoring including compression info (Phase 6 optimization)
      */
+    /**
+     * Lightweight health metadata without reading or decompressing cache files.
+     *
+     * @return array<string, mixed>
+     */
+    public function getHealthMetadata(): array
+    {
+        $astdbExists = file_exists($this->astdbFile);
+        $cacheExists = file_exists($this->cacheFile);
+
+        return [
+            'astdb_file_exists' => $astdbExists,
+            'astdb_file_size' => $astdbExists ? filesize($this->astdbFile) : 0,
+            'astdb_file_mtime' => $astdbExists ? filemtime($this->astdbFile) : null,
+            'cache_file_exists' => $cacheExists,
+            'cache_file_size' => $cacheExists ? filesize($this->cacheFile) : 0,
+            'cache_file_mtime' => $cacheExists ? filemtime($this->cacheFile) : null,
+            'entries_count' => self::$requestCache ? count(self::$requestCache) : 0,
+            'is_cached_in_memory' => self::$requestCache !== null,
+        ];
+    }
+
     public function getCacheStats(): array
     {
-        $stats = [
+        $stats = array_merge($this->getHealthMetadata(), [
             'is_cached' => self::$requestCache !== null,
             'file_path' => self::$lastFilePath,
             'file_mtime' => self::$fileMtime,
-            'entries_count' => self::$requestCache ? count(self::$requestCache) : 0,
             'application_cache_exists' => self::$applicationCache !== null,
-            'application_cache_mtime' => self::$applicationCacheMtime
-        ];
-        
-        // Add compression statistics if cache file exists
-        if (file_exists($this->cacheFile)) {
-            $cacheFileSize = filesize($this->cacheFile);
-            $stats['cache_file_size'] = $cacheFileSize;
-            $stats['cache_file_exists'] = true;
-            
-            // Try to determine if it's compressed by attempting decompression
+            'application_cache_mtime' => self::$applicationCacheMtime,
+        ]);
+
+        if ($stats['cache_file_exists']) {
+            $cacheFileSize = (int) $stats['cache_file_size'];
             $fileData = file_get_contents($this->cacheFile);
             if ($fileData !== false) {
                 $decompressedData = @gzuncompress($fileData);
@@ -469,10 +485,9 @@ class AstdbCacheService
                 }
             }
         } else {
-            $stats['cache_file_exists'] = false;
             $stats['is_compressed'] = false;
         }
-        
+
         return $stats;
     }
     

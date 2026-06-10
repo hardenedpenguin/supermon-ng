@@ -8,6 +8,11 @@ use Psr\Log\LoggerInterface;
 
 final class SystemHealthService
 {
+    private const CACHE_TTL_SECONDS = 45;
+
+    private ?array $cachedHealth = null;
+    private int $cachedAt = 0;
+
     public function __construct(
         private readonly LoggerInterface $logger
     ) {
@@ -18,6 +23,11 @@ final class SystemHealthService
      */
     public function getHealth(): array
     {
+        $now = time();
+        if ($this->cachedHealth !== null && ($now - $this->cachedAt) < self::CACHE_TTL_SECONDS) {
+            return $this->cachedHealth;
+        }
+
         $checks = [
             'backend_service' => $this->checkSystemdUnit('supermon-ng-backend.service'),
             'websocket_service' => $this->checkSystemdUnit('supermon-ng-websocket.service'),
@@ -38,11 +48,14 @@ final class SystemHealthService
             }
         }
 
-        return [
+        $this->cachedHealth = [
             'healthy' => $healthy,
             'checks' => $checks,
             'checked_at' => date('c'),
         ];
+        $this->cachedAt = $now;
+
+        return $this->cachedHealth;
     }
 
     /**

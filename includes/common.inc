@@ -75,7 +75,8 @@ $ASTERISK_LOG = "/var/log/asterisk/messages.log";
 /**
  * @var string Path to the AllStar allmon database text file.
  */
-$ASTDB_TXT = "/var/www/html/supermon-ng/astdb.txt";
+$_sm_app_root = rtrim(getenv('APP_ROOT') ?: '/var/www/html/supermon-ng', '/');
+$ASTDB_TXT = $_sm_app_root . '/astdb.txt';
 
 /**
  * @var string Path to the AllStar rpt_extnodes file (not present in DNS mode).
@@ -85,7 +86,7 @@ $EXTNODES = "/tmp/rpt_extnodes";
 /**
  * @var string Path to the Private AllStar nodelist.
  */
-$PRIVATENODES = "/var/www/html/supermon-ng/user_files/privatenodes.txt";
+$PRIVATENODES = $_sm_app_root . '/user_files/privatenodes.txt';
 
 /**
  * @var string Path to the IRLP calls data file (gzipped).

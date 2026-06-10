@@ -31,6 +31,15 @@ final class GlobalIncService
         'my_url' => 'MY_URL',
     ];
 
+    /** @var list<string> Legacy variables no longer read by the application */
+    private const DEPRECATED_VARS = [
+        'BACKGROUND',
+        'DATABASE_TXT',
+        'WANONLY',
+        'SMLOG',
+        'HAMCLOCK',
+    ];
+
     /** @var list<string> */
     private const OPTIONAL_VARS = [
         'TITLE2',
@@ -392,6 +401,46 @@ final class GlobalIncService
         }
 
         return '<span style="color: #00ff00">' . $this->escapeHtml($plainLocation) . '</span>';
+    }
+
+    /**
+     * Compare global.inc against supported and deprecated variable names.
+     *
+     * @return array{supported: list<string>, deprecated_found: list<string>, unknown: list<string>, file_exists: bool}
+     */
+    public function lint(): array
+    {
+        $path = $this->globalIncPath();
+        if (!is_readable($path)) {
+            return [
+                'file_exists' => false,
+                'supported' => array_values(self::FIELD_VARS),
+                'deprecated_found' => [],
+                'unknown' => [],
+            ];
+        }
+
+        $content = (string) file_get_contents($path);
+        preg_match_all('/^\$([A-Z_][A-Z0-9_]*)\s*=/m', $content, $matches);
+        $defined = array_values(array_unique($matches[1] ?? []));
+
+        $supported = array_values(array_unique(array_merge(
+            array_values(self::FIELD_VARS),
+            ['SMSERVERNAME', 'BACKGROUND_COLOR', 'BACKGROUND_HEIGHT', 'DISPLAY_BACKGROUND'],
+            ['CALLSIGN_COLOR', 'TITLE_LOGGED_COLOR', 'TITLE_NOT_LOGGED_COLOR'],
+            ['LOGO_NAME', 'LOGO_SIZE', 'LOGO_POSITION_RIGHT', 'LOGO_POSITION_TOP', 'LOGO_URL'],
+            self::OPTIONAL_VARS
+        )));
+
+        $deprecatedFound = array_values(array_intersect($defined, self::DEPRECATED_VARS));
+        $unknown = array_values(array_diff($defined, $supported, self::DEPRECATED_VARS));
+
+        return [
+            'file_exists' => true,
+            'supported' => $supported,
+            'deprecated_found' => $deprecatedFound,
+            'unknown' => $unknown,
+        ];
     }
 
     private function globalIncPath(): string

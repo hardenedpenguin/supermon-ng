@@ -7,7 +7,9 @@ namespace SupermonNg\Application\Controllers;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
+use SupermonNg\Services\AstdbCacheService;
 use SupermonNg\Services\CacheService;
+use SupermonNg\Services\GlobalIncService;
 use SupermonNg\Services\IncludeManagerService;
 use SupermonNg\Services\SessionService;
 use SupermonNg\Services\UserPermissionService;
@@ -21,19 +23,33 @@ class ConfigController
     private IncludeManagerService $includeService;
     private UserPermissionService $userPermissionService;
     private SessionService $sessionService;
+    private AstdbCacheService $astdbService;
+    private GlobalIncService $globalIncService;
 
     public function __construct(
         LoggerInterface $logger,
         ?CacheService $cacheService,
         IncludeManagerService $includeService,
         UserPermissionService $userPermissionService,
-        SessionService $sessionService
+        SessionService $sessionService,
+        AstdbCacheService $astdbService,
+        GlobalIncService $globalIncService
     ) {
         $this->logger = $logger;
         $this->cacheService = $cacheService;
         $this->includeService = $includeService;
         $this->userPermissionService = $userPermissionService;
         $this->sessionService = $sessionService;
+        $this->astdbService = $astdbService;
+        $this->globalIncService = $globalIncService;
+    }
+
+    /**
+     * Return menu payload for bootstrap (same structure as /config/menu data).
+     */
+    public function getMenuData(): array
+    {
+        return $this->loadMenuItems($this->getCurrentUser());
     }
 
     /**
@@ -3466,32 +3482,61 @@ class ConfigController
      */
     private function lookupNodeInfo(string $node): array|false
     {
-        $astdbPath = $this->getAstdbPath();
-        if (!$astdbPath || !file_exists($astdbPath)) {
+        $nodeInfo = $this->astdbService->getSingleNodeInfo($node);
+        if ($nodeInfo === null) {
             return false;
         }
 
-        $lines = file($astdbPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if ($lines === false) {
-            return false;
-        }
+        return [
+            'node' => $node,
+            'callsign' => $nodeInfo['callsign'],
+            'description' => $nodeInfo['description'],
+            'location' => $nodeInfo['location'],
+        ];
+    }
 
-        foreach ($lines as $line) {
-            $parts = explode('|', $line);
-            if (count($parts) >= 4) {
-                $nodeNum = trim($parts[0]);
-                if ($nodeNum === $node) {
-                    return [
-                        'node' => $nodeNum,
-                        'callsign' => trim($parts[1]),
-                        'description' => trim($parts[2]),
-                        'location' => trim($parts[3])
-                    ];
-                }
+    public function lintGlobalInc(Request $request, Response $response): Response
+    {
+        try {
+            $currentUser = $this->getCurrentUser();
+            if ($currentUser === null) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Authentication required',
+                ]));
+
+                return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
             }
-        }
 
-        return false;
+            if (!$this->userPermissionService->hasPermission($currentUser, 'CFGEDUSER')) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'You are not authorized to lint global configuration.',
+                ]));
+
+                return $response->withStatus(403)->withHeader('Content-Type', 'application/json');
+            }
+
+            $lint = $this->globalIncService->lint();
+
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'data' => $lint,
+            ]));
+
+            return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withHeader('Cache-Control', 'private, no-cache');
+        } catch (\Exception $e) {
+            $this->logger->error('Error in lintGlobalInc', ['error' => $e->getMessage()]);
+
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Internal server error',
+            ]));
+
+            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+        }
     }
 
     /**

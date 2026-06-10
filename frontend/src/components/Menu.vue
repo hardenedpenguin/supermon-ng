@@ -1,6 +1,6 @@
 <template>
-  <div id="menu" v-if="menuSections.length > 0">
-    <ul>
+  <nav id="menu" aria-label="Site menu" :class="{ 'menu--empty': menuSections.length === 0 }">
+    <ul v-show="menuSections.length > 0">
       <template v-for="section in menuSections" :key="sectionKey(section)">
         <li v-if="section.type === 'link'">
           <a
@@ -25,7 +25,7 @@
         </li>
       </template>
     </ul>
-  </div>
+  </nav>
 
   <!-- URL Modal for external links -->
   <UrlModal
@@ -131,7 +131,15 @@ const applyMenuData = (data: { sections?: MenuSection[] } & LegacyMenuItems) => 
   menuSections.value = legacyToSections(data)
 }
 
-const loadMenu = async () => {
+const loadMenu = async (forceFetch = false) => {
+  if (!forceFetch) {
+    const bootstrapMenu = appStore.bootstrapData?.menu
+    if (bootstrapMenu) {
+      applyMenuData(bootstrapMenu as { sections?: MenuSection[] } & LegacyMenuItems)
+      return
+    }
+  }
+
   try {
     isLoading.value = true
     const response = await api.get('/config/menu')
@@ -179,13 +187,14 @@ const handleMenuClick = (item: MenuItem, event: Event) => {
   }
 }
 
-onMounted(() => {
-  loadMenu()
+onMounted(async () => {
+  await appStore.waitUntilInitialized()
+  void loadMenu()
 })
 
 watch(() => appStore.isAuthenticated, () => {
   setTimeout(() => {
-    loadMenu()
+    loadMenu(true)
   }, 100)
 })
 </script>
@@ -198,6 +207,7 @@ watch(() => appStore.isAuthenticated, () => {
   background-color: var(--menu-background, #2a2a2a);
   border-radius: 5px;
   margin-bottom: 20px;
+  min-height: 44px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -205,6 +215,10 @@ watch(() => appStore.isAuthenticated, () => {
   z-index: 100;
   overflow: visible;
   box-sizing: border-box;
+}
+
+#menu.menu--empty {
+  visibility: hidden;
 }
 
 #menu ul {

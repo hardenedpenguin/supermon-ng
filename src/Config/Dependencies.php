@@ -332,7 +332,9 @@ return [
             $cacheService,
             $c->get(\SupermonNg\Services\IncludeManagerService::class),
             $c->get(\SupermonNg\Services\UserPermissionService::class),
-            $c->get(\SupermonNg\Services\SessionService::class)
+            $c->get(\SupermonNg\Services\SessionService::class),
+            $c->get(\SupermonNg\Services\AstdbCacheService::class),
+            $c->get(\SupermonNg\Services\GlobalIncService::class)
         );
     },
     

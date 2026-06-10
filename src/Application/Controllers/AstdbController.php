@@ -348,21 +348,23 @@ class AstdbController
     public function health(Request $request, Response $response): Response
     {
         try {
-            $cacheStats = $this->astdbService->getCacheStats();
-            
-            // Consider healthy if cache file exists, regardless of whether it's loaded in memory
-            $cacheFileExists = $cacheStats['cache_file_exists'] ?? false;
-            $hasEntries = ($cacheStats['entries_count'] ?? 0) > 0;
-            $isHealthy = $cacheFileExists || $hasEntries;
-            
+            $metadata = $this->astdbService->getHealthMetadata();
+
+            $astdbExists = (bool) ($metadata['astdb_file_exists'] ?? false);
+            $cacheExists = (bool) ($metadata['cache_file_exists'] ?? false);
+            $hasEntries = ($metadata['entries_count'] ?? 0) > 0;
+            $isHealthy = $astdbExists || $cacheExists || $hasEntries;
+
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'healthy' => $isHealthy,
                 'data' => [
                     'cache_status' => $isHealthy ? 'ready' : 'not_loaded',
-                    'entries_count' => $cacheStats['entries_count'] ?? 0,
-                    'cache_file_exists' => $cacheFileExists,
-                    'is_compressed' => $cacheStats['is_compressed'] ?? false
+                    'entries_count' => $metadata['entries_count'] ?? 0,
+                    'astdb_file_exists' => $astdbExists,
+                    'astdb_file_size' => $metadata['astdb_file_size'] ?? 0,
+                    'cache_file_exists' => $cacheExists,
+                    'cache_file_size' => $metadata['cache_file_size'] ?? 0,
                 ],
                 'timestamp' => date('c')
             ]));

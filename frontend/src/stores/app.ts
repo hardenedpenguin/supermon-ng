@@ -16,6 +16,7 @@ export const useAppStore = defineStore('app', () => {
     systemInfo?: any
     databaseStatus?: any
     nodes?: { config: Record<string, any>; ini_file: string; default_node: string | null }
+    menu?: { sections?: Array<{ type: string; name?: string; label?: string; url?: string; items?: unknown[] }> }
     setup?: { needs_setup: boolean; setup_complete: boolean }
   } | null>(null)
 
@@ -56,6 +57,7 @@ export const useAppStore = defineStore('app', () => {
           systemInfo: data.systemInfo,
           databaseStatus: data.databaseStatus,
           nodes: data.nodes,
+          menu: data.menu,
           setup: data.setup,
         }
       } else {
@@ -192,7 +194,8 @@ export const useAppStore = defineStore('app', () => {
   /** Drop large bootstrap payloads after Dashboard has hydrated stores. */
   const clearBootstrapData = () => {
     const setup = bootstrapData.value?.setup
-    bootstrapData.value = setup ? { setup } : null
+    const menu = bootstrapData.value?.menu
+    bootstrapData.value = setup || menu ? { setup, menu } : null
   }
 
   const waitUntilInitialized = async (): Promise<void> => {

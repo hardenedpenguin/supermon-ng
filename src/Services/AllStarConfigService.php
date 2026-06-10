@@ -19,6 +19,9 @@ class AllStarConfigService
     private string $authIniFile;
     private array $configCache = [];
 
+    /** @var array<string, array{mtime: int, config: array}> */
+    private array $iniFileCache = [];
+
     public function __construct(
         LoggerInterface $logger,
         string $userFilesPath = 'user_files/'
@@ -203,12 +206,22 @@ class AllStarConfigService
             return [];
         }
 
+        $mtime = (int) filemtime($iniFile);
+        if (isset($this->iniFileCache[$iniFile]) && $this->iniFileCache[$iniFile]['mtime'] === $mtime) {
+            return $this->iniFileCache[$iniFile]['config'];
+        }
+
         $config = parse_ini_file($iniFile, true);
         
         if ($config === false) {
             $this->logger->error("Failed to parse INI file", ['file' => $iniFile]);
             throw new Exception("Failed to parse INI file: $iniFile");
         }
+
+        $this->iniFileCache[$iniFile] = [
+            'mtime' => $mtime,
+            'config' => $config,
+        ];
 
         return $config;
     }
@@ -374,6 +387,7 @@ class AllStarConfigService
     public function clearCache(): void
     {
         $this->configCache = [];
+        $this->iniFileCache = [];
         $this->logger->info("Configuration cache cleared");
     }
 }

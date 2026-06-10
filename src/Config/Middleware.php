@@ -213,84 +213,65 @@ $app->add(function (Request $request, RequestHandlerInterface $handler) use ($ap
     return $response;
 });
 
-// Add rate limiting middleware
-$app->add(function (Request $request, RequestHandlerInterface $handler) use ($app): Response {
-    $container = $app->getContainer();
-    $cache = $container->get(\Symfony\Contracts\Cache\CacheInterface::class);
-    
-    // Reasonable rate limits: 200 requests per 60 seconds (per IP)
-    $rateLimit = (int)($_ENV['API_RATE_LIMIT'] ?? 200);
-    $rateLimitWindow = (int)($_ENV['API_RATE_LIMIT_WINDOW'] ?? 60);
-    
-    $clientIp = $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown';
-    $cacheKey = "rate_limit:$clientIp";
-    
-    try {
-        // Get rate limit data (count and window start time)
-        $rateLimitData = $cache->get($cacheKey, function () {
-            return ['count' => 0, 'window_start' => time()];
-        });
-        
-        // Parse rate limit data
-        if (is_array($rateLimitData)) {
-            $requests = (int)($rateLimitData['count'] ?? 0);
-            $windowStart = (int)($rateLimitData['window_start'] ?? time());
-        } else {
-            // Fallback for old format
-            $requests = (int)$rateLimitData;
-            $windowStart = time();
-        }
-        
-        $currentTime = time();
-        $timeSinceWindowStart = $currentTime - $windowStart;
-        
-        // Reset window if TTL has expired
-        if ($timeSinceWindowStart >= $rateLimitWindow) {
-            $requests = 0;
-            $windowStart = $currentTime;
-        }
-        
-        // Check if limit exceeded
-        if ($requests >= $rateLimit) {
-            $response = new \Slim\Psr7\Response();
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'error' => 'Rate limit exceeded',
-                'message' => 'Too many requests. Please try again later.',
-                'retry_after' => $rateLimitWindow - $timeSinceWindowStart
-            ]));
-            
-            return $response
-                ->withStatus(429)
-                ->withHeader('Content-Type', 'application/json')
-                ->withHeader('Retry-After', (string)max(1, $rateLimitWindow - $timeSinceWindowStart))
-                ->withHeader('X-RateLimit-Limit', (string)$rateLimit)
-                ->withHeader('X-RateLimit-Remaining', '0');
-        }
-        
-        // Increment request count and store with updated window start
-        $newCount = $requests + 1;
-        $cache->delete($cacheKey);
-        // Store with data structure including count and window start time
-        // Use default cache TTL (should be longer than rate limit window)
-        $cache->get($cacheKey, function () use ($newCount, $windowStart) {
-            return ['count' => $newCount, 'window_start' => $windowStart];
-        });
-        
-        // Continue with request
-        $response = $handler->handle($request);
-        
-        // Add rate limit headers to response
-        $remaining = max(0, $rateLimit - $newCount);
-        return $response
-            ->withHeader('X-RateLimit-Limit', (string)$rateLimit)
-            ->withHeader('X-RateLimit-Remaining', (string)$remaining)
-            ->withHeader('X-RateLimit-Reset', (string)(time() + $rateLimitWindow));
-        
-    } catch (\Exception $e) {
-        // If cache fails, allow the request to proceed (fail open)
+// Add rate limiting middleware (in-process per worker; exempts lightweight health/bootstrap paths)
+$app->add(function (Request $request, RequestHandlerInterface $handler): Response {
+    static $rateBuckets = [];
+
+    $uri = $request->getUri()->getPath();
+    $normalizedUri = AppBasePath::stripPrefix($uri);
+    $exemptPaths = [
+        '/health',
+        '/api/v1/bootstrap',
+        '/api/v1/version/check',
+        '/api/v1/config/system-info',
+        '/api/v1/astdb/health',
+        '/api/v1/system/health',
+    ];
+
+    if (in_array($uri, $exemptPaths, true)
+        || in_array($normalizedUri, $exemptPaths, true)
+        || str_ends_with($normalizedUri, '/health')) {
         return $handler->handle($request);
     }
+
+    $rateLimit = (int) ($_ENV['API_RATE_LIMIT'] ?? 200);
+    $rateLimitWindow = (int) ($_ENV['API_RATE_LIMIT_WINDOW'] ?? 60);
+    $clientIp = $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown';
+    $currentTime = time();
+
+    $bucket = $rateBuckets[$clientIp] ?? ['count' => 0, 'window_start' => $currentTime];
+    if (($currentTime - $bucket['window_start']) >= $rateLimitWindow) {
+        $bucket = ['count' => 0, 'window_start' => $currentTime];
+    }
+
+    if ($bucket['count'] >= $rateLimit) {
+        $retryAfter = max(1, $rateLimitWindow - ($currentTime - $bucket['window_start']));
+        $response = new \Slim\Psr7\Response();
+        $response->getBody()->write(json_encode([
+            'success' => false,
+            'error' => 'Rate limit exceeded',
+            'message' => 'Too many requests. Please try again later.',
+            'retry_after' => $retryAfter,
+        ]));
+
+        return $response
+            ->withStatus(429)
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Retry-After', (string) $retryAfter)
+            ->withHeader('X-RateLimit-Limit', (string) $rateLimit)
+            ->withHeader('X-RateLimit-Remaining', '0');
+    }
+
+    $bucket['count']++;
+    $rateBuckets[$clientIp] = $bucket;
+
+    $response = $handler->handle($request);
+    $remaining = max(0, $rateLimit - $bucket['count']);
+
+    return $response
+        ->withHeader('X-RateLimit-Limit', (string) $rateLimit)
+        ->withHeader('X-RateLimit-Remaining', (string) $remaining)
+        ->withHeader('X-RateLimit-Reset', (string) ($bucket['window_start'] + $rateLimitWindow));
 });
 
 // Add HTTP caching middleware

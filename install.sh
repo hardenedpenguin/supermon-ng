@@ -390,6 +390,11 @@ install_systemd_file() {
     
     # Replace placeholder with actual path
     sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$TARGET_FILE"
+
+    if [ "$FILE_TYPE" = "timer" ] && [ "$(basename "$SOURCE_FILE")" = "supermon-ng-node-status.timer" ]; then
+        local node_status_interval="${NODE_STATUS_INTERVAL_MINUTES:-3}"
+        sed -i "s|NODE_STATUS_INTERVAL_PLACEHOLDER|${node_status_interval}min|g" "$TARGET_FILE"
+    fi
     
     # Set proper permissions (644 for systemd files)
     chmod 644 "$TARGET_FILE"

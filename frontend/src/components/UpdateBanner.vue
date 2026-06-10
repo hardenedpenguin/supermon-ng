@@ -98,11 +98,17 @@ const releaseUrl = computed(() => updateCheck.value?.releaseUrl ?? null)
 
 <style scoped>
 .update-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1100;
   background: linear-gradient(90deg, #5c4a1a 0%, #6b4e0a 100%);
   color: #fff8e1;
   border-bottom: 1px solid rgba(255, 193, 7, 0.45);
   font-size: 0.9rem;
   line-height: 1.35;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .update-banner__inner {

@@ -194,6 +194,7 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
         $g->put('/user/preferences', [ConfigController::class, 'updateUserPreferences']);
         $g->get('/system-info', [ConfigController::class, 'getSystemInfo']);
         $g->get('/menu', [ConfigController::class, 'getMenu']);
+        $g->get('/global-lint', [ConfigController::class, 'lintGlobalInc']);
         $g->get('/header-background', [ConfigController::class, 'getHeaderBackground']);
         $g->get('/display', [ConfigController::class, 'getDisplayConfig']);
         $g->put('/display', [ConfigController::class, 'updateDisplayConfig']);

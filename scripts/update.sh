@@ -468,6 +468,11 @@ update_services() {
         
         # Replace placeholder with actual path
         sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$TARGET_FILE"
+
+        if [ "$FILE_TYPE" = "timer" ] && [ "$(basename "$SOURCE_FILE")" = "supermon-ng-node-status.timer" ]; then
+            local node_status_interval="${NODE_STATUS_INTERVAL_MINUTES:-3}"
+            sed -i "s|NODE_STATUS_INTERVAL_PLACEHOLDER|${node_status_interval}min|g" "$TARGET_FILE"
+        fi
         
         # Set proper permissions (644 for systemd files)
         chmod 644 "$TARGET_FILE"
@@ -743,7 +748,8 @@ display_summary() {
     
     echo ""
     echo "⏰ Scheduled Tasks:"
-    systemctl is-active supermon-ng-node-status.timer > /dev/null 2>&1 && echo "   ✅ Node Status Updates: Every 3 minutes" || echo "   ⚠️  Node Status Updates: Not configured"
+    local node_status_interval="${NODE_STATUS_INTERVAL_MINUTES:-3}"
+    systemctl is-active supermon-ng-node-status.timer > /dev/null 2>&1 && echo "   ✅ Node Status Updates: Every ${node_status_interval} minutes" || echo "   ⚠️  Node Status Updates: Not configured"
     systemctl is-active supermon-ng-database-update.timer > /dev/null 2>&1 && echo "   ✅ Database Updates: Every 3 hours" || echo "   ⚠️  Database Updates: Not configured"
     
     echo ""

@@ -27,6 +27,7 @@ class BootstrapController
         $systemInfo = $this->configController->getSystemInfoData();
         $databaseStatus = $this->databaseController->getStatusData(false);
         $nodes = $this->configController->getNodesData();
+        $menu = $this->configController->getMenuData();
         $setupStatus = $this->setupService->getStatus();
 
         $response->getBody()->write(json_encode([
@@ -36,6 +37,7 @@ class BootstrapController
                 'systemInfo' => $systemInfo,
                 'databaseStatus' => $databaseStatus,
                 'nodes' => $nodes,
+                'menu' => $menu,
                 'setup' => [
                     'needs_setup' => $setupStatus['needs_setup'],
                     'setup_complete' => $setupStatus['setup_complete'],

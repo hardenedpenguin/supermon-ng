@@ -44,8 +44,8 @@ export const useRealTimeStore = defineStore('realTime', () => {
 
   /** Poll AMI over HTTP (required for remote hosts and when WebSocket/AMI on 8105 is unavailable). */
   let amiPollTimer: ReturnType<typeof setInterval> | null = null
-  const AMI_POLL_INTERVAL_MS = 3000
-  const WS_RETRY_EVERY_N_POLLS = 10
+  const AMI_POLL_INTERVAL_MS = 8000
+  const WS_RETRY_EVERY_N_POLLS = 4
   let amiPollCount = 0
   const monitoringPromises = new Map<string, Promise<void>>()
   const wsUrlByNode = new Map<string, string>()
