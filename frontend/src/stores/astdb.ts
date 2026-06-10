@@ -57,7 +57,6 @@ export const useAstdbStore = defineStore('astdb', () => {
       
       // Check if we have valid cached data first
       if (isCacheValid.value && Object.keys(fullAstdb.value).length > 0) {
-        console.log('ASTDB: Using cached data')
         return
       }
       
@@ -81,14 +80,6 @@ export const useAstdbStore = defineStore('astdb', () => {
       // Use longer timeout for large ASTDB files
       const response = await api.get('/database/status', {
         timeout: 30000 // 30 seconds for large ASTDB files
-      })
-      
-      // Debug: Log the full response structure
-      console.log('Database status response:', {
-        status: response.status,
-        success: response.data?.success,
-        hasData: !!response.data?.data,
-        hasAstdb: !!response.data?.data?.astdb
       })
       
       // Check if response is valid
@@ -118,8 +109,6 @@ export const useAstdbStore = defineStore('astdb', () => {
       fullAstdb.value = astdbData
       lastRefresh.value = Date.now()
       
-      const entryCount = Array.isArray(astdbData) ? astdbData.length : Object.keys(astdbData).length
-      console.log(`ASTDB: Loaded ${entryCount} entries`)
     } catch (err) {
       console.error('Failed to load full ASTDB:', err)
       throw err
@@ -136,7 +125,6 @@ export const useAstdbStore = defineStore('astdb', () => {
       const cachedEntry = cache.value.get(cacheKey)
       
       if (cachedEntry && cachedEntry.expiresAt > Date.now()) {
-        console.log(`ASTDB: Cache hit for node ${nodeId}`)
         return cachedEntry.data
       }
       
@@ -149,8 +137,6 @@ export const useAstdbStore = defineStore('astdb', () => {
         return nodeInfo
       }
       
-      // Use optimized single node endpoint
-      console.log(`ASTDB: Fetching node ${nodeId} from API`)
       const response = await api.get(`/astdb/node/${nodeId}`)
       
       if (response.data.success && response.data.data) {
@@ -195,7 +181,6 @@ export const useAstdbStore = defineStore('astdb', () => {
       
       // If we have uncached nodes, use batch endpoint
       if (uncachedIds.length > 0) {
-        console.log(`ASTDB: Fetching ${uncachedIds.length} nodes from batch API`)
         const response = await api.get('/astdb/nodes', {
           params: { nodes: uncachedIds.join(',') }
         })
@@ -226,11 +211,9 @@ export const useAstdbStore = defineStore('astdb', () => {
       const cachedEntry = cache.value.get(cacheKey)
       
       if (cachedEntry && cachedEntry.expiresAt > Date.now()) {
-        console.log(`ASTDB: Cache hit for search "${query}"`)
         return cachedEntry.data
       }
-      
-      console.log(`ASTDB: Searching for "${query}"`)
+
       const response = await api.get('/astdb/search', {
         params: { q: query, limit }
       })
@@ -296,7 +279,6 @@ export const useAstdbStore = defineStore('astdb', () => {
     fullAstdb.value = {}
     lastRefresh.value = 0
     stats.value = null
-    console.log('ASTDB: Browser cache cleared')
   }
   
   /**
@@ -350,7 +332,6 @@ export const useAstdbStore = defineStore('astdb', () => {
       }
     }
     
-    console.log(`ASTDB: Cache cleaned, ${cache.value.size} entries remaining`)
   }
   
   /**

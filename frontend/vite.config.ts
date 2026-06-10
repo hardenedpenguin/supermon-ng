@@ -64,7 +64,7 @@ if (devPrefix) {
   serverProxy['/api/v1'] = { target: 'http://localhost:8000', changeOrigin: true, secure: false, cookieDomainRewrite: 'localhost' }
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [vue(), preloadPlugin()],
   base: './',
   resolve: {
@@ -86,7 +86,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: mode !== 'production',
     rollupOptions: {
       output: {
         manualChunks: {
@@ -96,4 +96,4 @@ export default defineConfig({
       }
     }
   }
-})
+}))

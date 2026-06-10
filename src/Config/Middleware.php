@@ -318,11 +318,19 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
     }
     // Cache API responses for different durations based on endpoint
     elseif (strpos($uri, '/api/') !== false) {
-        // Skip ETag generation for API endpoints to avoid consuming response body
-        // API responses are dynamic and shouldn't be cached anyway
-        $response = $response->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-        $response = $response->withHeader('Pragma', 'no-cache');
-        $response = $response->withHeader('Expires', '0');
+        $normalizedUri = AppBasePath::stripPrefix($uri);
+        $cacheableApiPaths = [
+            '/api/v1/bootstrap',
+            '/api/v1/version/check',
+            '/api/v1/config/system-info',
+        ];
+        $preserveCache = in_array($uri, $cacheableApiPaths, true)
+            || in_array($normalizedUri, $cacheableApiPaths, true);
+        if (!$preserveCache) {
+            $response = $response->withHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            $response = $response->withHeader('Pragma', 'no-cache');
+            $response = $response->withHeader('Expires', '0');
+        }
     }
     
     return $response;

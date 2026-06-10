@@ -2,10 +2,15 @@ RewriteEngine On
 # RewriteBase set by scripts/configure-app-base-path.sh from APP_BASE_PATH in .env
 RewriteBase /
 
-# Cache control for assets - allow caching but with revalidation
-<FilesMatch "\.(js|css)$">
-    Header set Cache-Control "public, max-age=3600, must-revalidate"
-</FilesMatch>
+# Hashed build assets (Vite) — safe to cache long-term
+<IfModule mod_headers.c>
+    <FilesMatch "^assets/.*\.(js|css)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    <FilesMatch "\.(png|jpg|jpeg|gif|webp|ico|woff2?)$">
+        Header set Cache-Control "public, max-age=2592000"
+    </FilesMatch>
+</IfModule>
 
 # No cache for index.html to ensure latest version is loaded
 <FilesMatch "index\.html$">

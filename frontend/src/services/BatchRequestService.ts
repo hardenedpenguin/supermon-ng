@@ -99,43 +99,33 @@ export class BatchRequestService {
   /**
    * Create a batched initialization request
    */
-  public async batchInitialization(): Promise<{
+  public async batchInitialization(options?: { skipNodesConfig?: boolean }): Promise<{
     nodes: any
     config: any
-    astdbHealth: any
   }> {
-    const batchId = `init_${Date.now()}`
-    
-    try {
-      // Execute requests in parallel but with proper error handling
-      const [nodesResponse, configResponse, astdbResponse] = await Promise.allSettled([
-        this.addRequest({
-          endpoint: '/nodes',
-          method: 'GET',
-          priority: 'high',
-          ttl: 10000 // Cache nodes for 10 seconds
-        }),
-        this.addRequest({
+    const nodesPromise = this.addRequest({
+      endpoint: '/nodes',
+      method: 'GET',
+      priority: 'high',
+      ttl: 10000,
+    })
+    const configPromise = options?.skipNodesConfig
+      ? Promise.resolve(null)
+      : this.addRequest({
           endpoint: '/config/nodes',
           method: 'GET',
           priority: 'high',
-          ttl: 300000 // Cache config for 5 minutes
-        }),
-        this.addRequest({
-          endpoint: '/astdb/health',
-          method: 'GET',
-          priority: 'medium',
-          ttl: 60000 // Cache health for 1 minute
+          ttl: 300000,
         })
-      ])
 
-      return {
-        nodes: nodesResponse.status === 'fulfilled' ? nodesResponse.value : null,
-        config: configResponse.status === 'fulfilled' ? configResponse.value : null,
-        astdbHealth: astdbResponse.status === 'fulfilled' ? astdbResponse.value : null
-      }
-    } catch (error) {
-      throw error
+    const [nodesResponse, configResponse] = await Promise.allSettled([
+      nodesPromise,
+      configPromise,
+    ])
+
+    return {
+      nodes: nodesResponse.status === 'fulfilled' ? nodesResponse.value : null,
+      config: configResponse.status === 'fulfilled' ? configResponse.value : null,
     }
   }
 

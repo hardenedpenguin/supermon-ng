@@ -674,11 +674,23 @@ update_apache_config() {
 post_update_tasks() {
     print_status "Running post-update tasks..."
     
-    # Clear any caches (including ASTDB cache)
+    # Clear application caches; keep ASTDB disk cache when still valid for astdb.txt
     if [ -d "$APP_DIR/cache" ]; then
         print_status "Clearing application caches..."
-        rm -rf "$APP_DIR/cache"/*
-        print_status "ASTDB cache cleared - will be regenerated on next access"
+        if [ -f "$APP_DIR/astdb.txt" ] && [ -f "$APP_DIR/cache/astdb_cache.php" ]; then
+            astdb_mtime=$(stat -c %Y "$APP_DIR/astdb.txt" 2>/dev/null || echo 0)
+            cache_mtime=$(stat -c %Y "$APP_DIR/cache/astdb_cache.php" 2>/dev/null || echo 0)
+            if [ "$cache_mtime" -ge "$astdb_mtime" ]; then
+                print_status "Preserving ASTDB cache (newer than astdb.txt)"
+                find "$APP_DIR/cache" -mindepth 1 ! -name 'astdb_cache.php' -delete 2>/dev/null || true
+            else
+                rm -rf "$APP_DIR/cache"/*
+                print_status "ASTDB cache cleared - astdb.txt changed"
+            fi
+        else
+            rm -rf "$APP_DIR/cache"/*
+            print_status "ASTDB cache cleared - will be regenerated on next access"
+        fi
     fi
     
     # Update file permissions

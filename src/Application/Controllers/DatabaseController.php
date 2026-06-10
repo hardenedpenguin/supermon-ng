@@ -51,9 +51,9 @@ class DatabaseController
     }
     
     /**
-     * Return database status payload for bootstrap (same structure as /database/status data).
+     * Return database status payload (metadata; optional full ASTDB for /database/status).
      */
-    public function getStatusData(): array
+    public function getStatusData(bool $includeAstdb = true): array
     {
         try {
             $status = $this->databaseService->getDatabaseStatus();
@@ -64,6 +64,11 @@ class DatabaseController
             $this->logger->error('Failed to get database status', ['error' => $e->getMessage()]);
             $status = [];
         }
+
+        if (!$includeAstdb) {
+            return $status;
+        }
+
         try {
             $astdb = $this->astdbService->getAstdb();
             if (!is_array($astdb)) {
@@ -73,6 +78,7 @@ class DatabaseController
             $this->logger->warning('Failed to load ASTDB data', ['error' => $e->getMessage()]);
             $astdb = [];
         }
+
         return array_merge($status, ['astdb' => $astdb]);
     }
 

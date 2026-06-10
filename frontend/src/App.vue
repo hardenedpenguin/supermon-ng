@@ -12,7 +12,7 @@
     <router-view />
 
     <ToastContainer />
-    <SetupWizard />
+    <SetupWizard v-if="showSetupWizard" />
 
     <!-- Theme Selector Modal -->
     <div v-if="showThemeSelector" class="modal-overlay" @click="showThemeSelector = false">
@@ -24,21 +24,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, defineAsyncComponent, ref, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useTheme } from '@/composables/useTheme'
-import ThemeSelector from '@/components/ThemeSelector.vue'
 import UpdateBanner from '@/components/UpdateBanner.vue'
 import ToastContainer from '@/components/ToastContainer.vue'
-import SetupWizard from '@/components/SetupWizard.vue'
+
+const ThemeSelector = defineAsyncComponent(() => import('@/components/ThemeSelector.vue'))
+const SetupWizard = defineAsyncComponent(() => import('@/components/SetupWizard.vue'))
 
 const appStore = useAppStore()
 const { loadTheme } = useTheme()
 const showThemeSelector = ref(false)
 
+const showSetupWizard = computed(
+  () => appStore.bootstrapData?.setup?.needs_setup === true
+)
+
 onMounted(async () => {
   await appStore.initialize()
-  // Initialize theme
   loadTheme()
 })
 </script>
@@ -112,7 +116,6 @@ body {
   background-color: var(--background-color);
   color: var(--text-color);
   transition: background-color var(--transition-normal), color var(--transition-normal);
-  /* Prevent horizontal scrolling on mobile */
   overflow-x: hidden;
   box-sizing: border-box;
 }
@@ -124,7 +127,6 @@ body {
   transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
-/* Theme toggle button */
 .theme-toggle {
   position: fixed;
   top: 20px;
@@ -150,7 +152,6 @@ body {
   transform: scale(1.1);
 }
 
-/* Modal overlay */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -171,18 +172,9 @@ body {
   overflow: auto;
 }
 
-/* Utility classes */
-.text-center {
-  text-align: center;
-}
-
-.text-left {
-  text-align: left;
-}
-
-.text-right {
-  text-align: right;
-}
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
 
 .mt-1 { margin-top: 0.25rem; }
 .mt-2 { margin-top: 0.5rem; }
@@ -202,18 +194,11 @@ body {
 .p-4 { padding: 1.5rem; }
 .p-5 { padding: 3rem; }
 
-/* Responsive utilities */
 @media (max-width: 768px) {
-  .hide-mobile {
-    display: none !important;
-  }
+  .hide-mobile { display: none !important; }
 }
 
 @media (min-width: 769px) {
-  .hide-desktop {
-    display: none !important;
-  }
+  .hide-desktop { display: none !important; }
 }
 </style>
-
-

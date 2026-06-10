@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/utils/api'
-import type { User, UserPreferences, UpdateCheckPayload } from '@/types'
+import type { User, UserPreferences } from '@/types'
 
 export const useAppStore = defineStore('app', () => {
   // State
@@ -16,7 +16,7 @@ export const useAppStore = defineStore('app', () => {
     systemInfo?: any
     databaseStatus?: any
     nodes?: { config: Record<string, any>; ini_file: string; default_node: string | null }
-    updateCheck?: UpdateCheckPayload | null
+    setup?: { needs_setup: boolean; setup_complete: boolean }
   } | null>(null)
 
   // Computed
@@ -56,7 +56,7 @@ export const useAppStore = defineStore('app', () => {
           systemInfo: data.systemInfo,
           databaseStatus: data.databaseStatus,
           nodes: data.nodes,
-          updateCheck: data.updateCheck ?? null
+          setup: data.setup,
         }
       } else {
         await checkAuth()
@@ -189,6 +189,19 @@ export const useAppStore = defineStore('app', () => {
     error.value = null
   }
 
+  /** Drop large bootstrap payloads after Dashboard has hydrated stores. */
+  const clearBootstrapData = () => {
+    const setup = bootstrapData.value?.setup
+    bootstrapData.value = setup ? { setup } : null
+  }
+
+  const waitUntilInitialized = async (): Promise<void> => {
+    if (initialized.value) {
+      return
+    }
+    await initialize()
+  }
+
   const reset = () => {
     user.value = null
     isAuthenticated.value = false
@@ -219,6 +232,8 @@ export const useAppStore = defineStore('app', () => {
     savePreferencesToCookies,
     loadPreferencesFromCookies,
     clearError,
+    clearBootstrapData,
+    waitUntilInitialized,
     reset
   }
 })

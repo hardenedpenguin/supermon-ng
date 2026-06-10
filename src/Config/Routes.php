@@ -11,6 +11,7 @@ use SupermonNg\Application\Controllers\AdminController;
 use SupermonNg\Application\Controllers\AstdbController;
 use SupermonNg\Application\Controllers\DvswitchController;
 use SupermonNg\Application\Controllers\BootstrapController;
+use SupermonNg\Application\Controllers\VersionCheckController;
 use SupermonNg\Application\Controllers\SetupController;
 use SupermonNg\Application\Controllers\SystemHealthController;
 use SupermonNg\Application\Middleware\AdminAuthMiddleware;
@@ -102,6 +103,7 @@ $app->get('/api/v1/csrf-token', function ($request, $response) {
  */
 $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth): void {
     $group->get('/bootstrap', [BootstrapController::class, 'get']);
+    $group->get('/version/check', [VersionCheckController::class, 'get']);
 
     $group->group('/auth', function (RouteCollectorProxy $g): void {
         $g->post('/login', [AuthController::class, 'login']);

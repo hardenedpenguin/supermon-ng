@@ -37,16 +37,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
-import { useAppStore } from '@/stores/app'
+import { computed, onMounted, ref, watch } from 'vue'
+import { api } from '@/utils/api'
 import type { UpdateCheckPayload } from '@/types'
 
-const appStore = useAppStore()
+const updateCheck = ref<UpdateCheckPayload | null>(null)
 const dismissed = ref(false)
 
-const updateCheck = computed(
-  () => appStore.bootstrapData?.updateCheck as UpdateCheckPayload | undefined
-)
+onMounted(async () => {
+  try {
+    const response = await api.get('/version/check')
+    if (response.data.success && response.data.data) {
+      updateCheck.value = response.data.data as UpdateCheckPayload
+    }
+  } catch {
+    // Non-critical; banner stays hidden
+  }
+})
 
 const storageKey = computed(() => {
   const tag = updateCheck.value?.latestTag ?? updateCheck.value?.latestVersion
@@ -99,14 +106,18 @@ const releaseUrl = computed(() => updateCheck.value?.releaseUrl ?? null)
 }
 
 .update-banner__inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0.55rem 1rem;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 0.5rem 1rem;
+  gap: 0.75rem 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
+}
+
+.update-banner__text {
+  flex: 1 1 auto;
 }
 
 .update-banner__muted {
@@ -123,20 +134,19 @@ const releaseUrl = computed(() => updateCheck.value?.releaseUrl ?? null)
 
 .update-banner__link {
   color: #ffe082;
-  font-weight: 600;
   text-decoration: underline;
 }
 
 .update-banner__link:hover {
-  color: #fff8e1;
+  color: #fff;
 }
 
 .update-banner__dismiss {
   background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  color: #fff8e1;
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: inherit;
   padding: 0.25rem 0.6rem;
+  border-radius: 4px;
   cursor: pointer;
   font-size: 0.85rem;
 }

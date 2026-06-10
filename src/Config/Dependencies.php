@@ -406,13 +406,19 @@ return [
         );
     },
 
+    \SupermonNg\Application\Controllers\VersionCheckController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\VersionCheckController(
+            $c->get(\SupermonNg\Services\VersionCheckService::class)
+        );
+    },
+
     // Bootstrap Controller (single-call auth + systemInfo + database + nodes)
     \SupermonNg\Application\Controllers\BootstrapController::class => function (ContainerInterface $c) {
         return new \SupermonNg\Application\Controllers\BootstrapController(
             $c->get(\SupermonNg\Application\Controllers\AuthController::class),
             $c->get(\SupermonNg\Application\Controllers\ConfigController::class),
             $c->get(\SupermonNg\Application\Controllers\DatabaseController::class),
-            $c->get(\SupermonNg\Services\VersionCheckService::class)
+            $c->get(\SupermonNg\Services\SetupService::class)
         );
     },
     

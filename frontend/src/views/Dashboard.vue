@@ -1159,92 +1159,58 @@ onBeforeMount(async () => {
   // Only set default if systemInfo confirms there's no custom header
 })
 
+const applySystemInfo = (info: typeof systemInfo.value) => {
+  if (!info) {
+    return
+  }
+  systemInfo.value = info
+  if (info.customHeaderBackground) {
+    headerBackground.value = info.customHeaderBackground
+  } else if (!headerBackground.value) {
+    headerBackground.value = appUrl('background.jpg')
+  }
+  if (info.smServerName) {
+    document.title = info.smServerName
+  }
+}
+
 // Lifecycle
 onMounted(async () => {
-  // Initialize date/time display
   loadDisplaySettingsFromCookies()
   if (showDateTime.value) {
     updateDateTime()
     dateTimeInterval = setInterval(updateDateTime, 1000)
   }
-  
-  // Initialize realTime store
-  await realTimeStore.initialize()
-  
+
+  await appStore.waitUntilInitialized()
   const boot = appStore.bootstrapData
-  if (boot?.systemInfo != null || boot?.databaseStatus != null || boot?.nodes != null) {
-    if (boot.systemInfo) {
-      systemInfo.value = boot.systemInfo
-      if (systemInfo.value?.customHeaderBackground) {
-        headerBackground.value = systemInfo.value.customHeaderBackground
-      } else if (!headerBackground.value) {
-        headerBackground.value = appUrl('background.jpg')
-      }
-      if (systemInfo.value?.smServerName) {
-        document.title = systemInfo.value.smServerName
-      }
-    }
-    if (boot.databaseStatus) databaseStatus.value = boot.databaseStatus
-    const defaultNode = boot.nodes?.default_node
+
+  if (boot?.systemInfo) {
+    applySystemInfo(boot.systemInfo)
+  }
+  if (boot?.databaseStatus) {
+    databaseStatus.value = boot.databaseStatus
+  }
+
+  try {
+    await realTimeStore.initialize(
+      boot?.nodes ? { nodesConfig: boot.nodes } : undefined
+    )
+
+    const defaultNode = boot?.nodes?.default_node
     if (defaultNode) {
       selectedNode.value = defaultNode
       await onNodeChange()
       await nextTick()
-      isLoadingDefaultNodes.value = false
-    } else {
-      isLoadingDefaultNodes.value = false
+    } else if (realTimeStore.nodes.length > 0) {
+      selectedNode.value = String(realTimeStore.nodes[0].id)
+      await onNodeChange()
     }
-  } else {
-    try {
-      const [systemResponse, databaseResponse, nodesResponse] = await Promise.all([
-        api.get('/config/system-info'),
-        api.get('/database/status'),
-        api.get('/config/nodes')
-      ])
-      
-      if (systemResponse.data.success) {
-        systemInfo.value = systemResponse.data.data || systemResponse.data
-        if (systemInfo.value?.customHeaderBackground) {
-          headerBackground.value = systemInfo.value.customHeaderBackground
-        } else if (!headerBackground.value) {
-          headerBackground.value = appUrl('background.jpg')
-        }
-        if (systemInfo.value?.smServerName) {
-          document.title = systemInfo.value.smServerName
-        }
-      }
-      
-      if (databaseResponse.data.success) {
-        databaseStatus.value = databaseResponse.data.data || databaseResponse.data
-      }
-
-      if (nodesResponse.data.success && nodesResponse.data.data?.default_node) {
-        const defaultNode = nodesResponse.data.data.default_node
-    
-        
-        selectedNode.value = defaultNode
-        await onNodeChange()
-        await nextTick()
-        
-        // Small delay to ensure the default node is properly set
-        await new Promise(resolve => setTimeout(resolve, 100))
-      } else {
-        // No default node from backend, wait for user to select a node
-        // This prevents showing all nodes initially
-    
-        if (realTimeStore.nodes.length > 0) {
-          const firstNode = realTimeStore.nodes[0]
-          selectedNode.value = String(firstNode.id)
-          await onNodeChange()
-        }
-      }
-      
-      // Mark default nodes as loaded
-      isLoadingDefaultNodes.value = false
-    } catch (error) {
-      console.error('Error loading system info and default nodes:', error)
-      isLoadingDefaultNodes.value = false
-    }
+  } catch (error) {
+    console.error('Error initializing dashboard:', error)
+  } finally {
+    isLoadingDefaultNodes.value = false
+    appStore.clearBootstrapData()
   }
 })
 

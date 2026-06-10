@@ -8,6 +8,14 @@ import { useBatchRequests } from '@/services/BatchRequestService'
 import { webSocketService, type WebSocketMessage } from '@/services/WebSocketService'
 import type { Node, ConnectedNode, NodeConfig, AstDbEntry, NodeActionType } from '@/types'
 
+export interface RealTimeInitOptions {
+  nodesConfig?: {
+    config: Record<string, unknown>
+    ini_file: string
+    default_node: string | null
+  }
+}
+
 export const useRealTimeStore = defineStore('realTime', () => {
   // State
   const nodes = ref<Node[]>([])
@@ -25,7 +33,7 @@ export const useRealTimeStore = defineStore('realTime', () => {
   // Services
   const { batchInitialization, clearCache } = useBatchRequests({
     maxBatchSize: 5,
-    batchDelay: 25,
+    batchDelay: 0,
     cacheEnabled: true,
     defaultCacheTTL: 5000
   })
@@ -144,12 +152,12 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const isMonitoring = computed(() => monitoringNodes.value.length > 0)
 
   // Actions
-  const initialize = async () => {
+  const initialize = async (options?: RealTimeInitOptions) => {
     try {
       const startTime = Date.now()
-      
-      // Use batch initialization for better performance
-      const batchResult = await batchInitialization()
+      const skipNodesConfig = !!options?.nodesConfig?.config
+
+      const batchResult = await batchInitialization({ skipNodesConfig })
       
       // Process nodes data - merge with existing nodes to preserve WebSocket updates
       if (batchResult.nodes?.data) {
@@ -199,17 +207,14 @@ export const useRealTimeStore = defineStore('realTime', () => {
         nodes.value = nodes.value.filter(n => newNodeIds.has(String(n.id || n.node_number)))
       }
       
-      // Process configuration data
-      if (batchResult.config?.data?.config) {
+      if (options?.nodesConfig?.config) {
+        nodeConfig.value = options.nodesConfig.config as NodeConfig
+      } else if (batchResult.config?.data?.config) {
         nodeConfig.value = batchResult.config.data.config
       }
-      
-      // Initialize ASTDB store (will use caching)
+
       await astdbStore.initialize()
-      
-      // Fetch WebSocket port configuration for all nodes
-      await fetchWebSocketPorts()
-      
+
       const duration = Date.now() - startTime
       
       error.value = null

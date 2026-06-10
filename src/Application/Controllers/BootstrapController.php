@@ -6,10 +6,10 @@ namespace SupermonNg\Application\Controllers;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use SupermonNg\Services\VersionCheckService;
+use SupermonNg\Services\SetupService;
 
 /**
- * Single bootstrap endpoint: auth + systemInfo + databaseStatus + nodes for faster first load.
+ * Single bootstrap endpoint: auth + systemInfo + database metadata + nodes + setup flags.
  */
 class BootstrapController
 {
@@ -17,7 +17,7 @@ class BootstrapController
         private readonly AuthController $authController,
         private readonly ConfigController $configController,
         private readonly DatabaseController $databaseController,
-        private readonly VersionCheckService $versionCheckService
+        private readonly SetupService $setupService
     ) {
     }
 
@@ -25,9 +25,9 @@ class BootstrapController
     {
         $auth = $this->authController->getAuthData();
         $systemInfo = $this->configController->getSystemInfoData();
-        $databaseStatus = $this->databaseController->getStatusData();
+        $databaseStatus = $this->databaseController->getStatusData(false);
         $nodes = $this->configController->getNodesData();
-        $updateCheck = $this->versionCheckService->getUpdateCheck();
+        $setupStatus = $this->setupService->getStatus();
 
         $response->getBody()->write(json_encode([
             'success' => true,
@@ -36,7 +36,10 @@ class BootstrapController
                 'systemInfo' => $systemInfo,
                 'databaseStatus' => $databaseStatus,
                 'nodes' => $nodes,
-                'updateCheck' => $updateCheck,
+                'setup' => [
+                    'needs_setup' => $setupStatus['needs_setup'],
+                    'setup_complete' => $setupStatus['setup_complete'],
+                ],
             ],
             'timestamp' => date('c')
         ]));

@@ -52,21 +52,17 @@ class ConfigController
         if (!str_starts_with($absoluteIniFile, '/')) {
             $absoluteIniFile = $userFilesDir . str_replace('user_files/', '', $iniFile);
         }
+        $defaultNode = null;
         if (file_exists($absoluteIniFile)) {
             $iniConfig = parse_ini_file($absoluteIniFile, true);
-            if ($iniConfig && is_array($iniConfig)) {
+            $iniConfigGlobal = parse_ini_file($absoluteIniFile, false);
+            if ($iniConfig !== false && is_array($iniConfig)) {
                 foreach ($iniConfig as $nodeId => $nodeConfig) {
                     if (is_array($nodeConfig) && isset($nodeConfig['host'])) {
                         $config[$nodeId] = $nodeConfig;
                     }
                 }
             }
-            $iniConfig = null;
-        }
-        $defaultNode = null;
-        if (file_exists($absoluteIniFile)) {
-            $iniConfig = parse_ini_file($absoluteIniFile, true);
-            $iniConfigGlobal = parse_ini_file($absoluteIniFile, false);
             if ($iniConfig !== false && $iniConfigGlobal !== false) {
                 if (isset($iniConfigGlobal['default_node'])) {
                     $defaultNode = $iniConfigGlobal['default_node'];
