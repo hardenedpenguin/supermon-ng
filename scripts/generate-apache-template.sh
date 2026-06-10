@@ -63,6 +63,8 @@ ${server_line}
     # Legacy subdirectory URLs after APP_BASE_PATH=/
     RedirectMatch 301 ^/supermon-ng/?(.*)$ /\$1
 
+    IncludeOptional ${APP_DIR}/config/apache-performance.conf
+
     ErrorLog \${APACHE_LOG_DIR}/supermon-ng_error.log
     CustomLog \${APACHE_LOG_DIR}/supermon-ng_access.log combined
 ${ssl_block}
@@ -118,6 +120,8 @@ write_subdir_vhost() {
         Require all granted
         Options Indexes FollowSymLinks
     </Directory>
+
+    IncludeOptional ${APP_DIR}/config/apache-performance.conf
 
     ErrorLog \${APACHE_LOG_DIR}/supermon-ng_error.log
     CustomLog \${APACHE_LOG_DIR}/supermon-ng_access.log combined

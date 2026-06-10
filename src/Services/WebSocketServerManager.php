@@ -140,7 +140,7 @@ class WebSocketServerManager
                     'host' => $nodeConfig['host'] ?? 'unknown'
                 ]);
                 
-                // Start AMI polling for this node
+                // Register service; AMI polling starts when a browser connects
                 $nodeService->start();
                 
             } catch (Exception $e) {

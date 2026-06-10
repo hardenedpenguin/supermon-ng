@@ -63,8 +63,9 @@ class NodeController
             // Get available nodes from AllStar configuration
             $availableNodes = $this->configService->getAvailableNodes($currentUser);
             
-            // Load ASTDB for node information
-            $astdb = $this->astdbService->getAstdb();
+            // Lazy ASTDB lookup for configured nodes only (avoid loading full database)
+            $nodeIds = array_map(static fn (array $node): string => (string) $node['id'], $availableNodes);
+            $astdb = $this->astdbService->getMultipleNodeInfo($nodeIds);
             
             // Convert to the expected format with basic data (AMI data is expensive)
             $nodes = [];
@@ -760,33 +761,28 @@ class NodeController
             });
             
             $amiData = [];
-            
+            $hostGroups = [];
+
             foreach ($requestedNodes as $node) {
-                $nodeId = (string)$node['id'];
+                $nodeId = (string) $node['id'];
                 $nodeConfig = $this->configService->getNodeConfig($nodeId, $currentUser);
-                
+
                 if (!$nodeConfig || !isset($nodeConfig['host'])) {
-                    // Node not configured, return basic info
-                    $amiData[$nodeId] = [
-                        'node' => $nodeId,
-                        'info' => 'Node not configured',
-                        'status' => 'unknown',
-                        'cos_keyed' => 0,
-                        'tx_keyed' => 0,
-                        'cpu_temp' => null,
-                        'cpu_up' => null,
-                        'cpu_load' => null,
-                        'ALERT' => null,
-                        'WX' => null,
-                        'DISK' => null,
-                        'remote_nodes' => []
-                    ];
+                    $amiData[$nodeId] = $this->buildUnconfiguredAmiResponse($nodeId);
                     continue;
                 }
-                
-        // Try to get AMI data for this node
-        $nodeAmiData = $this->getNodeAmiData($nodeConfig, $nodeId);
-        $amiData[$nodeId] = $nodeAmiData;
+
+                $hostKey = $this->getAmiHostKey($nodeConfig);
+                $hostGroups[$hostKey][] = [
+                    'id' => $nodeId,
+                    'config' => $nodeConfig,
+                ];
+            }
+
+            foreach ($hostGroups as $group) {
+                foreach ($this->getNodeAmiDataBatch($group) as $nodeId => $nodeAmiData) {
+                    $amiData[$nodeId] = $nodeAmiData;
+                }
             }
             
             $response->getBody()->write(json_encode([
@@ -817,91 +813,157 @@ class NodeController
      */
     private function getNodeAmiData(array $nodeConfig, string $nodeId): array
     {
-        // Include the AMI functions using optimized service
+        $batch = $this->getNodeAmiDataBatch([
+            ['id' => $nodeId, 'config' => $nodeConfig],
+        ]);
+
+        return $batch[$nodeId] ?? $this->buildAmiErrorResponse($nodeId, 'AMI data unavailable');
+    }
+
+    /**
+     * Fetch AMI data for multiple nodes sharing one AMI host (single pooled connection)
+     *
+     * @param array<int, array{id: string, config: array}> $nodes
+     * @return array<string, array>
+     */
+    private function getNodeAmiDataBatch(array $nodes): array
+    {
+        if ($nodes === []) {
+            return [];
+        }
+
         $this->includeService->includeAmiFunctions();
         $this->includeService->includeNodeInfo();
-        // Helpers functionality now available as modern services
-        
-        $host = $nodeConfig['host'];
-        $user = $nodeConfig['user'] ?? '';
-        $password = $nodeConfig['passwd'] ?? '';
-        
-        // Try to connect to AMI using connection pooling
-        $this->logger->debug("Attempting AMI connection", ['host' => $host, 'node_id' => $nodeId]);
+
+        $firstConfig = $nodes[0]['config'];
+        $host = $firstConfig['host'];
+        $user = $firstConfig['user'] ?? '';
+        $password = $firstConfig['passwd'] ?? '';
+
+        $this->logger->debug('Attempting AMI batch connection', [
+            'host' => $host,
+            'node_count' => count($nodes),
+        ]);
+
         $socket = \SimpleAmiClient::getConnection($host, $user, $password);
         if ($socket === false) {
-            $this->logger->warning("AMI connection failed", ['host' => $host, 'node_id' => $nodeId]);
-            return [
-                'node' => $nodeId,
-                'info' => 'AMI connection failed',
-                'status' => 'offline',
-                'cos_keyed' => 0,
-                'tx_keyed' => 0,
-                'cpu_temp' => null,
-                'cpu_up' => null,
-                'cpu_load' => null,
-                'ALERT' => null,
-                'WX' => null,
-                'DISK' => null,
-                'remote_nodes' => []
-            ];
-        }
-        
-        try {
-            // Use lazy loading for single node info (Phase 5 optimization)
-            $nodeInfo = $this->astdbService->getSingleNodeInfo($nodeId);
-            $info = 'Node ' . $nodeId;
-            if ($nodeInfo) {
-                $info = trim($nodeInfo['callsign'] . ' ' . $nodeInfo['description'] . ' ' . $nodeInfo['location']);
+            $this->logger->warning('AMI connection failed', ['host' => $host]);
+            $failed = [];
+            foreach ($nodes as $node) {
+                $failed[$node['id']] = $this->buildAmiOfflineResponse($node['id']);
             }
-            
-            // Get complete node data using XStat and SawStat
-            $nodeData = $this->getNodeData($socket, $nodeId);
-            
-            // Return connection to pool
-            \SimpleAmiClient::returnConnection($socket, $host, $user);
-            
-            return [
-                'node' => $nodeId,
-                'info' => $info,
-                'status' => 'online',
-                'cos_keyed' => $nodeData['cos_keyed'] ?? 0,
-                'tx_keyed' => $nodeData['tx_keyed'] ?? 0,
-                'cpu_temp' => $nodeData['cpu_temp'] ?? null,
-                'cpu_up' => $nodeData['cpu_up'] ?? null,
-                'cpu_load' => $nodeData['cpu_load'] ?? null,
-                'ALERT' => $nodeData['ALERT'] ?? null,
-                'WX' => $nodeData['WX'] ?? null,
-                'DISK' => $nodeData['DISK'] ?? null,
-                'remote_nodes' => $nodeData['remote_nodes'] ?? []
-            ];
-            
-        } catch (\Exception $e) {
-            // Return connection to pool
-            \SimpleAmiClient::returnConnection($socket, $host, $user);
-            $this->logger->error('Error getting AMI data for node', [
-                'node_id' => $nodeId,
-                'error' => $e->getMessage()
-            ]);
-            
-            return [
-                'node' => $nodeId,
-                'info' => 'Error: ' . $e->getMessage(),
-                'status' => 'error',
-                'cos_keyed' => 0,
-                'tx_keyed' => 0,
-                'cpu_temp' => null,
-                'cpu_up' => null,
-                'cpu_load' => null,
-                'ALERT' => null,
-                'WX' => null,
-                'DISK' => null,
-                'remote_nodes' => []
-            ];
+
+            return $failed;
+        }
+
+        $results = [];
+        try {
+            foreach ($nodes as $node) {
+                $nodeId = $node['id'];
+                try {
+                    $results[$nodeId] = $this->buildNodeAmiResponseFromSocket($socket, $nodeId);
+                } catch (\Exception $e) {
+                    $this->logger->error('Error getting AMI data for node', [
+                        'node_id' => $nodeId,
+                        'error' => $e->getMessage(),
+                    ]);
+                    $results[$nodeId] = $this->buildAmiErrorResponse($nodeId, $e->getMessage());
+                }
+            }
         } finally {
-            // Return connection to pool
             \SimpleAmiClient::returnConnection($socket, $host, $user);
         }
+
+        return $results;
+    }
+
+    private function getAmiHostKey(array $nodeConfig): string
+    {
+        return implode('|', [
+            $nodeConfig['host'] ?? '',
+            $nodeConfig['user'] ?? '',
+            $nodeConfig['passwd'] ?? '',
+        ]);
+    }
+
+    private function buildUnconfiguredAmiResponse(string $nodeId): array
+    {
+        return [
+            'node' => $nodeId,
+            'info' => 'Node not configured',
+            'status' => 'unknown',
+            'cos_keyed' => 0,
+            'tx_keyed' => 0,
+            'cpu_temp' => null,
+            'cpu_up' => null,
+            'cpu_load' => null,
+            'ALERT' => null,
+            'WX' => null,
+            'DISK' => null,
+            'remote_nodes' => [],
+        ];
+    }
+
+    private function buildAmiOfflineResponse(string $nodeId): array
+    {
+        return [
+            'node' => $nodeId,
+            'info' => 'AMI connection failed',
+            'status' => 'offline',
+            'cos_keyed' => 0,
+            'tx_keyed' => 0,
+            'cpu_temp' => null,
+            'cpu_up' => null,
+            'cpu_load' => null,
+            'ALERT' => null,
+            'WX' => null,
+            'DISK' => null,
+            'remote_nodes' => [],
+        ];
+    }
+
+    private function buildAmiErrorResponse(string $nodeId, string $message): array
+    {
+        return [
+            'node' => $nodeId,
+            'info' => 'Error: ' . $message,
+            'status' => 'error',
+            'cos_keyed' => 0,
+            'tx_keyed' => 0,
+            'cpu_temp' => null,
+            'cpu_up' => null,
+            'cpu_load' => null,
+            'ALERT' => null,
+            'WX' => null,
+            'DISK' => null,
+            'remote_nodes' => [],
+        ];
+    }
+
+    private function buildNodeAmiResponseFromSocket($socket, string $nodeId): array
+    {
+        $nodeInfo = $this->astdbService->getSingleNodeInfo($nodeId);
+        $info = 'Node ' . $nodeId;
+        if ($nodeInfo) {
+            $info = trim($nodeInfo['callsign'] . ' ' . $nodeInfo['description'] . ' ' . $nodeInfo['location']);
+        }
+
+        $nodeData = $this->getNodeData($socket, $nodeId);
+
+        return [
+            'node' => $nodeId,
+            'info' => $info,
+            'status' => 'online',
+            'cos_keyed' => $nodeData['cos_keyed'] ?? 0,
+            'tx_keyed' => $nodeData['tx_keyed'] ?? 0,
+            'cpu_temp' => $nodeData['cpu_temp'] ?? null,
+            'cpu_up' => $nodeData['cpu_up'] ?? null,
+            'cpu_load' => $nodeData['cpu_load'] ?? null,
+            'ALERT' => $nodeData['ALERT'] ?? null,
+            'WX' => $nodeData['WX'] ?? null,
+            'DISK' => $nodeData['DISK'] ?? null,
+            'remote_nodes' => $nodeData['remote_nodes'] ?? [],
+        ];
     }
     
     /**

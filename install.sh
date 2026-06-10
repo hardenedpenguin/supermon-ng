@@ -491,7 +491,7 @@ if [ "$SKIP_APACHE" = false ]; then
 
     # Enable required Apache modules (including mod_ssl for HTTPS)
     echo "📦 Enabling required Apache modules..."
-    a2enmod -q proxy proxy_http proxy_wstunnel rewrite headers substitute ssl 2>/dev/null || {
+    a2enmod -q proxy proxy_http proxy_wstunnel rewrite headers substitute ssl deflate expires 2>/dev/null || {
         echo "⚠️  Warning: Some Apache modules may not be available"
     }
 

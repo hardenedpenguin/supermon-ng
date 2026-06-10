@@ -36,6 +36,7 @@ class NodeWebSocketService implements MessageComponentInterface
     private $amiConnection = null;
     private bool $amiConnected = false;
     private int $pollInterval = 1; // seconds
+    private $pollTimer = null;
     private ?array $lastData = null; // Changed to array for diffing
     private int $lastAmiReconnectAttempt = 0; // Timestamp of last reconnect attempt
     private int $amiReconnectBackoff = 30; // Seconds between reconnect attempts
@@ -75,7 +76,7 @@ class NodeWebSocketService implements MessageComponentInterface
     }
     
     /**
-     * Start the WebSocket server and AMI polling
+     * Register the WebSocket service (AMI connects when the first client joins)
      */
     public function start(): void
     {
@@ -84,14 +85,60 @@ class NodeWebSocketService implements MessageComponentInterface
             'port' => $this->port,
             'host' => $this->nodeConfig['host'] ?? 'unknown'
         ]);
-        
-        // Connect to AMI
-        $this->connectToAmi();
-        
-        // Set up periodic polling
-        $this->loop->addPeriodicTimer($this->pollInterval, function () {
+    }
+
+    /**
+     * Start AMI polling when clients are connected
+     */
+    private function ensureAmiPolling(): void
+    {
+        if ($this->pollTimer !== null) {
+            return;
+        }
+
+        $this->pollTimer = $this->loop->addPeriodicTimer($this->pollInterval, function () {
             $this->pollAndBroadcast();
         });
+
+        $this->connectToAmi();
+        $this->pollAndBroadcast();
+    }
+
+    /**
+     * Stop AMI polling and disconnect when no clients remain
+     */
+    private function stopAmiPollingIfIdle(): void
+    {
+        if (!empty($this->clients)) {
+            return;
+        }
+
+        if ($this->pollTimer !== null) {
+            $this->loop->cancelTimer($this->pollTimer);
+            $this->pollTimer = null;
+        }
+
+        $this->disconnectAmi();
+    }
+
+    /**
+     * Close the dedicated AMI connection
+     */
+    private function disconnectAmi(): void
+    {
+        if ($this->amiConnection !== null) {
+            try {
+                \SimpleAmiClient::logoff($this->amiConnection);
+            } catch (Exception $e) {
+                $this->logger->debug("Error closing AMI connection", [
+                    'node_id' => $this->nodeId,
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+
+        $this->amiConnection = null;
+        $this->amiConnected = false;
     }
     
     /**
@@ -191,7 +238,7 @@ class NodeWebSocketService implements MessageComponentInterface
         }
         
         if (empty($this->clients)) {
-            // No clients connected, skip polling
+            $this->stopAmiPollingIfIdle();
             return;
         }
         
@@ -359,6 +406,8 @@ class NodeWebSocketService implements MessageComponentInterface
             'client_id' => $conn->resourceId,
             'total_clients' => count($this->clients)
         ]);
+
+        $this->ensureAmiPolling();
         
         // Send last known data immediately if available
         if ($this->lastData !== null) {
@@ -406,6 +455,8 @@ class NodeWebSocketService implements MessageComponentInterface
             'client_id' => $conn->resourceId,
             'total_clients' => count($this->clients)
         ]);
+
+        $this->stopAmiPollingIfIdle();
     }
     
     /**
@@ -431,20 +482,12 @@ class NodeWebSocketService implements MessageComponentInterface
             'node_id' => $this->nodeId
         ]);
         
-        if ($this->amiConnection !== null) {
-            try {
-                // Close dedicated connection (not returning to pool)
-                \SimpleAmiClient::logoff($this->amiConnection);
-            } catch (Exception $e) {
-                $this->logger->error("Error closing AMI connection", [
-                    'node_id' => $this->nodeId,
-                    'error' => $e->getMessage()
-                ]);
-            }
+        if ($this->pollTimer !== null) {
+            $this->loop->cancelTimer($this->pollTimer);
+            $this->pollTimer = null;
         }
-        
-        $this->amiConnection = null;
-        $this->amiConnected = false;
+
+        $this->disconnectAmi();
     }
 }
 
