@@ -58,6 +58,30 @@
         <details class="advanced">
           <summary>Optional settings</summary>
           <p class="hint">Uncheck a setting to comment out its line in <code>global.inc</code>.</p>
+          <div class="toggle-field">
+            <label class="toggle-row">
+              <input v-model="globalForm.welcome_msg_enabled" type="checkbox" />
+              <span>Welcome message for visitors (WELCOME_MSG)</span>
+            </label>
+            <input
+              v-model="globalForm.welcome_msg"
+              class="form-input"
+              placeholder="Leave blank for default: Welcome to your callsign Supermon-ng"
+              :disabled="!globalForm.welcome_msg_enabled"
+            />
+          </div>
+          <div class="toggle-field">
+            <label class="toggle-row">
+              <input v-model="globalForm.welcome_msg_logged_enabled" type="checkbox" />
+              <span>Welcome message when logged in (WELCOME_MSG_LOGGED)</span>
+            </label>
+            <input
+              v-model="globalForm.welcome_msg_logged"
+              class="form-input"
+              placeholder="Leave blank for default: Welcome back, operator name!"
+              :disabled="!globalForm.welcome_msg_logged_enabled"
+            />
+          </div>
           <label>Header background color</label>
           <input v-model="globalForm.background_color" class="form-input" placeholder="black" />
           <div class="toggle-field">
@@ -160,6 +184,10 @@ type GlobalForm = {
   dvm_url_enabled: boolean
   my_url: string
   my_url_enabled: boolean
+  welcome_msg: string
+  welcome_msg_logged: string
+  welcome_msg_enabled: boolean
+  welcome_msg_logged_enabled: boolean
 }
 
 const appStore = useAppStore()
@@ -187,6 +215,10 @@ const globalForm = ref<GlobalForm>({
   dvm_url_enabled: false,
   my_url: '',
   my_url_enabled: false,
+  welcome_msg: '',
+  welcome_msg_logged: '',
+  welcome_msg_enabled: false,
+  welcome_msg_logged_enabled: false,
 })
 
 const applyStepFromStatus = (allowAdvanceOnly = false) => {
@@ -224,6 +256,10 @@ const loadGlobalConfig = async () => {
         dvm_url_enabled: !!data.dvm_url_enabled,
         my_url: data.my_url || '',
         my_url_enabled: !!data.my_url_enabled,
+        welcome_msg: data.welcome_msg || '',
+        welcome_msg_logged: data.welcome_msg_logged || '',
+        welcome_msg_enabled: !!data.welcome_msg_enabled,
+        welcome_msg_logged_enabled: !!data.welcome_msg_logged_enabled,
       }
     }
   } catch {
@@ -290,6 +326,10 @@ const saveGlobalConfig = async () => {
       dvm_url_enabled: globalForm.value.dvm_url_enabled,
       my_url: globalForm.value.my_url.trim(),
       my_url_enabled: globalForm.value.my_url_enabled,
+      welcome_msg: globalForm.value.welcome_msg.trim(),
+      welcome_msg_logged: globalForm.value.welcome_msg_logged.trim(),
+      welcome_msg_enabled: globalForm.value.welcome_msg_enabled,
+      welcome_msg_logged_enabled: globalForm.value.welcome_msg_logged_enabled,
     })
     info.value = response.data.message || 'Site configuration saved'
     step.value = 3

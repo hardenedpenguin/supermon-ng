@@ -35,6 +35,8 @@ final class GlobalIncService
     private const OPTIONAL_VARS = [
         'TITLE2',
         'TITLE3',
+        'WELCOME_MSG',
+        'WELCOME_MSG_LOGGED',
         'CALLSIGN_COLOR',
         'MY_URL',
         'DVM_URL',
@@ -114,18 +116,6 @@ final class GlobalIncService
 
         $smServerName = trim((string) ($input['sm_server_name'] ?? '')) ?: 'Supermon-ng';
 
-        $welcomeMsg = trim((string) ($input['welcome_msg'] ?? ''));
-        if ($welcomeMsg === '') {
-            $welcomeMsg = '<p style=\'margin-top:1em;\'><center><b>Welcome to '
-                . $this->escapeHtml($call) . ' Supermon-ng</b></center></p>';
-        }
-
-        $welcomeMsgLogged = trim((string) ($input['welcome_msg_logged'] ?? ''));
-        if ($welcomeMsgLogged === '') {
-            $welcomeMsgLogged = '<p style=\'margin-top:1em;\'><center><b>Welcome back, '
-                . $this->escapeHtml($name) . '!</b></center></p>';
-        }
-
         $locationRaw = $parsed['LOCATION']['value_raw'] ?? null;
         $locationValue = $this->buildLocationValue($location, is_string($locationRaw) ? $locationRaw : null);
 
@@ -134,8 +124,6 @@ final class GlobalIncService
             'NAME' => $name,
             'LOCATION' => $locationValue,
             'SMSERVERNAME' => $smServerName,
-            'WELCOME_MSG' => $welcomeMsg,
-            'WELCOME_MSG_LOGGED' => $welcomeMsgLogged,
             'BACKGROUND_COLOR' => trim((string) ($input['background_color'] ?? 'black')) ?: 'black',
             'BACKGROUND_HEIGHT' => trim((string) ($input['background_height'] ?? '164px')) ?: '164px',
             'DISPLAY_BACKGROUND' => trim((string) ($input['display_background'] ?? 'black')) ?: 'black',
@@ -153,6 +141,16 @@ final class GlobalIncService
             'TITLE3' => [
                 'field' => 'title3',
                 'default' => 'AllStarLink/IRLP/EchoLink/Digital - Bridging Control Center',
+            ],
+            'WELCOME_MSG' => [
+                'field' => 'welcome_msg',
+                'default' => '<p style=\'margin-top:1em;\'><center><b>Welcome to '
+                    . $this->escapeHtml($call) . ' Supermon-ng</b></center></p>',
+            ],
+            'WELCOME_MSG_LOGGED' => [
+                'field' => 'welcome_msg_logged',
+                'default' => '<p style=\'margin-top:1em;\'><center><b>Welcome back, '
+                    . $this->escapeHtml($name) . '!</b></center></p>',
             ],
             'CALLSIGN_COLOR' => [
                 'field' => 'callsign_color',
@@ -223,6 +221,8 @@ final class GlobalIncService
             'sm_server_name' => 'Supermon-ng',
             'welcome_msg' => '',
             'welcome_msg_logged' => '',
+            'welcome_msg_enabled' => false,
+            'welcome_msg_logged_enabled' => false,
             'background_color' => 'black',
             'background_height' => '164px',
             'display_background' => 'black',
