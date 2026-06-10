@@ -194,8 +194,7 @@ export const useAppStore = defineStore('app', () => {
   /** Drop large bootstrap payloads after Dashboard has hydrated stores. */
   const clearBootstrapData = () => {
     const setup = bootstrapData.value?.setup
-    const menu = bootstrapData.value?.menu
-    bootstrapData.value = setup || menu ? { setup, menu } : null
+    bootstrapData.value = setup ? { setup } : null
   }
 
   const waitUntilInitialized = async (): Promise<void> => {

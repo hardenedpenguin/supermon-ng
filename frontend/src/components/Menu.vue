@@ -1,6 +1,6 @@
 <template>
-  <nav id="menu" aria-label="Site menu" :class="{ 'menu--empty': menuSections.length === 0 }">
-    <ul v-show="menuSections.length > 0">
+  <div id="menu" v-if="menuSections.length > 0">
+    <ul>
       <template v-for="section in menuSections" :key="sectionKey(section)">
         <li v-if="section.type === 'link'">
           <a
@@ -25,7 +25,7 @@
         </li>
       </template>
     </ul>
-  </nav>
+  </div>
 
   <!-- URL Modal for external links -->
   <UrlModal
@@ -207,7 +207,6 @@ watch(() => appStore.isAuthenticated, () => {
   background-color: var(--menu-background, #2a2a2a);
   border-radius: 5px;
   margin-bottom: 20px;
-  min-height: 44px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -215,10 +214,6 @@ watch(() => appStore.isAuthenticated, () => {
   z-index: 100;
   overflow: visible;
   box-sizing: border-box;
-}
-
-#menu.menu--empty {
-  visibility: hidden;
 }
 
 #menu ul {

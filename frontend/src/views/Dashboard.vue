@@ -43,7 +43,7 @@
       <!-- AllStar Logo (default or if no custom logo) -->
       <div v-if="!systemInfo?.logoName" class="header-img">
         <a :href="systemInfo?.logoUrl ? getCleanUrl(systemInfo.logoUrl) : 'https://www.allstarlink.org'" :target="systemInfo?.logoUrl ? (shouldOpenInNewTab(systemInfo.logoUrl) ? '_blank' : '_self') : '_blank'">
-          <img src="/allstarlink.jpg" width="120" height="90" style="border: 0px; width: auto; max-width: 70%; height: auto;" alt="Allstar Logo">
+          <img src="/allstarlink.jpg" width="70%" style="border: 0px;" alt="Allstar Logo">
         </a>
       </div>
     </div>
@@ -51,24 +51,15 @@
     <!-- Menu Component -->
     <Menu @node-selection="handleNodeSelection" />
 
-    <ConnectionStatus
-      :node-ids="activeMonitoringNodeIds"
-      :reserve-space="connectionStatusReserved"
-    />
+    <ConnectionStatus :node-ids="activeMonitoringNodeIds" />
 
     <!-- Date and Time Display -->
     <div v-if="showDateTime" class="datetime-display">
       {{ currentDateTime }}
     </div>
 
-    <!-- Welcome Message (reserved height avoids layout shift when text appears) -->
-    <div
-      class="welcome-message-slot"
-      :class="{ 'welcome-message-slot--active': welcomeLikely }"
-      :style="welcomeSlotStyle"
-    >
-      <div v-if="welcomeMessage" class="welcome-message" v-html="sanitizeHtml(welcomeMessage)"></div>
-    </div>
+    <!-- Welcome Message -->
+    <div v-if="welcomeMessage" class="welcome-message" v-html="sanitizeHtml(welcomeMessage)"></div>
 
     <DashboardConnectPanel
       v-if="hasControlPermissions"
@@ -95,16 +86,8 @@
     </p>
 
     <!-- Node Tables (mimics link.php structure) -->
-    <div class="node-tables-area">
-      <div v-if="showNodeTableSkeleton" class="node-table-skeleton" aria-hidden="true">
-        <div class="node-table-skeleton__title"></div>
-        <div class="node-table-skeleton__header"></div>
-        <div class="node-table-skeleton__row node-table-skeleton__row--tall"></div>
-        <div class="node-table-skeleton__row"></div>
-        <div class="node-table-skeleton__row"></div>
-        <div class="node-table-skeleton__row"></div>
-      </div>
-      <div v-else-if="displayedNodes.length === 0" class="no-nodes-message">
+    <div style="text-align: center;">
+      <div v-if="displayedNodes.length === 0" class="no-nodes-message">
         Select a node or group from the menu to display node tables
       </div>
       <div v-else class="node-tables-container">
@@ -123,11 +106,9 @@
 
     <!-- Footer Info -->
     <div class="clearer"></div>
-
-    <div class="footer-slot" :class="{ 'footer-slot--active': footerLikely }">
-      <div v-if="systemInfo?.maintainer" id="footer">
-        <b>System maintained by: <i>{{ systemInfo.maintainer }}</i></b>
-      </div>
+    
+    <div v-if="systemInfo?.maintainer" id="footer">
+      <b>System maintained by: <i>{{ systemInfo.maintainer }}</i></b>
     </div>
 
     <!-- Donate Button Section -->
@@ -332,7 +313,11 @@ const targetNode = ref('')
 const permConnect = ref(false)
 
 // Date and time display
-const formatCurrentDateTime = () => {
+const currentDateTime = ref('')
+const showDateTime = ref(true)
+let dateTimeInterval: ReturnType<typeof setInterval> | null = null
+
+const updateDateTime = () => {
   const now = new Date()
   const options: Intl.DateTimeFormatOptions = {
     weekday: 'long',
@@ -344,15 +329,7 @@ const formatCurrentDateTime = () => {
     second: '2-digit',
     hour12: true
   }
-  return now.toLocaleString('en-US', options)
-}
-
-const showDateTime = ref(true)
-const currentDateTime = ref(formatCurrentDateTime())
-let dateTimeInterval: ReturnType<typeof setInterval> | null = null
-
-const updateDateTime = () => {
-  currentDateTime.value = formatCurrentDateTime()
+  currentDateTime.value = now.toLocaleString('en-US', options)
 }
 
 const loadDisplaySettingsFromCookies = () => {
@@ -367,8 +344,6 @@ const loadDisplaySettingsFromCookies = () => {
 
   showDateTime.value = cookies['show-date-time'] !== '0'
 }
-loadDisplaySettingsFromCookies()
-
 const showLoginModal = ref(false)
 const showDisplayConfigModal = ref(false)
 const showAddFavoriteModal = ref(false)
@@ -407,7 +382,7 @@ const showDvswitchModal = ref(false)
 
 
 const systemInfo = ref<any>(null)
-const headerBackground = ref<string>(appUrl('background.jpg'))
+const headerBackground = ref<string | null>(null)
 const showDigitalDashboardModal = ref(false)
 const showNodeStatusModal = ref(false)
 const databaseStatus = ref<any>(null)
@@ -509,8 +484,14 @@ const nodeControls = useNodeControls({
 })
 
 const headerBackgroundUrl = computed(() => {
+  // Don't set background until we've checked for custom header
+  // This prevents the default from loading before we know if custom exists
   const backgroundUrl = headerBackground.value || systemInfo.value?.customHeaderBackground
-  return backgroundUrl ? `url('${backgroundUrl}')` : null
+  if (!backgroundUrl) {
+    // Return null to prevent any background from loading until we know which one to use
+    return null
+  }
+  return `url('${backgroundUrl}')`
 })
 
 const formatHeaderTag = () => {
@@ -571,76 +552,6 @@ const welcomeMessage = computed(() => {
   }
   return null
 })
-
-const resolvedSystemInfo = computed(
-  () => systemInfo.value ?? appStore.bootstrapData?.systemInfo ?? null
-)
-
-const welcomeLikely = computed(() => {
-  const info = resolvedSystemInfo.value
-  if (!info) {
-    return false
-  }
-  if (appStore.isAuthenticated) {
-    return Boolean(info.welcomeMsgLogged)
-  }
-  return Boolean(info.welcomeMsg)
-})
-
-const welcomePreviewText = computed(() => {
-  const info = resolvedSystemInfo.value
-  if (!info) {
-    return ''
-  }
-  const raw = appStore.isAuthenticated ? info.welcomeMsgLogged : info.welcomeMsg
-  if (!raw) {
-    return ''
-  }
-  return raw.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-})
-
-const welcomeSlotStyle = computed(() => {
-  if (!welcomeLikely.value) {
-    return undefined
-  }
-  const chars = welcomePreviewText.value.length
-  const lines = Math.max(1, Math.ceil(chars / 72))
-  const rem = Math.min(9, Math.max(4.5, 2.5 + lines * 1.35))
-  return { minHeight: `${rem}rem` }
-})
-
-const footerLikely = computed(() => Boolean(resolvedSystemInfo.value?.maintainer))
-
-const nodeHasLiveSnapshot = (nodeId: string): boolean => {
-  const node = realTimeStore.getNodeById(nodeId)
-  if (!node) {
-    return false
-  }
-  return (
-    node.status === 'online' ||
-    node.is_online === true ||
-    node.cpu_temp != null ||
-    node.ALERT != null ||
-    node.WX != null
-  )
-}
-
-const showNodeTableSkeleton = computed(() => {
-  if (isLoadingDefaultNodes.value) {
-    return true
-  }
-  if (displayedNodes.value.length === 0) {
-    return false
-  }
-  return displayedNodes.value.some((node) => !nodeHasLiveSnapshot(String(node.id)))
-})
-
-const connectionStatusReserved = computed(
-  () =>
-    showNodeTableSkeleton.value ||
-    realTimeStore.monitoringNodes.length > 0 ||
-    Boolean(realTimeStore.error)
-)
 
 const headerTitle = computed(() => {
   if (appStore.isAuthenticated && systemInfo.value?.titleLogged) {
@@ -1539,69 +1450,11 @@ onUnmounted(() => {
   margin-right: -20px;
 }
 
-.welcome-message-slot {
-  max-width: 880px;
-  margin: 0 auto;
-  min-height: 0;
-}
-
-.welcome-message-slot--active {
-  min-height: 4.5rem;
-}
-
 .welcome-message {
   margin: 20px auto;
   max-width: 880px;
   padding: 10px;
   text-align: center;
-}
-
-.node-tables-area {
-  text-align: center;
-}
-
-.node-table-skeleton {
-  max-width: 880px;
-  margin: 20px auto;
-  padding: 12px;
-  border: 1px solid var(--border-color, #404040);
-  border-radius: 4px;
-  background: var(--container-bg, #2a2a2a);
-  min-height: 380px;
-  box-sizing: border-box;
-}
-
-.node-table-skeleton__title {
-  height: 2.25rem;
-  margin-bottom: 0.5rem;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.node-table-skeleton__header {
-  height: 2rem;
-  margin-bottom: 0.75rem;
-  border-radius: 4px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06));
-}
-
-.node-table-skeleton__row {
-  height: 1.5rem;
-  margin-bottom: 0.5rem;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.node-table-skeleton__row--tall {
-  height: 4.5rem;
-}
-
-.footer-slot {
-  min-height: 0;
-}
-
-.footer-slot--active {
-  min-height: 3.25rem;
 }
 
 /* Configuration buttons */

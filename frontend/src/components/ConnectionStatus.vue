@@ -1,24 +1,22 @@
 <template>
-  <div class="connection-status-slot" :class="{ 'connection-status-slot--reserved': reserveSpace }">
-    <div
-      v-if="visible"
-      class="connection-status"
-      :class="statusClass"
-      role="status"
-      aria-live="polite"
+  <div
+    v-if="visible"
+    class="connection-status"
+    :class="statusClass"
+    role="status"
+    aria-live="polite"
+  >
+    <span class="connection-status-label">{{ statusLabel }}</span>
+    <span v-if="ageLabel" class="connection-status-age">{{ ageLabel }}</span>
+    <button
+      v-if="realTimeStore.error"
+      type="button"
+      class="connection-status-dismiss"
+      @click="realTimeStore.clearError()"
+      aria-label="Dismiss connection message"
     >
-      <span class="connection-status-label">{{ statusLabel }}</span>
-      <span v-if="ageLabel" class="connection-status-age">{{ ageLabel }}</span>
-      <button
-        v-if="realTimeStore.error"
-        type="button"
-        class="connection-status-dismiss"
-        @click="realTimeStore.clearError()"
-        aria-label="Dismiss connection message"
-      >
-        ×
-      </button>
-    </div>
+      ×
+    </button>
   </div>
 </template>
 
@@ -28,7 +26,6 @@ import { useRealTimeStore } from '@/stores/realTime'
 
 const props = defineProps<{
   nodeIds: string[]
-  reserveSpace?: boolean
 }>()
 
 const realTimeStore = useRealTimeStore()
@@ -112,14 +109,6 @@ const ageLabel = computed(() => {
 </script>
 
 <style scoped>
-.connection-status-slot {
-  min-height: 0;
-}
-
-.connection-status-slot--reserved {
-  min-height: 2.25rem;
-}
-
 .connection-status {
   display: flex;
   align-items: center;

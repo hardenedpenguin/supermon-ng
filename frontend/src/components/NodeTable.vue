@@ -1,5 +1,5 @@
 <template>
-  <table :class="[tableClass, { 'node-table--loading': !nodeData }]" :id="`table_${node.id}`">
+  <table :class="tableClass" :id="`table_${node.id}`">
     <thead>
       <tr>
         <th :colspan="colspan">
@@ -916,10 +916,6 @@ onUnmounted(() => {
 .node-table-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-}
-
-.node-table--loading {
-  min-height: 22rem;
 }
 
 .node-num-link {
