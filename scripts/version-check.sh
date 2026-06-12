@@ -56,7 +56,14 @@ fi
 if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
     echo -e "${GREEN}Node Status Service:${NC}"
     if systemctl is-active supermon-ng-node-status.timer >/dev/null 2>&1; then
-        echo "  Status: Running (Timer)"
+        if [ -f "$APP_DIR/.env" ]; then
+            set -a
+            # shellcheck disable=SC1091
+            source "$APP_DIR/.env" 2>/dev/null || true
+            set +a
+        fi
+        local interval="${NODE_STATUS_INTERVAL_MINUTES:-5}"
+        echo "  Status: Running (every ${interval} min)"
     else
         echo "  Status: Not running"
     fi

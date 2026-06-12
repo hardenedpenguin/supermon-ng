@@ -367,6 +367,23 @@ else
     exit 1
 fi
 
+# .env before systemd so NODE_STATUS_INTERVAL_MINUTES applies to the node-status timer
+if [ ! -f "$APP_DIR/.env" ] && [ -f "$INSTALLER_DIR/.env.example" ]; then
+    cp "$INSTALLER_DIR/.env.example" "$APP_DIR/.env"
+    echo "✅ Created $APP_DIR/.env from .env.example"
+fi
+if [ -f "$APP_DIR/.env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    source "$APP_DIR/.env" 2>/dev/null || true
+    set +a
+elif [ -f "$INSTALLER_DIR/.env" ]; then
+    set -a
+    # shellcheck disable=SC1091
+    source "$INSTALLER_DIR/.env" 2>/dev/null || true
+    set +a
+fi
+
 # Install systemd service files
 echo "🔧 Installing systemd services..."
 
@@ -392,8 +409,9 @@ install_systemd_file() {
     sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" "$TARGET_FILE"
 
     if [ "$FILE_TYPE" = "timer" ] && [ "$(basename "$SOURCE_FILE")" = "supermon-ng-node-status.timer" ]; then
-        local node_status_interval="${NODE_STATUS_INTERVAL_MINUTES:-3}"
-        sed -i "s|NODE_STATUS_INTERVAL_PLACEHOLDER|${node_status_interval}min|g" "$TARGET_FILE"
+        local node_status_interval="${NODE_STATUS_INTERVAL_MINUTES:-5}"
+        sed -i "s|OnUnitActiveSec=5min|OnUnitActiveSec=${node_status_interval}min|g" "$TARGET_FILE"
+        sed -i "s|every 5 minutes|every ${node_status_interval} minutes|g" "$TARGET_FILE"
     fi
     
     # Set proper permissions (644 for systemd files)
@@ -476,12 +494,6 @@ echo "📝 Creating Apache configuration template (APP_BASE_PATH=${APP_BASE_PATH
 chmod +x "$INSTALLER_DIR/scripts/generate-apache-template.sh"
 bash "$INSTALLER_DIR/scripts/generate-apache-template.sh" "$APACHE_TEMPLATE"
 echo "✅ Apache configuration template created"
-
-# Install .env from example when missing
-if [ ! -f "$APP_DIR/.env" ] && [ -f "$INSTALLER_DIR/.env.example" ]; then
-    cp "$INSTALLER_DIR/.env.example" "$APP_DIR/.env"
-    echo "✅ Created $APP_DIR/.env from .env.example"
-fi
 
 # Apply APP_BASE_PATH to index.html + .htaccess (universal release tarball)
 if [ -f "$INSTALLER_DIR/scripts/configure-app-base-path.sh" ]; then
@@ -623,7 +635,8 @@ echo "   After editing allmon.ini or username-allmon.ini, restart the WebSocket 
 echo "   so it picks up node changes: sudo systemctl restart supermon-ng-websocket.service"
 echo ""
 echo "⏰ Scheduled Tasks:"
-systemctl is-active supermon-ng-node-status.timer > /dev/null 2>&1 && echo "   ✅ Node Status Updates: Every 3 minutes" || echo "   ⚠️  Node Status Updates: Not configured"
+NODE_STATUS_INTERVAL_MINUTES="${NODE_STATUS_INTERVAL_MINUTES:-5}"
+systemctl is-active supermon-ng-node-status.timer > /dev/null 2>&1 && echo "   ✅ Node Status Updates: Every ${NODE_STATUS_INTERVAL_MINUTES} minutes" || echo "   ⚠️  Node Status Updates: Not configured"
 systemctl is-active supermon-ng-database-update.timer > /dev/null 2>&1 && echo "   ✅ Database Updates: Every 3 hours" || echo "   ⚠️  Database Updates: Not configured"
 echo ""
 echo "📝 Next steps:"

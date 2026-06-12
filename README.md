@@ -93,7 +93,10 @@ sudo /var/www/html/supermon-ng/scripts/version-check.sh
 ```bash
 sudo systemctl status supermon-ng-backend supermon-ng-websocket apache2
 sudo systemctl restart supermon-ng-backend supermon-ng-websocket
+sudo systemctl status supermon-ng-node-status.timer
 ```
+
+**Node status timer:** `supermon-ng-node-status.timer` runs `ast_node_status_update.py` every **5 minutes** by default (weather, alerts, etc.). To change the interval, set `NODE_STATUS_INTERVAL_MINUTES` in `.env` **before** running `install.sh` or `scripts/update.sh`, then re-run install/update or `sudo systemctl daemon-reload` and restart the timer.
 
 | Log | Location |
 |-----|----------|
