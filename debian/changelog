@@ -1,0 +1,7 @@
+supermon-ng (4.2.1-1) unstable; urgency=medium
+
+  * Initial Debian package (MVP internal packaging).
+  * Ships pre-built frontend, Composer vendor, systemd units, and sudoers.
+  * Apache configuration is not modified automatically; use docs/DEBIAN.md.
+
+ -- Supermon-ng Team <supermon-ng@example.com>  Thu, 12 Jun 2026 12:00:00 +0000

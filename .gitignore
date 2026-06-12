@@ -102,3 +102,17 @@ setup-android-env.sh
 __pycache__/
 *.pyc
 *.pyo
+
+# Debian package build artifacts
+debian/supermon-ng/
+debian/supermon-ng-*.service
+debian/supermon-ng-*.timer
+debian/sudoers.staged
+debian/debhelper-build-stamp
+debian/files
+debian/*.substvars
+debian/*.debhelper
+debian/.debhelper/
+../supermon-ng_*
+../supermon-ng-*
+*.buildinfo

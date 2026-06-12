@@ -1,0 +1,38 @@
+#!/usr/bin/make -f
+export DH_VERBOSE=1
+APP_DIR=/var/www/html/supermon-ng
+
+%:
+	dh $@
+
+override_dh_auto_test:
+
+override_dh_usrlocal:
+
+override_dh_auto_install:
+	@for f in systemd/*.service systemd/*.timer; do \
+		b=$$(basename $$f); \
+		sed "s|APP_DIR_PLACEHOLDER|$(APP_DIR)|g" $$f > debian/$$b; \
+	done
+	@NODE_INTERVAL="$${NODE_STATUS_INTERVAL_MINUTES:-5}"; \
+		sed -i "s|OnUnitActiveSec=5min|OnUnitActiveSec=$${NODE_INTERVAL}min|g" debian/supermon-ng-node-status.timer; \
+		sed -i "s|every 5 minutes|every $${NODE_INTERVAL} minutes|g" debian/supermon-ng-node-status.timer
+	@sed "s|@APP_DIR@|$(APP_DIR)|g" debian/sudoers.supermon-ng.in > debian/sudoers.staged
+	chmod +x scripts/stage-deb-payload.sh
+	./scripts/stage-deb-payload.sh debian/supermon-ng
+	install -D -m 440 debian/sudoers.staged debian/supermon-ng/etc/sudoers.d/011-supermon-ng
+	install -D -m 755 scripts/supermon_unified_file_editor.sh debian/supermon-ng/usr/local/sbin/supermon_unified_file_editor.sh
+
+override_dh_installsystemd:
+	dh_installsystemd --name=supermon-ng-backend
+	dh_installsystemd --name=supermon-ng-websocket
+	dh_installsystemd --name=supermon-ng-database-update --no-start
+	dh_installsystemd --name=supermon-ng-node-status --no-start
+	dh_installsystemd --name=supermon-ng-database-update.timer
+	dh_installsystemd --name=supermon-ng-node-status.timer
+
+override_dh_auto_clean:
+	dh_auto_clean
+	rm -rf debian/supermon-ng
+	rm -f debian/sudoers.staged
+	rm -f debian/supermon-ng-*.service debian/supermon-ng-*.timer

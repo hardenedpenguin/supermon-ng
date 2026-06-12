@@ -1,0 +1,68 @@
+#!/bin/sh
+set -e
+
+APP_DIR=/var/www/html/supermon-ng
+WWW_USER=www-data
+WWW_GROUP=www-data
+
+apply_app_base_path() {
+    if [ -f "$APP_DIR/.env" ] && [ -x "$APP_DIR/scripts/configure-app-base-path.sh" ]; then
+        # shellcheck disable=SC1091
+        set -a
+        . "$APP_DIR/.env" 2>/dev/null || true
+        set +a
+        APP_BASE_PATH="${APP_BASE_PATH:-/supermon-ng}"
+        export APP_DIR APP_BASE_PATH
+        "$APP_DIR/scripts/configure-app-base-path.sh" "$APP_DIR" || true
+    fi
+}
+
+ensure_runtime_dirs() {
+    mkdir -p "$APP_DIR/logs" "$APP_DIR/cache" "$APP_DIR/database"
+    chown -R "${WWW_USER}:${WWW_GROUP}" "$APP_DIR/logs" "$APP_DIR/cache" "$APP_DIR/database" 2>/dev/null || true
+    chmod 755 "$APP_DIR/logs" "$APP_DIR/cache" "$APP_DIR/database" 2>/dev/null || true
+}
+
+validate_sudoers() {
+    if [ -f /etc/sudoers.d/011-supermon-ng ]; then
+        visudo -cf /etc/sudoers.d/011-supermon-ng >/dev/null 2>&1 || {
+            echo "supermon-ng: sudoers validation failed for /etc/sudoers.d/011-supermon-ng" >&2
+            exit 1
+        }
+    fi
+}
+
+case "$1" in
+    configure)
+        if [ ! -f "$APP_DIR/.env" ] && [ -f "$APP_DIR/.env.example" ]; then
+            cp "$APP_DIR/.env.example" "$APP_DIR/.env"
+            chown root:${WWW_GROUP} "$APP_DIR/.env" 2>/dev/null || true
+            chmod 640 "$APP_DIR/.env" 2>/dev/null || true
+        fi
+
+        ensure_runtime_dirs
+        apply_app_base_path
+        validate_sudoers
+
+        # Composer fallback if vendor was not bundled at build time
+        if [ ! -d "$APP_DIR/vendor" ] && [ -x "$APP_DIR/scripts/composer-install-production.sh" ]; then
+            if command -v composer >/dev/null 2>&1; then
+                "$APP_DIR/scripts/composer-install-production.sh" "$APP_DIR" || true
+            fi
+        fi
+
+        chown -R "${WWW_USER}:${WWW_GROUP}" "$APP_DIR/logs" 2>/dev/null || true
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

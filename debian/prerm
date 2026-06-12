@@ -1,0 +1,22 @@
+#!/bin/sh
+set -e
+
+case "$1" in
+    remove|upgrade|deconfigure)
+        for unit in supermon-ng-backend supermon-ng-websocket \
+            supermon-ng-database-update.service supermon-ng-node-status.service; do
+            if systemctl is-active --quiet "$unit" 2>/dev/null; then
+                systemctl stop "$unit" || true
+            fi
+        done
+        for timer in supermon-ng-database-update.timer supermon-ng-node-status.timer; do
+            if systemctl is-active --quiet "$timer" 2>/dev/null; then
+                systemctl stop "$timer" || true
+            fi
+        done
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

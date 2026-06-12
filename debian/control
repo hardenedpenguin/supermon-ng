@@ -1,0 +1,37 @@
+Source: supermon-ng
+Section: web
+Priority: optional
+Maintainer: Supermon-ng Team <supermon-ng@example.com>
+Build-Depends: debhelper-compat (= 13),
+               composer,
+               npm,
+               nodejs | nodejs-lts,
+               php-cli,
+               php-xml,
+               php-mbstring,
+               php-curl,
+               php-sqlite3
+Standards-Version: 4.6.2
+Homepage: https://github.com/hardenedpenguin/supermon-ng
+Rules-Requires-Root: no
+
+Package: supermon-ng
+Architecture: all
+Depends: ${misc:Depends},
+         php-cli,
+         php-sqlite3,
+         php-curl,
+         php-mbstring,
+         php-xml,
+         python3,
+         adduser
+Recommends: apache2 | nginx,
+            asterisk
+Description: AllStar Link node monitoring dashboard (Supermon-ng)
+ Supermon-ng provides a web UI for monitoring and controlling AllStar Link
+ nodes: AMI integration, WebSocket live status, favorites, DVSwitch, and
+ node status/weather updates via systemd timers.
+ .
+ This package installs the application under /var/www/html/supermon-ng,
+ systemd units, and sudoers rules. Configure Apache/nginx separately
+ (see /var/www/html/supermon-ng/docs/DEBIAN.md).
