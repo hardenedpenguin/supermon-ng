@@ -1,3 +1,12 @@
+supermon-ng (4.2.1-2) unstable; urgency=medium
+
+  * Full Apache support: modules, site file, default site disable, reload.
+  * Add scripts/configure-apache.sh (shared with install.sh).
+  * debconf prompts for Apache setup, default sites, and site refresh on upgrade.
+  * postinst enables/starts systemd units; prerm/postrm manage Apache site lifecycle.
+
+ -- Supermon-ng Team <supermon-ng@example.com>  Tue, 19 May 2026 12:00:00 +0000
+
 supermon-ng (4.2.1-1) unstable; urgency=medium
 
   * Initial Debian package (MVP internal packaging).

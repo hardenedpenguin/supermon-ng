@@ -11,9 +11,15 @@ case "$1" in
         done
         for timer in supermon-ng-database-update.timer supermon-ng-node-status.timer; do
             if systemctl is-active --quiet "$timer" 2>/dev/null; then
-                systemctl stop "$timer" || true
+                systemctl stop "$timer" 2>/dev/null || true
             fi
         done
+        if [ "$1" = "remove" ] && command -v a2dissite >/dev/null 2>&1; then
+            a2dissite -q supermon-ng 2>/dev/null || true
+            if command -v apache2ctl >/dev/null 2>&1; then
+                apache2ctl configtest >/dev/null 2>&1 && systemctl reload apache2 2>/dev/null || true
+            fi
+        fi
         ;;
 esac
 

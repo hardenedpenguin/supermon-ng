@@ -1,0 +1,24 @@
+Template: supermon-ng/configure-apache
+Type: boolean
+Default: true
+Description: Configure Apache for Supermon-ng?
+ Automatically enable required Apache modules, install the supermon-ng site
+ configuration under /etc/apache2/sites-available/, and reload Apache.
+ .
+ Choose "No" if you use nginx or manage Apache vhosts yourself.
+
+Template: supermon-ng/disable-default-sites
+Type: boolean
+Default: true
+Description: Disable default Apache sites?
+ Disable the Debian default sites (000-default and default-ssl) so
+ Supermon-ng can serve HTTP/HTTPS on ports 80 and 443.
+
+Template: supermon-ng/refresh-apache-site
+Type: boolean
+Default: false
+Description: Regenerate Apache site configuration?
+ Replace /etc/apache2/sites-available/supermon-ng.conf with a newly
+ generated configuration from your current .env settings.
+ .
+ Only choose "Yes" if you want to discard manual edits to that file.

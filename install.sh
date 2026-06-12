@@ -457,109 +457,26 @@ install_systemd_file \
     "/etc/systemd/system/supermon-ng-node-status.timer" \
     "Timer"
 
-# Install Apache and ssl-cert if not present (unless skipping Apache configuration)
+# Apache template, app-base-path, and site configuration (shared with Debian postinst)
+APACHE_AUTO_CONFIGURED=false
+export APP_DIR
+export SKIP_APACHE
+export DISABLE_DEFAULT_SITES=true
+export OVERWRITE_SITE=true
+export ALLOW_APT_INSTALL=true
+export CONFIGURE_LOG_ACLS=false
+
+chmod +x "$INSTALLER_DIR/scripts/configure-apache.sh"
 if [ "$SKIP_APACHE" = false ]; then
-    if ! command -v apache2 &> /dev/null; then
-        echo "📦 Installing Apache..."
-        apt-get install -y apache2 ssl-cert
-    elif [ ! -f /etc/ssl/certs/ssl-cert-snakeoil.pem ]; then
-        echo "📦 Installing ssl-cert (system self-signed certificate)..."
-        apt-get install -y ssl-cert
-    fi
-else
-    echo "⏭️  Skipping Apache installation (--skip-apache flag)"
-fi
-
-# Create Apache configuration template (APP_BASE_PATH from .env or /)
-APACHE_TEMPLATE="$APP_DIR/apache-config-template.conf"
-if [ -f "$APP_DIR/.env" ]; then
-    set -a
-    # shellcheck disable=SC1091
-    source "$APP_DIR/.env" 2>/dev/null || true
-    set +a
-elif [ -f "$INSTALLER_DIR/.env" ]; then
-    set -a
-    # shellcheck disable=SC1091
-    source "$INSTALLER_DIR/.env" 2>/dev/null || true
-    set +a
-fi
-APP_BASE_PATH="${APP_BASE_PATH:-/supermon-ng}"
-export APP_DIR APP_BASE_PATH
-if [ -f "$APP_DIR/.env" ]; then
-    SUPERMON_SERVER_NAME="$(grep -E '^SUPERMON_SERVER_NAME=' "$APP_DIR/.env" 2>/dev/null | cut -d= -f2- | tr -d '"' || true)"
-    SSL_CERT_NAME="$(grep -E '^SSL_CERT_NAME=' "$APP_DIR/.env" 2>/dev/null | cut -d= -f2- | tr -d '"' || true)"
-    export SUPERMON_SERVER_NAME SSL_CERT_NAME
-fi
-echo "📝 Creating Apache configuration template (APP_BASE_PATH=${APP_BASE_PATH})..."
-chmod +x "$INSTALLER_DIR/scripts/generate-apache-template.sh"
-bash "$INSTALLER_DIR/scripts/generate-apache-template.sh" "$APACHE_TEMPLATE"
-echo "✅ Apache configuration template created"
-
-# Apply APP_BASE_PATH to index.html + .htaccess (universal release tarball)
-if [ -f "$INSTALLER_DIR/scripts/configure-app-base-path.sh" ]; then
-    chmod +x "$INSTALLER_DIR/scripts/configure-app-base-path.sh"
-    bash "$INSTALLER_DIR/scripts/configure-app-base-path.sh" "$APP_DIR"
-fi
-
-# Automatically install and configure Apache site (unless skipping)
-if [ "$SKIP_APACHE" = false ]; then
-    echo "🔧 Configuring Apache automatically..."
-    APACHE_SITE_FILE="/etc/apache2/sites-available/supermon-ng.conf"
-
-    # Enable required Apache modules (including mod_ssl for HTTPS)
-    echo "📦 Enabling required Apache modules..."
-    a2enmod -q proxy proxy_http proxy_wstunnel rewrite headers substitute ssl deflate expires 2>/dev/null || {
-        echo "⚠️  Warning: Some Apache modules may not be available"
-    }
-
-    # Install the Apache site configuration
-    if [ -f "$APACHE_SITE_FILE" ]; then
-        echo "⚠️  Apache site configuration already exists. Overwriting existing file..."
-    fi
-
-    echo "📝 Installing Apache site configuration..."
-    cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
-
-    # Disable the default sites so supermon-ng handles both :80 and :443
-    echo "🔗 Disabling default Apache sites..."
-    a2dissite -q 000-default 2>/dev/null || {
-        echo "⚠️  Warning: Failed to disable default site (may not exist)"
-    }
-    a2dissite -q default-ssl 2>/dev/null || {
-        echo "⚠️  Warning: Failed to disable default SSL site (may not exist)"
-    }
-    
-    # Enable the supermon-ng site
-    echo "🔗 Enabling supermon-ng Apache site..."
-    a2ensite -q supermon-ng 2>/dev/null || {
-        echo "⚠️  Warning: Failed to enable Apache site automatically"
-    }
-
-    # Test Apache configuration
-    echo "🧪 Testing Apache configuration..."
-    if apache2ctl configtest >/dev/null 2>&1; then
-        echo "✅ Apache configuration test passed"
-        
-        # Restart Apache
-        echo "🔄 Restarting Apache..."
-        systemctl restart apache2
-        
+    echo "🔧 Configuring Apache..."
+    if bash "$INSTALLER_DIR/scripts/configure-apache.sh" configure; then
         if systemctl is-active apache2 >/dev/null 2>&1; then
-            echo "✅ Apache restarted successfully"
             APACHE_AUTO_CONFIGURED=true
-        else
-            echo "❌ Apache failed to restart"
-            APACHE_AUTO_CONFIGURED=false
         fi
-    else
-        echo "❌ Apache configuration test failed"
-        echo "   Please check the configuration manually:"
-        echo "   sudo apache2ctl configtest"
-        APACHE_AUTO_CONFIGURED=false
     fi
 else
-    echo "⏭️  Skipping Apache configuration (--skip-apache flag)"
-    APACHE_AUTO_CONFIGURED=false
+    echo "⏭️  Skipping Apache site configuration (--skip-apache flag)"
+    bash "$INSTALLER_DIR/scripts/configure-apache.sh" template-only || true
 fi
 
 # Reload systemd and enable units (services are started at the end after everything is installed)

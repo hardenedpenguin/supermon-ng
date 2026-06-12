@@ -18,20 +18,24 @@ Rules-Requires-Root: no
 Package: supermon-ng
 Architecture: all
 Depends: ${misc:Depends},
+         debconf (>= 0.5) | debconf-2.0,
          php-cli,
          php-sqlite3,
          php-curl,
          php-mbstring,
          php-xml,
          python3,
-         adduser
-Recommends: apache2 | nginx,
-            asterisk
+         adduser,
+         apache2,
+         ssl-cert,
+         acl
+Recommends: asterisk,
+            certbot
 Description: AllStar Link node monitoring dashboard (Supermon-ng)
  Supermon-ng provides a web UI for monitoring and controlling AllStar Link
  nodes: AMI integration, WebSocket live status, favorites, DVSwitch, and
  node status/weather updates via systemd timers.
  .
  This package installs the application under /var/www/html/supermon-ng,
- systemd units, and sudoers rules. Configure Apache/nginx separately
- (see /var/www/html/supermon-ng/docs/DEBIAN.md).
+ configures Apache (modules, site, SSL), systemd units, and sudoers rules.
+ See /var/www/html/supermon-ng/docs/DEBIAN.md for debconf and upgrade options.

@@ -4,6 +4,13 @@ set -e
 case "$1" in
     purge)
         rm -f /etc/sudoers.d/011-supermon-ng
+        if command -v a2dissite >/dev/null 2>&1; then
+            a2dissite -q supermon-ng 2>/dev/null || true
+        fi
+        rm -f /etc/apache2/sites-available/supermon-ng.conf
+        if command -v apache2ctl >/dev/null 2>&1; then
+            apache2ctl configtest >/dev/null 2>&1 && systemctl reload apache2 2>/dev/null || true
+        fi
         ;;
 esac
 

@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+if [ -f /usr/share/debconf/confmodule ]; then
+    . /usr/share/debconf/confmodule
+
+    db_version 2.0
+
+    db_input medium supermon-ng/configure-apache || true
+    db_input medium supermon-ng/disable-default-sites || true
+
+    if [ -f /etc/apache2/sites-available/supermon-ng.conf ]; then
+        db_input high supermon-ng/refresh-apache-site || true
+    fi
+
+    db_go || true
+    db_stop || true
+fi
+
+exit 0
