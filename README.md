@@ -28,7 +28,7 @@ Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket
 
 ## Install
 
-**Debian package (experimental):** see [docs/DEBIAN.md](docs/DEBIAN.md). Build with `./scripts/build-deb.sh`, install with `dpkg -i`. Apache is configured automatically (debconf can opt out).
+**Debian package:** see [docs/DEBIAN.md](docs/DEBIAN.md). Build with `./scripts/build-deb.sh`, install with `dpkg -i`. Apache is configured automatically (debconf can opt out).
 
 **Tarball (recommended for ASL nodes):**
 

@@ -4,14 +4,25 @@ set -e
 APP_DIR=/var/www/html/supermon-ng
 WWW_USER=www-data
 WWW_GROUP=www-data
+NODE_STATUS_TIMER_DROPIN=/etc/systemd/system/supermon-ng-node-status.timer.d/interval.conf
 
-apply_app_base_path() {
-    if [ -f "$APP_DIR/.env" ] && [ -x "$APP_DIR/scripts/configure-app-base-path.sh" ]; then
+load_env() {
+    APP_BASE_PATH="${APP_BASE_PATH:-/supermon-ng}"
+    NODE_STATUS_INTERVAL_MINUTES="${NODE_STATUS_INTERVAL_MINUTES:-5}"
+
+    if [ -f "$APP_DIR/.env" ]; then
         # shellcheck disable=SC1091
         set -a
         . "$APP_DIR/.env" 2>/dev/null || true
         set +a
         APP_BASE_PATH="${APP_BASE_PATH:-/supermon-ng}"
+        NODE_STATUS_INTERVAL_MINUTES="${NODE_STATUS_INTERVAL_MINUTES:-5}"
+    fi
+}
+
+apply_app_base_path() {
+    load_env
+    if [ -f "$APP_DIR/.env" ] && [ -x "$APP_DIR/scripts/configure-app-base-path.sh" ]; then
         export APP_DIR APP_BASE_PATH
         "$APP_DIR/scripts/configure-app-base-path.sh" "$APP_DIR" || true
     fi
@@ -23,6 +34,27 @@ ensure_runtime_dirs() {
     chmod 755 "$APP_DIR/logs" "$APP_DIR/cache" "$APP_DIR/database" 2>/dev/null || true
 }
 
+ensure_app_permissions() {
+    chown -R "${WWW_USER}:${WWW_GROUP}" "$APP_DIR" 2>/dev/null || true
+    chmod -R 755 "$APP_DIR" 2>/dev/null || true
+    chmod -R 755 "$APP_DIR/logs" "$APP_DIR/cache" 2>/dev/null || true
+
+    find "$APP_DIR/user_files" -type d -exec chmod 755 {} \; 2>/dev/null || true
+    find "$APP_DIR/user_files" -type f -exec chmod 644 {} \; 2>/dev/null || true
+    chmod 644 "$APP_DIR/user_files/.htaccess" 2>/dev/null || true
+    chmod 644 "$APP_DIR/user_files/.htpasswd" 2>/dev/null || true
+
+    for script in ast_node_status_update.py din ssinfo dvswitch-bridge-restart.sh; do
+        [ -f "$APP_DIR/user_files/sbin/$script" ] && chmod 755 "$APP_DIR/user_files/sbin/$script"
+    done
+    [ -f "$APP_DIR/user_files/sbin/node_info.ini" ] && chmod 644 "$APP_DIR/user_files/sbin/node_info.ini"
+
+    if [ -f "$APP_DIR/.env" ]; then
+        chown root:${WWW_GROUP} "$APP_DIR/.env" 2>/dev/null || true
+        chmod 640 "$APP_DIR/.env" 2>/dev/null || true
+    fi
+}
+
 validate_sudoers() {
     if [ -f /etc/sudoers.d/011-supermon-ng ]; then
         visudo -cf /etc/sudoers.d/011-supermon-ng >/dev/null 2>&1 || {
@@ -30,6 +62,40 @@ validate_sudoers() {
             exit 1
         }
     fi
+}
+
+apply_node_status_timer_interval() {
+    load_env
+    interval="${NODE_STATUS_INTERVAL_MINUTES:-5}"
+
+    mkdir -p "$(dirname "$NODE_STATUS_TIMER_DROPIN")"
+    cat >"$NODE_STATUS_TIMER_DROPIN" <<EOF
+# Managed by supermon-ng postinst from NODE_STATUS_INTERVAL_MINUTES in .env
+[Unit]
+Description=Run Supermon-NG Node Status Update every ${interval} minutes
+
+[Timer]
+OnUnitActiveSec=${interval}min
+EOF
+    chmod 644 "$NODE_STATUS_TIMER_DROPIN"
+}
+
+generate_local_allmon_if_fresh() {
+    previous_version="$1"
+
+    if [ -n "$previous_version" ]; then
+        return 0
+    fi
+
+    if [ ! -f "$APP_DIR/scripts/generate_local_allmon.php" ]; then
+        return 0
+    fi
+
+    echo "supermon-ng: generating user_files/allmon.ini from Asterisk config..."
+    php "$APP_DIR/scripts/generate_local_allmon.php" --force || {
+        echo "supermon-ng: allmon.ini generation failed; edit user_files/allmon.ini manually or run:" >&2
+        echo "  sudo php $APP_DIR/scripts/generate_local_allmon.php --force" >&2
+    }
 }
 
 configure_apache_from_debconf() {
@@ -91,7 +157,9 @@ case "$1" in
 
         ensure_runtime_dirs
         apply_app_base_path
+        generate_local_allmon_if_fresh "$2"
         validate_sudoers
+        apply_node_status_timer_interval
         configure_apache_from_debconf
         enable_systemd_units
 
@@ -102,7 +170,7 @@ case "$1" in
             fi
         fi
 
-        chown -R "${WWW_USER}:${WWW_GROUP}" "$APP_DIR/logs" 2>/dev/null || true
+        ensure_app_permissions
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

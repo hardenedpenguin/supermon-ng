@@ -4,6 +4,7 @@ set -e
 case "$1" in
     purge)
         rm -f /etc/sudoers.d/011-supermon-ng
+        rm -rf /etc/systemd/system/supermon-ng-node-status.timer.d
         if command -v a2dissite >/dev/null 2>&1; then
             a2dissite -q supermon-ng 2>/dev/null || true
         fi

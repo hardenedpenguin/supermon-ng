@@ -3,6 +3,7 @@
 /var/www/html/supermon-ng/user_files/authusers.inc
 /var/www/html/supermon-ng/user_files/authini.inc
 /var/www/html/supermon-ng/user_files/favorites.ini
+/var/www/html/supermon-ng/user_files/favini.inc
 /var/www/html/supermon-ng/user_files/controlpanel.ini
 /var/www/html/supermon-ng/user_files/privatenodes.txt
 /var/www/html/supermon-ng/user_files/sbin/node_info.ini

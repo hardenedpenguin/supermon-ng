@@ -41,3 +41,21 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: npm run build
+
+  build-deb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Debian build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debhelper composer npm nodejs \
+            php-cli php-xml php-mbstring php-curl php-sqlite3
+
+      - name: Build Debian package
+        run: ./scripts/build-deb.sh
+
+      - name: Verify package artifact
+        run: test -f ../supermon-ng_*_all.deb

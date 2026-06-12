@@ -18,10 +18,10 @@ echo "build-deb: building supermon-ng ${FULL_VERSION} ..."
 
 export NODE_STATUS_INTERVAL_MINUTES="${NODE_STATUS_INTERVAL_MINUTES:-5}"
 
-# Reuse frontend/dist when present (full rebuild: DEB_SKIP_FRONTEND_BUILD=0 ./scripts/build-deb.sh)
-if [ -f "$ROOT/frontend/dist/index.html" ] && [ "${DEB_SKIP_FRONTEND_BUILD:-1}" = "1" ]; then
+# Rebuild frontend by default; reuse existing dist only when DEB_SKIP_FRONTEND_BUILD=1
+if [ -f "$ROOT/frontend/dist/index.html" ] && [ "${DEB_SKIP_FRONTEND_BUILD:-0}" = "1" ]; then
     export DEB_SKIP_FRONTEND_BUILD=1
-    echo "build-deb: using existing frontend/dist (set DEB_SKIP_FRONTEND_BUILD=0 to rebuild)"
+    echo "build-deb: using existing frontend/dist (DEB_SKIP_FRONTEND_BUILD=1)"
 fi
 
 # Sync changelog version if needed (best-effort)

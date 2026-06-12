@@ -1,7 +1,7 @@
 Source: supermon-ng
 Section: web
 Priority: optional
-Maintainer: Supermon-ng Team <supermon-ng@example.com>
+Maintainer: Jory A. Pratt <geekypenguin@gmail.com>
 Build-Depends: debhelper-compat (= 13),
                composer,
                npm,

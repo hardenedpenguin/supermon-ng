@@ -42,6 +42,7 @@ chmod 755 "$STAGE/user_files/sbin" 2>/dev/null || true
 for script in ast_node_status_update.py din ssinfo dvswitch-bridge-restart.sh; do
     [ -f "$STAGE/user_files/sbin/$script" ] && chmod 755 "$STAGE/user_files/sbin/$script" || true
 done
+[ -f "$STAGE/user_files/sbin/node_info.ini" ] && chmod 644 "$STAGE/user_files/sbin/node_info.ini" || true
 
 # public/ (non-asset static files; assets come from frontend dist)
 mkdir -p "$STAGE/public"

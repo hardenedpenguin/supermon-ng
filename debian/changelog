@@ -1,3 +1,13 @@
+supermon-ng (4.2.1-3) unstable; urgency=medium
+
+  * postinst: generate allmon.ini on fresh install; apply NODE_STATUS_INTERVAL
+    from .env via systemd drop-in; set app ownership and user_files permissions.
+  * conffiles: protect user_files/favini.inc on upgrade.
+  * build-deb: rebuild frontend by default (DEB_SKIP_FRONTEND_BUILD=1 to skip).
+  * user_files/sbin/node_info.ini ships with mode 644.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Mon, 26 May 2026 12:00:00 +0000
+
 supermon-ng (4.2.1-2) unstable; urgency=medium
 
   * Full Apache support: modules, site file, default site disable, reload.
@@ -5,7 +15,7 @@ supermon-ng (4.2.1-2) unstable; urgency=medium
   * debconf prompts for Apache setup, default sites, and site refresh on upgrade.
   * postinst enables/starts systemd units; prerm/postrm manage Apache site lifecycle.
 
- -- Supermon-ng Team <supermon-ng@example.com>  Tue, 19 May 2026 12:00:00 +0000
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Tue, 19 May 2026 12:00:00 +0000
 
 supermon-ng (4.2.1-1) unstable; urgency=medium
 
@@ -13,4 +23,4 @@ supermon-ng (4.2.1-1) unstable; urgency=medium
   * Ships pre-built frontend, Composer vendor, systemd units, and sudoers.
   * Apache configuration is not modified automatically; use docs/DEBIAN.md.
 
- -- Supermon-ng Team <supermon-ng@example.com>  Thu, 12 Jun 2026 12:00:00 +0000
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Mon, 12 May 2026 12:00:00 +0000
