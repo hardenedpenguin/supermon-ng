@@ -1,10 +1,10 @@
-# Build release tarball and attach to GitHub Release when a version tag is pushed.
+# Build release tarball and .deb, attach to GitHub Release when a version tag is pushed.
 #
 # Before tagging:
 #   1. Bump version and VERSION_DATE in includes/common.inc (TITLE_LOGGED, TITLE_NOT_LOGGED).
-#   2. Commit, then: git tag -a V4.2.1 -m "Release V4.2.1 - ..." && git push && git push origin V4.2.1
+#   2. Commit, then: git tag -a V4.2.2 -m "Release V4.2.2 - ..." && git push && git push origin V4.2.2
 # This workflow: verifies common.inc matches tag, updates README.md download URLs to this release,
-# runs create-release.sh (tarball includes updated README), uploads assets.
+# runs create-release.sh (tarball includes updated README), builds the Debian package, uploads assets.
 
 name: Release
 
@@ -56,6 +56,15 @@ jobs:
       - name: Create release tarball
         run: ./scripts/create-release.sh
 
+      - name: Install Debian build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debhelper composer npm nodejs \
+            php-cli php-xml php-mbstring php-curl php-sqlite3
+
+      - name: Build Debian package
+        run: ./scripts/build-deb.sh
+
       - name: Copy artifacts to workspace
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
@@ -63,6 +72,9 @@ jobs:
           cp "/tmp/supermon-ng-${TAG}.tar.xz.sha256" . 2>/dev/null || true
           cp "/tmp/supermon-ng-${TAG}.tar.xz.sha512" . 2>/dev/null || true
           cp "/tmp/supermon-ng-${TAG}.tar.xz.md5" . 2>/dev/null || true
+          DEB="$(ls -1 ../*_all.deb | head -1)"
+          cp "$DEB" .
+          sha256sum "$(basename "$DEB")" > "$(basename "$DEB").sha256"
           ls -la supermon-ng-*
 
       - name: Create Release and upload assets
@@ -77,5 +89,7 @@ jobs:
             supermon-ng-${{ github.ref_name }}.tar.xz.sha256
             supermon-ng-${{ github.ref_name }}.tar.xz.sha512
             supermon-ng-${{ github.ref_name }}.tar.xz.md5
+            supermon-ng_*_all.deb
+            supermon-ng_*_all.deb.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

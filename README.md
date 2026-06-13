@@ -28,7 +28,7 @@ Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket
 
 ## Install
 
-**Debian package:** see [docs/DEBIAN.md](docs/DEBIAN.md). Build with `./scripts/build-deb.sh`, install with `dpkg -i`. Apache is configured automatically (debconf can opt out).
+**Debian package:** download `supermon-ng_*_all.deb` from [Releases](https://github.com/hardenedpenguin/supermon-ng/releases) (built automatically on each version tag), or build locally — see [docs/DEBIAN.md](docs/DEBIAN.md). Install with `sudo dpkg -i supermon-ng_*_all.deb`. Apache is configured automatically (debconf can opt out).
 
 **Tarball (recommended for ASL nodes):**
 

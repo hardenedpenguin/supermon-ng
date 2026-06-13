@@ -19,7 +19,7 @@ From the repository root:
 ./scripts/build-deb.sh
 ```
 
-Output: `../supermon-ng_<version>_all.deb` (one directory above the repo).
+Output: `../supermon-ng_<version>_all.deb` (one directory above the repo). Tagged releases also publish the `.deb` on [GitHub Releases](https://github.com/hardenedpenguin/supermon-ng/releases) (built by CI when a `V*` tag is pushed).
 
 Optional:
 
