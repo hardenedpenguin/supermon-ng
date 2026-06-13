@@ -1,3 +1,11 @@
+supermon-ng (4.2.2-3) unstable; urgency=medium
+
+  * Fix postinst failure during apt install: read debconf via
+    debconf-communicate instead of sourcing the frontend in postinst.
+  * Guard postinst arguments and stop aborting on spurious empty calls.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Thu, 12 Jun 2026 22:55:00 +0000
+
 supermon-ng (4.2.2-2) unstable; urgency=medium
 
   * Drop certbot from Recommends; TLS cert detection still uses existing

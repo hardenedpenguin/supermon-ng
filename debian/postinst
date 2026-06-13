@@ -1,5 +1,6 @@
 #!/bin/sh
-set -e
+POSTINST_MODE="${1-}"
+PREVIOUS_VERSION="${2-}"
 
 APP_DIR=/var/www/html/supermon-ng
 WWW_USER=www-data
@@ -18,6 +19,23 @@ load_env() {
         APP_BASE_PATH="${APP_BASE_PATH:-/supermon-ng}"
         NODE_STATUS_INTERVAL_MINUTES="${NODE_STATUS_INTERVAL_MINUTES:-5}"
     fi
+}
+
+read_debconf_bool() {
+    key="$1"
+    default="$2"
+
+    if ! command -v debconf-communicate >/dev/null 2>&1; then
+        echo "$default"
+        return 0
+    fi
+
+    ans=$(echo "GET $key" | debconf-communicate supermon-ng 2>/dev/null | head -1)
+    case "$ans" in
+        "0 true") echo true ;;
+        "0 false") echo false ;;
+        *) echo "$default" ;;
+    esac
 }
 
 apply_app_base_path() {
@@ -81,9 +99,7 @@ EOF
 }
 
 generate_local_allmon_if_fresh() {
-    previous_version="$1"
-
-    if [ -n "$previous_version" ]; then
+    if [ -n "$PREVIOUS_VERSION" ]; then
         return 0
     fi
 
@@ -99,30 +115,22 @@ generate_local_allmon_if_fresh() {
 }
 
 configure_apache_from_debconf() {
+    configure_apache=$(read_debconf_bool supermon-ng/configure-apache true)
+    disable_default_sites=$(read_debconf_bool supermon-ng/disable-default-sites true)
+    refresh_apache_site=$(read_debconf_bool supermon-ng/refresh-apache-site false)
+
     SKIP_APACHE=false
     DISABLE_DEFAULT_SITES=true
     OVERWRITE_SITE=false
 
-    if [ -f /usr/share/debconf/confmodule ]; then
-        # shellcheck disable=SC1091
-        . /usr/share/debconf/confmodule
-
-        db_get supermon-ng/configure-apache || true
-        if [ "$RET" = "false" ]; then
-            SKIP_APACHE=true
-        fi
-
-        db_get supermon-ng/disable-default-sites || true
-        if [ "$RET" = "false" ]; then
-            DISABLE_DEFAULT_SITES=false
-        fi
-
-        db_get supermon-ng/refresh-apache-site || true
-        if [ "$RET" = "true" ]; then
-            OVERWRITE_SITE=true
-        fi
-
-        db_stop || true
+    if [ "$configure_apache" = "false" ]; then
+        SKIP_APACHE=true
+    fi
+    if [ "$disable_default_sites" = "false" ]; then
+        DISABLE_DEFAULT_SITES=false
+    fi
+    if [ "$refresh_apache_site" = "true" ]; then
+        OVERWRITE_SITE=true
     fi
 
     if [ ! -x "$APP_DIR/scripts/configure-apache.sh" ]; then
@@ -147,7 +155,7 @@ enable_systemd_units() {
     systemctl start supermon-ng-database-update.timer 2>/dev/null || true
 }
 
-case "$1" in
+case "$POSTINST_MODE" in
     configure)
         if [ ! -f "$APP_DIR/.env" ] && [ -f "$APP_DIR/.env.example" ]; then
             cp "$APP_DIR/.env.example" "$APP_DIR/.env"
@@ -157,13 +165,12 @@ case "$1" in
 
         ensure_runtime_dirs
         apply_app_base_path
-        generate_local_allmon_if_fresh "$2"
+        generate_local_allmon_if_fresh
         validate_sudoers
         apply_node_status_timer_interval
         configure_apache_from_debconf
         enable_systemd_units
 
-        # Composer fallback if vendor was not bundled at build time
         if [ ! -d "$APP_DIR/vendor" ] && [ -x "$APP_DIR/scripts/composer-install-production.sh" ]; then
             if command -v composer >/dev/null 2>&1; then
                 "$APP_DIR/scripts/composer-install-production.sh" "$APP_DIR" || true
@@ -173,12 +180,15 @@ case "$1" in
         ensure_app_permissions
         ;;
 
-    abort-upgrade|abort-remove|abort-deconfigure)
+    abort-upgrade|abort-remove|abort-deconfigure|triggered)
+        ;;
+
+    "")
+        echo "supermon-ng: postinst called with empty argument; skipping custom setup" >&2
         ;;
 
     *)
-        echo "postinst called with unknown argument \`$1'" >&2
-        exit 1
+        echo "supermon-ng: postinst skipping custom setup for argument \`$POSTINST_MODE'" >&2
         ;;
 esac
 
