@@ -7,7 +7,7 @@
 
 Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket real-time updates with AMI polling fallback.
 
-**Current release:** [V4.2.1](https://github.com/hardenedpenguin/supermon-ng/releases/tag/V4.2.1) (June 07, 2026)
+**Current release:** [V4.2.2](https://github.com/hardenedpenguin/supermon-ng/releases/tag/V4.2.2) (June 12, 2026)
 
 ## Features
 
@@ -33,8 +33,8 @@ Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket
 **Tarball (recommended for ASL nodes):**
 
 ```bash
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.2.1/supermon-ng-V4.2.1.tar.xz
-tar -xJf supermon-ng-V4.2.1.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.2.2/supermon-ng-V4.2.2.tar.xz
+tar -xJf supermon-ng-V4.2.2.tar.xz
 cd supermon-ng
 sudo ./install.sh
 ```
@@ -58,8 +58,8 @@ For a root vhost, also set `SUPERMON_SERVER_NAME` and `SSL_CERT_NAME` in `.env`,
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.2.1/supermon-ng-V4.2.1.tar.xz
-tar -xJf supermon-ng-V4.2.1.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.2.2/supermon-ng-V4.2.2.tar.xz
+tar -xJf supermon-ng-V4.2.2.tar.xz
 cd supermon-ng
 sudo ./scripts/update.sh
 ```

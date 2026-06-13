@@ -1,3 +1,10 @@
+supermon-ng (4.2.2-1) unstable; urgency=medium
+
+  * Release V4.2.2: dashboard performance optimizations, Debian .deb packaging,
+    shared Apache configure script, DVSwitch bridge restart, and setup wizard tweaks.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Thu, 12 Jun 2026 12:00:00 +0000
+
 supermon-ng (4.2.1-3) unstable; urgency=medium
 
   * postinst: generate allmon.ini on fresh install; apply NODE_STATUS_INTERVAL
