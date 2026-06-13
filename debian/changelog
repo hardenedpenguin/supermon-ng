@@ -1,3 +1,10 @@
+supermon-ng (4.2.2-2) unstable; urgency=medium
+
+  * Drop certbot from Recommends; TLS cert detection still uses existing
+    Let's Encrypt certs when present, otherwise Debian snakeoil.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Thu, 12 Jun 2026 18:00:00 +0000
+
 supermon-ng (4.2.2-1) unstable; urgency=medium
 
   * Release V4.2.2: dashboard performance optimizations, Debian .deb packaging,

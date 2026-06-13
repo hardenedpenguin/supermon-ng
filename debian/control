@@ -29,8 +29,7 @@ Depends: ${misc:Depends},
          apache2,
          ssl-cert,
          acl
-Recommends: asterisk,
-            certbot
+Recommends: asterisk
 Description: AllStar Link node monitoring dashboard (Supermon-ng)
  Supermon-ng provides a web UI for monitoring and controlling AllStar Link
  nodes: AMI integration, WebSocket live status, favorites, DVSwitch, and

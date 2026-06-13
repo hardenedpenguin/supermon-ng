@@ -96,6 +96,8 @@ On a **fresh install**, `postinst` also:
 
 Required modules are enabled automatically: `proxy`, `proxy_http`, `proxy_wstunnel`, `rewrite`, `headers`, `substitute`, `ssl`, `deflate`, `expires`.
 
+If you use Let's Encrypt, install `certbot` separately (it is not a package dependency). Apache setup auto-detects certs under `/etc/letsencrypt/live/` when present; otherwise the generated vhost uses the Debian `ssl-cert` snakeoil certificate until you add real TLS.
+
 Log ACLs for `www-data` are applied when the `acl` package is present (same as `install.sh`).
 
 ## Services
