@@ -67,7 +67,7 @@
               </label>
               <small class="form-text">
                 When enabled, weather is fetched from gpsd coordinates instead of a postal or airport code.
-                Set a display label below; optional <code>gps_fallback_location</code> in <code>/etc/asterisk/local/weather.ini</code> if the receiver has no fix.
+                Place name is resolved from GPS automatically; optional <code>gps_fallback_location</code> in <code>/etc/asterisk/local/weather.ini</code> if the receiver has no fix.
               </small>
             </div>
 
@@ -83,7 +83,7 @@
               <small class="form-text">Postal code, ICAO/IATA airport code, or <code>lat,lon</code></small>
             </div>
 
-            <div class="form-group">
+            <div v-if="!config.wx_use_gps" class="form-group">
               <label for="wx_location">Weather Location:</label>
               <input 
                 type="text" 
@@ -92,6 +92,7 @@
                 placeholder="Alvin, Texas"
                 class="form-control"
               >
+              <small class="form-text">Display label shown with weather on the dashboard</small>
             </div>
 
             <div class="form-group">
@@ -149,6 +150,20 @@
               </div>
             </div>
 
+            <div v-if="config.alerts_enabled" class="alert-severity-legend">
+              <p class="legend-title">Active alert colors (dashboard sysinfo)</p>
+              <ul class="legend-list">
+                <li v-for="item in alertSeverityLegend" :key="item.label">
+                  <span class="legend-swatch" :style="{ color: item.color }" aria-hidden="true">■</span>
+                  <span class="legend-label">
+                    <strong :style="{ color: item.color }">{{ item.label }}</strong>
+                    <span class="legend-desc">— {{ item.description }}</span>
+                  </span>
+                </li>
+              </ul>
+              <small class="form-text">Only active alerts are shown; severity colors match SkywarnPlus-NG / CANWarn-NG NWS-style levels.</small>
+            </div>
+
             <div class="form-actions">
               <button type="submit" :disabled="saving" class="btn btn-success">
                 {{ saving ? 'Saving...' : 'Save Configuration' }}
@@ -203,6 +218,15 @@ export default {
     
     const nodeNumbers = ref('')
     const serviceStatus = ref(null)
+
+    // Matches user_files/sbin/ast_node_status_update.py severity → color mapping
+    const alertSeverityLegend = [
+      { label: 'Extreme', color: '#FF0000', description: 'Highest urgency; immediate life-threatening threat' },
+      { label: 'Severe', color: '#FF6600', description: 'Significant threat; take protective action soon' },
+      { label: 'Moderate', color: '#FFCC00', description: 'Possible threat; stay aware and prepared' },
+      { label: 'Minor', color: '#FFFF00', description: 'Minimal threat; nuisance or low-level hazard' },
+      { label: 'Unknown', color: '#FF0000', description: 'Severity not reported; shown as red' }
+    ]
 
     const closeModal = () => {
       emit('close')
@@ -309,6 +333,7 @@ export default {
       config,
       nodeNumbers,
       serviceStatus,
+      alertSeverityLegend,
       closeModal,
       loadConfig,
       saveConfig,
@@ -492,6 +517,50 @@ export default {
   margin-left: 20px;
   padding-left: 15px;
   border-left: 2px solid #444;
+}
+
+.alert-severity-legend {
+  margin: 10px 0 20px;
+  padding: 12px 14px;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 6px;
+}
+
+.legend-title {
+  margin: 0 0 10px;
+  font-weight: bold;
+  color: #fff;
+  font-size: 14px;
+}
+
+.legend-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.legend-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 6px 0;
+  font-size: 13px;
+}
+
+.legend-swatch {
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.legend-label {
+  color: #ddd;
+}
+
+.legend-desc {
+  color: #aaa;
+  font-weight: normal;
 }
 
 .form-actions {

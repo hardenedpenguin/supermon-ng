@@ -376,15 +376,16 @@ def _log_skywarn_api_error(msg, status_code=None, body_snippet=None):
         pass
 
 
-def _format_alert_html(enabled_text, has_alerts, alerts, no_alerts_text="<span style='color: #FF0000;'>No Alerts</span>", max_len=None):
-    """Format alert data as HTML. Add full alerts only; stop before exceeding max_len (no mid-word truncation).
-    When max_len is set, use compact prefix so we can fit two full alerts (e.g. Brazoria)."""
+def _empty_alert():
+    """Quoted empty ALERT for Asterisk (keeps sysinfo clean when no active alerts)."""
+    return '""'
+
+
+def _format_alert_html(has_alerts, alerts, max_len=None):
+    """Format active alerts as HTML only. No provider header or status lines."""
     if not has_alerts or not alerts:
-        return f'"{enabled_text}<br>{no_alerts_text}"'
-    compact = max_len is not None
-    # Keep provider branding consistent regardless of compact mode.
-    prefix = f"{enabled_text}<br>"
-    total = prefix
+        return _empty_alert()
+    total = ""
     first = True
     for alert in alerts[:5]:
         if not isinstance(alert, dict):
@@ -407,9 +408,8 @@ def _format_alert_html(enabled_text, has_alerts, alerts, no_alerts_text="<span s
             break
         total = candidate
         first = False
-    if total == prefix:
-        head = prefix.rstrip("<br>") if compact else enabled_text
-        return f'"{head}<br>{no_alerts_text}"'
+    if not total:
+        return _empty_alert()
     return f'"{total}"'
 
 
@@ -422,7 +422,7 @@ def get_alerts_from_api(api_url, master_enable, nodes=None, product_name="Skywar
 
     API errors (timeout, connection refused, HTTP errors) are logged to
     /tmp/skywarn_api_errors.log and to stderr (node-status-update.log when run
-    via systemd). Check those when the dashboard shows "API Offline" or no alerts.
+    via systemd). The dashboard ALERT field stays empty unless there are active alerts.
 
     Args:
         api_url: Base URL for SkywarnPlus-NG API (e.g. http://10.0.0.5:8100).
@@ -436,23 +436,12 @@ def get_alerts_from_api(api_url, master_enable, nodes=None, product_name="Skywar
         Fallback key "" used for nodes not in alerts_by_node when using global fallback.
     """
     product = (product_name or "SkywarnPlus-NG").strip()
-    if product.lower() in ("canwarn-ng", "canwarn_ng", "canwarn"):
-        github_link = '<a href=\'https://github.com/hardenedpenguin/CANWarn\' style=\'color: inherit; text-decoration: none;\'>CANWarn-NG</a>'
-        enabled_label = "CANWarn-NG Enabled"
-    else:
-        github_link = '<a href=\'https://github.com/hardenedpenguin/SkywarnPlus-NG\' style=\'color: inherit; text-decoration: none;\'>SkywarnPlus-NG</a>'
-        enabled_label = "SkywarnPlus-NG Enabled"
-
-    enabled_text = f'<span style=\'color: SpringGreen;\'><b><u>{github_link} Enabled</u></b></span>'
-    disabled_text = f'<span style=\'color: darkorange;\'><b><u>{github_link} Disabled</u></b></span>'
-    no_alerts_text = '<span style=\'color: #FF0000;\'>No Alerts</span>'
-    error_text = '<span style=\'color: #FF0000;\'>API Error</span>'
 
     node_list = [n.strip() for n in (nodes or []) if n and str(n).strip()]
-    fallback = f'"{disabled_text}"'
     if master_enable.lower() != "yes":
-        _debug_log("MASTER_ENABLE != yes | returning disabled for all")
-        return {n: fallback for n in node_list} if node_list else {"": fallback}
+        _debug_log("MASTER_ENABLE != yes | ALERT cleared for all nodes")
+        empty = _empty_alert()
+        return {n: empty for n in node_list} if node_list else {"": empty}
 
     api_url = str(api_url).strip().rstrip('/')
     # Use 127.0.0.1 instead of localhost to avoid IPv6 connection refused when
@@ -491,9 +480,9 @@ def get_alerts_from_api(api_url, master_enable, nodes=None, product_name="Skywar
             if err_detail:
                 msg += f" | {err_detail}"
             _log_skywarn_api_error(msg, status_code=response.status_code, body_snippet=body_snippet or err_detail)
-            _debug_log(f"API HTTP error {response.status_code} request={status_url} | returning API Error for all")
-            one = f'"{enabled_text}<br>{error_text}"'
-            return {n: one for n in node_list} if node_list else {"": one}
+            _debug_log(f"API HTTP error {response.status_code} request={status_url} | ALERT cleared for all")
+            empty = _empty_alert()
+            return {n: empty for n in node_list} if node_list else {"": empty}
 
         try:
             data = response.json()
@@ -502,15 +491,15 @@ def get_alerts_from_api(api_url, master_enable, nodes=None, product_name="Skywar
                 f"SkywarnPlus-NG API JSON decode error: {e}",
                 body_snippet=response.text[:500] if getattr(response, 'text', None) else None
             )
-            _debug_log("API JSON decode error | returning API Error for all")
-            one = f'"{enabled_text}<br>{error_text}"'
-            return {n: one for n in node_list} if node_list else {"": one}
+            _debug_log("API JSON decode error | ALERT cleared for all")
+            empty = _empty_alert()
+            return {n: empty for n in node_list} if node_list else {"": empty}
 
         if not isinstance(data, dict):
             _log_skywarn_api_error(f"{product} API returned non-dict response", body_snippet=str(type(data)))
-            _debug_log("API non-dict response | returning API Error for all")
-            one = f'"{enabled_text}<br>{error_text}"'
-            return {n: one for n in node_list} if node_list else {"": one}
+            _debug_log("API non-dict response | ALERT cleared for all")
+            empty = _empty_alert()
+            return {n: empty for n in node_list} if node_list else {"": empty}
 
         alerts_by_node = data.get("alerts_by_node") or {}
         has_alerts = data.get("has_alerts", False)
@@ -538,13 +527,13 @@ def get_alerts_from_api(api_url, master_enable, nodes=None, product_name="Skywar
                     alist = per.get("alerts", [])
                     if not isinstance(alist, list):
                         alist = []
-                    result[node] = _format_alert_html(enabled_text, has, alist, no_alerts_text, max_len=ALERT_MAX_LEN)
+                    result[node] = _format_alert_html(has, alist, max_len=ALERT_MAX_LEN)
                     _debug_log(f"node={node} source=per_node has_alerts={has} alerts={len(alist)} snippet={_snippet(result[node])}")
                 else:
-                    result[node] = _format_alert_html(enabled_text, has_alerts, alerts, no_alerts_text, max_len=ALERT_MAX_LEN)
+                    result[node] = _format_alert_html(has_alerts, alerts, max_len=ALERT_MAX_LEN)
                     _debug_log(f"node={node} source=global_fallback has_alerts={has_alerts} snippet={_snippet(result[node])}")
         else:
-            single = _format_alert_html(enabled_text, has_alerts, alerts, no_alerts_text, max_len=ALERT_MAX_LEN)
+            single = _format_alert_html(has_alerts, alerts, max_len=ALERT_MAX_LEN)
             _debug_log(f"source=global single snippet={_snippet(single)}")
             for node in node_list:
                 result[node] = single
@@ -559,27 +548,27 @@ def get_alerts_from_api(api_url, master_enable, nodes=None, product_name="Skywar
             f"{product} API timeout: {status_url}",
             body_snippet=traceback.format_exc()
         )
-        _debug_log(f"API TIMEOUT request={status_url} | returning API Timeout for all nodes")
-        one = f'"{enabled_text}<br><span style=\'color: #FF6600;\'>API Timeout</span>"'
-        return {n: one for n in node_list} if node_list else {"": one}
+        _debug_log(f"API TIMEOUT request={status_url} | ALERT cleared for all nodes")
+        empty = _empty_alert()
+        return {n: empty for n in node_list} if node_list else {"": empty}
     except requests.exceptions.ConnectionError as e:
         import traceback
         _log_skywarn_api_error(
             f"{product} API offline / connection refused: {status_url} | {e!r}",
             body_snippet=traceback.format_exc()
         )
-        _debug_log(f"API CONNECTION ERROR request={status_url} | {e!r} | returning API Offline for all nodes")
-        one = f'"{enabled_text}<br><span style=\'color: #FF6600;\'>API Offline</span>"'
-        return {n: one for n in node_list} if node_list else {"": one}
+        _debug_log(f"API CONNECTION ERROR request={status_url} | {e!r} | ALERT cleared for all nodes")
+        empty = _empty_alert()
+        return {n: empty for n in node_list} if node_list else {"": empty}
     except Exception as e:
         import traceback
         _log_skywarn_api_error(
             f"{product} unexpected error: {e!r}",
             body_snippet=traceback.format_exc()
         )
-        _debug_log(f"API ERROR request={status_url} | {e!r} | returning API Error for all nodes")
-        one = f'"{enabled_text}<br>{error_text}"'
-        return {n: one for n in node_list} if node_list else {"": one}
+        _debug_log(f"API ERROR request={status_url} | {e!r} | ALERT cleared for all nodes")
+        empty = _empty_alert()
+        return {n: empty for n in node_list} if node_list else {"": empty}
 
 def _rpt_conf_exists():
     return os.path.isfile("/etc/asterisk/rpt.conf")
