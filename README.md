@@ -89,6 +89,28 @@ sudo /var/www/html/supermon-ng/scripts/version-check.sh
 
 **Permissions** in `authusers.inc`: `$CONNECTUSER`, `$MONUSER`, `$FAVUSER`, `$DVSWITCHUSER`, `$CFGEDUSER`, `$SYSINFUSER`, `$CTRLUSER`, etc. Replace default `anarchy` with your username.
 
+**Announcements (V4.3.0+)** — add your username to these arrays in `user_files/authusers.inc`:
+
+| Array | Grants |
+|-------|--------|
+| `$ANNOUNCEUSER` | Announcements button; upload, TTS, local play, delete, install voices |
+| `$ANNOUNCEGLOBALUSER` | Global playback (all connected nodes) |
+| `$ANNOUNCESCHEDUSER` | Scheduled tab (cron jobs) |
+
+```php
+// Local announcements only
+$ANNOUNCEUSER=array("youruser");
+$ANNOUNCEGLOBALUSER=array();
+$ANNOUNCESCHEDUSER=array();
+
+// Or full access for one operator
+$ANNOUNCEUSER=array("youruser");
+$ANNOUNCEGLOBALUSER=array("youruser");
+$ANNOUNCESCHEDUSER=array("youruser");
+```
+
+Also install recommended packages: `sudo apt-get install sox libsox-fmt-mp3 asl3-tts`. Details: [docs/DEBIAN.md](docs/DEBIAN.md#announcements-optional).
+
 **Optional:** `header-background.jpg` in `user_files/`; GPS weather via `saytime_weather` / `weather.rb --gps` in node status settings.
 
 ## Services & logs

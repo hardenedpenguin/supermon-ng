@@ -182,14 +182,43 @@ The **Announcements** button requires:
    sudo apt-get install sox libsox-fmt-mp3 asl3-tts
    ```
 
-2. Users granted in `user_files/authusers.inc`:
-   - `ANNOUNCEUSER` — upload, TTS, play, delete
-   - `ANNOUNCEGLOBALUSER` — global playback and schedules
-   - `ANNOUNCESCHEDUSER` — cron scheduling tab
+2. **Permissions in `user_files/authusers.inc`** — add your login username (same as `.htpasswd` / `manage_users.php`) to each array you need:
+
+   | Array | What it grants |
+   |-------|----------------|
+   | `$ANNOUNCEUSER` | Dashboard button; upload MP3/WAV, TTS, **local** play, delete, install Piper voices |
+   | `$ANNOUNCEGLOBALUSER` | **Global** playback (all connected nodes) and global schedules |
+   | `$ANNOUNCESCHEDUSER` | **Scheduled** tab — cron-based automatic playback |
+
+   **Example — local announcements only** (no global play, no schedules):
+
+   ```php
+   $ANNOUNCEUSER=array("youruser");
+   $ANNOUNCEGLOBALUSER=array();
+   $ANNOUNCESCHEDUSER=array();
+   ```
+
+   **Example — one operator with full access:**
+
+   ```php
+   $ANNOUNCEUSER=array("youruser");
+   $ANNOUNCEGLOBALUSER=array("youruser");
+   $ANNOUNCESCHEDUSER=array("youruser");
+   ```
+
+   **Example — add a second user without removing the default:**
+
+   ```php
+   $ANNOUNCEUSER=array("anarchy", "operator");
+   $ANNOUNCEGLOBALUSER=array("anarchy");
+   $ANNOUNCESCHEDUSER=array("anarchy", "operator");
+   ```
+
+   Empty arrays (`array()`) mean no one has that capability. After editing, no service restart is required — permissions load on the next login.
 
 3. On upgrade, if dpkg prompts about `/etc/sudoers.d/011-supermon-ng`, install the **maintainer version** to pick up `announce-*.sh` rules (or merge manually).
 
-4. Library files live under `user_files/mp3/`; installed ulaw copies go to `/usr/local/share/asterisk/sounds/announcements/`. Config: `user_files/announcements.ini` (conffile).
+4. Library files live under `user_files/mp3/`; installed ulaw copies go to `/usr/local/share/asterisk/sounds/announcements/`. Config: `user_files/announcements.ini` (conffile). Refresh the Piper voice catalog with `scripts/generate-announcement-voices.py` when maintaining the package.
 
 ## Remove / purge
 

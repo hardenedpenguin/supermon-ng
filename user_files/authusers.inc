@@ -65,6 +65,29 @@ $BUBLUSER=array("anarchy");
 // DVSwitch mode button
 $DVSWITCHUSER=array("anarchy");
 
+// ========================================
+// ANNOUNCEMENTS (V4.3.0+)
+// ========================================
+// Grants the Announcements button on the dashboard. Add your login username to
+// each array you need (usernames match user_files/.htpasswd / manage_users.php).
+//
+//   ANNOUNCEUSER        — button, upload, TTS, local play, delete, install voices
+//   ANNOUNCEGLOBALUSER  — global playback (all connected nodes); optional
+//   ANNOUNCESCHEDUSER   — Scheduled tab (cron); optional
+//
+// Minimal (local announcements only):
+//   $ANNOUNCEUSER=array("youruser");
+//   $ANNOUNCEGLOBALUSER=array();
+//   $ANNOUNCESCHEDUSER=array();
+//
+// Full access for one operator:
+//   $ANNOUNCEUSER=array("youruser");
+//   $ANNOUNCEGLOBALUSER=array("youruser");
+//   $ANNOUNCESCHEDUSER=array("youruser");
+//
+// Requires: sox, libsox-fmt-mp3, asl3-tts (apt install / package Recommends).
+// See docs/DEBIAN.md § Announcements for sudoers and paths.
+
 // Announcements button — upload, TTS, play local, delete
 $ANNOUNCEUSER=array("anarchy");
 

@@ -55,6 +55,7 @@ Thumbs.db
 vendor/
 composer.lock
 .phpunit.result.cache
+.phpunit.cache/
 
 # Node.js (if any future frontend tooling)
 node_modules/
