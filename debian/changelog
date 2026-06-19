@@ -1,3 +1,10 @@
+supermon-ng (4.3.1-1) unstable; urgency=medium
+
+  * Fix Piper voice install: use voice id in Hugging Face download URLs.
+  * announce-voice-install.sh: report wget failures on stderr.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Fri, 19 Jun 2026 21:21:10 +0000
+
 supermon-ng (4.3.0-1) unstable; urgency=medium
 
   * Announcements: upload/TTS, playback, and cron scheduling (modal UI and API).

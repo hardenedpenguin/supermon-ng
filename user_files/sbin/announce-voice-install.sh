@@ -47,8 +47,14 @@ TMP_ONNX="$(mktemp)"
 TMP_JSON="$(mktemp)"
 trap 'rm -f "$TMP_ONNX" "$TMP_JSON"' EXIT
 
-wget -q -4 -O "$TMP_ONNX" "${BASE_URL}/${HF_PATH}.onnx"
-wget -q -4 -O "$TMP_JSON" "${BASE_URL}/${HF_PATH}.onnx.json"
+wget -q -4 -O "$TMP_ONNX" "${BASE_URL}/${HF_PATH}/${VOICE_ID}.onnx" || {
+    echo "Failed to download ${VOICE_ID}.onnx from Hugging Face" >&2
+    exit 1
+}
+wget -q -4 -O "$TMP_JSON" "${BASE_URL}/${HF_PATH}/${VOICE_ID}.onnx.json" || {
+    echo "Failed to download ${VOICE_ID}.onnx.json from Hugging Face" >&2
+    exit 1
+}
 
 install -m 644 -o root -g root "$TMP_ONNX" "$ONNX"
 install -m 644 -o root -g root "$TMP_JSON" "$JSON"
