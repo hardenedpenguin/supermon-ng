@@ -400,6 +400,22 @@ return [
         );
     },
 
+    \SupermonNg\Services\AnnouncementsService::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Services\AnnouncementsService(
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\AllStarConfigService::class)
+        );
+    },
+
+    \SupermonNg\Application\Controllers\AnnouncementsController::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Application\Controllers\AnnouncementsController(
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\AnnouncementsService::class),
+            $c->get(\SupermonNg\Services\UserPermissionService::class),
+            $c->get(\SupermonNg\Services\SessionService::class)
+        );
+    },
+
     \SupermonNg\Services\VersionCheckService::class => function (ContainerInterface $c) {
         return new \SupermonNg\Services\VersionCheckService(
             $c->get(CacheInterface::class),

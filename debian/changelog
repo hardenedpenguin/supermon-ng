@@ -1,3 +1,24 @@
+supermon-ng (4.3.0-1) unstable; urgency=medium
+
+  * Announcements: upload/TTS, playback, and cron scheduling (modal UI and API).
+  * Piper voice catalog: curated picks per region with show-all, on-demand install.
+  * Privileged wrappers in user_files/sbin (announce-*.sh) and sudoers entries.
+  * Permissions: ANNOUNCEUSER, ANNOUNCEGLOBALUSER, ANNOUNCESCHEDUSER.
+  * Recommends: sox, libsox-fmt-mp3, asl3-tts for audio conversion and TTS.
+  * postinst: ensure user_files/mp3 and Asterisk sounds/announcements directories.
+  * scripts/generate-announcement-voices.py to refresh catalog from Piper voices.json.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Fri, 19 Jun 2026 19:41:40 +0000
+
+supermon-ng (4.2.2-4) unstable; urgency=medium
+
+  * First apt install always overwrites the Apache site from .env (match install.sh).
+  * generate_local_allmon: use --if-missing when allmon.ini exists; load .env for paths.
+  * postinst: drop duplicate systemd enable/start (debhelper handles units).
+  * configure-app-base-path: ensure a single app-base meta tag in index.html.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Fri, 13 Jun 2026 12:00:00 +0000
+
 supermon-ng (4.2.2-3) unstable; urgency=medium
 
   * Fix postinst failure during apt install: read debconf via

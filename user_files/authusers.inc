@@ -65,6 +65,15 @@ $BUBLUSER=array("anarchy");
 // DVSwitch mode button
 $DVSWITCHUSER=array("anarchy");
 
+// Announcements button — upload, TTS, play local, delete
+$ANNOUNCEUSER=array("anarchy");
+
+// Announcements global playback
+$ANNOUNCEGLOBALUSER=array("anarchy");
+
+// Announcements cron scheduling
+$ANNOUNCESCHEDUSER=array("anarchy");
+
 // Favorites button
 $FAVUSER=array("anarchy");
 

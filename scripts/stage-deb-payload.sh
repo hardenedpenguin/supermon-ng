@@ -39,10 +39,12 @@ done
 # user_files (templates; conffiles protect local edits on upgrade)
 copy_tree user_files user_files
 chmod 755 "$STAGE/user_files/sbin" 2>/dev/null || true
-for script in ast_node_status_update.py din ssinfo dvswitch-bridge-restart.sh; do
+for script in ast_node_status_update.py din ssinfo dvswitch-bridge-restart.sh \
+    announce-play.sh announce-install.sh announce-tts.sh announce-delete.sh announce-schedule.sh announce-voice-install.sh; do
     [ -f "$STAGE/user_files/sbin/$script" ] && chmod 755 "$STAGE/user_files/sbin/$script" || true
 done
 [ -f "$STAGE/user_files/sbin/node_info.ini" ] && chmod 644 "$STAGE/user_files/sbin/node_info.ini" || true
+mkdir -p "$STAGE/user_files/mp3"
 
 # public/ (non-asset static files; assets come from frontend dist)
 mkdir -p "$STAGE/public"

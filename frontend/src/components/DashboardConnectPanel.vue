@@ -77,6 +77,7 @@
     <input v-if="appStore.hasPermission('GPIOUSER')" type="button" class="submit" value="GPIO" @click="emit('action', 'openpigpio')">
     <input v-if="appStore.hasPermission('BANUSER')" type="button" class="submit" value="Access List" @click="emit('action', 'openbanallow')">
     <input v-if="appStore.hasPermission('DVSWITCHUSER')" type="button" class="submit" value="DVSwitch Mode" @click="emit('action', 'dvswitch')">
+    <input v-if="appStore.hasPermission('ANNOUNCEUSER')" type="button" class="submit" value="Announcements" @click="emit('action', 'announcements')">
   </div>
 </template>
 

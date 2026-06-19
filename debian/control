@@ -29,11 +29,15 @@ Depends: ${misc:Depends},
          apache2,
          ssl-cert,
          acl
-Recommends: asterisk
+Recommends: asterisk,
+         sox,
+         libsox-fmt-mp3,
+         asl3-tts
 Description: AllStar Link node monitoring dashboard (Supermon-ng)
  Supermon-ng provides a web UI for monitoring and controlling AllStar Link
- nodes: AMI integration, WebSocket live status, favorites, DVSwitch, and
- node status/weather updates via systemd timers.
+ nodes: AMI integration, WebSocket live status, favorites, DVSwitch,
+ announcements (upload, TTS, playback, cron scheduling), and node status/weather
+ updates via systemd timers.
  .
  This package installs the application under /var/www/html/supermon-ng,
  configures Apache (modules, site, SSL), systemd units, and sudoers rules.

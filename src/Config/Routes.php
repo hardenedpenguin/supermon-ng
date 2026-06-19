@@ -10,6 +10,7 @@ use SupermonNg\Application\Controllers\NodeStatusController;
 use SupermonNg\Application\Controllers\AdminController;
 use SupermonNg\Application\Controllers\AstdbController;
 use SupermonNg\Application\Controllers\DvswitchController;
+use SupermonNg\Application\Controllers\AnnouncementsController;
 use SupermonNg\Application\Controllers\BootstrapController;
 use SupermonNg\Application\Controllers\VersionCheckController;
 use SupermonNg\Application\Controllers\SetupController;
@@ -186,6 +187,20 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
         $g->post('/node/{nodeId}/mode/{mode}', [DvswitchController::class, 'switchMode']);
         $g->post('/node/{nodeId}/tune/{tgid}', [DvswitchController::class, 'switchTalkgroup']);
         $g->post('/restart-bridges', [DvswitchController::class, 'restartBridges']);
+    });
+
+    $group->group('/announcements', function (RouteCollectorProxy $g) use ($requireAuth): void {
+        $g->get('', [AnnouncementsController::class, 'getStatus']);
+        $g->post('/play', [AnnouncementsController::class, 'play'])->add($requireAuth);
+        $g->post('/upload', [AnnouncementsController::class, 'upload'])->add($requireAuth);
+        $g->post('/tts', [AnnouncementsController::class, 'tts'])->add($requireAuth);
+        $g->get('/voices', [AnnouncementsController::class, 'listVoices']);
+        $g->post('/voices/install', [AnnouncementsController::class, 'installVoice'])->add($requireAuth);
+        $g->delete('/{name}', [AnnouncementsController::class, 'delete'])->add($requireAuth);
+        $g->get('/schedules', [AnnouncementsController::class, 'listSchedules']);
+        $g->post('/schedules', [AnnouncementsController::class, 'addSchedule'])->add($requireAuth);
+        $g->patch('/schedules/{id}/enabled', [AnnouncementsController::class, 'toggleSchedule'])->add($requireAuth);
+        $g->delete('/schedules/{id}', [AnnouncementsController::class, 'deleteSchedule'])->add($requireAuth);
     });
 
     $group->group('/config', function (RouteCollectorProxy $g): void {

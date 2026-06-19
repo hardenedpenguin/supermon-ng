@@ -28,6 +28,7 @@ chdir($root);
 
 require_once $root . '/vendor/autoload.php';
 
+use Dotenv\Dotenv;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use SupermonNg\Services\LocalAllmonGeneratorService;
@@ -43,6 +44,14 @@ if (!$hasDry && !$hasIfMissing && !$hasForce) {
     fwrite(STDERR, "  --force       Write allmon.ini; backup existing to .bak.<timestamp>\n");
     fwrite(STDERR, "If both --if-missing and --force are set, an existing file is not overwritten.\n");
     exit(1);
+}
+
+if (is_file($root . '/.env')) {
+    try {
+        Dotenv::createImmutable($root)->safeLoad();
+    } catch (Throwable $e) {
+        // optional .env
+    }
 }
 
 $_ENV['USER_FILES_PATH'] = $_ENV['USER_FILES_PATH'] ?? $root . '/user_files/';

@@ -39,6 +39,14 @@ www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /e
 # DVSwitch bridge restart (MMDVM_Bridge + Analog_Bridge)
 www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/dvswitch-bridge-restart.sh
 
+# Announcements
+www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/announce-play.sh
+www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/announce-install.sh
+www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/announce-tts.sh
+www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/announce-delete.sh
+www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/announce-schedule.sh
+www-data ALL=(root) NOPASSWD: /var/www/html/supermon-ng/user_files/sbin/announce-voice-install.sh
+
 # DvSwitch files
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /opt/Analog_Bridge/Analog_Bridge.ini
 www-data ALL=(root) NOPASSWD: /usr/local/sbin/supermon_unified_file_editor.sh /opt/MMDVM_Bridge/MMDVM_Bridge.ini

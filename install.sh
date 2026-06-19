@@ -164,6 +164,7 @@ fi
 # Create necessary directories
 mkdir -p "$APP_DIR/logs"
 mkdir -p "$APP_DIR/user_files"
+mkdir -p "$APP_DIR/user_files/mp3"
 mkdir -p "$APP_DIR/cache"
 
 # Store the original directory for accessing installer files
@@ -253,7 +254,8 @@ find "$APP_DIR/user_files" -type d -exec chmod 755 {} \; 2>/dev/null || true
 find "$APP_DIR/user_files" -type f -exec chmod 644 {} \; 2>/dev/null || true
 chmod 644 "$APP_DIR/user_files/.htaccess" 2>/dev/null || true
 chmod 644 "$APP_DIR/user_files/.htpasswd" 2>/dev/null || true
-for script in ast_node_status_update.py din ssinfo dvswitch-bridge-restart.sh; do
+for script in ast_node_status_update.py din ssinfo dvswitch-bridge-restart.sh \
+    announce-play.sh announce-install.sh announce-tts.sh announce-delete.sh announce-schedule.sh announce-voice-install.sh; do
     [ -f "$APP_DIR/user_files/sbin/$script" ] && chmod 755 "$APP_DIR/user_files/sbin/$script"
 done
 

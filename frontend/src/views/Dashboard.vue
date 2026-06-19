@@ -229,6 +229,11 @@
       v-model:isVisible="showDvswitchModal" 
       :local-node="selectedLocalNode || selectedNode || String(displayedNodes[0]?.id || '')" 
     />
+
+    <AnnouncementsModal
+      v-model:isVisible="showAnnouncementsModal"
+      :local-node="selectedLocalNode || selectedNode || String(displayedNodes[0]?.id || '')"
+    />
     
     <!-- ConfigEditor Modal -->
     <ConfigEditor v-model:open="showConfigEditorModal" />
@@ -274,6 +279,7 @@ const AddFavorite = defineAsyncComponent(() => import('@/components/AddFavorite.
 const DeleteFavorite = defineAsyncComponent(() => import('@/components/DeleteFavorite.vue'))
 const Favorites = defineAsyncComponent(() => import('@/components/Favorites.vue'))
 const DVSwitchModal = defineAsyncComponent(() => import('@/components/DVSwitchModal.vue'))
+const AnnouncementsModal = defineAsyncComponent(() => import('@/components/AnnouncementsModal.vue'))
 const AstLog = defineAsyncComponent(() => import('@/components/AstLog.vue'))
 const AstLookup = defineAsyncComponent(() => import('@/components/AstLookup.vue'))
 const BubbleChart = defineAsyncComponent(() => import('@/components/BubbleChart.vue'))
@@ -379,6 +385,7 @@ const showServiceHealthModal = ref(false)
 const showConfigBackupModal = ref(false)
 const showLinkMapModal = ref(false)
 const showDvswitchModal = ref(false)
+const showAnnouncementsModal = ref(false)
 
 
 const systemInfo = ref<any>(null)
@@ -733,6 +740,9 @@ const handleControlAction = (action: string) => {
       break
     case 'dvswitch':
       showDvswitchModal.value = true
+      break
+    case 'announcements':
+      showAnnouncementsModal.value = true
       break
   }
 }

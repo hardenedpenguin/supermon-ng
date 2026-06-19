@@ -29,11 +29,8 @@ if [ -f "$INDEX" ]; then
   else
     META_CONTENT="/${BASE_PATH#/}"
   fi
-  if grep -q 'name="app-base"' "$INDEX"; then
-    sed -i "s|<meta name=\"app-base\" content=\"[^\"]*\"|<meta name=\"app-base\" content=\"${META_CONTENT}\"|" "$INDEX"
-  else
-    sed -i "s|</head>|    <meta name=\"app-base\" content=\"${META_CONTENT}\" />\\n  </head>|" "$INDEX"
-  fi
+  sed -i '/<meta name="app-base"/d' "$INDEX"
+  sed -i "s|</head>|    <meta name=\"app-base\" content=\"${META_CONTENT}\" />\\n  </head>|" "$INDEX"
   echo "configure-app-base-path: index.html app-base=\"${META_CONTENT}\" (APP_BASE_PATH=${APP_BASE_PATH})"
 else
   echo "configure-app-base-path: warning: missing $INDEX" >&2

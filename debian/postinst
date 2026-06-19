@@ -52,6 +52,19 @@ ensure_runtime_dirs() {
     chmod 755 "$APP_DIR/logs" "$APP_DIR/cache" "$APP_DIR/database" 2>/dev/null || true
 }
 
+ensure_announcement_dirs() {
+    mkdir -p "$APP_DIR/user_files/mp3"
+    chown "${WWW_USER}:${WWW_GROUP}" "$APP_DIR/user_files/mp3" 2>/dev/null || true
+    chmod 755 "$APP_DIR/user_files/mp3" 2>/dev/null || true
+
+    # Asterisk sounds target (announce-install.sh also mkdir -p when converting)
+    if [ -d /usr/local/share/asterisk/sounds ]; then
+        mkdir -p /usr/local/share/asterisk/sounds/announcements
+        chown root:root /usr/local/share/asterisk/sounds/announcements 2>/dev/null || true
+        chmod 755 /usr/local/share/asterisk/sounds/announcements 2>/dev/null || true
+    fi
+}
+
 ensure_app_permissions() {
     chown -R "${WWW_USER}:${WWW_GROUP}" "$APP_DIR" 2>/dev/null || true
     chmod -R 755 "$APP_DIR" 2>/dev/null || true
@@ -62,7 +75,7 @@ ensure_app_permissions() {
     chmod 644 "$APP_DIR/user_files/.htaccess" 2>/dev/null || true
     chmod 644 "$APP_DIR/user_files/.htpasswd" 2>/dev/null || true
 
-    for script in ast_node_status_update.py din ssinfo dvswitch-bridge-restart.sh; do
+    for script in ast_node_status_update.py din ssinfo dvswitch-bridge-restart.sh announce-play.sh announce-install.sh announce-tts.sh announce-delete.sh announce-schedule.sh announce-voice-install.sh; do
         [ -f "$APP_DIR/user_files/sbin/$script" ] && chmod 755 "$APP_DIR/user_files/sbin/$script"
     done
     [ -f "$APP_DIR/user_files/sbin/node_info.ini" ] && chmod 644 "$APP_DIR/user_files/sbin/node_info.ini"
@@ -107,8 +120,15 @@ generate_local_allmon_if_fresh() {
         return 0
     fi
 
-    echo "supermon-ng: generating user_files/allmon.ini from Asterisk config..."
-    php "$APP_DIR/scripts/generate_local_allmon.php" --force || {
+    if [ -f "$APP_DIR/user_files/allmon.ini" ]; then
+        allmon_mode="--if-missing"
+        echo "supermon-ng: user_files/allmon.ini exists; generating only if missing..."
+    else
+        allmon_mode="--force"
+        echo "supermon-ng: generating user_files/allmon.ini from Asterisk config..."
+    fi
+
+    php "$APP_DIR/scripts/generate_local_allmon.php" "$allmon_mode" || {
         echo "supermon-ng: allmon.ini generation failed; edit user_files/allmon.ini manually or run:" >&2
         echo "  sudo php $APP_DIR/scripts/generate_local_allmon.php --force" >&2
     }
@@ -132,6 +152,10 @@ configure_apache_from_debconf() {
     if [ "$refresh_apache_site" = "true" ]; then
         OVERWRITE_SITE=true
     fi
+    # Match install.sh: always install the site file on first package install.
+    if [ -z "$PREVIOUS_VERSION" ]; then
+        OVERWRITE_SITE=true
+    fi
 
     if [ ! -x "$APP_DIR/scripts/configure-apache.sh" ]; then
         echo "supermon-ng: configure-apache.sh missing; Apache setup skipped" >&2
@@ -143,18 +167,6 @@ configure_apache_from_debconf() {
     "$APP_DIR/scripts/configure-apache.sh" configure || true
 }
 
-enable_systemd_units() {
-    systemctl daemon-reload || true
-    systemctl enable supermon-ng-backend 2>/dev/null || true
-    systemctl enable supermon-ng-websocket.service 2>/dev/null || true
-    systemctl enable supermon-ng-node-status.timer 2>/dev/null || true
-    systemctl enable supermon-ng-database-update.timer 2>/dev/null || true
-    systemctl start supermon-ng-backend 2>/dev/null || true
-    systemctl start supermon-ng-websocket.service 2>/dev/null || true
-    systemctl start supermon-ng-node-status.timer 2>/dev/null || true
-    systemctl start supermon-ng-database-update.timer 2>/dev/null || true
-}
-
 case "$POSTINST_MODE" in
     configure)
         if [ ! -f "$APP_DIR/.env" ] && [ -f "$APP_DIR/.env.example" ]; then
@@ -164,12 +176,12 @@ case "$POSTINST_MODE" in
         fi
 
         ensure_runtime_dirs
+        ensure_announcement_dirs
         apply_app_base_path
         generate_local_allmon_if_fresh
         validate_sudoers
         apply_node_status_timer_interval
         configure_apache_from_debconf
-        enable_systemd_units
 
         if [ ! -d "$APP_DIR/vendor" ] && [ -x "$APP_DIR/scripts/composer-install-production.sh" ]; then
             if command -v composer >/dev/null 2>&1; then

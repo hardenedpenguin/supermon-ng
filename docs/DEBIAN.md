@@ -55,9 +55,60 @@ sudo dpkg -i ../supermon-ng_*_all.deb
 On a **fresh install**, `postinst` also:
 
 - creates `.env` from `.env.example`
-- runs `generate_local_allmon.php --force` when Asterisk config is readable (same as `install.sh`)
+- runs `generate_local_allmon.php` (`--if-missing` when `allmon.ini` exists, else `--force`)
+- installs the Apache site from the current `.env` (same as `install.sh` `OVERWRITE_SITE=true`)
 - applies `NODE_STATUS_INTERVAL_MINUTES` from `.env` via a systemd drop-in
 - sets `www-data` ownership and file modes under the app tree
+
+Systemd units are enabled and started by the package maintainer scripts (`dh_installsystemd`).
+
+## Migrating from tarball (`install.sh`) to apt
+
+Do **not** mix `update.sh` and `dpkg` upgrades on the same tree. To move from a tarball install:
+
+1. **Back up** configs:
+
+   ```bash
+   sudo tar -czf /root/supermon-ng-pre-apt-backup.tar.gz \
+     /var/www/html/supermon-ng/user_files \
+     /var/www/html/supermon-ng/.env \
+     /var/www/html/supermon-ng/database \
+     /var/www/html/supermon-ng/astdb.txt
+   ```
+
+2. **Remove** the old install (stop services, delete `/var/www/html/supermon-ng`, Apache site, `/etc/sudoers.d/011_www-nopasswd`, systemd unit files under `/etc/systemd/system/supermon-ng-*`).
+
+3. **Install** the package:
+
+   ```bash
+   sudo apt install supermon-ng
+   ```
+
+4. **Restore** your backup over the package tree:
+
+   ```bash
+   sudo tar -xzf /root/supermon-ng-pre-apt-backup.tar.gz -C /
+   ```
+
+5. **Re-apply** configuration from the restored `.env` (required for dedicated vhosts such as `APP_BASE_PATH=/` and `SUPERMON_SERVER_NAME`):
+
+   ```bash
+   sudo dpkg-reconfigure supermon-ng
+   ```
+
+   Answer **Yes** to refresh the Apache site, or run:
+
+   ```bash
+   sudo OVERWRITE_SITE=true /var/www/html/supermon-ng/scripts/configure-apache.sh configure
+   ```
+
+6. Remove the old tarball sudoers file if still present:
+
+   ```bash
+   sudo rm -f /etc/sudoers.d/011_www-nopasswd
+   ```
+
+7. Remove duplicate systemd units under `/etc/systemd/system/supermon-ng-*` if the tarball left copies there (the package uses `/usr/lib/systemd/system/`).
 
 ## Configure
 
@@ -92,7 +143,7 @@ On a **fresh install**, `postinst` also:
 | Path | Purpose |
 |------|---------|
 | `/var/www/html/supermon-ng/apache-config-template.conf` | Generated vhost template |
-| `/etc/apache2/sites-available/supermon-ng.conf` | Installed site (created by postinst; preserved unless refresh) |
+| `/etc/apache2/sites-available/supermon-ng.conf` | Installed site (refreshed on first install; preserved on upgrade unless debconf refresh) |
 
 Required modules are enabled automatically: `proxy`, `proxy_http`, `proxy_wstunnel`, `rewrite`, `headers`, `substitute`, `ssl`, `deflate`, `expires`.
 
@@ -119,7 +170,26 @@ User configs listed in `debian/supermon-ng.conffiles` (including `favini.inc`) a
 sudo OVERWRITE_SITE=true /var/www/html/supermon-ng/scripts/configure-apache.sh configure
 ```
 
-`/etc/sudoers.d/011-supermon-ng` is also a conffile. If a package upgrade adds new sudo rules, dpkg may prompt to keep your file or install the package maintainer version.
+`/etc/sudoers.d/011-supermon-ng` is also a conffile. If a package upgrade adds new sudo rules, dpkg may prompt to keep your file or install the package maintainer version. **Announcements** upgrades add `announce-*.sh` sudo lines — choose the package maintainer version unless you have custom edits.
+
+## Announcements (optional)
+
+The **Announcements** button requires:
+
+1. Recommended packages (install if missing):
+
+   ```bash
+   sudo apt-get install sox libsox-fmt-mp3 asl3-tts
+   ```
+
+2. Users granted in `user_files/authusers.inc`:
+   - `ANNOUNCEUSER` — upload, TTS, play, delete
+   - `ANNOUNCEGLOBALUSER` — global playback and schedules
+   - `ANNOUNCESCHEDUSER` — cron scheduling tab
+
+3. On upgrade, if dpkg prompts about `/etc/sudoers.d/011-supermon-ng`, install the **maintainer version** to pick up `announce-*.sh` rules (or merge manually).
+
+4. Library files live under `user_files/mp3/`; installed ulaw copies go to `/usr/local/share/asterisk/sounds/announcements/`. Config: `user_files/announcements.ini` (conffile).
 
 ## Remove / purge
 
