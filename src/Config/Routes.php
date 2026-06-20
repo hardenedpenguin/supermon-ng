@@ -190,14 +190,14 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
     });
 
     $group->group('/announcements', function (RouteCollectorProxy $g) use ($requireAuth): void {
-        $g->get('', [AnnouncementsController::class, 'getStatus']);
+        $g->get('', [AnnouncementsController::class, 'getStatus'])->add($requireAuth);
         $g->post('/play', [AnnouncementsController::class, 'play'])->add($requireAuth);
         $g->post('/upload', [AnnouncementsController::class, 'upload'])->add($requireAuth);
         $g->post('/tts', [AnnouncementsController::class, 'tts'])->add($requireAuth);
-        $g->get('/voices', [AnnouncementsController::class, 'listVoices']);
+        $g->get('/voices', [AnnouncementsController::class, 'listVoices'])->add($requireAuth);
         $g->post('/voices/install', [AnnouncementsController::class, 'installVoice'])->add($requireAuth);
         $g->delete('/{name}', [AnnouncementsController::class, 'delete'])->add($requireAuth);
-        $g->get('/schedules', [AnnouncementsController::class, 'listSchedules']);
+        $g->get('/schedules', [AnnouncementsController::class, 'listSchedules'])->add($requireAuth);
         $g->post('/schedules', [AnnouncementsController::class, 'addSchedule'])->add($requireAuth);
         $g->patch('/schedules/{id}/enabled', [AnnouncementsController::class, 'toggleSchedule'])->add($requireAuth);
         $g->delete('/schedules/{id}', [AnnouncementsController::class, 'deleteSchedule'])->add($requireAuth);
