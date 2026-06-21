@@ -7,7 +7,9 @@
 
 Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket real-time updates with AMI polling fallback.
 
-**Current release:** [V4.2.2](https://github.com/hardenedpenguin/supermon-ng/releases/tag/V4.2.2) (June 12, 2026)
+**Current release:** [V4.3.1](https://github.com/hardenedpenguin/supermon-ng/releases/tag/V4.3.1) (May 2026)
+
+> **Install and upgrades:** Supermon-ng is moving to the **Debian `.deb` package** for new installs and updates. Use the [hardenedpenguin APT repository](https://hardenedpenguin.github.io/hardenedpenguin-apt/) (`apt install supermon-ng`) or install a `.deb` from [Releases](https://github.com/hardenedpenguin/supermon-ng/releases). The tarball **`install.sh`** and **`update.sh`** flows are **deprecated** — they remain for legacy sites but are no longer supported. Tarball `update.sh` in particular does not reliably deploy new privileged scripts (for example announcements `announce-*.sh` and sudoers). See [docs/DEBIAN.md](docs/DEBIAN.md). Existing tarball installs should [migrate to apt](docs/DEBIAN.md#migrating-from-tarball-installsh-to-apt) rather than run `update.sh` again.
 
 ## Features
 
@@ -28,24 +30,49 @@ Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket
 
 ## Install
 
-**Debian package:** download `supermon-ng_*_all.deb` from [Releases](https://github.com/hardenedpenguin/supermon-ng/releases) (built automatically on each version tag), or build locally — see [docs/DEBIAN.md](docs/DEBIAN.md). Install with `sudo dpkg -i supermon-ng_*_all.deb`. Apache is configured automatically (debconf can opt out).
-
-**Tarball (recommended for ASL nodes):**
+**APT repository (recommended):** one-time setup adds the signing key and `sources.list` entry ([hardenedpenguin-apt](https://github.com/hardenedpenguin/hardenedpenguin-apt)). Supports `amd64` and `arm64`.
 
 ```bash
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.2.2/supermon-ng-V4.2.2.tar.xz
-tar -xJf supermon-ng-V4.2.2.tar.xz
+cd /tmp
+curl -fsSLO https://hardenedpenguin.github.io/hardenedpenguin-apt/pool/main/h/hardenedpenguin-archive-keyring/hardenedpenguin-archive-keyring_1.0_all.deb
+sudo apt install ./hardenedpenguin-archive-keyring_1.0_all.deb
+sudo apt update
+sudo apt install supermon-ng
+```
+
+**Or** download `supermon-ng_*_all.deb` from [Releases](https://github.com/hardenedpenguin/supermon-ng/releases) (built on each version tag) and install locally — see [docs/DEBIAN.md](docs/DEBIAN.md) for build-from-source.
+
+```bash
+sudo apt install ./supermon-ng_*_all.deb
+# or: sudo dpkg -i supermon-ng_*_all.deb && sudo apt-get install -f
+```
+
+Apache is configured automatically (debconf can opt out). On a **fresh install**, `postinst` can generate `user_files/allmon.ini` from local `rpt.conf` + `manager.conf`.
+
+Open `https://your-host/supermon-ng/` — the **setup wizard** walks through admin creation, `global.inc`, and node setup. Existing sites skip the wizard once complete.
+
+<details>
+<summary><strong>Deprecated: tarball + install.sh</strong></summary>
+
+Not recommended for new deployments. May miss package-managed files (sudoers, systemd, `user_files/sbin` scripts).
+
+```bash
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.3.1/supermon-ng-V4.3.1.tar.xz
+tar -xJf supermon-ng-V4.3.1.tar.xz
 cd supermon-ng
 sudo ./install.sh
 ```
 
-`install.sh` installs dependencies, configures Apache (unless `--skip-apache`), deploys the app, and on **fresh installs** generates `user_files/allmon.ini` from local `rpt.conf` + `manager.conf`.
-
-Open `https://your-host/supermon-ng/` — the **setup wizard** walks through admin creation, `global.inc`, and node setup. Existing sites skip the wizard once complete.
+</details>
 
 ### URL base path
 
-Set `APP_BASE_PATH` in `/var/www/html/supermon-ng/.env`, then run `sudo ./scripts/update.sh`:
+Set `APP_BASE_PATH` in `/var/www/html/supermon-ng/.env`, then reconfigure Apache:
+
+```bash
+sudo dpkg-reconfigure supermon-ng
+# or: sudo OVERWRITE_SITE=true /var/www/html/supermon-ng/scripts/configure-apache.sh configure
+```
 
 | Value | Layout | Example |
 |-------|--------|---------|
@@ -56,17 +83,39 @@ For a root vhost, also set `SUPERMON_SERVER_NAME` and `SSL_CERT_NAME` in `.env`,
 
 ## Update
 
+**APT repository (recommended):** after the [one-time repo setup](#install) above:
+
+```bash
+sudo apt update
+sudo apt install supermon-ng
+```
+
+`apt` / `dpkg` preserve conffiles under `user_files/` and prompt when maintainer configs change (for example sudoers).
+
+**Or** install a newer `.deb` from [Releases](https://github.com/hardenedpenguin/supermon-ng/releases):
+
+```bash
+sudo apt install ./supermon-ng_*_all.deb
+```
+
+Tarball sites should [migrate to apt](docs/DEBIAN.md#migrating-from-tarball-installsh-to-apt) instead of using `update.sh`.
+
+<details>
+<summary><strong>Deprecated: tarball + update.sh</strong></summary>
+
+Do not use on sites that can move to the `.deb`. `update.sh` preserves the existing `user_files/sbin/` tree and may skip new privileged scripts.
+
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.2.2/supermon-ng-V4.2.2.tar.xz
-tar -xJf supermon-ng-V4.2.2.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.3.1/supermon-ng-V4.3.1.tar.xz
+tar -xJf supermon-ng-V4.3.1.tar.xz
 cd supermon-ng
 sudo ./scripts/update.sh
 ```
 
-Use **`update.sh`** on existing sites (preserves `allmon.ini`, `global.inc`, `.htpasswd`, DVSwitch configs, and setup flags). Use **`install.sh`** only for fresh deployments.
-
 Options: `--skip-apache`, `--force` (re-apply same version).
+
+</details>
 
 ```bash
 sudo /var/www/html/supermon-ng/scripts/version-check.sh
@@ -121,7 +170,7 @@ sudo systemctl restart supermon-ng-backend supermon-ng-websocket
 sudo systemctl status supermon-ng-node-status.timer
 ```
 
-**Node status timer:** `supermon-ng-node-status.timer` runs `ast_node_status_update.py` every **5 minutes** by default (weather, alerts, etc.). To change the interval, set `NODE_STATUS_INTERVAL_MINUTES` in `.env` **before** running `install.sh` or `scripts/update.sh`, then re-run install/update or `sudo systemctl daemon-reload` and restart the timer.
+**Node status timer:** `supermon-ng-node-status.timer` runs `ast_node_status_update.py` every **5 minutes** by default (weather, alerts, etc.). To change the interval, set `NODE_STATUS_INTERVAL_MINUTES` in `.env` before install or upgrade, then `sudo systemctl daemon-reload` and restart the timer (on apt installs, the package applies the drop-in on configure).
 
 | Log | Location |
 |-----|----------|

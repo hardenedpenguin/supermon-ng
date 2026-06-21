@@ -30,7 +30,36 @@ DEB_SKIP_FRONTEND_BUILD=1 ./scripts/build-deb.sh   # reuse existing frontend/dis
 
 The build rebuilds the frontend by default. Set `DEB_SKIP_FRONTEND_BUILD=1` only when you intentionally want to reuse an existing `frontend/dist`.
 
+## APT repository
+
+Published packages are in the [hardenedpenguin APT repository](https://hardenedpenguin.github.io/hardenedpenguin-apt/) (`stable`, `amd64` / `arm64`). New releases are published there automatically when a `V*` tag is pushed.
+
+**One-time setup** on the node:
+
+```bash
+cd /tmp
+curl -fsSLO https://hardenedpenguin.github.io/hardenedpenguin-apt/pool/main/h/hardenedpenguin-archive-keyring/hardenedpenguin-archive-keyring_1.0_all.deb
+sudo apt install ./hardenedpenguin-archive-keyring_1.0_all.deb
+sudo apt update
+```
+
+The `hardenedpenguin-archive-keyring` package installs the GPG key and `/etc/apt/sources.list.d/hardenedpenguin.list`.
+
+**Install or upgrade:**
+
+```bash
+sudo apt install supermon-ng
+```
+
 ## Install
+
+**From the APT repository** (after one-time setup above):
+
+```bash
+sudo apt install supermon-ng
+```
+
+**From a local `.deb`** (GitHub Releases or `./scripts/build-deb.sh` output):
 
 ```bash
 sudo dpkg -i ../supermon-ng_*_all.deb
@@ -78,11 +107,13 @@ Do **not** mix `update.sh` and `dpkg` upgrades on the same tree. To move from a 
 
 2. **Remove** the old install (stop services, delete `/var/www/html/supermon-ng`, Apache site, `/etc/sudoers.d/011_www-nopasswd`, systemd unit files under `/etc/systemd/system/supermon-ng-*`).
 
-3. **Install** the package:
+3. **Add the APT repository** if not already configured (see [APT repository](#apt-repository) above), then **install** the package:
 
    ```bash
    sudo apt install supermon-ng
    ```
+
+   Or install a `.deb` from [GitHub Releases](https://github.com/hardenedpenguin/supermon-ng/releases) with `sudo apt install ./supermon-ng_*_all.deb`.
 
 4. **Restore** your backup over the package tree:
 
@@ -159,6 +190,15 @@ sudo systemctl status supermon-ng-node-status.timer supermon-ng-database-update.
 ```
 
 ## Upgrade
+
+**From the APT repository:**
+
+```bash
+sudo apt update
+sudo apt install supermon-ng
+```
+
+**From a local `.deb`:**
 
 ```bash
 sudo dpkg -i ../supermon-ng_<new>_all.deb
