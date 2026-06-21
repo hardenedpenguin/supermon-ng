@@ -413,9 +413,24 @@ class AnnouncementsService
      */
     public function listSchedules(): array
     {
-        $json = $this->runSudoScriptCapture('announce-schedule.sh', ['list']);
+        try {
+            $json = $this->runSudoScriptCapture('announce-schedule.sh', ['list']);
+        } catch (Exception $e) {
+            // Listing schedules should not break the announcements UI when sudo/scripts
+            // are missing on a partial upgrade (common on tarball-only deploys).
+            $this->logger->warning('Could not list announcement schedules', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+
         $decoded = json_decode($json, true);
         if (!is_array($decoded)) {
+            $this->logger->warning('Announcement schedule list returned invalid JSON', [
+                'output' => $json,
+            ]);
+
             return [];
         }
 

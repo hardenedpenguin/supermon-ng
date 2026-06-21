@@ -9,6 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLAY_SCRIPT="${SCRIPT_DIR}/announce-play.sh"
 MARKER="# Announcement:"
 CRON_TAG="announce-play.sh"
+PYTHON="${PYTHON:-/usr/bin/python3}"
 
 usage() {
     echo "Usage: $0 list" >&2
@@ -93,8 +94,8 @@ parse_entries() {
 
         printf '{"id":"%s","enabled":%s,"minute":"%s","hour":"%s","dom":"%s","month":"%s","dow":"%s","node":"%s","scope":"%s","mode":"%s","file":"%s","description":%s,"raw":%s}\n' \
             "$id" "$enabled" "$min" "$hour" "$dom" "$month" "$dow" "${node:-}" "${scope:-}" "${mode:-}" "${file:-}" \
-            "$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$desc")" \
-            "$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$cron_line")"
+            "$("$PYTHON" -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$desc")" \
+            "$("$PYTHON" -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$cron_line")"
 
         last_comment=""
     done

@@ -220,6 +220,12 @@ The **Announcements** button requires:
 
 4. Library files live under `user_files/mp3/`; installed ulaw copies go to `/usr/local/share/asterisk/sounds/announcements/`. Config: `user_files/announcements.ini` (conffile). Refresh the Piper voice catalog with `scripts/generate-announcement-voices.py` when maintaining the package.
 
+5. **Scheduled tab empty or “privileged operation failed”** — `authusers.inc` is not the cause (that yields 403). Check:
+   - Supermon-ng **≥ 4.3.0** with all `user_files/sbin/announce-*.sh` present and executable (`chmod 755`).
+   - `/etc/sudoers.d/011-supermon-ng` (or tarball `011_www-nopasswd`) includes `announce-schedule.sh` for `www-data`.
+   - As `www-data`: `sudo -n /var/www/html/supermon-ng/user_files/sbin/announce-schedule.sh list` should print `[]` or JSON, not “not allowed” or “command not found”.
+   - App log: `logs/app-YYYY-MM-DD.log` for `Announcements sudo script failed` with the exact message.
+
 ## Remove / purge
 
 - **remove**: stops services, disables the `supermon-ng` Apache site; keeps the site file on disk.
