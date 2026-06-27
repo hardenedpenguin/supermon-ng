@@ -86,7 +86,7 @@ $DVSWITCHUSER=array("anarchy");
 //   $ANNOUNCESCHEDUSER=array("youruser");
 //
 // Requires: sox, libsox-fmt-mp3, asl3-tts (apt install / package Recommends).
-// See docs/DEBIAN.md § Announcements for sudoers and paths.
+// See docs/ANNOUNCEMENTS.md for permissions, EchoLink/global playback, and troubleshooting.
 
 // Announcements button — upload, TTS, play local, delete
 $ANNOUNCEUSER=array("anarchy");
