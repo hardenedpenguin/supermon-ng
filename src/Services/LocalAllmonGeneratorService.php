@@ -9,6 +9,8 @@ use Psr\Log\LoggerInterface;
 /**
  * Builds user_files/allmon.ini from /etc/asterisk/rpt.conf (node stanzas) and
  * manager.conf ([general] bind/port + first non-general stanza with secret).
+ * When allmon.ini is written, NODE in user_files/sbin/node_info.ini is updated
+ * from the same rpt.conf list (not when --if-missing skips an existing allmon.ini).
  */
 final class LocalAllmonGeneratorService
 {
@@ -117,12 +119,204 @@ final class LocalAllmonGeneratorService
             return ['success' => false, 'message' => 'Failed writing ' . $target];
         }
 
-        return [
+        $result = [
             'success' => true,
             'message' => 'Wrote ' . $target,
             'path' => $target,
             'nodes' => $gen['nodes'] ?? [],
         ];
+
+        $nodeSync = $this->syncNodeInfoIniNodes($gen['nodes'] ?? []);
+        if ($nodeSync['success'] && empty($nodeSync['skipped'])) {
+            $result['node_info'] = $nodeSync;
+            $result['message'] .= '; ' . $nodeSync['message'];
+        } elseif (!$nodeSync['success'] && empty($nodeSync['skipped'])) {
+            $this->logger->warning('allmon.ini written but node_info.ini NODE sync failed', [
+                'error' => $nodeSync['message'],
+            ]);
+            $result['node_info_warning'] = $nodeSync['message'];
+        }
+
+        return $result;
+    }
+
+    /**
+     * Set NODE in user_files/sbin/node_info.ini to match rpt.conf node list.
+     * Called only when allmon.ini was just written (install / --if-missing paths).
+     *
+     * @param list<string> $nodeIds
+     * @return array{success: bool, skipped?: bool, message: string, path?: string, nodes?: list<string>}
+     */
+    public function syncNodeInfoIniNodes(array $nodeIds): array
+    {
+        if ($nodeIds === []) {
+            return [
+                'success' => false,
+                'skipped' => true,
+                'message' => 'No nodes to sync to node_info.ini',
+            ];
+        }
+
+        $target = $this->nodeInfoIniPath();
+        $nodeLine = 'NODE = ' . implode(' ', $nodeIds);
+
+        $dir = dirname($target);
+        if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+            return ['success' => false, 'message' => 'Cannot create directory: ' . $dir];
+        }
+
+        if (!is_file($target)) {
+            $content = $this->defaultNodeInfoIniContent($nodeIds);
+            if (@file_put_contents($target, $content, LOCK_EX) === false) {
+                return ['success' => false, 'message' => 'Failed writing ' . $target];
+            }
+            $this->logger->info('Created node_info.ini with NODE from rpt.conf', ['nodes' => $nodeIds]);
+
+            return [
+                'success' => true,
+                'message' => 'Wrote ' . $target,
+                'path' => $target,
+                'nodes' => $nodeIds,
+            ];
+        }
+
+        $raw = @file_get_contents($target);
+        if ($raw === false) {
+            return ['success' => false, 'message' => 'Cannot read ' . $target];
+        }
+
+        $existingNodes = $this->parseNodeLineFromNodeInfo($raw);
+        if ($existingNodes === $nodeIds) {
+            return [
+                'success' => true,
+                'skipped' => true,
+                'message' => 'node_info.ini NODE already matches rpt.conf',
+                'path' => $target,
+                'nodes' => $nodeIds,
+            ];
+        }
+
+        $updated = $this->applyNodeLineToNodeInfoIni($raw, $nodeLine);
+
+        if (@file_put_contents($target, $updated, LOCK_EX) === false) {
+            return ['success' => false, 'message' => 'Failed writing ' . $target];
+        }
+
+        $this->logger->info('Updated node_info.ini NODE from rpt.conf', ['nodes' => $nodeIds]);
+
+        return [
+            'success' => true,
+            'message' => 'Updated NODE in ' . $target,
+            'path' => $target,
+            'nodes' => $nodeIds,
+        ];
+    }
+
+    private function nodeInfoIniPath(): string
+    {
+        return $this->userFilesPath . 'sbin/node_info.ini';
+    }
+
+    /**
+     * @param list<string> $nodeIds
+     */
+    private function defaultNodeInfoIniContent(array $nodeIds): string
+    {
+        return "[general]\n"
+            . 'NODE = ' . implode(' ', $nodeIds) . "\n"
+            . "WX_USE_GPS = no\n"
+            . "WX_CODE = 00000\n"
+            . "WX_LOCATION = City, State\n"
+            . "TEMP_UNIT = F\n"
+            . "ALERT_PROVIDER = skywarnplus\n\n"
+            . "[skywarnplus]\n"
+            . "MASTER_ENABLE = yes\n"
+            . "API_URL = http://127.0.0.1:8100\n\n"
+            . "[canwarn_ng]\n"
+            . "MASTER_ENABLE = no\n"
+            . "API_URL = http://127.0.0.1:8110\n";
+    }
+
+    /**
+     * Replace or insert NODE = in [general]; preserve all other lines and sections.
+     */
+    private function applyNodeLineToNodeInfoIni(string $content, string $nodeLine): string
+    {
+        $lines = preg_split('/\R/', $content) ?: [];
+        $out = [];
+        $inGeneral = false;
+        $nodeHandled = false;
+        $hadGeneral = false;
+
+        foreach ($lines as $line) {
+            $trim = trim($line);
+            if (preg_match('/^\[([^\]]+)\]\s*$/', $trim, $m)) {
+                if ($inGeneral && !$nodeHandled) {
+                    $out[] = $nodeLine;
+                    $nodeHandled = true;
+                }
+                $inGeneral = strcasecmp($m[1], 'general') === 0;
+                if ($inGeneral) {
+                    $hadGeneral = true;
+                }
+                $out[] = $line;
+                continue;
+            }
+
+            if ($inGeneral && preg_match('/^NODE\s*=/i', $trim)) {
+                if (!$nodeHandled) {
+                    $out[] = $nodeLine;
+                    $nodeHandled = true;
+                }
+                continue;
+            }
+
+            $out[] = $line;
+        }
+
+        if ($inGeneral && !$nodeHandled) {
+            $out[] = $nodeLine;
+            $nodeHandled = true;
+        }
+
+        if (!$hadGeneral) {
+            $result = "[general]\n{$nodeLine}\n\n" . implode("\n", $out);
+        } else {
+            $result = implode("\n", $out);
+        }
+
+        if ($content !== '' && str_ends_with($content, "\n")) {
+            $result .= "\n";
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return list<string>|null
+     */
+    private function parseNodeLineFromNodeInfo(string $content): ?array
+    {
+        $lines = preg_split('/\R/', $content) ?: [];
+        $inGeneral = false;
+
+        foreach ($lines as $line) {
+            $trim = trim($line);
+            if (preg_match('/^\[([^\]]+)\]\s*$/', $trim, $m)) {
+                $inGeneral = strcasecmp($m[1], 'general') === 0;
+                continue;
+            }
+            if ($inGeneral && preg_match('/^NODE\s*=\s*(.*)$/i', $trim, $m)) {
+                $value = trim($m[1]);
+                if ($value === '') {
+                    return [];
+                }
+
+                return array_values(array_filter(preg_split('/\s+/', $value) ?: [], static fn (string $id): bool => $id !== ''));
+            }
+        }
+
+        return null;
     }
 
     /**

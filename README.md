@@ -85,7 +85,7 @@ sudo /var/www/html/supermon-ng/scripts/version-check.sh
 
 **Users:** `sudo ./scripts/manage_users.php add|list|change|remove`
 
-**Regenerate `allmon.ini` from Asterisk:** `sudo php scripts/generate_local_allmon.php --force` (backs up first)
+**Regenerate `allmon.ini` from Asterisk:** `sudo php scripts/generate_local_allmon.php --force` (backs up first). When allmon.ini is created or regenerated, `NODE` in `user_files/sbin/node_info.ini` is synced from the same `rpt.conf` node list; normal upgrades that skip allmon generation do not change `node_info.ini`.
 
 **Permissions** in `authusers.inc`: `$CONNECTUSER`, `$MONUSER`, `$FAVUSER`, `$DVSWITCHUSER`, `$CFGEDUSER`, `$SYSINFUSER`, `$CTRLUSER`, etc. Replace default `anarchy` with your username.
 

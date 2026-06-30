@@ -5,6 +5,8 @@ declare(strict_types=1);
 
 /**
  * Generate user_files/allmon.ini from Asterisk rpt.conf + manager.conf.
+ * When allmon.ini is written, NODE in user_files/sbin/node_info.ini is synced
+ * from the same rpt.conf node list (not on --if-missing skip / normal upgrades).
  *
  * Uses the first non-[general] manager stanza that defines secret (file order).
  * AMI host is [general] bindaddr + port; 0.0.0.0 / empty bind uses 127.0.0.1 for the client.
@@ -86,5 +88,8 @@ if (!$result['success']) {
 fwrite(STDERR, $result['message'] . "\n");
 if (!empty($result['nodes'])) {
     fwrite(STDERR, 'Nodes: ' . implode(', ', $result['nodes']) . "\n");
+}
+if (!empty($result['node_info_warning'])) {
+    fwrite(STDERR, 'Warning (node_info.ini): ' . $result['node_info_warning'] . "\n");
 }
 exit(0);
