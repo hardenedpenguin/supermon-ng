@@ -1,3 +1,27 @@
+supermon-ng (4.3.2-1) unstable; urgency=high
+
+  * Security: verify PHP_AUTH_USER against .htpasswd before trusting it;
+    regenerate session id on login (fixation); centralize credential checks.
+  * Security: restrict config editor .inc writes to safe constructs (RCE);
+    validate favorite commands against the user's saved favorites.
+  * Security: enforce auth middleware on state-changing node/config/dvswitch
+    routes; drop the DVSwitch CSRF exemption; redact credentials in logs.
+  * Security: strip CRLF from AMI values; enforce per-call AMI read timeouts
+    to prevent worker exhaustion; sanitize usernames used in filenames.
+  * Announcements: harden schedule listing for partial deploys (no more 500);
+    detach playback so PHP-FPM workers are freed; clean up failed uploads;
+    serialize crontab edits with flock; validate target nodes.
+  * Fix GPIO commands executing twice; run delayed reboot inline instead of a
+    predictable /tmp script; use APCu-backed rate limiting when available.
+  * deb: restart node-status/database-update timers on upgrade (they were
+    left dead by --no-start applied to both service and timer).
+  * Frontend: fix CSRF retry loop, WebSocket leak on reset, stale ASTDB and
+    node status; consolidate per-node 1s timers; per-request timeouts for
+    long operations; add rel=noopener to external links.
+  * Docs: recommend APT/.deb install; deprecate install.sh/update.sh.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Sat, 18 Jul 2026 04:22:43 +0000
+
 supermon-ng (4.3.1-1) unstable; urgency=medium
 
   * Fix Piper voice install: use voice id in Hugging Face download URLs.
