@@ -77,6 +77,19 @@ class SimpleAmiClient
     {
         return $prefix . uniqid('', true) . '_' . mt_rand(1000, 9999);
     }
+
+    /**
+     * Remove CR/LF from a value before it is written into the AMI protocol.
+     *
+     * AMI frames headers with \r\n and terminates an action with \r\n\r\n, so a
+     * value containing carriage returns or newlines (e.g. a ban comment or a
+     * DTMF/command string derived from user input) could smuggle additional
+     * headers or whole actions. Stripping them neutralizes that injection.
+     */
+    private static function sanitizeAmiValue($value)
+    {
+        return str_replace(["\r", "\n"], '', (string) $value);
+    }
     
     /**
      * Get connection from pool or create new one
@@ -306,8 +319,8 @@ class SimpleAmiClient
 
         // Uppercase protocol headers (Allmon3 style)
         $loginCmd = "ACTION: LOGIN" . self::AMI_EOL;
-        $loginCmd .= "USERNAME: " . $user . self::AMI_EOL;
-        $loginCmd .= "SECRET: " . $password . self::AMI_EOL;
+        $loginCmd .= "USERNAME: " . self::sanitizeAmiValue($user) . self::AMI_EOL;
+        $loginCmd .= "SECRET: " . self::sanitizeAmiValue($password) . self::AMI_EOL;
         $loginCmd .= "EVENTS: 0" . self::AMI_EOL;
         $loginCmd .= "ActionID: " . $actionID . self::AMI_EOL . self::AMI_EOL;
 
@@ -348,10 +361,12 @@ class SimpleAmiClient
         $actionID = self::generateActionID('action_');
         
         // Build action command with uppercase headers (Allmon3 style)
-        $cmd = "ACTION: " . strtoupper($action) . self::AMI_EOL;
+        $cmd = "ACTION: " . self::sanitizeAmiValue(strtoupper($action)) . self::AMI_EOL;
         foreach ($params as $key => $value) {
-            // Uppercase parameter keys (Allmon3 style)
-            $cmd .= strtoupper($key) . ": " . $value . self::AMI_EOL;
+            // Uppercase parameter keys (Allmon3 style); strip CR/LF from both key
+            // and value so parameters cannot inject extra AMI headers/actions.
+            $cmd .= self::sanitizeAmiValue(strtoupper((string) $key)) . ": "
+                . self::sanitizeAmiValue($value) . self::AMI_EOL;
         }
         $cmd .= "ActionID: " . $actionID . self::AMI_EOL . self::AMI_EOL;
         
@@ -380,9 +395,10 @@ class SimpleAmiClient
         $startTime = microtime(true);
         $actionID = self::generateActionID('cmd_');
 
-        // Uppercase protocol headers (Allmon3 style)
+        // Uppercase protocol headers (Allmon3 style). Strip CR/LF from the CLI
+        // command so it cannot inject additional AMI headers or actions.
         $commandAction = "ACTION: COMMAND" . self::AMI_EOL;
-        $commandAction .= "COMMAND: " . $cmdString . self::AMI_EOL;
+        $commandAction .= "COMMAND: " . self::sanitizeAmiValue($cmdString) . self::AMI_EOL;
         $commandAction .= "ActionID: " . $actionID . self::AMI_EOL . self::AMI_EOL;
 
         if (fwrite($fp, $commandAction) === false) {

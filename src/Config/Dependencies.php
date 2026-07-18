@@ -234,9 +234,15 @@ return [
         );
     },
     
+    \SupermonNg\Services\HtpasswdService::class => function () {
+        return new \SupermonNg\Services\HtpasswdService();
+    },
+
     // Controllers with dependency injection
-    \SupermonNg\Services\SessionService::class => function () {
-        return new \SupermonNg\Services\SessionService();
+    \SupermonNg\Services\SessionService::class => function (ContainerInterface $c) {
+        return new \SupermonNg\Services\SessionService(
+            $c->get(\SupermonNg\Services\HtpasswdService::class)
+        );
     },
 
     \SupermonNg\Application\Middleware\RequireAuthMiddleware::class => function (ContainerInterface $c) {
@@ -359,7 +365,8 @@ return [
 
     \SupermonNg\Application\Controllers\AuthController::class => function (ContainerInterface $c) {
         return new \SupermonNg\Application\Controllers\AuthController(
-            $c->get(LoggerInterface::class)
+            $c->get(LoggerInterface::class),
+            $c->get(\SupermonNg\Services\HtpasswdService::class)
         );
     },
     

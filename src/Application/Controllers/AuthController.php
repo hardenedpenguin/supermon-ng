@@ -7,14 +7,17 @@ namespace SupermonNg\Application\Controllers;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Log\LoggerInterface;
+use SupermonNg\Services\HtpasswdService;
 
 class AuthController
 {
     private LoggerInterface $logger;
+    private HtpasswdService $htpasswd;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, ?HtpasswdService $htpasswd = null)
     {
         $this->logger = $logger;
+        $this->htpasswd = $htpasswd ?? new HtpasswdService($this->getUserFilesPath());
     }
 
     public function login(Request $request, Response $response): Response
@@ -183,139 +186,14 @@ class AuthController
     }
 
     /**
-     * Verify user credentials against .htpasswd file
+     * Verify user credentials against .htpasswd file (delegated to the shared
+     * HtpasswdService so login and per-request identity use one implementation).
      */
     private function verifyCredentials(string $username, string $password): bool
     {
-        $htpasswdFile = $this->getUserFilesPath() . '.htpasswd';
-
-        // Check if .htpasswd file exists
-        if (!file_exists($htpasswdFile)) {
-            $this->logger->warning('.htpasswd file not found');
-            return false;
-        }
-        
-        // Read .htpasswd file
-        $lines = file($htpasswdFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        if ($lines === false) {
-            $this->logger->error('Failed to read .htpasswd file');
-            return false;
-        }
-        
-        // Look for the user
-        foreach ($lines as $line) {
-            $parts = explode(':', $line, 2);
-            if (count($parts) !== 2) {
-                continue; // Skip malformed lines
-            }
-            
-            $storedUsername = trim($parts[0]);
-            $storedHash = trim($parts[1]);
-            
-            if ($storedUsername === $username) {
-                // Verify password
-                return $this->verifyPassword($password, $storedHash);
-            }
-        }
-        
-        return false; // User not found
+        return $this->htpasswd->verify($username, $password);
     }
     
-    /**
-     * Verify password against stored hash
-     * Supports multiple hash formats: MD5, SHA1, bcrypt, etc.
-     */
-    private function verifyPassword(string $password, string $storedHash): bool
-    {
-        // Check if it's a bcrypt hash (starts with $2y$)
-        if (strpos($storedHash, '$2y$') === 0) {
-            return password_verify($password, $storedHash);
-        }
-        
-        // Check if it's an Apache MD5 hash (starts with $apr1$)
-        if (strpos($storedHash, '$apr1$') === 0) {
-            return $this->verifyApacheMd5($password, $storedHash);
-        }
-        
-        // Check if it's a SHA1 hash (starts with {SHA})
-        if (strpos($storedHash, '{SHA}') === 0) {
-            $hash = base64_encode(sha1($password, true));
-            return $storedHash === '{SHA}' . $hash;
-        }
-        
-        // Check if it's a plain MD5 hash
-        if (strlen($storedHash) === 32 && ctype_xdigit($storedHash)) {
-            return md5($password) === $storedHash;
-        }
-        
-        // Check if it's a plain text password (not recommended, but supported for legacy)
-        if ($storedHash === $password) {
-            $this->logger->warning('Plain text password detected for user');
-            return true;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Verify Apache MD5 password hash
-     */
-    private function verifyApacheMd5(string $password, string $storedHash): bool
-    {
-        // Extract salt from hash
-        if (!preg_match('/^\$apr1\$([a-zA-Z0-9\/\.]{8})\$/', $storedHash, $matches)) {
-            return false;
-        }
-        
-        $salt = $matches[1];
-        
-        // Generate hash using Apache's MD5 algorithm
-        $hash = $this->apacheMd5($password, $salt);
-        
-        return $storedHash === $hash;
-    }
-    
-    /**
-     * Generate Apache MD5 hash
-     */
-    private function apacheMd5(string $password, string $salt): string
-    {
-        $len = strlen($password);
-        $text = $password . '$apr1$' . $salt;
-        $bin = pack("H32", md5($password . $salt . $password));
-        
-        for ($i = $len; $i > 0; $i -= 16) {
-            $text .= substr($bin, 0, min(16, $i));
-        }
-        
-        for ($i = $len; $i > 0; $i >>= 1) {
-            $text .= ($i & 1) ? chr(0) : $password[0];
-        }
-        
-        $bin = pack("H32", md5($text));
-        
-        for ($i = 0; $i < 1000; $i++) {
-            $new = ($i & 1) ? $password : $bin;
-            if ($i % 3) $new .= $salt;
-            if ($i % 7) $new .= $password;
-            $new .= ($i & 1) ? $bin : $password;
-            $bin = pack("H32", md5($new));
-        }
-        
-        $tmp = '';
-        for ($i = 0; $i < 5; $i++) {
-            $k = $i + 6;
-            $j = $i + 12;
-            if ($j == 16) $j = 5;
-            $tmp = $bin[$i] . $bin[$k] . $bin[$j] . $tmp;
-        }
-        
-        $tmp = chr(0) . chr(0) . $bin[11] . $tmp;
-        $tmp = strtr(strrev(substr(base64_encode($tmp), 2)), "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-        
-        return '$apr1$' . $salt . '$' . $tmp;
-    }
-
     /**
      * All permission keys returned by /auth/me (must stay in sync with API enforcement).
      *
@@ -393,13 +271,18 @@ class AuthController
             return null;
         }
         
-        // Check if user is logged in via HTTP Basic Auth
-        if (isset($_SERVER['PHP_AUTH_USER'])) {
-            return $_SERVER['PHP_AUTH_USER'];
+        // HTTP Basic Auth: only trust PHP_AUTH_USER after re-verifying the
+        // password, since PHP populates it from the client's Authorization
+        // header regardless of whether the web server enforced auth.
+        if (!empty($_SERVER['PHP_AUTH_USER']) && isset($_SERVER['PHP_AUTH_PW'])) {
+            if ($this->htpasswd->verify((string) $_SERVER['PHP_AUTH_USER'], (string) $_SERVER['PHP_AUTH_PW'])) {
+                return $_SERVER['PHP_AUTH_USER'];
+            }
         }
         
-        // Check if user is logged in via .htaccess/.htpasswd
-        if (isset($_SERVER['REMOTE_USER'])) {
+        // REMOTE_USER is set by the web server post-authentication (not a
+        // client-settable request header), so it is safe to trust.
+        if (isset($_SERVER['REMOTE_USER']) && $_SERVER['REMOTE_USER'] !== '') {
             return $_SERVER['REMOTE_USER'];
         }
         
@@ -449,6 +332,11 @@ class AuthController
         
         // Use .htpasswd authentication (same as verifyCredentials method)
         if ($this->verifyCredentials($username, $password)) {
+            // Rotate the session id on privilege change to prevent session fixation.
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_regenerate_id(true);
+            }
+
             // Set session data
             $_SESSION['user'] = $username;
             $_SESSION['authenticated'] = true;

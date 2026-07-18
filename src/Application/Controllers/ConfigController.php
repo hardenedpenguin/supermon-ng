@@ -2719,6 +2719,13 @@ class ConfigController
             throw new \Exception('File is not in the editable files whitelist');
         }
 
+        // The .inc files are include()'d as PHP by the application, so writing
+        // arbitrary content to them would be remote code execution. Restrict
+        // them to plain configuration (assignments of literals/arrays only).
+        if (strtolower(pathinfo($filePath, PATHINFO_EXTENSION)) === 'inc') {
+            $this->assertSafePhpConfig($content);
+        }
+
         // Use the sudo helper script to write the file
         $command = "sudo /usr/local/sbin/supermon_unified_file_editor.sh " . escapeshellarg($filePath);
         
@@ -2757,6 +2764,70 @@ class ConfigController
             'stderr' => $stderr,
             'returnCode' => $returnCode
         ];
+    }
+
+    /**
+     * Reject PHP content that is more than plain configuration.
+     *
+     * The .inc files (authusers.inc, authini.inc, global.inc, favini.inc) are
+     * include()'d by the application, so a CFGEDUSER who can save arbitrary PHP
+     * into them gains code execution as the web server. Tokenize the content
+     * and allow only variable assignments of scalar literals and arrays plus
+     * comments; anything else (function calls, eval, backticks, includes, ...)
+     * is refused with an explanatory error.
+     */
+    private function assertSafePhpConfig(string $content): void
+    {
+        $reject = function (string $what): void {
+            throw new \Exception(
+                "This file is loaded as PHP code by Supermon-ng, so only simple " .
+                "configuration is allowed (variable assignments of strings, numbers, " .
+                "and arrays, plus comments). Refusing to save: found $what."
+            );
+        };
+
+        $allowedChars = ['=', ';', ',', '(', ')', '[', ']', '.', '-', '+', '"'];
+        $allowedWords = ['array', 'true', 'false', 'null'];
+
+        foreach (token_get_all($content) as $token) {
+            if (is_string($token)) {
+                if (!in_array($token, $allowedChars, true)) {
+                    $reject("'" . $token . "'");
+                }
+                continue;
+            }
+
+            [$id, $text] = $token;
+            switch ($id) {
+                case T_OPEN_TAG:
+                case T_CLOSE_TAG:
+                case T_WHITESPACE:
+                case T_COMMENT:
+                case T_DOC_COMMENT:
+                case T_VARIABLE:
+                case T_CONSTANT_ENCAPSED_STRING:
+                case T_ENCAPSED_AND_WHITESPACE:
+                case T_LNUMBER:
+                case T_DNUMBER:
+                case T_ARRAY:
+                case T_DOUBLE_ARROW:
+                    break;
+                case T_STRING:
+                    if (!in_array(strtolower($text), $allowedWords, true)) {
+                        $reject("'" . $text . "'");
+                    }
+                    break;
+                case T_INLINE_HTML:
+                    // Content outside the PHP tags is echoed on include; allow
+                    // only whitespace (e.g. a trailing newline after the close tag).
+                    if (trim($text) !== '') {
+                        $reject('content outside the PHP open/close tags');
+                    }
+                    break;
+                default:
+                    $reject("'" . trim($text) . "' (" . token_name($id) . ")");
+            }
+        }
     }
 
     /**
@@ -2895,6 +2966,21 @@ class ConfigController
                     'message' => 'Node and command are required'
                 ]));
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
+
+            // Only run commands that actually exist in this user's favorites INI.
+            // The command string ends up at "asterisk -rx", so accepting arbitrary
+            // client input here would let any FAVUSER run arbitrary CLI commands.
+            if (!$this->isConfiguredFavoriteCommand($currentUser, (string) $command)) {
+                $this->logger->warning('Rejected favorite command not present in favorites INI', [
+                    'user' => $currentUser,
+                    'command' => $command,
+                ]);
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Command is not defined in your favorites configuration'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
             }
 
             // Execute the command using the same logic as control panel
@@ -3171,6 +3257,31 @@ class ConfigController
     /**
      * Execute a favorite command using AMI or shell
      */
+    /**
+     * True when the submitted command matches one configured in the user's
+     * favorites INI (compared before %node% substitution, as sent by the UI).
+     */
+    private function isConfiguredFavoriteCommand(string $user, string $command): bool
+    {
+        try {
+            $config = $this->loadFavoritesConfiguration($user);
+        } catch (\Exception $e) {
+            $this->logger->warning('Could not load favorites configuration for validation', [
+                'user' => $user,
+                'error' => $e->getMessage(),
+            ]);
+            return false;
+        }
+
+        foreach ($config['favorites'] ?? [] as $favorite) {
+            if (isset($favorite['command']) && trim((string) $favorite['command']) === trim($command)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private function executeFavoriteCommand(string $command, string $node): array
     {
         // Replace %node% placeholder with actual node number

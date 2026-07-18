@@ -155,38 +155,40 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
         $g->get('/{id}/websocket/port', [NodeController::class, 'getWebSocketPort']);
         $g->get('/{id}', [NodeController::class, 'get']);
         $g->get('/{id}/status', [NodeController::class, 'status']);
-        $g->post('/connect', [NodeController::class, 'connect']);
-        $g->post('/disconnect', [NodeController::class, 'disconnect']);
-        $g->post('/monitor', [NodeController::class, 'monitor']);
-        $g->post('/local-monitor', [NodeController::class, 'localMonitor']);
-        $g->post('/dtmf', [NodeController::class, 'dtmf']);
-        $g->post('/rptstats', [NodeController::class, 'rptstats']);
-        $g->post('/cpustats', [NodeController::class, 'cpustats']);
-        $g->post('/database', [NodeController::class, 'database']);
-        $g->post('/extnodes', [NodeController::class, 'extnodes']);
-        $g->post('/fastrestart', [NodeController::class, 'fastrestart']);
-        $g->post('/irlplog', [NodeController::class, 'irlplog']);
-        $g->post('/linuxlog', [NodeController::class, 'linuxlog']);
-        $g->post('/banallow', [NodeController::class, 'banallow']);
-        $g->post('/banallow/action', [NodeController::class, 'banallowAction']);
-        $g->post('/pigpio', [NodeController::class, 'pigpio']);
-        $g->post('/pigpio/action', [NodeController::class, 'pigpioAction']);
-        $g->post('/reboot', [NodeController::class, 'reboot']);
-        $g->post('/smlog', [NodeController::class, 'smlog']);
-        $g->post('/stats', [NodeController::class, 'stats']);
-        $g->post('/webacclog', [NodeController::class, 'webacclog']);
-        $g->post('/weberrlog', [NodeController::class, 'weberrlog']);
+        // State-changing/privileged actions also require an authenticated
+        // session (defense in depth on top of the per-method permission checks).
+        $g->post('/connect', [NodeController::class, 'connect'])->add($requireAuth);
+        $g->post('/disconnect', [NodeController::class, 'disconnect'])->add($requireAuth);
+        $g->post('/monitor', [NodeController::class, 'monitor'])->add($requireAuth);
+        $g->post('/local-monitor', [NodeController::class, 'localMonitor'])->add($requireAuth);
+        $g->post('/dtmf', [NodeController::class, 'dtmf'])->add($requireAuth);
+        $g->post('/rptstats', [NodeController::class, 'rptstats'])->add($requireAuth);
+        $g->post('/cpustats', [NodeController::class, 'cpustats'])->add($requireAuth);
+        $g->post('/database', [NodeController::class, 'database'])->add($requireAuth);
+        $g->post('/extnodes', [NodeController::class, 'extnodes'])->add($requireAuth);
+        $g->post('/fastrestart', [NodeController::class, 'fastrestart'])->add($requireAuth);
+        $g->post('/irlplog', [NodeController::class, 'irlplog'])->add($requireAuth);
+        $g->post('/linuxlog', [NodeController::class, 'linuxlog'])->add($requireAuth);
+        $g->post('/banallow', [NodeController::class, 'banallow'])->add($requireAuth);
+        $g->post('/banallow/action', [NodeController::class, 'banallowAction'])->add($requireAuth);
+        $g->post('/pigpio', [NodeController::class, 'pigpio'])->add($requireAuth);
+        $g->post('/pigpio/action', [NodeController::class, 'pigpioAction'])->add($requireAuth);
+        $g->post('/reboot', [NodeController::class, 'reboot'])->add($requireAuth);
+        $g->post('/smlog', [NodeController::class, 'smlog'])->add($requireAuth);
+        $g->post('/stats', [NodeController::class, 'stats'])->add($requireAuth);
+        $g->post('/webacclog', [NodeController::class, 'webacclog'])->add($requireAuth);
+        $g->post('/weberrlog', [NodeController::class, 'weberrlog'])->add($requireAuth);
         $g->get('/{id}/lsnodes', [NodeController::class, 'lsnodes']);
         $g->get('/{id}/lsnodes/web', [NodeController::class, 'lsnodesWeb']);
     });
 
-    $group->group('/dvswitch', function (RouteCollectorProxy $g): void {
+    $group->group('/dvswitch', function (RouteCollectorProxy $g) use ($requireAuth): void {
         $g->get('/nodes', [DvswitchController::class, 'getNodes']);
         $g->get('/node/{nodeId}/modes', [DvswitchController::class, 'getModes']);
         $g->get('/node/{nodeId}/mode/{mode}/talkgroups', [DvswitchController::class, 'getTalkgroups']);
-        $g->post('/node/{nodeId}/mode/{mode}', [DvswitchController::class, 'switchMode']);
-        $g->post('/node/{nodeId}/tune/{tgid}', [DvswitchController::class, 'switchTalkgroup']);
-        $g->post('/restart-bridges', [DvswitchController::class, 'restartBridges']);
+        $g->post('/node/{nodeId}/mode/{mode}', [DvswitchController::class, 'switchMode'])->add($requireAuth);
+        $g->post('/node/{nodeId}/tune/{tgid}', [DvswitchController::class, 'switchTalkgroup'])->add($requireAuth);
+        $g->post('/restart-bridges', [DvswitchController::class, 'restartBridges'])->add($requireAuth);
     });
 
     $group->group('/announcements', function (RouteCollectorProxy $g) use ($requireAuth): void {
@@ -203,32 +205,32 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
         $g->delete('/schedules/{id}', [AnnouncementsController::class, 'deleteSchedule'])->add($requireAuth);
     });
 
-    $group->group('/config', function (RouteCollectorProxy $g): void {
+    $group->group('/config', function (RouteCollectorProxy $g) use ($requireAuth): void {
         $g->get('/nodes', [ConfigController::class, 'getNodes']);
         $g->get('/user/preferences', [ConfigController::class, 'getUserPreferences']);
-        $g->put('/user/preferences', [ConfigController::class, 'updateUserPreferences']);
+        $g->put('/user/preferences', [ConfigController::class, 'updateUserPreferences'])->add($requireAuth);
         $g->get('/system-info', [ConfigController::class, 'getSystemInfo']);
         $g->get('/menu', [ConfigController::class, 'getMenu']);
         $g->get('/global-lint', [ConfigController::class, 'lintGlobalInc']);
         $g->get('/header-background', [ConfigController::class, 'getHeaderBackground']);
         $g->get('/display', [ConfigController::class, 'getDisplayConfig']);
-        $g->put('/display', [ConfigController::class, 'updateDisplayConfig']);
+        $g->put('/display', [ConfigController::class, 'updateDisplayConfig'])->add($requireAuth);
         $g->get('/node-info', [ConfigController::class, 'getNodeInfo']);
-        $g->post('/add-favorite', [ConfigController::class, 'addFavorite']);
+        $g->post('/add-favorite', [ConfigController::class, 'addFavorite'])->add($requireAuth);
         $g->get('/favorites', [ConfigController::class, 'getFavorites']);
-        $g->post('/favorites/add', [ConfigController::class, 'addFavorite']);
-        $g->delete('/favorites', [ConfigController::class, 'deleteFavorite']);
-        $g->post('/favorites/execute', [ConfigController::class, 'executeFavorite']);
-        $g->post('/asterisk/reload', [ConfigController::class, 'executeAsteriskReload']);
-        $g->post('/asterisk/control', [ConfigController::class, 'executeAsteriskControl']);
+        $g->post('/favorites/add', [ConfigController::class, 'addFavorite'])->add($requireAuth);
+        $g->delete('/favorites', [ConfigController::class, 'deleteFavorite'])->add($requireAuth);
+        $g->post('/favorites/execute', [ConfigController::class, 'executeFavorite'])->add($requireAuth);
+        $g->post('/asterisk/reload', [ConfigController::class, 'executeAsteriskReload'])->add($requireAuth);
+        $g->post('/asterisk/control', [ConfigController::class, 'executeAsteriskControl'])->add($requireAuth);
         $g->get('/astlog', [ConfigController::class, 'getAstLog']);
-        $g->post('/astlookup', [ConfigController::class, 'performAstLookup']);
-        $g->post('/bubblechart', [ConfigController::class, 'getBubbleChart']);
+        $g->post('/astlookup', [ConfigController::class, 'performAstLookup'])->add($requireAuth);
+        $g->post('/bubblechart', [ConfigController::class, 'getBubbleChart'])->add($requireAuth);
         $g->get('/controlpanel', [ConfigController::class, 'getControlPanel']);
-        $g->post('/controlpanel/execute', [ConfigController::class, 'executeControlPanelCommand']);
+        $g->post('/controlpanel/execute', [ConfigController::class, 'executeControlPanelCommand'])->add($requireAuth);
         $g->get('/configeditor/files', [ConfigController::class, 'getConfigEditorFiles']);
-        $g->post('/configeditor/content', [ConfigController::class, 'getConfigFileContent']);
-        $g->post('/configeditor/save', [ConfigController::class, 'saveConfigFile']);
+        $g->post('/configeditor/content', [ConfigController::class, 'getConfigFileContent'])->add($requireAuth);
+        $g->post('/configeditor/save', [ConfigController::class, 'saveConfigFile'])->add($requireAuth);
     });
 
     $group->group('/database', function (RouteCollectorProxy $g) use ($requireAuth): void {
