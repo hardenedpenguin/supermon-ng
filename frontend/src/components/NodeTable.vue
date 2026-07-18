@@ -110,6 +110,7 @@
 import { computed, ref, watch, watchEffect, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useRealTimeStore } from '@/stores/realTime'
+import { useTimerTick } from '@/composables/useTimerTick'
 import { sanitizeHtml } from '@/utils/sanitize'
 import LsnodModal from './LsnodModal.vue'
 
@@ -117,7 +118,7 @@ const BubbleChart = defineAsyncComponent(() => import('./BubbleChart.vue'))
 import type { ConnectedNode, Node } from '@/types/node'
 
 // Timer state for real-time updates
-const timerTick = ref(0)
+const { timerTick } = useTimerTick()
 const nodeTimers = ref<Map<string, { elapsedBase: number | null, elapsedTimestamp: number | null, lastKeyedBase: number | null, lastKeyedTimestamp: number | null }>>(new Map())
 
 // Emits
@@ -196,7 +197,7 @@ const nodeTitle = computed(() => {
     let url = customUrl
     if (url.endsWith('>')) {
       url = url.slice(0, -1)
-      targetBlank = 'target="_blank"'
+      targetBlank = 'target="_blank" rel="noopener noreferrer"'
     }
     infoDisplay = `<a href="${url}" ${targetBlank}>${nodeInfo}</a>`
   }
@@ -220,7 +221,7 @@ const nodeTitle = computed(() => {
       : ''
     
     if (allstarNodeUrl) {
-      nodeLink = `<a href="${allstarNodeUrl}" target="_blank">${nodeId}</a>`
+      nodeLink = `<a href="${allstarNodeUrl}" target="_blank" rel="noopener noreferrer">${nodeId}</a>`
     } else if (customUrl) {
       let url = customUrl
       if (url.endsWith('>')) url = url.slice(0, -1)
@@ -240,11 +241,11 @@ const nodeTitle = computed(() => {
   modalLinks.push(`<a href="#" class="lsnod-modal-link" data-node-id="${nodeId}">lsNodes</a>`)
   
   if (props.config && props.config[nodeId]?.listenlive) {
-    links.push(`<a href="${props.config[nodeId].listenlive}" target="_blank">Listen Live</a>`)
+    links.push(`<a href="${props.config[nodeId].listenlive}" target="_blank" rel="noopener noreferrer">Listen Live</a>`)
   }
   
   if (props.config && props.config[nodeId]?.archive) {
-    links.push(`<a href="${props.config[nodeId].archive}" target="_blank">Archive</a>`)
+    links.push(`<a href="${props.config[nodeId].archive}" target="_blank" rel="noopener noreferrer">Archive</a>`)
   }
   
   let title = `  ${baseTitle} ${nodeLink} => ${infoDisplay}  `
@@ -636,32 +637,18 @@ const handleModalLinkClick = (event: Event) => {
   }
 }
 
-// Set up real-time timer updates
-let timerInterval: ReturnType<typeof setInterval> | null = null
-
 onMounted(() => {
   // Use a more specific selector to avoid conflicts
   const tableElement = document.querySelector(`#table_${props.node.id}`)
   if (tableElement) {
     tableElement.addEventListener('click', handleModalLinkClick)
   }
-  
-  // Start timer for real-time updates (update every second)
-  timerInterval = setInterval(() => {
-    timerTick.value = Date.now()
-  }, 1000)
 })
 
 onUnmounted(() => {
   const tableElement = document.querySelector(`#table_${props.node.id}`)
   if (tableElement) {
     tableElement.removeEventListener('click', handleModalLinkClick)
-  }
-  
-  // Clear timer interval
-  if (timerInterval) {
-    clearInterval(timerInterval)
-    timerInterval = null
   }
   
   // Clear timers

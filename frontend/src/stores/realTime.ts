@@ -195,12 +195,15 @@ export const useRealTimeStore = defineStore('realTime', () => {
               node_number: newNode.node_number || existing.node_number,
               id: newNode.id || existing.id,
               info: newNode.info || existing.info,
-              // Preserve real-time fields from WebSocket
+              // Preserve WebSocket-provided connection lists (the API bootstrap
+              // does not carry live connection detail), but let this refresh
+              // correct online/status — otherwise a stale value would stick
+              // forever once set.
               connected_nodes: existing.connected_nodes || newNode.connected_nodes,
               remote_nodes: existing.remote_nodes || newNode.remote_nodes,
-              status: existing.status || newNode.status,
-              is_online: existing.is_online !== undefined ? existing.is_online : newNode.is_online,
-              last_updated: existing.last_updated || newNode.last_updated
+              status: newNode.status ?? existing.status,
+              is_online: newNode.is_online ?? existing.is_online,
+              last_updated: newNode.last_updated ?? existing.last_updated
             } as Node
           } else {
             // Add new node

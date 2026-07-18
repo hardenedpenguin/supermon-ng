@@ -23,7 +23,7 @@
             <p>Last update {{ getCurrentTime() }}</p>
             <p>My IP - {{ getMyIP() }}</p>
             <p class="bubble-chart-link">
-              <a :href="getBubbleChartUrl()" target="_blank">View this Node Graphically</a>
+              <a :href="getBubbleChartUrl()" target="_blank" rel="noopener noreferrer">View this Node Graphically</a>
             </p>
           </div>
 

@@ -172,7 +172,7 @@ export class BatchRequestService {
   /**
    * Process the current batch of requests
    */
-  private async processBatch(): void {
+  private async processBatch(): Promise<void> {
     if (this.batchTimer) {
       clearTimeout(this.batchTimer)
       this.batchTimer = null
@@ -374,7 +374,8 @@ export function useBatchRequests(config?: Partial<BatchConfig>) {
 
   return {
     addRequest: (request: Omit<BatchRequest, 'id'>) => batchService.addRequest(request),
-    batchInitialization: () => batchService.batchInitialization(),
+    batchInitialization: (options?: { skipNodesConfig?: boolean }) =>
+      batchService.batchInitialization(options),
     batchRealTimeUpdate: (nodeIds: string[]) => batchService.batchRealTimeUpdate(nodeIds),
     clearCache: () => batchService.clearCache(),
     getCacheStats: () => batchService.getCacheStats()

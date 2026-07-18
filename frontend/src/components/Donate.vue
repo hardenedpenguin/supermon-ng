@@ -39,6 +39,7 @@
           <a 
             href="https://cash.app/$anarchpeng" 
             target="_blank" 
+            rel="noopener noreferrer"
             class="donate-button cashapp-button"
             @click="handleCashAppClick"
           >

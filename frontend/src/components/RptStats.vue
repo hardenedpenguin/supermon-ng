@@ -41,7 +41,7 @@
         <!-- External Stats Redirect -->
         <div v-if="externalUrl" class="external-redirect">
           <p>Redirecting to external AllStar Link statistics...</p>
-          <a :href="externalUrl" target="_blank" class="btn btn-primary">
+          <a :href="externalUrl" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
             Open External Stats
           </a>
           <button @click="closeExternalRedirect" class="btn btn-secondary">
