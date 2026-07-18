@@ -26,10 +26,12 @@ override_dh_auto_install:
 override_dh_installsystemd:
 	dh_installsystemd --name=supermon-ng-backend
 	dh_installsystemd --name=supermon-ng-websocket
-	dh_installsystemd --name=supermon-ng-database-update --no-start
-	dh_installsystemd --name=supermon-ng-node-status --no-start
-	dh_installsystemd --name=supermon-ng-database-update.timer
-	dh_installsystemd --name=supermon-ng-node-status.timer
+	# Timer-driven oneshot services: never start the .service directly,
+	# but do start/restart the .timer (preinst stops it on upgrade).
+	dh_installsystemd --name=supermon-ng-database-update --no-start supermon-ng-database-update.service
+	dh_installsystemd --name=supermon-ng-database-update supermon-ng-database-update.timer
+	dh_installsystemd --name=supermon-ng-node-status --no-start supermon-ng-node-status.service
+	dh_installsystemd --name=supermon-ng-node-status supermon-ng-node-status.timer
 
 override_dh_auto_clean:
 	dh_auto_clean
