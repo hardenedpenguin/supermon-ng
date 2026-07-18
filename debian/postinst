@@ -152,7 +152,7 @@ configure_apache_from_debconf() {
     if [ "$refresh_apache_site" = "true" ]; then
         OVERWRITE_SITE=true
     fi
-    # Match install.sh: always install the site file on first package install.
+    # Always install the site file on first package install.
     if [ -z "$PREVIOUS_VERSION" ]; then
         OVERWRITE_SITE=true
     fi

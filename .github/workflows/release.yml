@@ -1,10 +1,10 @@
-# Build release tarball and .deb, attach to GitHub Release when a version tag is pushed.
+# Build the .deb and attach it to a GitHub Release when a version tag is pushed.
 #
 # Before tagging:
 #   1. Bump version and VERSION_DATE in includes/common.inc (TITLE_LOGGED, TITLE_NOT_LOGGED).
 #   2. Commit, then: git tag -a V4.2.2 -m "Release V4.2.2 - ..." && git push && git push origin V4.2.2
-# This workflow: verifies common.inc matches tag, updates README.md download URLs to this release,
-# runs create-release.sh (tarball includes updated README), builds the Debian package, uploads assets.
+# This workflow: verifies common.inc matches tag, builds the Debian package, uploads it,
+# and dispatches the APT repository publish. (Tarball/install.sh installs are no longer supported.)
 
 name: Release
 
@@ -41,21 +41,6 @@ jobs:
             exit 1
           fi
 
-      - name: Update README.md download URLs to this release
-        run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          # Full asset URLs: optional leading v/V on semver in path; tarball name may use V4.1.x
-          sed -i -E \
-            "s|(https://github.com/[^/]+/[^/]+/releases/download/)[Vv]?[0-9]+\.[0-9]+\.[0-9]+/(supermon-ng-)[Vv]?[0-9]+\.[0-9]+\.[0-9]+(\.tar\.xz)|\1${TAG}/\2${TAG}\3|g" \
-            README.md
-          # Standalone tarball filenames (e.g. tar -xJf supermon-ng-V4.1.2.tar.xz)
-          sed -i -E "s|supermon-ng-[Vv]?[0-9]+\.[0-9]+\.[0-9]+\.tar\.xz|supermon-ng-${TAG}.tar.xz|g" README.md
-          echo "::notice::README download URLs rewritten for ${TAG}"
-          grep -n "releases/download/${TAG}" README.md | head -5 || true
-
-      - name: Create release tarball
-        run: ./scripts/create-release.sh
-
       - name: Install Debian build dependencies
         run: |
           sudo apt-get update
@@ -67,15 +52,10 @@ jobs:
 
       - name: Copy artifacts to workspace
         run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          cp "/tmp/supermon-ng-${TAG}.tar.xz" .
-          cp "/tmp/supermon-ng-${TAG}.tar.xz.sha256" . 2>/dev/null || true
-          cp "/tmp/supermon-ng-${TAG}.tar.xz.sha512" . 2>/dev/null || true
-          cp "/tmp/supermon-ng-${TAG}.tar.xz.md5" . 2>/dev/null || true
           DEB="$(ls -1 ../*_all.deb | head -1)"
           cp "$DEB" .
           sha256sum "$(basename "$DEB")" > "$(basename "$DEB").sha256"
-          ls -la supermon-ng-*
+          ls -la supermon-ng_*_all.deb*
 
       - name: Create Release and upload assets
         uses: softprops/action-gh-release@v2
@@ -85,10 +65,6 @@ jobs:
           draft: false
           generate_release_notes: true
           files: |
-            supermon-ng-${{ github.ref_name }}.tar.xz
-            supermon-ng-${{ github.ref_name }}.tar.xz.sha256
-            supermon-ng-${{ github.ref_name }}.tar.xz.sha512
-            supermon-ng-${{ github.ref_name }}.tar.xz.md5
             supermon-ng_*_all.deb
             supermon-ng_*_all.deb.sha256
         env:

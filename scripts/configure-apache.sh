@@ -1,12 +1,13 @@
 #!/bin/bash
-# Shared Apache setup for install.sh and the Debian package postinst.
+# Apache setup for supermon-ng, invoked by the Debian package postinst
+# (and runnable by hand for reconfiguration).
 #
 # Environment:
 #   APP_DIR              Application root (default: /var/www/html/supermon-ng)
 #   SKIP_APACHE          true = only generate template + app-base-path, no site install
 #   DISABLE_DEFAULT_SITES  true = a2dissite 000-default and default-ssl (default: true)
 #   OVERWRITE_SITE       true = replace existing sites-available/supermon-ng.conf
-#   ALLOW_APT_INSTALL    true = apt-get install apache2/ssl-cert if missing (install.sh)
+#   ALLOW_APT_INSTALL    true = apt-get install apache2/ssl-cert if missing
 #   CONFIGURE_LOG_ACLS   true = setfacl on Apache/Asterisk logs (default: true)
 #   QUIET                true = less output
 

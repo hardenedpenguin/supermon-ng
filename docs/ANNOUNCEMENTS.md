@@ -2,7 +2,7 @@
 
 Upload or generate audio, play it on a node (local or global), and optionally schedule playback with cron. The dashboard **Announcements** button opens a modal with **Playback**, **Create**, and **Scheduled** tabs.
 
-Requires Supermon-ng **≥ 4.3.0** installed via the **`.deb` package** or a complete upgrade (tarball `update.sh` may not deploy `announce-*.sh` or sudoers — see [DEBIAN.md](DEBIAN.md#migrating-from-tarball-installsh-to-apt)).
+Requires Supermon-ng **≥ 4.3.0** installed via the **`.deb` package**, which deploys the `announce-*.sh` scripts and sudoers rules. Legacy tarball installs should [migrate to apt](DEBIAN.md#migrating-from-a-legacy-tarball-install-to-apt).
 
 ## Requirements
 
@@ -144,7 +144,7 @@ Interpretation:
   should print `[]` or JSON, not “not allowed” or “command not found”.
 - App log: `logs/app-YYYY-MM-DD.log` for `Announcements sudo script failed` or `Could not list announcement schedules`.
 
-Partial tarball upgrades (`update.sh`) often preserve an old `user_files/sbin/` tree and skip new `announce-*.sh` scripts. Migrate to the [`.deb` package](DEBIAN.md#migrating-from-tarball-installsh-to-apt) instead of re-running `update.sh`.
+Legacy tarball installs often have an old `user_files/sbin/` tree missing the `announce-*.sh` scripts. [Migrate to the `.deb` package](DEBIAN.md#migrating-from-a-legacy-tarball-install-to-apt) to pick them up.
 
 ### TTS or upload fails
 

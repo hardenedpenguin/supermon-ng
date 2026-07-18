@@ -1,6 +1,6 @@
 # Debian package (supermon-ng)
 
-`.deb` packaging for ASL3+ nodes. Apache is configured automatically on install (same behavior as `install.sh`), with debconf prompts to opt out or refresh the site on upgrade.
+`.deb` packaging for ASL3+ nodes. The `.deb` (via apt or a local install) is the only supported way to install and update supermon-ng; the old tarball `install.sh` / `update.sh` flows have been removed. Apache is configured automatically on install, with debconf prompts to opt out or refresh the site on upgrade.
 
 ## Build dependencies
 
@@ -85,15 +85,15 @@ On a **fresh install**, `postinst` also:
 
 - creates `.env` from `.env.example`
 - runs `generate_local_allmon.php` (`--if-missing` when `allmon.ini` exists, else `--force`)
-- installs the Apache site from the current `.env` (same as `install.sh` `OVERWRITE_SITE=true`)
+- installs the Apache site from the current `.env` (using `OVERWRITE_SITE=true`)
 - applies `NODE_STATUS_INTERVAL_MINUTES` from `.env` via a systemd drop-in
 - sets `www-data` ownership and file modes under the app tree
 
 Systemd units are enabled and started by the package maintainer scripts (`dh_installsystemd`).
 
-## Migrating from tarball (`install.sh`) to apt
+## Migrating from a legacy tarball install to apt
 
-Do **not** mix `update.sh` and `dpkg` upgrades on the same tree. To move from a tarball install:
+Older sites installed from the (now removed) `install.sh` tarball should move to the package. To migrate an existing tarball tree:
 
 1. **Back up** configs:
 
@@ -180,7 +180,7 @@ Required modules are enabled automatically: `proxy`, `proxy_http`, `proxy_wstunn
 
 If you use Let's Encrypt, install `certbot` separately (it is not a package dependency). Apache setup auto-detects certs under `/etc/letsencrypt/live/` when present; otherwise the generated vhost uses the Debian `ssl-cert` snakeoil certificate until you add real TLS.
 
-Log ACLs for `www-data` are applied when the `acl` package is present (same as `install.sh`).
+Log ACLs for `www-data` are applied when the `acl` package is present.
 
 ## Services
 
@@ -223,17 +223,6 @@ On upgrade, if dpkg prompts about `/etc/sudoers.d/011-supermon-ng`, install the 
 - **remove**: stops services, disables the `supermon-ng` Apache site; keeps the site file on disk.
 - **purge**: also removes `/etc/apache2/sites-available/supermon-ng.conf`, sudoers drop-in, and the node-status timer drop-in.
 
-## Tarball vs .deb
+## Legacy tarball note
 
-| | Tarball + `install.sh` | `.deb` |
-|--|------------------------|--------|
-| Apache setup | `install.sh` (optional `--skip-apache`) | debconf + `postinst` |
-| Config backup | `update.sh` | `dpkg`/conffiles |
-| Composer vendor | On target | Bundled at build time |
-| `allmon.ini` from Asterisk | `install.sh` on fresh install | `postinst` on fresh install |
-| Node status interval | `.env` at install/update | `.env` via systemd drop-in on configure |
-| Sudoers file | `/etc/sudoers.d/011_www-nopasswd` | `/etc/sudoers.d/011-supermon-ng` |
-
-Both can coexist on the same path; do not mix upgrade methods without backing up `user_files/`.
-
-The tarball `update.sh` script is shipped under `/var/www/html/supermon-ng/scripts/` for manual use but is not invoked automatically during `dpkg` upgrades.
+Older installs used a tarball with `install.sh` / `update.sh` and a `/etc/sudoers.d/011_www-nopasswd` sudoers file. Those flows are gone; the package uses `/etc/sudoers.d/011-supermon-ng` and manages Apache, composer vendoring, `allmon.ini` generation, and the node-status interval through debconf and the maintainer scripts. See [Migrating from a legacy tarball install to apt](#migrating-from-a-legacy-tarball-install-to-apt).

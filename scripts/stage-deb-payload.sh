@@ -88,7 +88,7 @@ fi
 
 # Admin scripts shipped with the app
 mkdir -p "$STAGE/scripts"
-for s in manage_users.php generate_local_allmon.php update.sh version-check.sh \
+for s in manage_users.php generate_local_allmon.php version-check.sh \
     generate-apache-template.sh configure-apache.sh patch-public-htaccess.sh \
     configure-app-base-path.sh composer-install-production.sh database-auto-update.php \
     supermon_unified_file_editor.sh; do

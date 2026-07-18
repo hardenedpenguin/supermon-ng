@@ -9,7 +9,7 @@ namespace SupermonNg\Support;
  *
  * Default install: /supermon-ng under a shared Apache document root.
  * Dedicated vhost (DocumentRoot = public): set APP_BASE_PATH=/ in .env and run
- * scripts/configure-app-base-path.sh (or install/update.sh).
+ * scripts/configure-app-base-path.sh (or dpkg-reconfigure supermon-ng).
  */
 final class AppBasePath
 {

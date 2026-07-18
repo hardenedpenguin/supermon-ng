@@ -9,7 +9,7 @@ Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket
 
 **Current release:** [V4.3.3](https://github.com/hardenedpenguin/supermon-ng/releases/tag/V4.3.3) (July 2026)
 
-> **Install and upgrades:** Supermon-ng is moving to the **Debian `.deb` package** for new installs and updates. Use the [hardenedpenguin APT repository](https://hardenedpenguin.github.io/hardenedpenguin-apt/) (`apt install supermon-ng`) or install a `.deb` from [Releases](https://github.com/hardenedpenguin/supermon-ng/releases). The tarball **`install.sh`** and **`update.sh`** flows are **deprecated** — they remain for legacy sites but are no longer supported. Tarball `update.sh` in particular does not reliably deploy new privileged scripts (for example announcements `announce-*.sh` and sudoers). See [docs/DEBIAN.md](docs/DEBIAN.md). Existing tarball installs should [migrate to apt](docs/DEBIAN.md#migrating-from-tarball-installsh-to-apt) rather than run `update.sh` again.
+> **Install and upgrades:** Supermon-ng installs and updates via the **Debian `.deb` package** only. Use the [hardenedpenguin APT repository](https://hardenedpenguin.github.io/hardenedpenguin-apt/) (`apt install supermon-ng`) or install a `.deb` from [Releases](https://github.com/hardenedpenguin/supermon-ng/releases). The old tarball `install.sh` / `update.sh` flows have been **removed** and are no longer supported or published. Existing tarball installs should [migrate to apt](docs/DEBIAN.md#migrating-from-a-legacy-tarball-install-to-apt). See [docs/DEBIAN.md](docs/DEBIAN.md).
 
 ## Features
 
@@ -51,20 +51,6 @@ Apache is configured automatically (debconf can opt out). On a **fresh install**
 
 Open `https://your-host/supermon-ng/` — the **setup wizard** walks through admin creation, `global.inc`, and node setup. Existing sites skip the wizard once complete.
 
-<details>
-<summary><strong>Deprecated: tarball + install.sh</strong></summary>
-
-Not recommended for new deployments. May miss package-managed files (sudoers, systemd, `user_files/sbin` scripts).
-
-```bash
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.3.3/supermon-ng-V4.3.3.tar.xz
-tar -xJf supermon-ng-V4.3.3.tar.xz
-cd supermon-ng
-sudo ./install.sh
-```
-
-</details>
-
 ### URL base path
 
 Set `APP_BASE_PATH` in `/var/www/html/supermon-ng/.env`, then reconfigure Apache:
@@ -98,24 +84,7 @@ sudo apt install supermon-ng
 sudo apt install ./supermon-ng_*_all.deb
 ```
 
-Tarball sites should [migrate to apt](docs/DEBIAN.md#migrating-from-tarball-installsh-to-apt) instead of using `update.sh`.
-
-<details>
-<summary><strong>Deprecated: tarball + update.sh</strong></summary>
-
-Do not use on sites that can move to the `.deb`. `update.sh` preserves the existing `user_files/sbin/` tree and may skip new privileged scripts.
-
-```bash
-cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.3.3/supermon-ng-V4.3.3.tar.xz
-tar -xJf supermon-ng-V4.3.3.tar.xz
-cd supermon-ng
-sudo ./scripts/update.sh
-```
-
-Options: `--skip-apache`, `--force` (re-apply same version).
-
-</details>
+Legacy tarball sites should [migrate to apt](docs/DEBIAN.md#migrating-from-a-legacy-tarball-install-to-apt).
 
 ```bash
 sudo /var/www/html/supermon-ng/scripts/version-check.sh

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Generate apache-config-template.conf for install.sh / update.sh
+# Generate apache-config-template.conf (used by the package Apache setup)
 # APP_BASE_PATH=/  → dedicated vhost (DocumentRoot = app public, /api, /ws)
 # APP_BASE_PATH=/supermon-ng → subdirectory under shared /var/www/html
 
