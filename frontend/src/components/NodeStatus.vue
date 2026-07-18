@@ -277,7 +277,8 @@ export default {
       updating.value = true
       updateOutput.value = ''
       try {
-        const response = await api.post('/node-status/trigger-update')
+        // Running the update script can far exceed the global 5s timeout.
+        const response = await api.post('/node-status/trigger-update', {}, { timeout: 120000 })
         if (response.data.success) {
           updateOutput.value = response.data.output || 'Update completed successfully'
           await loadServiceStatus() // Refresh service status

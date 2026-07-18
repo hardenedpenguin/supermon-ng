@@ -311,11 +311,12 @@ const executeFavoriteCommand = async (favorite: Favorite, node: string) => {
   error.value = ''
   
   try {
-    // CSRF token is automatically handled by the API interceptor
+    // CSRF token is automatically handled by the API interceptor.
+    // AMI/asterisk execution can exceed the global 5s timeout.
     const response = await api.post('/config/favorites/execute', {
       node: node,
       command: favorite.command
-    })
+    }, { timeout: 30000 })
     
     result.value = {
       success: response.data.success,

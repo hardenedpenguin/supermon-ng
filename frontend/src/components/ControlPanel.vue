@@ -155,10 +155,11 @@ const executeCommand = async () => {
   result.value = null
   
   try {
+    // AMI/asterisk execution can exceed the global 5s timeout.
     const response = await api.post('/config/controlpanel/execute', {
       node: props.localNode,
       command: selectedCommand.value
-    })
+    }, { timeout: 30000 })
     
     if (response.data.success) {
       result.value = {

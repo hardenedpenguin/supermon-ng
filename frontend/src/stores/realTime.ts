@@ -50,6 +50,12 @@ export const useRealTimeStore = defineStore('realTime', () => {
   const monitoringPromises = new Map<string, Promise<void>>()
   const wsUrlByNode = new Map<string, string>()
 
+  // Re-expose the ASTDB map as a computed so consumers stay reactive to the
+  // astdb store reassigning fullAstdb. Reading astdbStore.fullAstdb directly
+  // into the returned object would capture the initial (empty) map once and
+  // never reflect later loads, leaving ASTDB fallback titles stale.
+  const astdb = computed(() => astdbStore.fullAstdb)
+
   const setWsMonitoringMode = (nodeId: string, mode: NodeMonitoringMode) => {
     const key = String(nodeId)
     if (wsMonitoringModes.value[key] !== mode) {
@@ -717,8 +723,10 @@ export const useRealTimeStore = defineStore('realTime', () => {
     wsUrlByNode.clear()
     wsMonitoringModes.value = {}
 
-    // Disconnect all WebSocket connections
-    monitoringNodes.value.forEach(nodeId => {
+    // Disconnect all WebSocket connections. Iterate a snapshot because
+    // stopMonitoring() splices monitoringNodes.value, and mutating the array
+    // being iterated would skip entries and leak their WebSocket connections.
+    ;[...monitoringNodes.value].forEach(nodeId => {
       stopMonitoring(nodeId)
     })
     
@@ -734,7 +742,7 @@ export const useRealTimeStore = defineStore('realTime', () => {
     // State
     nodes,
     nodeConfig,
-    astdb: astdbStore.fullAstdb,
+    astdb,
     astdbStore,
     isConnected,
     error,

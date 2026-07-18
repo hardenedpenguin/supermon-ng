@@ -119,7 +119,8 @@ const executeRestart = async () => {
   result.value = null
 
   try {
-    const response = await api.post('/nodes/fastrestart', { localnode: props.localnode })
+    // Restarting Asterisk can take longer than the global 5s timeout.
+    const response = await api.post('/nodes/fastrestart', { localnode: props.localnode }, { timeout: 30000 })
 
     if (response.data.success) {
       result.value = response.data.data

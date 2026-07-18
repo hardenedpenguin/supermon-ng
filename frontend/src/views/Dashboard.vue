@@ -810,8 +810,9 @@ const configeditor = async () => {
 
 const astreload = async () => {
   try {
-    // IAX2/Module reload is local only - no node selection needed
-    const response = await api.post('/config/asterisk/reload', {})
+    // IAX2/Module reload is local only - no node selection needed.
+    // Reloads can take longer than the global 5s timeout.
+    const response = await api.post('/config/asterisk/reload', {}, { timeout: 30000 })
 
     if (response.data.success) {
       alert('Asterisk configuration reload completed successfully!\n\n' + response.data.results.join('\n'))
@@ -831,9 +832,10 @@ const astaron = async () => {
       return
     }
 
+    // Service start can take longer than the global 5s timeout.
     const response = await api.post('/config/asterisk/control', {
       action: 'start'
-    })
+    }, { timeout: 30000 })
 
     if (response.data.success) {
       alert('AllStar service started successfully!\n\n' + response.data.output.join('\n'))
@@ -853,9 +855,10 @@ const astaroff = async () => {
       return
     }
 
+    // Service stop can take longer than the global 5s timeout.
     const response = await api.post('/config/asterisk/control', {
       action: 'stop'
-    })
+    }, { timeout: 30000 })
 
     if (response.data.success) {
       alert('AllStar service stopped successfully!\n\n' + response.data.output.join('\n'))

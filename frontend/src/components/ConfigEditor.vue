@@ -186,11 +186,12 @@ const saveFile = async () => {
   saveResult.value = null
   
   try {
-    // CSRF token is automatically handled by the API interceptor
+    // CSRF token is automatically handled by the API interceptor.
+    // Writing goes through a sudo helper, which can exceed the global 5s timeout.
     const response = await api.post('/config/configeditor/save', {
       filePath: selectedFile.value.path,
       content: fileContent.value
-    })
+    }, { timeout: 30000 })
     
     if (response.data.success) {
       saveResult.value = {

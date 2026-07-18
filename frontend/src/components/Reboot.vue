@@ -111,7 +111,7 @@ const executeReboot = async () => {
   result.value = null
 
   try {
-    const response = await api.post('/nodes/reboot')
+    const response = await api.post('/nodes/reboot', {}, { timeout: 30000 })
 
     if (response.data.success) {
       result.value = {

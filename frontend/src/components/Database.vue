@@ -241,9 +241,11 @@ const generateAstdb = async () => {
   generationSuccess.value = false
 
   try {
+    // Regenerating the ASTDB downloads and rebuilds a large file; allow well
+    // beyond the global 5s timeout.
     const response = await api.post('/database/generate', {
       strictly_private: strictlyPrivate.value
-    })
+    }, { timeout: 120000 })
 
     if (response.data.success) {
       generationSuccess.value = true

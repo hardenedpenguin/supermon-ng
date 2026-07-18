@@ -2,6 +2,14 @@ import axios from 'axios'
 import { getCsrfService } from '@/services/CsrfTokenService'
 import { appUrl } from '@/utils/basePath'
 
+declare module 'axios' {
+  export interface InternalAxiosRequestConfig {
+    // Set once we have retried a request after a CSRF failure, so the response
+    // interceptor never retries the same request more than once.
+    _csrfRetried?: boolean
+  }
+}
+
 // Use the enhanced CSRF service
 const csrfService = getCsrfService()
 
@@ -75,13 +83,20 @@ api.interceptors.response.use(
           // Anonymous read-only browsing is allowed; do not force login on 401.
           break
         case 403:
-          // Check if it's a CSRF token error
-          if (error.response.data?.message?.includes('CSRF token validation failed')) {
-            // Refresh CSRF token and retry the request
+          // Check if it's a CSRF token error. Retry at most once: if the
+          // retried request also fails CSRF validation, fall through instead of
+          // looping (which would otherwise hammer the server indefinitely).
+          if (
+            error.response.data?.message?.includes('CSRF token validation failed') &&
+            error.config &&
+            !error.config._csrfRetried
+          ) {
             try {
+              error.config._csrfRetried = true
               csrfService.clearToken()
               const newToken = await csrfService.refreshToken()
-              if (newToken && error.config) {
+              if (newToken) {
+                error.config.headers = error.config.headers || {}
                 error.config.headers['X-CSRF-Token'] = newToken
                 return api.request(error.config)
               }
