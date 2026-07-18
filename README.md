@@ -7,7 +7,7 @@
 
 Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket real-time updates with AMI polling fallback.
 
-**Current release:** [V4.3.2](https://github.com/hardenedpenguin/supermon-ng/releases/tag/V4.3.2) (July 2026)
+**Current release:** [V4.3.3](https://github.com/hardenedpenguin/supermon-ng/releases/tag/V4.3.3) (July 2026)
 
 > **Install and upgrades:** Supermon-ng is moving to the **Debian `.deb` package** for new installs and updates. Use the [hardenedpenguin APT repository](https://hardenedpenguin.github.io/hardenedpenguin-apt/) (`apt install supermon-ng`) or install a `.deb` from [Releases](https://github.com/hardenedpenguin/supermon-ng/releases). The tarball **`install.sh`** and **`update.sh`** flows are **deprecated** — they remain for legacy sites but are no longer supported. Tarball `update.sh` in particular does not reliably deploy new privileged scripts (for example announcements `announce-*.sh` and sudoers). See [docs/DEBIAN.md](docs/DEBIAN.md). Existing tarball installs should [migrate to apt](docs/DEBIAN.md#migrating-from-tarball-installsh-to-apt) rather than run `update.sh` again.
 
@@ -57,8 +57,8 @@ Open `https://your-host/supermon-ng/` — the **setup wizard** walks through adm
 Not recommended for new deployments. May miss package-managed files (sudoers, systemd, `user_files/sbin` scripts).
 
 ```bash
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.3.2/supermon-ng-V4.3.2.tar.xz
-tar -xJf supermon-ng-V4.3.2.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.3.3/supermon-ng-V4.3.3.tar.xz
+tar -xJf supermon-ng-V4.3.3.tar.xz
 cd supermon-ng
 sudo ./install.sh
 ```
@@ -107,8 +107,8 @@ Do not use on sites that can move to the `.deb`. `update.sh` preserves the exist
 
 ```bash
 cd $HOME
-wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.3.2/supermon-ng-V4.3.2.tar.xz
-tar -xJf supermon-ng-V4.3.2.tar.xz
+wget https://github.com/hardenedpenguin/supermon-ng/releases/download/V4.3.3/supermon-ng-V4.3.3.tar.xz
+tar -xJf supermon-ng-V4.3.3.tar.xz
 cd supermon-ng
 sudo ./scripts/update.sh
 ```

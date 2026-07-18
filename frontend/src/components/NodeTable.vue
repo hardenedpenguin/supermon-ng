@@ -439,76 +439,87 @@ const openLsnodModal = () => {
   showLsnodModal.value = true
 }
 
+const parseElapsedSeconds = (elapsed: string | null | undefined): number | null => {
+  if (!elapsed || elapsed === 'N/A' || elapsed === 'unknown' || elapsed === '') {
+    return null
+  }
+  const timeMatch = elapsed.match(/(\d+):(\d+):(\d+)/)
+  if (timeMatch) {
+    return parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3])
+  }
+  const seconds = parseInt(elapsed)
+  return Number.isNaN(seconds) ? null : seconds
+}
+
+const parseLastKeyedSeconds = (lastKeyed: string | null | undefined): number | null => {
+  if (!lastKeyed || lastKeyed === '-1' || lastKeyed === 'N/A' || lastKeyed === 'n/a') {
+    return null
+  }
+  const seconds = parseInt(lastKeyed)
+  return !Number.isNaN(seconds) && seconds >= 0 ? seconds : null
+}
+
 const applyNodeData = (data: Node | null) => {
   nodeData.value = data
-  
+
   if (data && data.remote_nodes) {
     connectedNodes.value = data.remote_nodes
     totalNodes.value = connectedNodes.value.length
-    // Use user preferences for display count, fallback to 999
     const maxDisplay = appStore.user?.preferences?.displayedNodes || 999
     displayedNodes.value = Math.min(totalNodes.value, maxDisplay)
-    
-    // Update timer bases for real-time calculations
+
+    const seen = new Set<string>()
+    const now = Date.now()
+
     connectedNodes.value.forEach((node: ConnectedNode) => {
-      const nodeKey = `${props.node.id}-${node.node}`
-      
-      // Parse elapsed time - could be HH:MM:SS or seconds
-      let elapsedBase: number | null = null
-      let elapsedTimestamp: number | null = null
-      if (node.elapsed && node.elapsed !== 'N/A' && node.elapsed !== 'unknown' && node.elapsed !== '') {
-        // Try parsing as HH:MM:SS
-        const timeMatch = node.elapsed.match(/(\d+):(\d+):(\d+)/)
-        if (timeMatch) {
-          const hours = parseInt(timeMatch[1])
-          const minutes = parseInt(timeMatch[2])
-          const seconds = parseInt(timeMatch[3])
-          elapsedBase = hours * 3600 + minutes * 60 + seconds
-          elapsedTimestamp = Date.now() // Store when we received this value
-        } else {
-          // Try parsing as seconds
-          const seconds = parseInt(node.elapsed)
-          if (!isNaN(seconds)) {
-            elapsedBase = seconds
-            elapsedTimestamp = Date.now() // Store when we received this value
-          }
-        }
-      }
-      
-      // Parse last_keyed - should be seconds since last keyed
-      let lastKeyedBase: number | null = null
-      let lastKeyedTimestamp: number | null = null
-      if (node.last_keyed && node.last_keyed !== '-1' && node.last_keyed !== 'N/A' && node.last_keyed !== 'n/a') {
-        const seconds = parseInt(node.last_keyed)
-        if (!isNaN(seconds) && seconds >= 0) {
-          lastKeyedBase = seconds
-          lastKeyedTimestamp = Date.now() // Store when we received this value
-        }
-      }
-      
-      // Update or create timer entry
+      const nodeKey = `${nodeId.value}-${node.node}`
+      seen.add(nodeKey)
+
+      const elapsedBase = parseElapsedSeconds(node.elapsed)
+      const lastKeyedBase = parseLastKeyedSeconds(node.last_keyed)
+      const existing = nodeTimers.value.get(nodeKey)
+
+      // Only refresh the wall-clock anchor when AMI reports a new base value.
+      // Re-applying the same bases (e.g. parent re-render) must not reset the
+      // anchor or the Connected/Received columns freeze until the next keyup.
+      const elapsedUnchanged = existing != null && existing.elapsedBase === elapsedBase
+      const lastKeyedUnchanged = existing != null && existing.lastKeyedBase === lastKeyedBase
+
       nodeTimers.value.set(nodeKey, {
         elapsedBase,
-        elapsedTimestamp,
+        elapsedTimestamp: elapsedBase === null
+          ? null
+          : (elapsedUnchanged ? existing!.elapsedTimestamp : now),
         lastKeyedBase,
-        lastKeyedTimestamp
+        lastKeyedTimestamp: lastKeyedBase === null
+          ? null
+          : (lastKeyedUnchanged ? existing!.lastKeyedTimestamp : now)
       })
     })
+
+    for (const key of nodeTimers.value.keys()) {
+      if (!seen.has(key)) {
+        nodeTimers.value.delete(key)
+      }
+    }
   } else {
     connectedNodes.value = []
     totalNodes.value = 0
     displayedNodes.value = 0
-    // Clear timers when no nodes
     nodeTimers.value.clear()
   }
 }
 
+// Depend on the id string (stable across parent re-renders that rebuild the
+// inline :node object) rather than props.node itself. deep:true is unnecessary
+// because the store replaces the node object on AMI/WS updates.
+const nodeId = computed(() => String(props.node.id))
 watch(
-  () => realTimeStore.getNodeById(props.node.id),
+  () => realTimeStore.getNodeById(nodeId.value),
   (data) => {
     applyNodeData((data as Node | undefined) ?? null)
   },
-  { immediate: true, deep: true }
+  { immediate: true }
 )
 
 // Format last keyed time with real-time updates
@@ -531,7 +542,7 @@ const formatLastKeyed = (lastKeyed: string | null | undefined, index: number): s
     return 'N/A'
   }
   
-  const nodeKey = `${props.node.id}-${connectedNode.node}`
+  const nodeKey = `${nodeId.value}-${connectedNode.node}`
   const timer = nodeTimers.value.get(nodeKey)
   
   // Calculate current seconds since last keyed
@@ -576,7 +587,7 @@ const formatElapsed = (elapsed: string | null | undefined, index: number): strin
     return 'N/A'
   }
   
-  const nodeKey = `${props.node.id}-${connectedNode.node}`
+  const nodeKey = `${nodeId.value}-${connectedNode.node}`
   const timer = nodeTimers.value.get(nodeKey)
   
   // Calculate current elapsed time

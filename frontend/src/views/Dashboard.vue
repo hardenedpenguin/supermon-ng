@@ -92,9 +92,9 @@
       </div>
       <div v-else class="node-tables-container">
         <NodeTable 
-          v-for="(node, index) in displayedNodes"
-          :key="String(node.id)"
-          :node="{ id: String(node.id), info: (node as NodeType).info, callsign: (node as NodeType).callsign }"
+          v-for="node in nodeTableEntries"
+          :key="node.id"
+          :node="node"
           :show-detail="true"
           :astdb="realTimeStore.astdb"
           :config="realTimeStore.nodeConfig"
@@ -480,6 +480,16 @@ const displayedNodes = computed((): NodeType[] => {
     id: String(node.id)
   }))
 })
+
+// Stable NodeTable props: cached across Dashboard re-renders (e.g. the 1s
+// clock tick) so we do not pass a fresh object literal every second.
+const nodeTableEntries = computed(() =>
+  displayedNodes.value.map((node) => ({
+    id: String(node.id),
+    info: node.info,
+    callsign: node.callsign
+  }))
+)
 
 const nodeControls = useNodeControls({
   targetNode,

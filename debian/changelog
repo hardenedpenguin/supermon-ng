@@ -1,3 +1,14 @@
+supermon-ng (4.3.3-1) unstable; urgency=medium
+
+  * Fix Connected/Received timers freezing until a keyup.
+  * Dashboard was rebuilding the NodeTable :node object every second for the
+    clock tick; NodeTable's deep watch treated that as new data and reset the
+    elapsed/last-keyed anchors, so the columns never advanced.
+  * Stabilize NodeTable props, drop the unnecessary deep watch, and only
+    refresh timer anchors when AMI reports a new base value.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Sat, 18 Jul 2026 16:49:11 +0000
+
 supermon-ng (4.3.2-1) unstable; urgency=high
 
   * Security: verify PHP_AUTH_USER against .htpasswd before trusting it;
