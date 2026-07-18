@@ -107,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, watchEffect, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import { useAppStore } from '@/stores/app'
 import { useRealTimeStore } from '@/stores/realTime'
 import { useTimerTick } from '@/composables/useTimerTick'
@@ -510,11 +510,6 @@ watch(
   },
   { immediate: true, deep: true }
 )
-
-// Watch for header status details changes
-watchEffect(() => {
-  // Header status details have changed
-})
 
 // Format last keyed time with real-time updates
 const formatLastKeyed = (lastKeyed: string | null | undefined, index: number): string => {

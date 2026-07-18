@@ -2431,7 +2431,9 @@ class NodeController
                 ];
         }
 
-        $output = shell_exec($command . " 2>/dev/null");
+        // Run once via exec() so we get the return code; a prior shell_exec()
+        // of the same command executed the GPIO change twice.
+        $output = [];
         $returnVar = 0;
         exec($command . " 2>/dev/null", $output, $returnVar);
 
@@ -2494,34 +2496,17 @@ class NodeController
 
     private function executeRebootInBackground(): void
     {
-        try {
-            // Create a temporary script to handle the delayed reboot
-            $scriptContent = "#!/bin/bash\nsleep 10\nsudo /usr/sbin/reboot\n";
-            $scriptPath = '/tmp/reboot_' . uniqid() . '.sh';
-            
-            // Write the script
-            file_put_contents($scriptPath, $scriptContent);
-            chmod($scriptPath, 0755);
-            
-            // Execute the script in background
-            $command = "nohup $scriptPath > /dev/null 2>&1 &";
-            $output = [];
-            $returnCode = 0;
-            exec($command, $output, $returnCode);
-            
-            // Log the reboot attempt
-            $this->logger->info('Server reboot command executed in background', [
-                'command' => $command,
-                'script_path' => $scriptPath,
-                'return_code' => $returnCode,
-                'output' => $output
-            ]);
-        } catch (\Exception $e) {
-            $this->logger->error('Failed to execute reboot command in background', [
-                'error' => $e->getMessage(),
-                'command' => $command ?? 'unknown'
-            ]);
-        }
+        // Run the delayed reboot inline rather than writing a world-executable
+        // script into /tmp (predictable path + symlink/TOCTOU risk). The delay
+        // lets the HTTP response reach the client before the box goes down.
+        $command = "nohup sh -c 'sleep 10; sudo /usr/sbin/reboot' > /dev/null 2>&1 &";
+        $output = [];
+        $returnCode = 0;
+        exec($command, $output, $returnCode);
+
+        $this->logger->info('Server reboot command executed in background', [
+            'return_code' => $returnCode,
+        ]);
     }
 
     public function smlog(Request $request, Response $response, array $args): Response

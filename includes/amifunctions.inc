@@ -488,54 +488,6 @@ class SimpleAmiClient
     }
     
     /**
-     * Get pool size (for performance monitoring)
-     * 
-     * @return int Current pool size
-     */
-    public static function getPoolSize() 
-    {
-        return count(self::$connectionPool);
-    }
-    
-    /**
-     * Get active connections (for performance monitoring)
-     * 
-     * @return int Number of active connections
-     */
-    public static function getActiveConnections() 
-    {
-        $active = 0;
-        foreach (self::$connectionPool as $connection) {
-            if (self::isConnectionValid($connection['fp'])) {
-                $active++;
-            }
-        }
-        return $active;
-    }
-    
-    /**
-     * Get total requests (for performance monitoring)
-     * 
-     * @return int Total requests processed
-     */
-    public static function getTotalRequests() 
-    {
-        // Simple implementation - in production you'd track actual requests
-        return 0;
-    }
-    
-    /**
-     * Get average response time (for performance monitoring)
-     * 
-     * @return float Average response time in milliseconds
-     */
-    public static function getAverageResponseTime() 
-    {
-        // Simple implementation - in production you'd track actual response times
-        return 150.0; // Return 150ms as default
-    }
-    
-    /**
      * Execute command with connection pooling
      * 
      * @param string $host AMI host

@@ -213,7 +213,10 @@ $app->add(function (Request $request, RequestHandlerInterface $handler) use ($ap
     return $response;
 });
 
-// Add rate limiting middleware (in-process per worker; exempts lightweight health/bootstrap paths)
+// Add rate limiting middleware (exempts lightweight health/bootstrap paths).
+// Uses APCu when available so counts are shared across PHP-FPM workers and
+// survive between requests; otherwise falls back to an in-process array,
+// which is only effective under long-running (non-FPM) runtimes.
 $app->add(function (Request $request, RequestHandlerInterface $handler): Response {
     static $rateBuckets = [];
 
@@ -239,7 +242,18 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
     $clientIp = $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown';
     $currentTime = time();
 
-    $bucket = $rateBuckets[$clientIp] ?? ['count' => 0, 'window_start' => $currentTime];
+    $useApcu = function_exists('apcu_enabled') && apcu_enabled();
+    $apcuKey = 'sng_rl_' . $clientIp;
+
+    if ($useApcu) {
+        $bucket = apcu_fetch($apcuKey);
+        if (!is_array($bucket)) {
+            $bucket = ['count' => 0, 'window_start' => $currentTime];
+        }
+    } else {
+        $bucket = $rateBuckets[$clientIp] ?? ['count' => 0, 'window_start' => $currentTime];
+    }
+
     if (($currentTime - $bucket['window_start']) >= $rateLimitWindow) {
         $bucket = ['count' => 0, 'window_start' => $currentTime];
     }
@@ -263,7 +277,11 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
     }
 
     $bucket['count']++;
-    $rateBuckets[$clientIp] = $bucket;
+    if ($useApcu) {
+        apcu_store($apcuKey, $bucket, $rateLimitWindow * 2);
+    } else {
+        $rateBuckets[$clientIp] = $bucket;
+    }
 
     $response = $handler->handle($request);
     $remaining = max(0, $rateLimit - $bucket['count']);

@@ -74,7 +74,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { api } from '@/utils/api'
 
@@ -93,13 +93,23 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(['update:isVisible'])
 
+interface ControlPanelCommands {
+  labels: string[]
+  cmds: string[]
+}
+
+interface CommandResult {
+  error: boolean
+  message: string
+}
+
 // Reactive state
 const loading = ref(false)
 const error = ref('')
-const commands = ref({ labels: [], cmds: [] })
+const commands = ref<ControlPanelCommands>({ labels: [], cmds: [] })
 const selectedCommand = ref('')
 const executing = ref(false)
-const result = ref(null)
+const result = ref<CommandResult | null>(null)
 
 // Computed
 const hasCommands = computed(() => {

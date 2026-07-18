@@ -101,7 +101,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { api } from '@/utils/api'
 
@@ -111,13 +111,24 @@ const props = defineProps({
 
 const emit = defineEmits(['update:open'])
 
+interface EditableFile {
+  path: string
+  name: string
+  description?: string
+}
+
+interface SaveResult {
+  success: boolean
+  message: string
+}
+
 const loading = ref(false)
 const error = ref('')
-const fileCategories = ref({})
-const selectedFile = ref(null)
+const fileCategories = ref<Record<string, EditableFile[]>>({})
+const selectedFile = ref<EditableFile | null>(null)
 const fileContent = ref('')
 const saving = ref(false)
-const saveResult = ref(null)
+const saveResult = ref<SaveResult | null>(null)
 
 const closeModal = () => {
   emit('update:open', false)

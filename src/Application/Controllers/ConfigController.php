@@ -1201,7 +1201,7 @@ class ConfigController
             if (!$fp) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
-                    'message' => "Could not connect to Asterisk Manager for node $localNode"
+                    'message' => "Could not connect to Asterisk Manager at $amiHost"
                 ]));
                 return $response->withStatus(500);
             }
