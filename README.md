@@ -1,7 +1,15 @@
 # Supermon-NG
 
-![GitHub total downloads](https://img.shields.io/github/downloads/hardenedpenguin/supermon-ng/total?style=flat-square)
-![Release](https://img.shields.io/github/v/release/hardenedpenguin/supermon-ng?style=flat-square)
+[![Release](https://img.shields.io/github/v/release/hardenedpenguin/supermon-ng?style=flat-square&label=release)](https://github.com/hardenedpenguin/supermon-ng/releases)
+[![Downloads](https://img.shields.io/github/downloads/hardenedpenguin/supermon-ng/total?style=flat-square)](https://github.com/hardenedpenguin/supermon-ng/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/hardenedpenguin/supermon-ng/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/hardenedpenguin/supermon-ng/actions/workflows/ci.yml)
+[![Last commit](https://img.shields.io/github/last-commit/hardenedpenguin/supermon-ng?style=flat-square)](https://github.com/hardenedpenguin/supermon-ng/commits/main)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](debian/copyright)
+[![Install: apt](https://img.shields.io/badge/install-apt-A81D33?style=flat-square&logo=debian&logoColor=white)](https://hardenedpenguin.github.io/hardenedpenguin-apt/)
+
+![PHP](https://img.shields.io/badge/PHP-8.1%2B-777BB4?style=flat-square&logo=php&logoColor=white)
+![Vue](https://img.shields.io/badge/Vue-3-42b883?style=flat-square&logo=vuedotjs&logoColor=white)
+![Platform](https://img.shields.io/badge/platform-Debian%20%2F%20ASL3%2B-A81D33?style=flat-square&logo=debian&logoColor=white)
 
 <img src="supermon-ng.png" alt="Supermon-NG" width="200"/> <img src="supermon-ng-1.png" alt="Supermon-NG" width="200"/>
 
