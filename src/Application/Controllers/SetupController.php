@@ -55,6 +55,10 @@ final class SetupController
 
     public function saveGlobalConfig(Request $request, Response $response): Response
     {
+        if ($this->setupService->getStatus()['setup_complete']) {
+            return ApiResponseHelper::error($response, 'Setup is already complete', 403);
+        }
+
         $body = $this->parseJson($request);
         $result = $this->setupService->saveGlobalConfig($body);
 
@@ -67,6 +71,13 @@ final class SetupController
 
     public function generateAllmon(Request $request, Response $response): Response
     {
+        // The setup wizard is unauthenticated, so once setup is complete this
+        // endpoint must stop overwriting allmon.ini. Authenticated admins use
+        // the /admin/generate-local-allmon endpoint instead.
+        if ($this->setupService->getStatus()['setup_complete']) {
+            return ApiResponseHelper::error($response, 'Setup is already complete', 403);
+        }
+
         $body = $this->parseJson($request);
         $force = !empty($body['force']);
         $result = $this->setupService->generateAllmon($force);

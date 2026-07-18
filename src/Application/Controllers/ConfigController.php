@@ -210,8 +210,24 @@ class ConfigController
     /**
      * Load user preferences from file
      */
+    /**
+     * Restrict a username to characters safe for use in a filename, so it can
+     * never traverse out of its intended directory (defense in depth alongside
+     * verified authentication).
+     */
+    private function safeUsernameForFilename(string $username): string
+    {
+        $safe = preg_replace('/[^A-Za-z0-9._-]/', '', $username);
+        $safe = ltrim((string) $safe, '.');
+        return $safe;
+    }
+
     private function loadUserPreferences(string $username): array
     {
+        $username = $this->safeUsernameForFilename($username);
+        if ($username === '') {
+            return $this->getDefaultPreferences();
+        }
         $prefsFile = __DIR__ . "/../../../user_files/preferences/{$username}.json";
         
         if (file_exists($prefsFile)) {
@@ -233,6 +249,11 @@ class ConfigController
      */
     private function saveUserPreferences(string $username, array $preferences): bool
     {
+        $username = $this->safeUsernameForFilename($username);
+        if ($username === '') {
+            $this->logger->error('Refusing to save preferences for empty/invalid username');
+            return false;
+        }
         $prefsDir = __DIR__ . "/../../../user_files/preferences";
         $prefsFile = "{$prefsDir}/{$username}.json";
         
@@ -3326,10 +3347,16 @@ class ConfigController
      */
     private function getFavoritesIniPath(string $user): string
     {
+        // Constrain the username before using it in a filename so it cannot
+        // traverse out of user_files (defense in depth alongside verified auth).
+        $safeUser = $this->safeUsernameForFilename($user);
+
         // Check if user-specific favorites file exists
-        $userSpecificPath = __DIR__ . '/../../../user_files/' . $user . '-favorites.ini';
-        if (file_exists($userSpecificPath)) {
-            return $userSpecificPath;
+        if ($safeUser !== '') {
+            $userSpecificPath = __DIR__ . '/../../../user_files/' . $safeUser . '-favorites.ini';
+            if (file_exists($userSpecificPath)) {
+                return $userSpecificPath;
+            }
         }
 
         // Check favini.inc for user mapping

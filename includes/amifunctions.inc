@@ -226,14 +226,26 @@ class SimpleAmiClient
      * @param string|null $actionID Optional ActionID to look for in the response.
      * @return string|false      The matching response block or false on error/timeout.
      */
-    public static function getResponse($fp, $actionID = null)
+    public static function getResponse($fp, $actionID = null, $timeout = null)
     {
+        if ($timeout === null) {
+            $timeout = self::DEFAULT_COMMAND_TIMEOUT;
+        }
+
         $response = '';
         $foundActionID = ($actionID === null);
-        
-        stream_set_timeout($fp, self::VERY_LONG_TIMEOUT_SECONDS);
+
+        // Bound both the per-read block and the overall wait. Previously this
+        // used a ~24h timeout, so an AMI socket that connected but never sent a
+        // terminating "\r\n\r\n" would pin the PHP-FPM worker indefinitely.
+        $deadline = microtime(true) + $timeout;
+        stream_set_timeout($fp, max(1, (int) ceil($timeout)));
 
         while (true) {
+            if (microtime(true) >= $deadline) {
+                return false;
+            }
+
             $line = fgets($fp, 4096);
             $metadata = stream_get_meta_data($fp);
 
@@ -328,7 +340,7 @@ class SimpleAmiClient
             return false;
         }
 
-        $loginResponse = self::getResponse($fp, $actionID);
+        $loginResponse = self::getResponse($fp, $actionID, $timeout);
         if ($loginResponse === false) {
             return false;
         }
@@ -374,7 +386,7 @@ class SimpleAmiClient
             return false;
         }
         
-        return self::getResponse($fp, $actionID);
+        return self::getResponse($fp, $actionID, $timeout);
     }
 
     /**
@@ -406,7 +418,7 @@ class SimpleAmiClient
             return false;
         }
 
-        $rawResponse = self::getResponse($fp, $actionID);
+        $rawResponse = self::getResponse($fp, $actionID, $timeout);
         if ($rawResponse === false) {
             self::logAMIOperation('command', 'unknown', microtime(true) - $startTime, false, 'Response timeout');
             return false;

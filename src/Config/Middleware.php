@@ -71,7 +71,10 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
     if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'], true)) {
         $uri = $request->getUri()->getPath();
         
-        // Skip CSRF validation for auth endpoints (login, etc.), bubble chart, and DVSwitch endpoints
+        // Skip CSRF validation for auth endpoints (login, etc.) and bubble chart.
+        // DVSwitch is intentionally NOT exempt: it changes state (mode switch,
+        // bridge restart) and the frontend already sends the token, so a
+        // session-cookie CSRF must not be able to reach it.
         $normalizedUri = AppBasePath::stripPrefix($uri);
         $skipPaths = [
             '/api/v1/auth/login',
@@ -79,10 +82,7 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
             '/api/v1/auth/me',
             '/api/v1/config/bubblechart',
         ];
-        // Skip CSRF for DVSwitch endpoints (they have their own permission checks)
-        $isDvswitchPath = str_contains($normalizedUri, '/api/v1/dvswitch/')
-            || str_contains($uri, '/api/v1/dvswitch/');
-        if (!in_array($uri, $skipPaths, true) && !in_array($normalizedUri, $skipPaths, true) && !$isDvswitchPath) {
+        if (!in_array($uri, $skipPaths, true) && !in_array($normalizedUri, $skipPaths, true)) {
             $parsedBody = $request->getParsedBody();
             $headerToken = $request->getHeaderLine('X-CSRF-Token');
             $token = $headerToken !== '' ? $headerToken : (is_array($parsedBody) ? ($parsedBody['csrf_token'] ?? '') : '');

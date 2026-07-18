@@ -494,7 +494,7 @@ class NodeController
                 'success' => false,
                 'message' => 'Please provide a DTMF command.'
             ]));
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
         // Check user permissions
@@ -1785,13 +1785,14 @@ class NodeController
                     ],
                     'message' => 'Fast restart command executed successfully'
                 ]));
-            } else {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => $restartResult['message']
-                ]));
+                return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
             }
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $restartResult['message']
+            ]));
+            return $response->withStatus(502)->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to execute fast restart', ['error' => $e->getMessage()]);
@@ -2154,13 +2155,14 @@ class NodeController
                     ],
                     'message' => $result['message']
                 ]));
-            } else {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => $result['message']
-                ]));
+                return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
             }
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $result['message']
+            ]));
+            return $response->withStatus(502)->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to execute ban/allow action', ['error' => $e->getMessage()]);
@@ -2359,13 +2361,14 @@ class NodeController
                     ],
                     'message' => $result['message']
                 ]));
-            } else {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => $result['message']
-                ]));
+                return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
             }
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $result['message']
+            ]));
+            return $response->withStatus(502)->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to execute GPIO command', ['error' => $e->getMessage()]);
@@ -2543,13 +2546,14 @@ class NodeController
                     ],
                     'message' => 'Supermon log content retrieved successfully'
                 ]));
-            } else {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => $result['message']
-                ]));
+                return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
             }
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $result['message']
+            ]));
+            return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve Supermon log content', ['error' => $e->getMessage()]);
@@ -2824,13 +2828,14 @@ class NodeController
                     ],
                     'message' => 'Web access log content retrieved successfully'
                 ]));
-            } else {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => $result['message']
-                ]));
+                return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
             }
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $result['message']
+            ]));
+            return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve web access log content', ['error' => $e->getMessage()]);
@@ -2970,13 +2975,14 @@ class NodeController
                     ],
                     'message' => 'Web error log content retrieved successfully'
                 ]));
-            } else {
-                $response->getBody()->write(json_encode([
-                    'success' => false,
-                    'message' => $result['message']
-                ]));
+                return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
             }
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => $result['message']
+            ]));
+            return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
 
         } catch (\Exception $e) {
             $this->logger->error('Failed to retrieve web error log content', ['error' => $e->getMessage()]);

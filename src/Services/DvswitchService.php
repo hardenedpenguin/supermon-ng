@@ -25,6 +25,16 @@ class DvswitchService
 
     private const TALKGROUP_REF_PREFIX = 'smngtg1:';
 
+    /**
+     * Mask any hotspot credential ("password@host:port!tg") in a string before
+     * it is written to the logs, so DVSwitch commands/tune args cannot leak the
+     * connection password.
+     */
+    private function redactSecrets(string $value): string
+    {
+        return preg_replace('/[^\s\'"@]+@/', '***@', $value) ?? $value;
+    }
+
     public function __construct(
         LoggerInterface $logger,
         AllStarConfigService $configService,
@@ -677,7 +687,7 @@ class DvswitchService
             'username' => $username ?? 'null',
             'abinfo_file' => $abinfoFile,
             'dvswitch_ini' => $dvswitchIni,
-            'command' => $command
+            'command' => $this->redactSecrets($command)
         ]);
         
         $output = [];
@@ -687,7 +697,7 @@ class DvswitchService
             'node_id' => $nodeId,
             'mode' => $modeName,
             'abinfo_file' => $abinfoFile,
-            'command' => $command
+            'command' => $this->redactSecrets($command)
         ]);
         
         exec($command . ' 2>&1', $output, $returnVar);
@@ -697,7 +707,7 @@ class DvswitchService
             $this->logger->error('DVSwitch mode switch failed', [
                 'node_id' => $nodeId,
                 'mode' => $modeName,
-                'command' => $command,
+                'command' => $this->redactSecrets($command),
                 'error' => $error,
                 'return_code' => $returnVar
             ]);
@@ -795,11 +805,11 @@ class DvswitchService
 
         $this->logger->warning('DVSwitch command being executed', [
             'node_id' => $nodeId,
-            'tgid' => $execArg,
+            'tgid' => $this->redactSecrets((string) $execArg),
             'username' => $username ?? 'null',
             'abinfo_file' => $abinfoFile,
             'dvswitch_ini' => $dvswitchIni,
-            'command' => $command,
+            'command' => $this->redactSecrets($command),
         ]);
 
         $output = [];
@@ -807,9 +817,9 @@ class DvswitchService
 
         $this->logger->debug('Executing DVSwitch tune command', [
             'node_id' => $nodeId,
-            'tgid' => $execArg,
+            'tgid' => $this->redactSecrets((string) $execArg),
             'abinfo_file' => $abinfoFile,
-            'command' => $command,
+            'command' => $this->redactSecrets($command),
         ]);
 
         exec($command . ' 2>&1', $output, $returnVar);
@@ -818,8 +828,8 @@ class DvswitchService
             $error = implode("\n", $output);
             $this->logger->error('DVSwitch talkgroup switch failed', [
                 'node_id' => $nodeId,
-                'tgid' => $execArg,
-                'command' => $command,
+                'tgid' => $this->redactSecrets((string) $execArg),
+                'command' => $this->redactSecrets($command),
                 'error' => $error,
                 'return_code' => $returnVar,
             ]);
@@ -828,7 +838,7 @@ class DvswitchService
 
         $this->logger->info('DVSwitch talkgroup switched', [
             'node_id' => $nodeId,
-            'tgid' => $execArg,
+            'tgid' => $this->redactSecrets((string) $execArg),
             'output' => implode("\n", $output),
         ]);
 
