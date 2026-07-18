@@ -165,6 +165,9 @@
 
           <!-- Scheduled -->
           <section v-show="activeTab === 'scheduled' && canSchedule" class="tab-panel">
+            <div v-if="!schedulingEnabled" class="status-message error">
+              Scheduling is disabled in announcements.ini.
+            </div>
             <h3 class="section-title">Add schedule</h3>
             <div class="field">
               <label for="sched-preset">Preset</label>
@@ -415,6 +418,7 @@ const minuteOptions = ref<string[]>(['0', '15', '30', '45', '*'])
 const hourOptions = ref<string[]>(['7', '7-20', '6-11', '12-17', '17-21', '*'])
 
 const defaults = ref({ mode: 'polite', scope: 'local' })
+const schedulingEnabled = ref(true)
 const uploadInput = ref<HTMLInputElement | null>(null)
 const uploadName = ref('')
 
@@ -543,6 +547,7 @@ const schedulePreview = computed(() => {
 
 const canSaveSchedule = computed(() =>
   Boolean(
+    schedulingEnabled.value &&
     scheduleForm.value.file &&
     scheduleForm.value.node &&
     scheduleForm.value.description.trim() &&
@@ -625,6 +630,7 @@ async function loadData() {
     files.value = data?.files ?? []
     nodes.value = data?.nodes ?? []
     defaults.value = data?.config?.defaults ?? defaults.value
+    schedulingEnabled.value = data?.config?.scheduling?.enabled ?? true
     minuteOptions.value = ['*', ...((data?.config?.presets?.minutes as string[]) ?? ['0', '15', '30', '45'])]
     hourOptions.value = ['*', ...((data?.config?.presets?.hours as string[]) ?? ['7-20'])]
     if (data?.config?.tts?.voice) {
@@ -852,7 +858,7 @@ async function deleteSchedule(id: string) {
   try {
     const response = await api.delete(`/announcements/schedules/${id}`)
     success.value = response.data?.message || 'Schedule deleted.'
-    schedules.value = schedules.value.filter((job) => job.id !== id)
+    await loadSchedules()
   } catch (e: unknown) {
     error.value = extractError(e)
   } finally {

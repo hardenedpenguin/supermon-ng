@@ -41,6 +41,16 @@ write_crontab() {
     crontab "$file"
 }
 
+# Serialize read-modify-write of the root crontab so concurrent add/toggle/delete
+# operations cannot clobber each other. Best-effort: continues if flock is absent.
+lock_crontab() {
+    local lockfile="${TMPDIR:-/tmp}/supermon-ng-announce-cron.lock"
+    if command -v flock >/dev/null 2>&1; then
+        exec 9>"$lockfile" 2>/dev/null || return 0
+        flock -w 10 9 2>/dev/null || true
+    fi
+}
+
 parse_entries() {
     local line comment="" last_comment="" enabled=1
     while IFS= read -r line || [[ -n "$line" ]]; do
@@ -147,6 +157,7 @@ cmd_add() {
         esac
     done
 
+    lock_crontab
     [[ -n "$min" && -n "$hour" && -n "$node" && -n "$file" && -n "$desc" ]] || usage
     validate_cron_field "$min" || { echo "Invalid minute" >&2; exit 1; }
     validate_cron_field "$hour" || { echo "Invalid hour" >&2; exit 1; }
@@ -190,47 +201,6 @@ cmd_add() {
     echo "Schedule added"
 }
 
-find_entry_lines() {
-    local target_id="$1"
-    local comment="" cron_line="" id=""
-    local prev_comment=""
-
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        line="${line//$'\r'/}"
-        local trimmed="${line#"${line%%[![:space:]]*}"}"
-        trimmed="${trimmed%"${trimmed##*[![:space:]]}"}"
-        [[ -z "$trimmed" ]] && continue
-
-        if [[ "$trimmed" == "$MARKER"* ]]; then
-            prev_comment="$trimmed"
-            continue
-        fi
-
-        local raw="$trimmed"
-        local enabled=1
-        if [[ "$raw" == \#* ]]; then
-            raw="${raw#\#}"
-            raw="${raw# }"
-        fi
-
-        if [[ "$raw" != *"$CRON_TAG"* ]]; then
-            prev_comment=""
-            continue
-        fi
-
-        id=$(entry_id "$prev_comment" "$raw")
-        if [[ "$id" == "$target_id" ]]; then
-            comment="$prev_comment"
-            cron_line="$raw"
-            printf '%s\n%s\n' "$comment" "$cron_line"
-            return 0
-        fi
-        prev_comment=""
-    done < <(read_crontab)
-
-    return 1
-}
-
 cmd_toggle() {
     local target_id="" enable=""
     while [[ $# -gt 0 ]]; do
@@ -242,6 +212,7 @@ cmd_toggle() {
     done
     [[ -n "$target_id" && ( "$enable" == "0" || "$enable" == "1" ) ]] || usage
 
+    lock_crontab
     local tmp found=0
     tmp=$(mktemp)
     while IFS= read -r line || [[ -n "$line" ]]; do
@@ -296,6 +267,7 @@ cmd_delete() {
     done
     [[ -n "$target_id" ]] || usage
 
+    lock_crontab
     local tmp found=0 skip_next=0
     tmp=$(mktemp)
     while IFS= read -r line || [[ -n "$line" ]]; do

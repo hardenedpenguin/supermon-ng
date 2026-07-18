@@ -44,7 +44,15 @@ class AnnouncementsController
                 return ApiResponseHelper::error($response, 'You are not authorized for global playback.', 403);
             }
 
-            $result = $this->announcementsService->play($body);
+            if (!$this->announcementsService->isNodeAllowed((string) ($body['node'] ?? ''), $user)) {
+                return ApiResponseHelper::error($response, 'You are not authorized for that node.', 403);
+            }
+
+            try {
+                $result = $this->announcementsService->play($body);
+            } catch (Exception $e) {
+                return ApiResponseHelper::error($response, $e->getMessage(), 400);
+            }
 
             return ApiResponseHelper::json($response, $result);
         });
@@ -87,8 +95,10 @@ class AnnouncementsController
     public function tts(Request $request, Response $response): Response
     {
         return $this->withAnnouncePermission($response, function (string $user) use ($request, $response): Response {
-            unset($user);
             $body = $this->parseJson($request);
+            if (!$this->announcementsService->isNodeAllowed((string) ($body['node'] ?? ''), $user)) {
+                return ApiResponseHelper::error($response, 'You are not authorized for that node.', 403);
+            }
             try {
                 $result = $this->announcementsService->generateTts(
                     (string) ($body['text'] ?? ''),
@@ -173,6 +183,10 @@ class AnnouncementsController
             $scope = strtolower((string) ($body['scope'] ?? 'local'));
             if ($scope === 'global' && !$this->userPermissionService->hasPermission($user, 'ANNOUNCEGLOBALUSER')) {
                 return ApiResponseHelper::error($response, 'You are not authorized for global schedules.', 403);
+            }
+
+            if (!$this->announcementsService->isNodeAllowed((string) ($body['node'] ?? ''), $user)) {
+                return ApiResponseHelper::error($response, 'You are not authorized for that node.', 403);
             }
 
             try {

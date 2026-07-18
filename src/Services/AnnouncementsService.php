@@ -80,6 +80,25 @@ class AnnouncementsService
     }
 
     /**
+     * Confirm a node id is both syntactically valid and present in the caller's
+     * available node list. Prevents targeting nodes outside the user's scope.
+     */
+    public function isNodeAllowed(string $node, ?string $username): bool
+    {
+        if (!$this->isValidNode($node)) {
+            return false;
+        }
+
+        foreach ($this->getNodes($username) as $available) {
+            if ((string) $available['id'] === $node) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @return list<array{name: string, size: int, modified: int}>
      */
     public function listFiles(): array
@@ -205,12 +224,18 @@ class AnnouncementsService
             throw new Exception('Could not store uploaded file.');
         }
 
-        $output = $this->runSudoScript('announce-install.sh', [
-            '--input', $dest,
-            '--name', $name,
-            '--mp3-dir', $mp3Dir,
-            '--sounds-dir', $this->getSoundsDir(),
-        ]);
+        try {
+            $output = $this->runSudoScript('announce-install.sh', [
+                '--input', $dest,
+                '--name', $name,
+                '--mp3-dir', $mp3Dir,
+                '--sounds-dir', $this->getSoundsDir(),
+            ]);
+        } catch (Exception $e) {
+            // Don't leave the raw upload behind if conversion/install failed.
+            @unlink($dest);
+            throw $e;
+        }
 
         return [
             'success' => true,
