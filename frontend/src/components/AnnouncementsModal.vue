@@ -74,7 +74,7 @@
                 <option v-for="file in files" :key="file.name" :value="file.name">{{ file.name }}</option>
               </select>
             </div>
-            <div class="actions">
+            <div class="actions actions-split">
               <button type="button" class="submit action-primary" :disabled="busy || !canPlay" @click="playNow">
                 Play now
               </button>
@@ -84,7 +84,7 @@
                 :disabled="busy || !playForm.file"
                 @click="deleteFile(playForm.file)"
               >
-                Delete
+                Delete announcement
               </button>
             </div>
           </section>
@@ -1073,6 +1073,16 @@ watch(activeTab, async (tab) => {
   gap: 10px;
   flex-wrap: wrap;
   margin-top: 8px;
+}
+
+/* Keep destructive action away from Play to reduce mis-clicks (issue #27) */
+.actions-split {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actions-split .action-danger {
+  margin-left: auto;
 }
 
 .action-primary {
