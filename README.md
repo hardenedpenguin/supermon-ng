@@ -42,8 +42,8 @@ Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket
 
 ```bash
 cd /tmp
-curl -fsSLO https://hardenedpenguin.github.io/hardenedpenguin-apt/pool/main/h/hardenedpenguin-archive-keyring/hardenedpenguin-archive-keyring_1.0_all.deb
-sudo apt install ./hardenedpenguin-archive-keyring_1.0_all.deb
+curl -fsSLO https://hardenedpenguin.github.io/hardenedpenguin-apt/pool/main/h/hardenedpenguin-archive-keyring/hardenedpenguin-archive-keyring_1.2_all.deb
+sudo apt install ./hardenedpenguin-archive-keyring_1.2_all.deb
 sudo apt update
 sudo apt install supermon-ng
 ```
