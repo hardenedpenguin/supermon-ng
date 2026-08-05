@@ -28,6 +28,7 @@ Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket
 - **DVSwitch** — Mode/talkgroup switching; credentials stay server-side
 - **System tools** — CPU/memory/disk, logs, config editor, custom themes and header images
 - **Multi-node** — One dashboard for many nodes from `allmon.ini`
+- **Announcements** — Upload, TTS, local/global play, and scheduling. Inspired by **N5AD**’s announcement-manager idea; reworked for security and feature completeness without added overhead
 
 ## Requirements
 
