@@ -219,8 +219,9 @@ class AuthController
         $permissionNames = self::permissionNames();
 
         if (!file_exists($authFile)) {
-            // If no auth file exists, grant all permissions
-            return array_fill_keys($permissionNames, true);
+            // Fail closed: missing authusers.inc means no UI capabilities.
+            // Action controllers already deny without membership; keep /auth/me consistent.
+            return array_fill_keys($permissionNames, false);
         }
 
         /** @noinspection PhpUnusedLocalVariableInspection */

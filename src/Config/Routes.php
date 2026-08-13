@@ -217,7 +217,7 @@ $app->group('/api/v1', function (RouteCollectorProxy $group) use ($requireAuth):
         $g->put('/display', [ConfigController::class, 'updateDisplayConfig'])->add($requireAuth);
         $g->get('/node-info', [ConfigController::class, 'getNodeInfo']);
         $g->post('/add-favorite', [ConfigController::class, 'addFavorite'])->add($requireAuth);
-        $g->get('/favorites', [ConfigController::class, 'getFavorites']);
+        $g->get('/favorites', [ConfigController::class, 'getFavorites'])->add($requireAuth);
         $g->post('/favorites/add', [ConfigController::class, 'addFavorite'])->add($requireAuth);
         $g->delete('/favorites', [ConfigController::class, 'deleteFavorite'])->add($requireAuth);
         $g->post('/favorites/execute', [ConfigController::class, 'executeFavorite'])->add($requireAuth);

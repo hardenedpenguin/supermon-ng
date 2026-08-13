@@ -681,7 +681,6 @@ async function uploadFile() {
       form.append('name', uploadName.value.trim())
     }
     const response = await api.post('/announcements/upload', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
       timeout: 120000,
     })
     success.value = response.data?.message || 'Upload complete.'

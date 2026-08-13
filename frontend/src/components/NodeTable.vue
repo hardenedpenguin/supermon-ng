@@ -37,7 +37,7 @@
         <template v-if="connectedNodes && connectedNodes.length > 0">
           <tr 
             v-for="(connectedNode, index) in displayedConnectedNodes" 
-            :key="`${node.id}-${index}`"
+            :key="`${node.id}-${connectedNode.node}`"
             :class="getConnectedNodeClass(connectedNode, index)"
           >
             <td class="nodeNum" align="center">
@@ -60,12 +60,12 @@
             </td>
             <td>{{ connectedNode.info || connectedNode.ip || 'Unknown' }}</td>
             <td v-if="showDetail" align="center">
-              {{ formatLastKeyed(connectedNode.last_keyed, index) }}
+              {{ formatLastKeyed(connectedNode.last_keyed, connectedNode) }}
             </td>
             <td align="center">{{ connectedNode.link || 'n/a' }}</td>
             <td align="center">{{ connectedNode.direction || 'n/a' }}</td>
             <td v-if="showDetail" align="right">
-              {{ formatElapsed(connectedNode.elapsed, index) }}
+              {{ formatElapsed(connectedNode.elapsed, connectedNode) }}
             </td>
             <td align="center">{{ getModeText(connectedNode.mode) }}</td>
           </tr>
@@ -523,7 +523,7 @@ watch(
 )
 
 // Format last keyed time with real-time updates
-const formatLastKeyed = (lastKeyed: string | null | undefined, index: number): string => {
+const formatLastKeyed = (lastKeyed: string | null | undefined, connectedNode: ConnectedNode): string => {
   // Access timerTick to trigger reactivity
   const _ = timerTick.value
   
@@ -534,12 +534,6 @@ const formatLastKeyed = (lastKeyed: string | null | undefined, index: number): s
   // If it's -1, return "Never"
   if (lastKeyed === -1 || lastKeyed === '-1' || lastKeyed === '-1') {
     return 'Never'
-  }
-  
-  // Get the connected node to find its timer
-  const connectedNode = connectedNodes.value[index]
-  if (!connectedNode) {
-    return 'N/A'
   }
   
   const nodeKey = `${nodeId.value}-${connectedNode.node}`
@@ -573,17 +567,11 @@ const formatLastKeyed = (lastKeyed: string | null | undefined, index: number): s
 }
 
 // Format elapsed time with real-time updates
-const formatElapsed = (elapsed: string | null | undefined, index: number): string => {
+const formatElapsed = (elapsed: string | null | undefined, connectedNode: ConnectedNode): string => {
   // Access timerTick to trigger reactivity
   const _ = timerTick.value
   
   if (!elapsed || elapsed === 'N/A' || elapsed === 'unknown' || elapsed === '') {
-    return 'N/A'
-  }
-  
-  // Get the connected node to find its timer
-  const connectedNode = connectedNodes.value[index]
-  if (!connectedNode) {
     return 'N/A'
   }
   

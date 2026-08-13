@@ -8,6 +8,6 @@ export function sanitizeHtml(html: string | null | undefined): string {
   if (html == null || typeof html !== 'string') return ''
   return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ['span', 'a', 'b', 'u', 'br', 'div', 'i'],
-    ALLOWED_ATTR: ['href', 'target', 'style', 'class', 'data-node-id'],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'style', 'class', 'data-node-id'],
   })
 }

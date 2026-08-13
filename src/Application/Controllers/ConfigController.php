@@ -75,7 +75,8 @@ class ConfigController
             if ($iniConfig !== false && is_array($iniConfig)) {
                 foreach ($iniConfig as $nodeId => $nodeConfig) {
                     if (is_array($nodeConfig) && isset($nodeConfig['host'])) {
-                        $config[$nodeId] = $nodeConfig;
+                        // Public API/bootstrap must never expose AMI secrets.
+                        $config[$nodeId] = $this->publicNodeConfig($nodeConfig);
                     }
                 }
             }
@@ -220,6 +221,40 @@ class ConfigController
         $safe = preg_replace('/[^A-Za-z0-9._-]/', '', $username);
         $safe = ltrim((string) $safe, '.');
         return $safe;
+    }
+
+    /**
+     * Browser-safe node fields for public API/bootstrap (explicit allowlist).
+     * Excludes AMI user and every credential alias used in node configuration.
+     *
+     * @param array<string, mixed> $nodeConfig
+     * @return array<string, mixed>
+     */
+    private function publicNodeConfig(array $nodeConfig): array
+    {
+        $allowed = [
+            'host' => true,
+            'port' => true,
+            'menu' => true,
+            'system' => true,
+            'hidenodeurl' => true,
+            'lsnodes' => true,
+            'listenlive' => true,
+            'archive' => true,
+            'nodes' => true,
+            'comment' => true,
+        ];
+
+        $public = [];
+        foreach ($nodeConfig as $key => $value) {
+            $name = (string) $key;
+            $lower = strtolower($name);
+            if (isset($allowed[$lower]) || str_starts_with($name, 'URL_')) {
+                $public[$name] = $value;
+            }
+        }
+
+        return $public;
     }
 
     private function loadUserPreferences(string $username): array
@@ -2857,26 +2892,16 @@ class ConfigController
     public function getFavorites(Request $request, Response $response): Response
     {
         try {
-        $currentUser = $this->getCurrentUser();
-        
-        // If no user is authenticated, use a generic approach
-        if (!$currentUser) {
-            // Try to determine user from available user-specific files
-            $userFilesDir = __DIR__ . '/../../../user_files/';
-            $userSpecificFiles = glob($userFilesDir . '*-favorites.ini');
-            
-            if (!empty($userSpecificFiles)) {
-                // Extract username from the first user-specific file found
-                $firstFile = basename($userSpecificFiles[0]);
-                $currentUser = str_replace('-favorites.ini', '', $firstFile);
-            } else {
-                // No user-specific files found, use generic approach
-                $currentUser = null;
+            $currentUser = $this->getCurrentUser();
+            if (!$currentUser) {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Authentication required'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(401);
             }
-        }
-        
-        // Check user permissions (pass null for unauthenticated users to use default permissions)
-        if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
+
+            if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
                     'message' => 'FAVUSER permission required'
@@ -2884,8 +2909,8 @@ class ConfigController
                 return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
             }
 
-            $favoritesData = $this->loadFavoritesConfiguration($currentUser ?? 'default');
-            
+            $favoritesData = $this->loadFavoritesConfiguration($currentUser);
+
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'data' => $favoritesData['favorites'],

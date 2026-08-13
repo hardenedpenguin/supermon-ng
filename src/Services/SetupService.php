@@ -31,15 +31,16 @@ final class SetupService
         $globalWizardDone = is_file($globalSavedFlag);
 
         if (!$setupComplete && $this->shouldAutoCompleteSetup($userCount, $nodeCount, $globalWizardDone)) {
-            $this->markComplete();
-            if (!$globalWizardDone) {
-                file_put_contents(
-                    $globalSavedFlag,
-                    json_encode(['saved_at' => date('c'), 'auto' => true], JSON_PRETTY_PRINT)
-                );
+            if ($this->writeSetupCompleteFlag()) {
+                $setupComplete = true;
+                if (!$globalWizardDone) {
+                    file_put_contents(
+                        $globalSavedFlag,
+                        json_encode(['saved_at' => date('c'), 'auto' => true], JSON_PRETTY_PRINT)
+                    );
+                    $globalWizardDone = true;
+                }
             }
-            $setupComplete = true;
-            $globalWizardDone = true;
         }
 
         $needsSetup = !$setupComplete;
@@ -106,6 +107,9 @@ final class SetupService
         if ($status['setup_complete']) {
             return ['success' => false, 'message' => 'Setup is already complete'];
         }
+        if ($status['user_count'] > 0) {
+            return ['success' => false, 'message' => 'An admin user already exists'];
+        }
 
         if (!preg_match('/^[a-zA-Z0-9._-]{2,32}$/', $username)) {
             return ['success' => false, 'message' => 'Invalid username'];
@@ -116,13 +120,17 @@ final class SetupService
 
         $userFiles = $this->paths->userFiles();
         $htpasswd = $userFiles . '.htpasswd';
+        if (is_file($htpasswd) && $this->countHtpasswdUsers($htpasswd) > 0) {
+            return ['success' => false, 'message' => 'An admin user already exists'];
+        }
+
         $hash = $this->hashPassword($username, $password);
         $line = $username . ':' . $hash . PHP_EOL;
 
         if (file_put_contents($htpasswd, $line, LOCK_EX) === false) {
             return ['success' => false, 'message' => 'Could not write .htpasswd'];
         }
-        chmod($htpasswd, 0644);
+        chmod($htpasswd, 0640);
 
         $this->provisionAuthusers($userFiles . 'authusers.inc', $username);
         $this->logger->info('Setup wizard created admin user', ['username' => $username]);
@@ -152,11 +160,45 @@ final class SetupService
      */
     public function markComplete(): array
     {
-        $flag = $this->paths->userFiles() . '.setup_complete';
-        file_put_contents($flag, json_encode(['completed_at' => date('c')], JSON_PRETTY_PRINT));
-        chmod($flag, 0644);
+        $userFiles = $this->paths->userFiles();
+        $flag = $userFiles . '.setup_complete';
+        if (is_file($flag)) {
+            return ['success' => true, 'message' => 'Setup already complete'];
+        }
+
+        $userCount = $this->countHtpasswdUsers($userFiles . '.htpasswd');
+        $nodeCount = $this->countAllmonNodes($userFiles . 'allmon.ini');
+        $globalWizardDone = is_file($userFiles . '.setup_global_saved')
+            || $this->globalIncService->isConfigured();
+
+        if ($userCount === 0) {
+            return ['success' => false, 'message' => 'Cannot complete setup before creating an admin user'];
+        }
+        if (!$globalWizardDone) {
+            return ['success' => false, 'message' => 'Cannot complete setup before saving global configuration'];
+        }
+        if ($nodeCount === 0) {
+            return ['success' => false, 'message' => 'Cannot complete setup before configuring nodes'];
+        }
+
+        if (!$this->writeSetupCompleteFlag()) {
+            return ['success' => false, 'message' => 'Could not write setup complete flag'];
+        }
 
         return ['success' => true, 'message' => 'Setup marked complete'];
+    }
+
+    private function writeSetupCompleteFlag(): bool
+    {
+        $flag = $this->paths->userFiles() . '.setup_complete';
+        $written = file_put_contents($flag, json_encode(['completed_at' => date('c')], JSON_PRETTY_PRINT));
+        if ($written === false) {
+            return false;
+        }
+        // chmod failure must not undo a successful write
+        @chmod($flag, 0644);
+
+        return true;
     }
 
     private function shouldAutoCompleteSetup(int $userCount, int $nodeCount, bool $globalWizardDone): bool

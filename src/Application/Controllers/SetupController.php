@@ -91,7 +91,12 @@ final class SetupController
 
     public function complete(Request $request, Response $response): Response
     {
-        return ApiResponseHelper::json($response, $this->setupService->markComplete());
+        $result = $this->setupService->markComplete();
+        if (!$result['success']) {
+            return ApiResponseHelper::error($response, $result['message'], 400);
+        }
+
+        return ApiResponseHelper::json($response, $result);
     }
 
     /**
