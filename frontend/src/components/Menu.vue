@@ -42,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { api } from '@/utils/api'
 import { useAppStore } from '@/stores/app'
 import UrlModal from './UrlModal.vue'
@@ -192,10 +192,23 @@ onMounted(async () => {
   void loadMenu()
 })
 
+let menuReloadTimer: ReturnType<typeof setTimeout> | null = null
+
 watch(() => appStore.isAuthenticated, () => {
-  setTimeout(() => {
+  if (menuReloadTimer !== null) {
+    clearTimeout(menuReloadTimer)
+  }
+  menuReloadTimer = setTimeout(() => {
+    menuReloadTimer = null
     loadMenu(true)
   }, 100)
+})
+
+onUnmounted(() => {
+  if (menuReloadTimer !== null) {
+    clearTimeout(menuReloadTimer)
+    menuReloadTimer = null
+  }
 })
 </script>
 

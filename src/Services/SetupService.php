@@ -114,8 +114,8 @@ final class SetupService
         if (!preg_match('/^[a-zA-Z0-9._-]{2,32}$/', $username)) {
             return ['success' => false, 'message' => 'Invalid username'];
         }
-        if (strlen($password) < 6) {
-            return ['success' => false, 'message' => 'Password must be at least 6 characters'];
+        if (strlen($password) < 8) {
+            return ['success' => false, 'message' => 'Password must be at least 8 characters'];
         }
 
         $userFiles = $this->paths->userFiles();

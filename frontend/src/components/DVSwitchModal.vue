@@ -213,7 +213,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { api } from '@/utils/api'
 
 const STORAGE_PRESETS = 'supermon_dvswitch_presets_v1'
@@ -424,10 +424,15 @@ function onNetworkFilterChange() {
   customTalkgroup.value = ''
 }
 
+let resetTimer: ReturnType<typeof setTimeout> | null = null
+
 const closeModal = () => {
   emit('update:isVisible', false)
-  // Reset state when closing
-  setTimeout(() => {
+  if (resetTimer !== null) {
+    clearTimeout(resetTimer)
+  }
+  resetTimer = setTimeout(() => {
+    resetTimer = null
     selectedNode.value = ''
     selectedMode.value = ''
     selectedTalkgroup.value = ''
@@ -776,6 +781,13 @@ watch(
 onMounted(() => {
   if (props.isVisible) {
     loadNodes()
+  }
+})
+
+onUnmounted(() => {
+  if (resetTimer !== null) {
+    clearTimeout(resetTimer)
+    resetTimer = null
   }
 })
 </script>

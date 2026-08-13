@@ -16,7 +16,7 @@
         <label>Username</label>
         <input v-model="username" class="form-input" autocomplete="username" />
         <label>Password</label>
-        <input v-model="password" type="password" class="form-input" autocomplete="new-password" />
+        <input v-model="password" type="password" class="form-input" autocomplete="new-password" minlength="8" />
         <button class="submit" :disabled="busy" @click="createAdmin">Create Admin</button>
       </div>
 
@@ -274,7 +274,9 @@ const loadStatus = async (options: { syncStep?: boolean } = {}) => {
     if (response.data.success) {
       status.value = response.data.data
       visible.value = !!status.value?.needs_setup && !status.value?.setup_complete
-      await loadGlobalConfig()
+      if (visible.value) {
+        await loadGlobalConfig()
+      }
       if (syncStep) {
         applyStepFromStatus(false)
       }
@@ -285,9 +287,13 @@ const loadStatus = async (options: { syncStep?: boolean } = {}) => {
 }
 
 const createAdmin = async () => {
-  busy.value = true
   error.value = ''
   info.value = ''
+  if (password.value.length < 8) {
+    error.value = 'Password must be at least 8 characters'
+    return
+  }
+  busy.value = true
   try {
     const response = await api.post('/setup/admin', {
       username: username.value.trim(),
@@ -296,7 +302,6 @@ const createAdmin = async () => {
     info.value = response.data.message || 'Admin created'
     step.value = 2
     await loadStatus()
-    visible.value = true
   } catch (err: unknown) {
     const axiosError = err as AxiosErrorResponse
     error.value = axiosError.response?.data?.message || 'Could not create admin'

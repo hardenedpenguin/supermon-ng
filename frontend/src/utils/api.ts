@@ -29,11 +29,6 @@ api.interceptors.request.use(
   async (config) => {
     // Add CSRF token for POST, PUT, DELETE, PATCH requests
     if (config.method && ['post', 'put', 'delete', 'patch'].includes(config.method.toLowerCase())) {
-      // Skip CSRF token for bubble chart endpoint since it's disabled on backend
-      if (config.url === '/config/bubblechart') {
-        return config
-      }
-      
       try {
         // Always get a fresh token - don't rely on cached value
         const token = await csrfService.getToken()

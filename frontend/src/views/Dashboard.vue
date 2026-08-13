@@ -51,8 +51,6 @@
     <!-- Menu Component -->
     <Menu @node-selection="handleNodeSelection" />
 
-    <ConnectionStatus :node-ids="activeMonitoringNodeIds" />
-
     <!-- Date and Time Display -->
     <div v-if="showDateTime" class="datetime-display">
       {{ currentDateTime }}
@@ -270,7 +268,6 @@ import type { Node as NodeType } from '@/types'
 import NodeTable from '@/components/NodeTable.vue'
 import LoginForm from '@/components/LoginForm.vue'
 import Menu from '@/components/Menu.vue'
-import ConnectionStatus from '@/components/ConnectionStatus.vue'
 import DashboardConnectPanel from '@/components/DashboardConnectPanel.vue'
 import { useToast } from '@/composables/useToast'
 import { useNodeControls } from '@/composables/useNodeControls'

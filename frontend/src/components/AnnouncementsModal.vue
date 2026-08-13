@@ -342,6 +342,7 @@
 import { computed, ref, watch } from 'vue'
 import { api } from '@/utils/api'
 import { useAppStore } from '@/stores/app'
+import { apiErrorMessage } from '@/utils/errors'
 
 interface AnnounceFile {
   name: string
@@ -660,7 +661,7 @@ async function playNow() {
     const response = await api.post('/announcements/play', playForm.value)
     success.value = response.data?.message || 'Playback started.'
   } catch (e: unknown) {
-    error.value = extractError(e)
+    error.value = apiErrorMessage(e, 'Request failed')
   } finally {
     busy.value = false
   }
@@ -688,7 +689,7 @@ async function uploadFile() {
     uploadName.value = ''
     await loadData()
   } catch (e: unknown) {
-    error.value = extractError(e)
+    error.value = apiErrorMessage(e, 'Request failed')
   } finally {
     busy.value = false
   }
@@ -708,7 +709,7 @@ async function createTts() {
     ttsForm.value.name = ''
     await loadData()
   } catch (e: unknown) {
-    error.value = extractError(e)
+    error.value = apiErrorMessage(e, 'Request failed')
   } finally {
     busy.value = false
   }
@@ -733,7 +734,7 @@ async function installSelectedVoice() {
     }
     await loadVoices()
   } catch (e: unknown) {
-    error.value = extractError(e)
+    error.value = apiErrorMessage(e, 'Request failed')
   } finally {
     installingVoice.value = false
   }
@@ -750,7 +751,7 @@ async function deleteFile(name: string) {
     success.value = response.data?.message || 'Deleted.'
     await loadData()
   } catch (e: unknown) {
-    error.value = extractError(e)
+    error.value = apiErrorMessage(e, 'Request failed')
   } finally {
     busy.value = false
   }
@@ -826,7 +827,7 @@ async function saveSchedule() {
     success.value = response.data?.message || 'Schedule saved.'
     await loadSchedules()
   } catch (e: unknown) {
-    error.value = extractError(e)
+    error.value = apiErrorMessage(e, 'Request failed')
   } finally {
     busy.value = false
   }
@@ -842,7 +843,7 @@ async function toggleSchedule(job: ScheduleJob) {
     success.value = response.data?.message || 'Schedule updated.'
     await loadSchedules()
   } catch (e: unknown) {
-    error.value = extractError(e)
+    error.value = apiErrorMessage(e, 'Request failed')
   } finally {
     busy.value = false
   }
@@ -859,20 +860,10 @@ async function deleteSchedule(id: string) {
     success.value = response.data?.message || 'Schedule deleted.'
     await loadSchedules()
   } catch (e: unknown) {
-    error.value = extractError(e)
+    error.value = apiErrorMessage(e, 'Request failed')
   } finally {
     busy.value = false
   }
-}
-
-function extractError(e: unknown): string {
-  if (typeof e === 'object' && e !== null && 'response' in e) {
-    const resp = (e as { response?: { data?: { message?: string } } }).response
-    if (resp?.data?.message) {
-      return resp.data.message
-    }
-  }
-  return e instanceof Error ? e.message : 'Request failed'
 }
 
 watch([voiceRegion, showAllVoices], () => {

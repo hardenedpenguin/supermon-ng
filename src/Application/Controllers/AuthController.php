@@ -351,7 +351,6 @@ class AuthController
                 'data' => [
                     'user' => $username,
                     'authenticated' => true,
-                    'session_id' => session_id()
                 ],
                 'timestamp' => date('c')
             ]));

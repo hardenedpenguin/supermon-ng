@@ -76,7 +76,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import api from '@/utils/api'
 
 onMounted(() => {
@@ -115,7 +115,23 @@ const closeModal = () => {
   resetState()
 }
 
+let copySuccessTimer = null
+let clipboardOp = 0
+
+const clearCopySuccessTimer = () => {
+  if (copySuccessTimer !== null) {
+    clearTimeout(copySuccessTimer)
+    copySuccessTimer = null
+  }
+}
+
+const invalidateClipboardOp = () => {
+  clipboardOp += 1
+  clearCopySuccessTimer()
+}
+
 const resetState = () => {
+  invalidateClipboardOp()
   nodeInput.value = ''
   loading.value = false
   error.value = ''
@@ -133,6 +149,7 @@ const openBubbleChart = async () => {
   error.value = ''
   success.value = ''
   bubbleChartUrl.value = ''
+  invalidateClipboardOp()
 
   try {
     const response = await api.post('/config/bubblechart', {
@@ -161,13 +178,19 @@ const openBubbleChart = async () => {
 const copyToClipboard = async () => {
   if (!bubbleChartUrl.value) return
 
+  const op = clipboardOp
   try {
     await navigator.clipboard.writeText(bubbleChartUrl.value)
+    if (op !== clipboardOp) return
     success.value = 'URL copied to clipboard!'
-    setTimeout(() => {
+    clearCopySuccessTimer()
+    copySuccessTimer = setTimeout(() => {
+      copySuccessTimer = null
+      if (op !== clipboardOp) return
       success.value = ''
     }, 2000)
   } catch (err) {
+    if (op !== clipboardOp) return
     console.error('Copy to clipboard failed:', err)
     error.value = 'Failed to copy URL to clipboard'
   }
@@ -190,6 +213,10 @@ watch(() => props.open, (newValue) => {
   } else {
     resetState()
   }
+})
+
+onUnmounted(() => {
+  invalidateClipboardOp()
 })
 </script>
 

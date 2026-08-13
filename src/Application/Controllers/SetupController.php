@@ -47,6 +47,10 @@ final class SetupController
 
     public function getGlobalConfig(Request $request, Response $response): Response
     {
+        if ($this->setupService->getStatus()['setup_complete']) {
+            return ApiResponseHelper::error($response, 'Setup is already complete', 403);
+        }
+
         return ApiResponseHelper::json($response, [
             'success' => true,
             'data' => $this->setupService->getGlobalConfig(),

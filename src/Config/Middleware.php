@@ -78,14 +78,11 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
     if (in_array($method, ['POST', 'PUT', 'DELETE', 'PATCH'], true)) {
         $uri = $request->getUri()->getPath();
         
-        // Skip CSRF validation for auth endpoints (login, etc.) and bubble chart.
-        // DVSwitch is intentionally NOT exempt: it changes state (mode switch,
-        // bridge restart) and the frontend already sends the token, so a
-        // session-cookie CSRF must not be able to reach it.
+        // Skip CSRF for login (no session token yet). Logout and other
+        // state-changing endpoints require the token.
         $normalizedUri = AppBasePath::stripPrefix($uri);
         $skipPaths = [
             '/api/v1/auth/login',
-            '/api/v1/auth/logout',
             '/api/v1/auth/me',
         ];
         if (!in_array($uri, $skipPaths, true) && !in_array($normalizedUri, $skipPaths, true)) {

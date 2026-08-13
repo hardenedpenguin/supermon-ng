@@ -113,7 +113,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 import { api } from '@/utils/api'
 import type { AxiosErrorResponse } from '@/types/api'
 
@@ -199,14 +199,26 @@ const closeModal = () => {
   hasSearched.value = false
 }
 
-// Watch for modal open state
+let focusTimer: ReturnType<typeof setTimeout> | null = null
+
 watch(() => props.open, (newOpen) => {
+  if (focusTimer !== null) {
+    clearTimeout(focusTimer)
+    focusTimer = null
+  }
   if (newOpen) {
-    // Focus the input when modal opens
-    setTimeout(() => {
+    focusTimer = setTimeout(() => {
+      focusTimer = null
       const input = document.getElementById('lookupInput')
       if (input) input.focus()
     }, 100)
+  }
+})
+
+onUnmounted(() => {
+  if (focusTimer !== null) {
+    clearTimeout(focusTimer)
+    focusTimer = null
   }
 })
 </script>
