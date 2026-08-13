@@ -19,6 +19,7 @@
             action="https://www.paypal.com/donate" 
             method="post" 
             target="_blank"
+            rel="noopener noreferrer"
             @submit="handlePayPalSubmit"
           >
             <input type="hidden" name="business" value="H2XYYRGQ9Q92E" />

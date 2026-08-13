@@ -23,13 +23,20 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
     if (session_status() === PHP_SESSION_NONE) {
         session_name('supermon61');
 
-        // Detect HTTPS for secure cookies
+        // Detect HTTPS for secure cookies. Only trust X-Forwarded-* when
+        // explicitly enabled (or request is from loopback), so clients cannot
+        // clear the Secure flag by spoofing forwarded headers.
         $isSecure = false;
         $serverParams = $request->getServerParams();
+        $remoteAddr = (string) ($serverParams['REMOTE_ADDR'] ?? '');
+        $trustForwarded = filter_var($_ENV['TRUST_FORWARDED_PROTO'] ?? 'false', FILTER_VALIDATE_BOOLEAN)
+            || in_array($remoteAddr, ['127.0.0.1', '::1'], true);
         if (($serverParams['HTTPS'] ?? '') === 'on' ||
-            ($serverParams['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ||
-            ($serverParams['HTTP_X_FORWARDED_SSL'] ?? '') === 'on' ||
-            ($serverParams['SERVER_PORT'] ?? '') == '443') {
+            ($serverParams['SERVER_PORT'] ?? '') == '443' ||
+            ($trustForwarded && (
+                ($serverParams['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https' ||
+                ($serverParams['HTTP_X_FORWARDED_SSL'] ?? '') === 'on'
+            ))) {
             $isSecure = true;
         }
 
@@ -80,7 +87,6 @@ $app->add(function (Request $request, RequestHandlerInterface $handler): Respons
             '/api/v1/auth/login',
             '/api/v1/auth/logout',
             '/api/v1/auth/me',
-            '/api/v1/config/bubblechart',
         ];
         if (!in_array($uri, $skipPaths, true) && !in_array($normalizedUri, $skipPaths, true)) {
             $parsedBody = $request->getParsedBody();

@@ -222,7 +222,8 @@ return [
     \SupermonNg\Application\Middleware\AdminAuthMiddleware::class => function (ContainerInterface $c) {
         return new \SupermonNg\Application\Middleware\AdminAuthMiddleware(
             $c->get(LoggerInterface::class),
-            $c->get(\SupermonNg\Services\IncludeManagerService::class)
+            $c->get(\SupermonNg\Services\IncludeManagerService::class),
+            $c->get(\SupermonNg\Services\SessionService::class)
         );
     },
     

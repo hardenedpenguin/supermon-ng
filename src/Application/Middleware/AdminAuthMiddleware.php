@@ -9,31 +9,28 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use SupermonNg\Services\IncludeManagerService;
+use SupermonNg\Services\SessionService;
 use Psr\Log\LoggerInterface;
 
 class AdminAuthMiddleware implements MiddlewareInterface
 {
-    private LoggerInterface $logger;
-    private IncludeManagerService $includeService;
-
-    public function __construct(LoggerInterface $logger, IncludeManagerService $includeService)
-    {
-        $this->logger = $logger;
-        $this->includeService = $includeService;
+    public function __construct(
+        private LoggerInterface $logger,
+        private IncludeManagerService $includeService,
+        private SessionService $sessionService
+    ) {
     }
 
     public function process(Request $request, RequestHandlerInterface $handler): Response
     {
         $this->logger->info('Admin Auth middleware - checking admin permissions');
-        
-        // Get user from session
-        $user = $_SESSION['user'] ?? null;
-        if (!$user) {
-            $this->logger->warning('Admin Auth middleware - no user session found');
+
+        $user = $this->sessionService->getCurrentUser();
+        if ($user === null || $user === '') {
+            $this->logger->warning('Admin Auth middleware - no authenticated user');
             return $this->createUnauthorizedResponse();
         }
 
-        // Check if user has admin permissions
         if (!$this->includeService->userHasAdminPermission($user)) {
             $this->logger->warning('Admin Auth middleware - user lacks admin permissions', ['user' => $user]);
             return $this->createForbiddenResponse();
@@ -67,5 +64,3 @@ class AdminAuthMiddleware implements MiddlewareInterface
             ->withHeader('Content-Type', 'application/json');
     }
 }
-
-

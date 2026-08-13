@@ -1180,7 +1180,7 @@ class ConfigController
                 'success' => false,
                 'message' => 'Authentication required'
             ]));
-            return $response->withStatus(401);
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
 
         // Check if user has ASTRELUSER permission
@@ -1343,7 +1343,7 @@ class ConfigController
                 'success' => false,
                 'message' => 'Authentication required'
             ]));
-            return $response->withStatus(401);
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
 
         $data = $request->getParsedBody();
@@ -1437,7 +1437,7 @@ class ConfigController
                 'success' => false,
                 'message' => 'Authentication required'
             ]));
-            return $response->withStatus(401);
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
 
         // Check if user has ASTLUSER permission
@@ -1537,11 +1537,12 @@ class ConfigController
     public function performAstLookup(Request $request, Response $response): Response
     {
         $currentUser = $this->getCurrentUser();
-        
-        // Allow lookup to proceed even without authentication (using default permissions)
-        // The system is designed to work with default permissions for basic functionality
         if (!$currentUser) {
-            $currentUser = 'default'; // Use default user for INI file resolution
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Authentication required'
+            ]));
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
 
         // Check if user has ASTLKUSER permission
@@ -2156,11 +2157,14 @@ class ConfigController
     public function getBubbleChart(Request $request, Response $response): Response
     {
         $currentUser = $this->getCurrentUser();
-        
-        // Allow bubble chart to proceed even without authentication (using default permissions)
-        $userForIni = $currentUser ?: 'default'; // Use default user for INI file resolution
+        if (!$currentUser) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Authentication required'
+            ]));
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+        }
 
-        // Check if user has BUBLUSER permission (pass null for unauthenticated users to use default permissions)
         if (!$this->hasUserPermission($currentUser, 'BUBLUSER')) {
             $response->getBody()->write(json_encode([
                 'success' => false,
@@ -2219,10 +2223,12 @@ class ConfigController
     public function getControlPanel(Request $request, Response $response): Response
     {
         $currentUser = $this->getCurrentUser();
-        
-        // Allow control panel to proceed even without authentication (using default permissions)
         if (!$currentUser) {
-            $currentUser = 'default'; // Use default user for INI file resolution
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Authentication required'
+            ]));
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
 
         // Check if user has CTRLUSER permission
@@ -2269,10 +2275,12 @@ class ConfigController
     public function executeControlPanelCommand(Request $request, Response $response): Response
     {
         $currentUser = $this->getCurrentUser();
-        
-        // Allow control panel to proceed even without authentication (using default permissions)
         if (!$currentUser) {
-            $currentUser = 'default'; // Use default user for INI file resolution
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Authentication required'
+            ]));
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
 
         // Check if user has CTRLUSER permission
@@ -2582,7 +2590,8 @@ class ConfigController
     {
         $currentUser = $this->getCurrentUser();
         if (!$currentUser) {
-            $currentUser = 'default';
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Authentication required']));
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
         
         if (!$this->hasUserPermission($currentUser, 'CFGEDUSER')) {
@@ -2607,7 +2616,8 @@ class ConfigController
     {
         $currentUser = $this->getCurrentUser();
         if (!$currentUser) {
-            $currentUser = 'default';
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Authentication required']));
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
         
         if (!$this->hasUserPermission($currentUser, 'CFGEDUSER')) {
@@ -2640,7 +2650,8 @@ class ConfigController
     {
         $currentUser = $this->getCurrentUser();
         if (!$currentUser) {
-            $currentUser = 'default';
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Authentication required']));
+            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
         }
         
         if (!$this->hasUserPermission($currentUser, 'CFGEDUSER')) {
@@ -2936,11 +2947,14 @@ class ConfigController
         try {
         $currentUser = $this->getCurrentUser();
         if (!$currentUser) {
-            $currentUser = 'default';
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Authentication required'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(401);
         }
         
-        // Check user permissions (pass null for unauthenticated users to use default permissions)
-        if (!$this->hasUserPermission($currentUser === 'default' ? null : $currentUser, 'FAVUSER')) {
+        if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
                     'message' => 'FAVUSER permission required'
@@ -2990,11 +3004,14 @@ class ConfigController
         try {
         $currentUser = $this->getCurrentUser();
         if (!$currentUser) {
-            $currentUser = 'default';
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Authentication required'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(401);
         }
         
-        // Check user permissions (pass null for unauthenticated users to use default permissions)
-        if (!$this->hasUserPermission($currentUser === 'default' ? null : $currentUser, 'FAVUSER')) {
+        if (!$this->hasUserPermission($currentUser, 'FAVUSER')) {
                 $response->getBody()->write(json_encode([
                     'success' => false,
                     'message' => 'FAVUSER permission required'
@@ -3463,21 +3480,12 @@ class ConfigController
     {
         try {
             $currentUser = $this->getCurrentUser();
-            
-            // If no user is authenticated, use a generic approach
             if (!$currentUser) {
-                // Try to determine user from available user-specific files
-                $userFilesDir = __DIR__ . '/../../../user_files/';
-                $userSpecificFiles = glob($userFilesDir . '*-favorites.ini');
-                
-                if (!empty($userSpecificFiles)) {
-                    // Extract username from the first user-specific file found
-                    $firstFile = basename($userSpecificFiles[0]);
-                    $currentUser = str_replace('-favorites.ini', '', $firstFile);
-                } else {
-                    // No user-specific files found, use generic approach
-                    $currentUser = null;
-                }
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Authentication required'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(401);
             }
 
             // Check user permissions
@@ -3598,13 +3606,7 @@ class ConfigController
     public function getNodeInfo(Request $request, Response $response): Response
     {
         try {
-            $currentUser = $this->getCurrentUser();
-            if (!$currentUser) {
-                $currentUser = 'default';
-            }
-            
-            // Note: No permission check needed - node info is public data from astdb.txt
-
+            // Public astdb lookup — no auth identity required.
             $node = $request->getQueryParams()['node'] ?? '';
             
             if (empty($node)) {

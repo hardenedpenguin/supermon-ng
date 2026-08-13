@@ -905,7 +905,7 @@ const reboot = async () => {
 
 const openHelp = async () => {
   try {
-    window.open('https://allstarlink.github.io/adv-topics/', 'AllStarHelp', 'status=no,location=no,toolbar=yes,width=800,height=600,left=100,top=100')
+    window.open('https://allstarlink.github.io/adv-topics/', 'AllStarHelp', 'noopener,noreferrer,status=no,location=no,toolbar=yes,width=800,height=600,left=100,top=100')
   } catch (error) {
     // Help link error handled
   }
@@ -913,7 +913,7 @@ const openHelp = async () => {
 
 const openWiki = async () => {
   try {
-    window.open('https://wiki.allstarlink.org', 'AllStarWiki', 'status=no,location=no,toolbar=yes,width=800,height=600,left=100,top=100')
+    window.open('https://wiki.allstarlink.org', 'AllStarWiki', 'noopener,noreferrer,status=no,location=no,toolbar=yes,width=800,height=600,left=100,top=100')
   } catch (error) {
     // Wiki link error handled
   }
@@ -954,7 +954,7 @@ const aststats = async () => {
 
 const openActiveNodes = async () => {
   try {
-    window.open('https://stats.allstarlink.org/', 'ActiveNodes', 'status=no,location=no,toolbar=yes,width=1200,height=800,left=100,top=100')
+    window.open('https://stats.allstarlink.org/', 'ActiveNodes', 'noopener,noreferrer,status=no,location=no,toolbar=yes,width=1200,height=800,left=100,top=100')
   } catch (error) {
     // Active nodes link error handled
   }
@@ -962,7 +962,7 @@ const openActiveNodes = async () => {
 
 const openAllNodes = async () => {
   try {
-    window.open('https://www.allstarlink.org/nodelist/', 'AllNodes', 'status=no,location=no,toolbar=yes,width=1200,height=800,left=100,top=100')
+    window.open('https://www.allstarlink.org/nodelist/', 'AllNodes', 'noopener,noreferrer,status=no,location=no,toolbar=yes,width=1200,height=800,left=100,top=100')
   } catch (error) {
     // All nodes link error handled
   }
@@ -1243,8 +1243,9 @@ onUnmounted(() => {
     clearInterval(dateTimeInterval)
     dateTimeInterval = null
   }
-  
-  // WebSocket connections are cleaned up automatically when stopMonitoring() is called
+
+  // Stop WS/AMI monitoring when leaving the dashboard (e.g. /lsnod/:id)
+  realTimeStore.reset()
 })
 
 </script>

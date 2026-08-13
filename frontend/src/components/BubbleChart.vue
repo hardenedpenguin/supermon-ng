@@ -175,7 +175,7 @@ const copyToClipboard = async () => {
 
 const openInNewWindow = () => {
   if (!bubbleChartUrl.value) return
-  window.open(bubbleChartUrl.value, 'BubbleChart', 'status=no,location=no,toolbar=no,width=1200,height=800,left=100,top=100')
+  window.open(bubbleChartUrl.value, 'BubbleChart', 'noopener,noreferrer,status=no,location=no,toolbar=no,width=1200,height=800,left=100,top=100')
 }
 
 // Watch for modal open/close

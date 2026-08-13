@@ -111,6 +111,60 @@ final class ConfigBackupService
         }
 
         $userFiles = $this->paths->userFiles();
+        /** @var list<array{target: string, contents: string, restored: string}> $pending */
+        $pending = [];
+
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            $name = $zip->getNameIndex($i);
+            if (!is_string($name)) {
+                continue;
+            }
+
+            $normalized = $this->normalizeArchivePath($name);
+            if ($normalized === null) {
+                continue;
+            }
+
+            if (str_starts_with($normalized, 'user_files/')) {
+                $relative = substr($normalized, strlen('user_files/'));
+                if ($relative === '' || str_ends_with($normalized, '/')) {
+                    continue;
+                }
+                $first = strtolower(explode('/', $relative, 2)[0]);
+                if ($first === 'sbin') {
+                    $this->logger->warning('Skipped sbin path during config restore', ['path' => $relative]);
+                    continue;
+                }
+                $contents = $zip->getFromIndex($i);
+                if ($contents === false) {
+                    continue;
+                }
+                if (str_ends_with(strtolower($relative), '.inc')) {
+                    try {
+                        $this->assertSafePhpConfig($contents);
+                    } catch (\Exception $e) {
+                        $zip->close();
+
+                        return ['success' => false, 'message' => "Unsafe PHP in {$relative}: " . $e->getMessage()];
+                    }
+                }
+                $pending[] = [
+                    'target' => $userFiles . $relative,
+                    'contents' => $contents,
+                    'restored' => 'user_files/' . $relative,
+                ];
+            } elseif ($normalized === '.env') {
+                $contents = $zip->getFromIndex($i);
+                if ($contents !== false) {
+                    $pending[] = [
+                        'target' => $this->paths->envFile(),
+                        'contents' => $contents,
+                        'restored' => '.env',
+                    ];
+                }
+            }
+        }
+
         $backupDir = sys_get_temp_dir() . '/supermon-ng-restore-backup-' . date('Ymd-His');
         if (!mkdir($backupDir, 0755, true) && !is_dir($backupDir)) {
             $zip->close();
@@ -121,37 +175,15 @@ final class ConfigBackupService
         $this->backupCurrentConfig($backupDir);
         $restored = [];
 
-        for ($i = 0; $i < $zip->numFiles; $i++) {
-            $name = $zip->getNameIndex($i);
-            if (!is_string($name) || str_contains($name, '..')) {
-                continue;
-            }
+        foreach ($pending as $entry) {
+            $dir = dirname($entry['target']);
+            if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+                $zip->close();
 
-            if (str_starts_with($name, 'user_files/')) {
-                $relative = substr($name, strlen('user_files/'));
-                if ($relative === '' || str_ends_with($name, '/')) {
-                    continue;
-                }
-                $target = $userFiles . $relative;
-                $dir = dirname($target);
-                if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
-                    $zip->close();
-
-                    return ['success' => false, 'message' => "Could not create directory for {$relative}"];
-                }
-                $contents = $zip->getFromIndex($i);
-                if ($contents === false) {
-                    continue;
-                }
-                file_put_contents($target, $contents);
-                $restored[] = 'user_files/' . $relative;
-            } elseif ($name === '.env') {
-                $contents = $zip->getFromIndex($i);
-                if ($contents !== false) {
-                    file_put_contents($this->paths->envFile(), $contents);
-                    $restored[] = '.env';
-                }
+                return ['success' => false, 'message' => "Could not create directory for {$entry['restored']}"];
             }
+            file_put_contents($entry['target'], $entry['contents']);
+            $restored[] = $entry['restored'];
         }
 
         $zip->close();
@@ -166,6 +198,26 @@ final class ConfigBackupService
             'restored' => $restored,
             'pre_restore_backup' => $backupDir,
         ];
+    }
+
+    /**
+     * Normalize zip entry paths: forward slashes, drop ".", reject "..".
+     */
+    private function normalizeArchivePath(string $name): ?string
+    {
+        $name = str_replace('\\', '/', $name);
+        $parts = [];
+        foreach (explode('/', $name) as $part) {
+            if ($part === '' || $part === '.') {
+                continue;
+            }
+            if ($part === '..') {
+                return null;
+            }
+            $parts[] = $part;
+        }
+
+        return $parts === [] ? null : implode('/', $parts);
     }
 
     private function backupCurrentConfig(string $backupDir): void
@@ -216,5 +268,75 @@ final class ConfigBackupService
         }
 
         $zip->addFromString($zipName, $contents);
+    }
+
+    /**
+     * Same rules as ConfigController::assertSafePhpConfig — .inc files are included as PHP.
+     */
+    private function assertSafePhpConfig(string $content): void
+    {
+        $reject = function (string $what): void {
+            throw new \Exception(
+                "This file is loaded as PHP code by Supermon-ng, so only simple " .
+                "configuration is allowed (variable assignments of strings, numbers, " .
+                "and arrays, plus comments). Refusing to restore: found $what."
+            );
+        };
+
+        $allowedChars = ['=', ';', ',', '(', ')', '[', ']', '.', '-', '+', '"'];
+        $allowedWords = ['array', 'true', 'false', 'null'];
+        $tokens = token_get_all($content);
+        $count = count($tokens);
+
+        for ($i = 0; $i < $count; $i++) {
+            $token = $tokens[$i];
+            if (is_string($token)) {
+                if (!in_array($token, $allowedChars, true)) {
+                    $reject("'" . $token . "'");
+                }
+                continue;
+            }
+
+            [$id, $text] = $token;
+            if ($id === T_VARIABLE) {
+                for ($j = $i + 1; $j < $count; $j++) {
+                    $next = $tokens[$j];
+                    if (is_array($next) && in_array($next[0], [T_WHITESPACE, T_COMMENT, T_DOC_COMMENT], true)) {
+                        continue;
+                    }
+                    if ($next === '(') {
+                        $reject('variable function call');
+                    }
+                    break;
+                }
+            }
+            switch ($id) {
+                case T_OPEN_TAG:
+                case T_CLOSE_TAG:
+                case T_WHITESPACE:
+                case T_COMMENT:
+                case T_DOC_COMMENT:
+                case T_VARIABLE:
+                case T_CONSTANT_ENCAPSED_STRING:
+                case T_ENCAPSED_AND_WHITESPACE:
+                case T_LNUMBER:
+                case T_DNUMBER:
+                case T_ARRAY:
+                case T_DOUBLE_ARROW:
+                    break;
+                case T_STRING:
+                    if (!in_array(strtolower($text), $allowedWords, true)) {
+                        $reject("'" . $text . "'");
+                    }
+                    break;
+                case T_INLINE_HTML:
+                    if (trim($text) !== '') {
+                        $reject('content outside the PHP open/close tags');
+                    }
+                    break;
+                default:
+                    $reject("'" . trim($text) . "' (" . token_name($id) . ")");
+            }
+        }
     }
 }

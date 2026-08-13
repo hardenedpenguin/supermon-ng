@@ -488,11 +488,19 @@ class NodeController
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }
 
-        // Validate DTMF command
-        if (!$dtmfCommand || empty(trim($dtmfCommand))) {
+        // Validate DTMF command ("0" is a valid digit and must not be treated as empty)
+        if (!is_string($dtmfCommand) || trim($dtmfCommand) === '') {
             $response->getBody()->write(json_encode([
                 'success' => false,
                 'message' => 'Please provide a DTMF command.'
+            ]));
+            return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+        $dtmfCommand = trim($dtmfCommand);
+        if (strlen($dtmfCommand) > 64 || !preg_match('/^[0-9A-D*#]+$/i', $dtmfCommand)) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'DTMF command may only contain digits, A-D, *, and # (max 64 characters).'
             ]));
             return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
         }

@@ -69,6 +69,7 @@ const eventSources = ref({})
 const spinners = ref({})
 const spinnerChars = ['*', '|', '/', '-', '\\']
 let spinnerInterval = null
+let voterGeneration = 0
 const pollingTimeouts = ref(new Map())
 
 const closeModal = () => {
@@ -82,6 +83,9 @@ const startVoter = () => {
   // Parse nodes
   const nodeList = nodeInput.value.split(',').map(n => n.trim()).filter(n => n)
   if (nodeList.length === 0) return
+
+  // Clear any prior poll/spinner before starting a new session
+  stopVoter()
   
   nodes.value = nodeList
   startSpinner()
@@ -89,6 +93,7 @@ const startVoter = () => {
 }
 
 const stopVoter = () => {
+  voterGeneration++
   // Close all event sources
   Object.values(eventSources.value).forEach(source => {
     if (source) {
@@ -115,6 +120,10 @@ const stopVoter = () => {
 }
 
 const startSpinner = () => {
+  if (spinnerInterval) {
+    clearInterval(spinnerInterval)
+    spinnerInterval = null
+  }
   let spinIndex = 0
   spinnerInterval = setInterval(() => {
     nodes.value.forEach(node => {
@@ -138,6 +147,7 @@ const initializeEventSources = () => {
 }
 
 const pollVoterStatus = async (node) => {
+  const generation = voterGeneration
   // Check if node is still being monitored (prevents polling after stopVoter is called)
   if (!nodes.value.includes(node)) {
     return
@@ -145,6 +155,9 @@ const pollVoterStatus = async (node) => {
   
   try {
     const response = await api.get(`/nodes/voter/status?node=${encodeURIComponent(node)}`)
+    if (generation !== voterGeneration) {
+      return
+    }
     
     if (response.data.html) {
       const element = document.getElementById(`link_list_${node}`)
@@ -157,13 +170,16 @@ const pollVoterStatus = async (node) => {
       spinners.value[node] = response.data.spinner
     }
     
-    // Continue polling only if node is still being monitored
-    if (nodes.value.includes(node)) {
+    // Continue polling only if this session is still active
+    if (generation === voterGeneration && nodes.value.includes(node)) {
       const timeoutId = setTimeout(() => pollVoterStatus(node), 1000)
       pollingTimeouts.value.set(node, timeoutId)
     }
     
   } catch (error) {
+    if (generation !== voterGeneration) {
+      return
+    }
     console.error(`Error polling voter status for node ${node}:`, error)
     const element = document.getElementById(`link_list_${node}`)
     if (element) {

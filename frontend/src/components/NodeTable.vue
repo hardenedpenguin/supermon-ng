@@ -71,9 +71,9 @@
           </tr>
           
           <!-- Node Count Summary -->
-          <tr v-if="showNodeCount && totalNodes > displayedNodes">
+          <tr v-if="showNodeCount">
             <td colspan="2">
-              {{ displayedNodes }} shown of {{ totalNodes }} nodes connected
+              {{ displayedConnectedNodes.length }} shown of {{ establishedConnectedCount }} nodes connected
               <a href="#" @click="scrollToTop">^^^</a>
             </td>
             <td :colspan="showDetail ? 5 : 3"></td>
@@ -128,6 +128,9 @@ const emit = defineEmits<{
 }>()
 
 const canAddFavorite = computed(() => appStore.hasPermission('FAVUSER'))
+const canShowBubbleChart = computed(() =>
+  appStore.isAuthenticated && appStore.hasPermission('BUBLUSER')
+)
 
 // Store
 const appStore = useAppStore()
@@ -197,8 +200,8 @@ const nodeTitle = computed(() => {
     let url = customUrl
     if (url.endsWith('>')) {
       url = url.slice(0, -1)
-      targetBlank = 'target="_blank" rel="noopener noreferrer"'
     }
+    targetBlank = 'target="_blank" rel="noopener noreferrer"'
     infoDisplay = `<a href="${url}" ${targetBlank}>${nodeInfo}</a>`
   }
   
@@ -234,7 +237,7 @@ const nodeTitle = computed(() => {
   
   // Add Bubble Chart and lsNodes links for the main node on the same line
   const modalLinks = []
-  if (!isPrivateOrHidden && parseInt(nodeId) >= 2000) {
+  if (!isPrivateOrHidden && parseInt(nodeId) >= 2000 && canShowBubbleChart.value) {
     // Bubble Chart link - now opens modal instead of external site
     modalLinks.push(`<a href="#" class="bubble-chart-modal-link" data-node-id="${nodeId}">Bubble Chart</a>`)
   }
@@ -365,17 +368,18 @@ const headerColspan3 = computed(() => {
   return 5
 })
 
+const isDisplayedConnection = (node: ConnectedNode): boolean => {
+  const isActuallyConnected = node.link === 'ESTABLISHED' || node.link === 'CONNECTING'
+  const isNodeOne = Number(node.node) === 1
+  const node1Valid = !isNodeOne || (node.info && node.info !== 'NO CONNECTION')
+  return isActuallyConnected && node1Valid
+}
+
 const displayedConnectedNodes = computed(() => {
   if (!connectedNodes.value) return []
-  
-  // Filter: only show actually connected nodes (ESTABLISHED or CONNECTING), not LINKED (indirect)
-  // Also filter out node 1 if it has no info
-  const filteredNodes = connectedNodes.value.filter(node => {
-    const isActuallyConnected = node.link === 'ESTABLISHED' || node.link === 'CONNECTING'
-    const node1Valid = node.node !== 1 || (node.info && node.info !== 'NO CONNECTION')
-    return isActuallyConnected && node1Valid
-  })
-  
+
+  const filteredNodes = connectedNodes.value.filter(isDisplayedConnection)
+
   // Apply display logic based on user preferences
 if (appStore.user?.preferences?.showAll) {
   return filteredNodes
@@ -385,8 +389,14 @@ if (appStore.user?.preferences?.showAll) {
 }
 })
 
+const establishedConnectedCount = computed(() => {
+  if (!connectedNodes.value) return 0
+  return connectedNodes.value.filter(isDisplayedConnection).length
+})
+
 const showNodeCount = computed(() => {
-  return totalNodes.value > displayedNodes.value && totalNodes.value > 1
+  return establishedConnectedCount.value > displayedConnectedNodes.value.length
+    && establishedConnectedCount.value > 1
 })
 
 // Methods

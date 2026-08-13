@@ -44,17 +44,15 @@ export class CsrfTokenService {
    * Get a valid CSRF token, refreshing if necessary
    */
   public async getToken(): Promise<string> {
-    // Check if we have a valid token
-    if (this.isTokenValid()) {
-      return this.tokenInfo!.token
-    }
-
-    // Check if token needs refresh
+    // Proactively refresh before expiry while the token is still usable.
     if (this.shouldRefreshToken()) {
       return this.refreshToken()
     }
 
-    // No token or expired - fetch new one
+    if (this.isTokenValid()) {
+      return this.tokenInfo!.token
+    }
+
     return this.fetchNewToken()
   }
 
@@ -154,21 +152,12 @@ export class CsrfTokenService {
    * Perform token refresh
    */
   private async performTokenRefresh(): Promise<string> {
-    
-    // Clear existing token info but keep the old token as fallback
-    const oldToken = this.tokenInfo?.token
-    
     try {
-      const newToken = await this.fetchNewToken()
-      return newToken
+      return await this.fetchNewToken()
     } catch (error) {
-      
-      // If refresh failed but we have an old token, extend its lifetime temporarily
-      if (oldToken && this.tokenInfo) {
-        this.tokenInfo.expiresAt = Date.now() + 60000 // Extend by 1 minute
-        return oldToken
-      }
-      
+      // Do not extend an expired/near-expired token on refresh failure —
+      // force callers to fetch a fresh token instead of reusing a dead one.
+      this.tokenInfo = null
       throw error
     }
   }

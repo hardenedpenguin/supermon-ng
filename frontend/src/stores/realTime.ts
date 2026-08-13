@@ -568,7 +568,9 @@ export const useRealTimeStore = defineStore('realTime', () => {
                 WX: amiNode.WX,
                 DISK: amiNode.DISK,
                 remote_nodes: amiNode.remote_nodes,
-                info: amiNode.info
+                info: amiNode.info,
+                is_online: amiNode.status === 'online',
+                is_keyed: (amiNode.cos_keyed ?? 0) > 0 || (amiNode.tx_keyed ?? 0) > 0,
               }
             } else {
               // Add new node with AMI data (e.g. remote node selected before /nodes list refresh)
