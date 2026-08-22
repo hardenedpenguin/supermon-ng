@@ -154,7 +154,7 @@ Hard-refresh the browser after upgrades so the latest frontend loads.
 - DVSwitch and system actions require explicit permission flags
 - Unauthenticated users get no capabilities until login
 - `CORS_ORIGINS` should list explicit origins in production (not `*` with credentials)
-- Behind a TLS-terminating reverse proxy, set `TRUST_FORWARDED_PROTO=true` in `.env` so session cookies stay `Secure`
+- Set `TRUST_FORWARDED_PROTO=true` only when a TLS-terminating reverse proxy sanitizes client-supplied `X-Forwarded-Proto` and writes the real external scheme; otherwise leave it disabled so session-cookie `Secure` behavior cannot be spoofed
 - Install `php-apcu` so API rate limits are shared across PHP-FPM workers (recommended by the `.deb` package)
 
 ## Contributing & support
