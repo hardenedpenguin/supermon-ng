@@ -30,25 +30,4 @@ trait JsonResponseTrait
             $status
         );
     }
-
-    protected function inferErrorStatus(string $message): int
-    {
-        $lower = strtolower($message);
-        if (str_contains($lower, 'not authorized') || str_contains($lower, 'permission')) {
-            return 403;
-        }
-        if (str_contains($lower, 'authentication required') || str_contains($lower, 'login')) {
-            return 401;
-        }
-        if (str_contains($lower, 'not found')) {
-            return 404;
-        }
-        if (str_contains($lower, 'could not connect to asterisk') || str_contains($lower, 'ami')) {
-            return 502;
-        }
-        if (str_contains($lower, 'valid') || str_contains($lower, 'required') || str_contains($lower, 'invalid')) {
-            return 400;
-        }
-        return 500;
-    }
 }

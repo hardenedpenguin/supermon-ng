@@ -30,6 +30,7 @@ Depends: ${misc:Depends},
          ssl-cert,
          acl
 Recommends: asterisk,
+         php-apcu,
          sox,
          libsox-fmt-mp3,
          asl3-tts

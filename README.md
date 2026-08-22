@@ -23,7 +23,7 @@ Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket
 
 - **Real-time monitoring** — WebSocket node status; AMI polling when WS is down
 - **Setup wizard** — First-run guide: admin account, `global.inc` site identity, `allmon.ini` generation
-- **Operations** — Service health panel, config backup/restore, link map, connection status bar
+- **Operations** — Service health panel, config backup/restore, link map
 - **Node control** — Connect, monitor, DTMF, favorites, control panel (permission-gated)
 - **DVSwitch** — Mode/talkgroup switching; credentials stay server-side
 - **System tools** — CPU/memory/disk, logs, config editor, custom themes and header images
@@ -154,10 +154,12 @@ Hard-refresh the browser after upgrades so the latest frontend loads.
 - DVSwitch and system actions require explicit permission flags
 - Unauthenticated users get no capabilities until login
 - `CORS_ORIGINS` should list explicit origins in production (not `*` with credentials)
+- Behind a TLS-terminating reverse proxy, set `TRUST_FORWARDED_PROTO=true` in `.env` so session cookies stay `Secure`
+- Install `php-apcu` so API rate limits are shared across PHP-FPM workers (recommended by the `.deb` package)
 
 ## Contributing & support
 
-PRs welcome (PSR-12 PHP, ESLint for frontend). Report issues at [GitHub Issues](https://github.com/hardenedpenguin/supermon-ng/issues) with PHP version, relevant log lines, and reproduction steps.
+PRs welcome (PSR-12 PHP; frontend builds with Vite / `vue-tsc`). Report issues at [GitHub Issues](https://github.com/hardenedpenguin/supermon-ng/issues) with PHP version, relevant log lines, and reproduction steps.
 
 ## License
 
