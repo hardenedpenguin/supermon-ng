@@ -1,3 +1,35 @@
+supermon-ng (4.3.4-1) unstable; urgency=high
+
+  * Security: strip AMI credentials from public node config via an allowlist;
+    require auth for favorites; fail closed when authusers.inc is missing.
+  * Security: harden setup completion gating; block post-setup global-config
+    reads; raise setup admin password minimum to 8 characters.
+  * Security: validate config-restore archives before write; skip sbin paths;
+    reject unsafe .inc constructs on import.
+  * Security: align AdminAuth with SessionService; stop default-user fallback
+    on privileged config paths; require real sessions for privileged APIs.
+  * Security: require CSRF on logout and Bubble Chart POST; drop login
+    session_id from JSON responses.
+  * Security: allowlist DTMF charset/length (including digit "0"); only trust
+    X-Forwarded-Proto when TRUST_FORWARDED_PROTO is set and the proxy sanitizes
+    client forwarded headers.
+  * Frontend: fix NodeTable timer indexing; preserve link rel in HTML sanitize;
+    fix announcements multipart upload Content-Type; clear toast/modal timers
+    on dismiss and unmount; clipboard copy generation token in Bubble Chart.
+  * Frontend: fix Voter spinner leak; Dashboard unmount stops monitoring;
+    AMI poll sets is_online/is_keyed; NodeTable shown/total counts; CSRF
+    proactive refresh path; add noopener on window.open / Donate.
+  * UX: separate Announcements Play vs Delete (issue #27); pin mobile viewport
+    to desktop width; allow SAMEORIGIN framing for Digital Dashboard iframe;
+    remove redundant WebSocket/polling status banner (Service Health remains).
+  * Packaging: remove deprecated tarball install/update flow; apt/.deb only;
+    Recommends php-apcu for shared FPM rate limits; bump vue-tsc for TS 5.
+  * Docs: apt/.deb README and badges; document TRUST_FORWARDED_PROTO, CORS,
+    rate-limit, and WebSocket auth knobs in .env.example; credit N5AD for
+    the announcements feature idea.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Sat, 22 Aug 2026 17:40:00 +0000
+
 supermon-ng (4.3.3-1) unstable; urgency=medium
 
   * Fix Connected/Received timers freezing until a keyup.
