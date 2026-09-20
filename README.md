@@ -15,7 +15,7 @@
 
 Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket real-time updates with AMI polling fallback.
 
-**Current release:** [V4.3.4](https://github.com/hardenedpenguin/supermon-ng/releases/tag/V4.3.4) (August 2026)
+**Current release:** [V4.3.5](https://github.com/hardenedpenguin/supermon-ng/releases/tag/V4.3.5) (September 2026)
 
 > **Install and upgrades:** Supermon-ng installs and updates via the **Debian `.deb` package** only. Use the [hardenedpenguin APT repository](https://hardenedpenguin.github.io/hardenedpenguin-apt/) (`apt install supermon-ng`) or install a `.deb` from [Releases](https://github.com/hardenedpenguin/supermon-ng/releases). The old tarball `install.sh` / `update.sh` flows have been **removed** and are no longer supported or published. Existing tarball installs should [migrate to apt](docs/DEBIAN.md#migrating-from-a-legacy-tarball-install-to-apt). See [docs/DEBIAN.md](docs/DEBIAN.md).
 

@@ -1,3 +1,18 @@
+supermon-ng (4.3.5-1) unstable; urgency=medium
+
+  * Fix clean apt install leaving the packaged allmon.ini placeholder in place.
+    The .deb ships example nodes 1998/1999 as a conffile; postinst previously
+    used --if-missing and skipped Asterisk generation whenever that file
+    already existed.
+  * Fresh install now always runs generate_local_allmon.php --force (backs up
+    the template, writes nodes/AMI from rpt.conf + manager.conf).
+  * Upgrades replace allmon.ini when it still matches the unused stock
+    placeholder, so broken 4.3.4 clean installs are repaired automatically.
+  * Run allmon generation after Composer vendor is ensured so autoload works.
+  * Docs: clarify fresh-install allmon.ini behavior in docs/DEBIAN.md.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Sun, 20 Sep 2026 19:42:00 +0000
+
 supermon-ng (4.3.4-1) unstable; urgency=high
 
   * Security: strip AMI credentials from public node config via an allowlist;

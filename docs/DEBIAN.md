@@ -84,7 +84,10 @@ sudo dpkg -i ../supermon-ng_*_all.deb
 On a **fresh install**, `postinst` also:
 
 - creates `.env` from `.env.example`
-- runs `generate_local_allmon.php` (`--if-missing` when `allmon.ini` exists, else `--force`)
+- runs `generate_local_allmon.php --force` on fresh install (the package ships a
+  placeholder `allmon.ini` conffile; `--force` overwrites it from Asterisk and
+  keeps a `.bak.*` copy). Upgrades skip generation unless the file is still that
+  unused stock placeholder (nodes 1998/1999, empty passwords)
 - installs the Apache site from the current `.env` (using `OVERWRITE_SITE=true`)
 - applies `NODE_STATUS_INTERVAL_MINUTES` from `.env` via a systemd drop-in
 - sets `www-data` ownership and file modes under the app tree
