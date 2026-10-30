@@ -260,9 +260,22 @@ class NodeWebSocketService implements MessageComponentInterface
                 'error' => $e->getMessage()
             ]);
             
-            // Mark AMI as disconnected, will reconnect on next poll
-            $this->amiConnected = false;
+            $this->disconnectAmi();
         }
+    }
+
+    /**
+     * Drop a dead AMI socket so the next poll reconnects via connectToAmi().
+     * SimpleAmiClient::action() returns false (no exception) on a broken pipe
+     * or read timeout, e.g. after Asterisk restarts.
+     */
+    private function handleAmiActionFailure(string $command): void
+    {
+        $this->logger->warning("AMI action failed for node; reconnecting", [
+            'node_id' => $this->nodeId,
+            'command' => $command,
+        ]);
+        $this->disconnectAmi();
     }
     
     /**
@@ -283,6 +296,7 @@ class NodeWebSocketService implements MessageComponentInterface
             ]);
             
             if ($xstatResponse === false) {
+                $this->handleAmiActionFailure('XStat');
                 return null;
             }
             
@@ -291,11 +305,13 @@ class NodeWebSocketService implements MessageComponentInterface
                 "COMMAND" => "SawStat",
                 "NODE" => $this->nodeId
             ]);
+
+            if ($sawStatResponse === false) {
+                $this->handleAmiActionFailure('SawStat');
+                return null;
+            }
             
-            $parsed = $this->amiParser->parse(
-                $xstatResponse,
-                $sawStatResponse !== false ? $sawStatResponse : ''
-            );
+            $parsed = $this->amiParser->parse($xstatResponse, $sawStatResponse);
             $nodeIds = array_map(static fn (array $c) => (string) $c[0], $parsed->conns);
             $infoMap = $nodeIds !== [] ? $this->astdbService->getMultipleNodeInfo($nodeIds) : [];
             $resolveInfo = AmiXstatParserService::astdbInfoResolver($this->astdbService, $infoMap);
