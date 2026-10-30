@@ -1,3 +1,35 @@
+supermon-ng (4.3.6-1) unstable; urgency=medium
+
+  * Fix /supermon-ng returning 404 on ASL3 appliance 3.x hosts. asl3-appliance
+    3.0.0 installs 000-asl3-appliance sites without a ServerName, which become
+    Apache's default vhost and shadow the supermon-ng site.
+  * Subdirectory mode now installs its Alias/ProxyPass routes as a global
+    conf (/etc/apache2/conf-available/supermon-ng.conf, a2enconf), applied
+    under every vhost; the supermon-ng site becomes a host-only vhost. The
+    conf is regenerated from .env on every configure. Root mode
+    (APP_BASE_PATH=/) keeps its dedicated vhost and removes the conf.
+  * The API proxy sets X-Forwarded-Proto from the request scheme, so Secure
+    cookies and wss:// work behind the appliance's TLS vhost.
+  * Scope config/apache-performance.conf to the app's public directory so its
+    headers and caching do not leak onto other sites on the host.
+  * Place the /supermon-ng/user_files Alias before /supermon-ng so it matches
+    (served behind user_files/.htaccess Basic Auth, as in root mode); removes
+    the AH00671 configtest warning.
+  * configure-apache: when switching to APP_BASE_PATH=/, replace the host-only
+    subdirectory site (backup kept) instead of leaving no routes. When
+    switching to /supermon-ng, replace the generated root-mode site, or stop
+    with instructions if a customized one would redirect the path away.
+  * configure-apache: warn when root mode has no ServerName on hosts with the
+    ASL3 appliance default sites.
+  * prerm/postrm: disable the conf on remove and delete it on purge.
+  * WebSocket: reconnect AMI after Asterisk restarts. Failed XStat/SawStat
+    actions now drop the dead socket so the next poll reconnects (closes #28);
+    the first failure skips the 30-second reconnect backoff.
+  * Docs: document the global Apache conf in README, docs/DEBIAN.md, and the
+    debconf template.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Fri, 30 Oct 2026 14:25:00 +0000
+
 supermon-ng (4.3.5-1) unstable; urgency=medium
 
   * Fix clean apt install leaving the packaged allmon.ini placeholder in place.
