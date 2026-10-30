@@ -108,6 +108,28 @@ enable_apache_modules() {
     }
 }
 
+# Subdirectory mode with an installed root-mode site whose legacy redirect covers APP_BASE_PATH.
+root_redirect_conflicts() {
+    [ -f "$APACHE_CONF_TEMPLATE" ] || return 1
+    case "${APP_BASE_PATH%/}" in
+        /supermon-ng|/supermon-ng/*) ;;
+        *) return 1 ;;
+    esac
+    grep -qE '^[[:space:]]*RedirectMatch[[:space:]].*\^/supermon-ng' "$APACHE_SITE_FILE"
+}
+
+# True when the installed site is byte-identical to what root mode would generate now.
+root_site_is_generated() {
+    local tmp rc=1
+    tmp=$(mktemp) || return 1
+    if APP_BASE_PATH=/ bash "$APP_DIR/scripts/generate-apache-template.sh" "$tmp" >/dev/null 2>&1 \
+        && cmp -s "$tmp" "$APACHE_SITE_FILE"; then
+        rc=0
+    fi
+    rm -f "$tmp"
+    return "$rc"
+}
+
 install_site_config() {
     if [ ! -f "$APACHE_TEMPLATE" ]; then
         warn "configure-apache: template missing at $APACHE_TEMPLATE"
@@ -119,10 +141,17 @@ install_site_config() {
             # Host-only subdirectory vhost has no app routes; the conf is about to be removed.
             log "APP_BASE_PATH=/ but $APACHE_SITE_FILE is the subdirectory host-only site; replacing (backup: ${APACHE_SITE_FILE}.bak)"
             cp -p "$APACHE_SITE_FILE" "${APACHE_SITE_FILE}.bak"
-        else
-            if [ -f "$APACHE_CONF_TEMPLATE" ] && grep -qE '^[[:space:]]*RedirectMatch[[:space:]].*\^/supermon-ng' "$APACHE_SITE_FILE"; then
-                warn "configure-apache: $APACHE_SITE_FILE is a root-mode (APP_BASE_PATH=/) site that redirects /supermon-ng away; re-run with OVERWRITE_SITE=true or remove its RedirectMatch"
+        elif root_redirect_conflicts; then
+            # Vhost RedirectMatch is applied before the global Alias and would send the app back to /.
+            if root_site_is_generated; then
+                log "APP_BASE_PATH=${APP_BASE_PATH} but $APACHE_SITE_FILE is the generated root-mode site; replacing (backup: ${APACHE_SITE_FILE}.bak)"
+                cp -p "$APACHE_SITE_FILE" "${APACHE_SITE_FILE}.bak"
+            else
+                warn "configure-apache: $APACHE_SITE_FILE is a customized root-mode (APP_BASE_PATH=/) site whose RedirectMatch sends ${APP_BASE_PATH} to /."
+                warn "configure-apache: remove that RedirectMatch, or regenerate the site (OVERWRITE_SITE=true, or 'sudo dpkg-reconfigure supermon-ng' and choose to regenerate), then re-run."
+                return 1
             fi
+        else
             log "Leaving existing Apache site: $APACHE_SITE_FILE"
             return 0
         fi
