@@ -71,8 +71,8 @@ Install location: `/var/www/html/supermon-ng` (matches tarball installs and sudo
 During install, debconf asks whether to:
 
 - configure Apache (default: yes)
-- disable `000-default` / `default-ssl` (default: yes)
-- regenerate `/etc/apache2/sites-available/supermon-ng.conf` on upgrade (default: no)
+- disable `000-default` / `default-ssl` (default: yes; only used with `APP_BASE_PATH=/`)
+- regenerate `/etc/apache2/sites-available/supermon-ng.conf` on upgrade (default: no; in subdirectory mode this retires the site instead)
 
 To skip Apache setup non-interactively:
 
@@ -88,7 +88,7 @@ On a **fresh install**, `postinst` also:
   placeholder `allmon.ini` conffile; `--force` overwrites it from Asterisk and
   keeps a `.bak.*` copy). Upgrades skip generation unless the file is still that
   unused stock placeholder (nodes 1998/1999, empty passwords)
-- installs the Apache site from the current `.env` (using `OVERWRITE_SITE=true`)
+- configures Apache from the current `.env`: the global conf for `/supermon-ng`, or the dedicated site for `APP_BASE_PATH=/` (using `OVERWRITE_SITE=true`)
 - applies `NODE_STATUS_INTERVAL_MINUTES` from `.env` via a systemd drop-in
 - sets `www-data` ownership and file modes under the app tree
 
@@ -176,16 +176,20 @@ Older sites installed from the (now removed) `install.sh` tarball should move to
 
 | Path | Purpose |
 |------|---------|
-| `/var/www/html/supermon-ng/apache-config-template.conf` | Generated vhost template |
-| `/var/www/html/supermon-ng/apache-conf-template.conf` | Generated conf snippet (subdirectory mode only) |
-| `/etc/apache2/sites-available/supermon-ng.conf` | Installed site (refreshed on first install; preserved on upgrade unless debconf refresh) |
-| `/etc/apache2/conf-available/supermon-ng.conf` | Global `Alias`/`ProxyPass` routes for `APP_BASE_PATH` (subdirectory mode); regenerated and `a2enconf`'d on every configure |
+| `/var/www/html/supermon-ng/apache-conf-template.conf` | Generated conf snippet (subdirectory mode) |
+| `/etc/apache2/conf-available/supermon-ng.conf` | Global `Alias`/`ProxyPass` routes and `supermon-ng_access.log` for `APP_BASE_PATH` (subdirectory mode); regenerated and `a2enconf`'d on every configure |
+| `/var/www/html/supermon-ng/apache-config-template.conf` | Generated vhost template (root mode) |
+| `/etc/apache2/sites-available/supermon-ng.conf` | Dedicated site (root mode; refreshed on first install, preserved on upgrade unless debconf refresh) |
 
-In subdirectory mode the app routes live in the global conf, so `/supermon-ng` works under whichever vhost Apache picks as default — including the ASL3 appliance's `000-asl3-appliance` sites (appliance 3.x), which otherwise shadow the `supermon-ng` site. Root mode (`APP_BASE_PATH=/`) uses only the vhost and removes the conf; on hosts with other default sites set `SUPERMON_SERVER_NAME` so the vhost is selected by hostname.
+**Subdirectory mode (default).** Supermon-ng installs no site of its own and leaves the existing default sites enabled — Debian's `000-default` / `default-ssl` or the ASL3 appliance's `000-asl3-appliance` sites — so their settings are never overwritten. The global conf applies under whichever vhost answers. If no enabled site listens on port 80 or 443, `000-default` / `default-ssl` (snakeoil) are enabled; run `certbot --apache` for a real certificate. Requests under `/supermon-ng` are also copied to `/var/log/apache2/supermon-ng_access.log`; errors go to the serving site's error log (normally `error.log`, which the dashboard log viewer reads).
 
-Required modules are enabled automatically: `proxy`, `proxy_http`, `proxy_wstunnel`, `rewrite`, `headers`, `substitute`, `ssl`, `deflate`, `expires`.
+On upgrade, a `supermon-ng` site from an earlier release is disabled and moved to `supermon-ng.conf.bak` when it is an unmodified generated site (no `ServerName`, snakeoil certificate, no extra directives), and the defaults are enabled as above. A customized site (for example with a `ServerName` or a Let's Encrypt certificate) is left in place.
 
-If you use Let's Encrypt, install `certbot` separately (it is not a package dependency). Apache setup auto-detects certs under `/etc/letsencrypt/live/` when present; otherwise the generated vhost uses the Debian `ssl-cert` snakeoil certificate until you add real TLS.
+**Root mode (`APP_BASE_PATH=/`).** Uses the dedicated site and removes the conf. On hosts with other default sites set `SUPERMON_SERVER_NAME` so the site is selected by hostname.
+
+Required modules are enabled automatically: `proxy`, `proxy_http`, `proxy_wstunnel`, `rewrite`, `headers`, `substitute`, `ssl`, `deflate`, `expires`, `setenvif`.
+
+If you use Let's Encrypt, install `certbot` separately (it is not a package dependency). In root mode, Apache setup auto-detects certs under `/etc/letsencrypt/live/` when present; otherwise the generated vhost uses the Debian `ssl-cert` snakeoil certificate until you add real TLS.
 
 Log ACLs for `www-data` are applied when the `acl` package is present.
 
@@ -211,7 +215,7 @@ sudo apt install supermon-ng
 sudo dpkg -i ../supermon-ng_<new>_all.deb
 ```
 
-User configs listed in `debian/supermon-ng.conffiles` (including `favini.inc`) are preserved. To replace a customized Apache site with a freshly generated one, answer **Yes** to the debconf refresh prompt, or run:
+User configs listed in `debian/supermon-ng.conffiles` (including `favini.inc`) are preserved. To replace a customized Apache site with a freshly generated one (root mode), or retire it in favor of the default sites (subdirectory mode), answer **Yes** to the debconf refresh prompt, or run:
 
 ```bash
 sudo OVERWRITE_SITE=true /var/www/html/supermon-ng/scripts/configure-apache.sh configure
@@ -228,7 +232,7 @@ On upgrade, if dpkg prompts about `/etc/sudoers.d/011-supermon-ng`, install the 
 ## Remove / purge
 
 - **remove**: stops services, disables the `supermon-ng` Apache site and conf; keeps the files on disk.
-- **purge**: also removes `/etc/apache2/sites-available/supermon-ng.conf`, `/etc/apache2/conf-available/supermon-ng.conf`, sudoers drop-in, and the node-status timer drop-in.
+- **purge**: also removes `/etc/apache2/sites-available/supermon-ng.conf` (and its `.bak`), `/etc/apache2/conf-available/supermon-ng.conf`, sudoers drop-in, and the node-status timer drop-in. Default sites enabled during install are left enabled.
 
 ## Legacy tarball note
 

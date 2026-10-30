@@ -9,7 +9,7 @@ case "$1" in
             a2dissite -q supermon-ng 2>/dev/null || true
             a2disconf -q supermon-ng 2>/dev/null || true
         fi
-        rm -f /etc/apache2/sites-available/supermon-ng.conf
+        rm -f /etc/apache2/sites-available/supermon-ng.conf /etc/apache2/sites-available/supermon-ng.conf.bak
         rm -f /etc/apache2/conf-available/supermon-ng.conf
         if command -v apache2ctl >/dev/null 2>&1; then
             apache2ctl configtest >/dev/null 2>&1 && systemctl reload apache2 2>/dev/null || true
