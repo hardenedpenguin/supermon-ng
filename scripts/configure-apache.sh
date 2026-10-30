@@ -172,6 +172,11 @@ subdir_site_is_generated() {
     printf '%s\n' "$GENERATED_SUBDIR_SITE_SHA256" | grep -qx "$sum"
 }
 
+site_has_host_or_tls() {
+    grep -qiE '^[[:space:]]*ServerName[[:space:]]' "$APACHE_SITE_FILE" \
+        || grep -qE '^[[:space:]]*SSLCertificateFile[[:space:]]+/etc/letsencrypt/' "$APACHE_SITE_FILE"
+}
+
 retire_site() {
     log "$1; disabling and moving it to ${APACHE_SITE_FILE}.bak"
     a2dissite -q supermon-ng 2>/dev/null || true
@@ -186,7 +191,13 @@ retire_subdir_site() {
     if [ "$OVERWRITE_SITE" = true ]; then
         retire_site "Site regeneration requested in subdirectory mode (no site needed)"
     elif root_site_is_generated; then
-        retire_site "APP_BASE_PATH=${APP_BASE_PATH} but $APACHE_SITE_FILE is the generated root-mode site"
+        if site_has_host_or_tls; then
+            # Its hostname/certificate would be lost; the default sites only provide snakeoil.
+            warn "configure-apache: keeping generated root-mode site $APACHE_SITE_FILE (it has a ServerName or Let's Encrypt certificate); its hostname still serves the APP_BASE_PATH=/ layout."
+            warn "configure-apache: to use ${APP_BASE_PATH} there, re-run with OVERWRITE_SITE=true (or 'sudo dpkg-reconfigure supermon-ng' and choose to regenerate) to retire it."
+        else
+            retire_site "APP_BASE_PATH=${APP_BASE_PATH} but $APACHE_SITE_FILE is the generated root-mode site"
+        fi
     elif subdir_site_is_generated; then
         retire_site "$APACHE_SITE_FILE is an unmodified generated site; the default sites serve ${APP_BASE_PATH} via the global conf"
     elif root_redirect_conflicts; then
