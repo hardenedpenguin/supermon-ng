@@ -115,8 +115,17 @@ install_site_config() {
     fi
 
     if [ -f "$APACHE_SITE_FILE" ] && [ "$OVERWRITE_SITE" != true ]; then
-        log "Leaving existing Apache site: $APACHE_SITE_FILE"
-        return 0
+        if [ ! -f "$APACHE_CONF_TEMPLATE" ] && grep -q 'conf-available/supermon-ng.conf' "$APACHE_SITE_FILE"; then
+            # Host-only subdirectory vhost has no app routes; the conf is about to be removed.
+            log "APP_BASE_PATH=/ but $APACHE_SITE_FILE is the subdirectory host-only site; replacing (backup: ${APACHE_SITE_FILE}.bak)"
+            cp -p "$APACHE_SITE_FILE" "${APACHE_SITE_FILE}.bak"
+        else
+            if [ -f "$APACHE_CONF_TEMPLATE" ] && grep -qE '^[[:space:]]*RedirectMatch[[:space:]].*\^/supermon-ng' "$APACHE_SITE_FILE"; then
+                warn "configure-apache: $APACHE_SITE_FILE is a root-mode (APP_BASE_PATH=/) site that redirects /supermon-ng away; re-run with OVERWRITE_SITE=true or remove its RedirectMatch"
+            fi
+            log "Leaving existing Apache site: $APACHE_SITE_FILE"
+            return 0
+        fi
     fi
 
     log "Installing Apache site configuration..."

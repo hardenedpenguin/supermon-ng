@@ -41,6 +41,7 @@ class NodeWebSocketService implements MessageComponentInterface
     private int $lastAmiReconnectAttempt = 0; // Timestamp of last reconnect attempt
     private int $amiReconnectBackoff = 30; // Seconds between reconnect attempts
     private bool $amiReconnectLogged = false; // Track if we've logged the reconnect failure
+    private int $lastAmiActionFailure = 0; // Timestamp of last failed AMI action on a live connection
     
     public function __construct(
         string $nodeId,
@@ -268,6 +269,8 @@ class NodeWebSocketService implements MessageComponentInterface
      * Drop a dead AMI socket so the next poll reconnects via connectToAmi().
      * SimpleAmiClient::action() returns false (no exception) on a broken pipe
      * or read timeout, e.g. after Asterisk restarts.
+     * The first failure reconnects on the next poll; repeated failures within
+     * the backoff window fall back to the normal reconnect backoff.
      */
     private function handleAmiActionFailure(string $command): void
     {
@@ -275,6 +278,11 @@ class NodeWebSocketService implements MessageComponentInterface
             'node_id' => $this->nodeId,
             'command' => $command,
         ]);
+        $now = time();
+        if ($now - $this->lastAmiActionFailure >= $this->amiReconnectBackoff) {
+            $this->lastAmiReconnectAttempt = 0;
+        }
+        $this->lastAmiActionFailure = $now;
         $this->disconnectAmi();
     }
     
