@@ -1,3 +1,32 @@
+supermon-ng (4.3.7-1) unstable; urgency=medium
+
+  * Subdirectory installs (/supermon-ng) no longer install a supermon-ng site
+    or disable 000-default / default-ssl. On ASL3 images those default sites
+    carry the appliance's own settings; they are now left enabled and
+    untouched, and the app is served from the global
+    conf-available/supermon-ng.conf under whichever site answers.
+  * The global conf also copies /supermon-ng requests to
+    /var/log/apache2/supermon-ng_access.log (GlobalLog). Errors stay in the
+    serving site's error.log, which the dashboard log viewer reads.
+  * If no enabled site listens on port 80 or 443, 000-default / default-ssl
+    (snakeoil) are enabled; use certbot --apache for a real certificate.
+  * Upgrades disable a supermon-ng site from an earlier release and move it
+    to supermon-ng.conf.bak only when it exactly matches a generated
+    subdirectory site (any past release) or a generated root-mode site with
+    no ServerName or Let's Encrypt certificate. Customized sites, and
+    generated root-mode sites with a ServerName or Let's Encrypt certificate,
+    are kept (with a warning for the latter).
+  * Generated root-mode sites are recognized from the ServerName and
+    certificate recorded in the site, not the current .env.
+  * Root-mode redirect conflicts are detected by testing each RedirectMatch
+    against the actual APP_BASE_PATH (e.g. /supermon-ng2).
+  * "Disable default sites" now applies only to APP_BASE_PATH=/; the
+    regenerate prompt retires the site in subdirectory mode. setenvif is
+    enabled for the access log. Purge also removes supermon-ng.conf.bak.
+  * Root mode (APP_BASE_PATH=/) behavior is unchanged.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Fri, 30 Oct 2026 15:20:00 +0000
+
 supermon-ng (4.3.6-1) unstable; urgency=medium
 
   * Fix /supermon-ng returning 404 on ASL3 appliance 3.x hosts. asl3-appliance
