@@ -142,6 +142,7 @@ SSL_HTTP=''
 
 # Prefer Certbot/Let's Encrypt when present; fall back to Debian snakeoil for fresh installs
 detect_letsencrypt_cert_name() {
+  [ "${FORCE_SNAKEOIL:-false}" = true ] && return 1
   if [ -n "$SSL_CERT_NAME" ] && [ -f "/etc/letsencrypt/live/${SSL_CERT_NAME}/fullchain.pem" ]; then
     echo "$SSL_CERT_NAME"
     return 0
