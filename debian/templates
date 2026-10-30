@@ -3,7 +3,10 @@ Type: boolean
 Default: true
 Description: Configure Apache for Supermon-ng?
  Automatically enable required Apache modules, install the supermon-ng site
- configuration under /etc/apache2/sites-available/, and reload Apache.
+ configuration under /etc/apache2/sites-available/ (plus a global
+ /etc/apache2/conf-available/supermon-ng.conf for the /supermon-ng path,
+ so it works alongside other default sites such as the ASL3 appliance),
+ and reload Apache.
  .
  Choose "No" if you use nginx or manage Apache vhosts yourself.
 

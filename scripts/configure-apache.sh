@@ -7,6 +7,7 @@
 #   SKIP_APACHE          true = only generate template + app-base-path, no site install
 #   DISABLE_DEFAULT_SITES  true = a2dissite 000-default and default-ssl (default: true)
 #   OVERWRITE_SITE       true = replace existing sites-available/supermon-ng.conf
+#                        (conf-available/supermon-ng.conf is always regenerated)
 #   ALLOW_APT_INSTALL    true = apt-get install apache2/ssl-cert if missing
 #   CONFIGURE_LOG_ACLS   true = setfacl on Apache/Asterisk logs (default: true)
 #   QUIET                true = less output
@@ -23,6 +24,8 @@ QUIET="${QUIET:-false}"
 
 APACHE_SITE_FILE="/etc/apache2/sites-available/supermon-ng.conf"
 APACHE_TEMPLATE="${APP_DIR}/apache-config-template.conf"
+APACHE_CONF_FILE="/etc/apache2/conf-available/supermon-ng.conf"
+APACHE_CONF_TEMPLATE="${APP_DIR}/apache-conf-template.conf"
 WWW_GROUP="${WWW_GROUP:-www-data}"
 APACHE_LOG_DIR="${APACHE_LOG_DIR:-/var/log/apache2}"
 ASTERISK_LOG_DIR="${ASTERISK_LOG_DIR:-/var/log/asterisk}"
@@ -92,7 +95,7 @@ generate_template_and_paths() {
     fi
 
     log "Generating Apache template (APP_BASE_PATH=${APP_BASE_PATH})..."
-    bash "$APP_DIR/scripts/generate-apache-template.sh" "$APACHE_TEMPLATE"
+    bash "$APP_DIR/scripts/generate-apache-template.sh" "$APACHE_TEMPLATE" "$APACHE_CONF_TEMPLATE"
 
     if [ -x "$APP_DIR/scripts/configure-app-base-path.sh" ]; then
         bash "$APP_DIR/scripts/configure-app-base-path.sh" "$APP_DIR"
@@ -120,6 +123,34 @@ install_site_config() {
     cp "$APACHE_TEMPLATE" "$APACHE_SITE_FILE"
 }
 
+# Subdirectory mode: app routes live in a global conf snippet, regenerated from
+# .env every time (unlike the site file, it holds no admin-editable host/TLS
+# settings). Root mode uses a dedicated vhost, so the snippet is removed.
+install_app_conf() {
+    if [ -f "$APACHE_CONF_TEMPLATE" ]; then
+        log "Installing Apache conf: $APACHE_CONF_FILE"
+        cp "$APACHE_CONF_TEMPLATE" "$APACHE_CONF_FILE"
+        a2enconf -q supermon-ng 2>/dev/null || {
+            warn "configure-apache: failed to enable Apache conf supermon-ng"
+            return 1
+        }
+    else
+        a2disconf -q supermon-ng 2>/dev/null || true
+        rm -f "$APACHE_CONF_FILE"
+    fi
+}
+
+# ASL3 appliance 3.x installs 000-asl3-appliance sites without a ServerName,
+# which become the default host. Root mode needs its own ServerName to be reachable.
+warn_root_mode_shadowed() {
+    [ -f "$APACHE_CONF_TEMPLATE" ] && return 0
+    [ -n "${SUPERMON_SERVER_NAME:-}" ] && return 0
+    grep -qiE '^[[:space:]]*ServerName[[:space:]]' "$APACHE_SITE_FILE" 2>/dev/null && return 0
+    if ls /etc/apache2/sites-enabled/000-asl3-appliance*.conf >/dev/null 2>&1; then
+        warn "configure-apache: APP_BASE_PATH=/ without SUPERMON_SERVER_NAME is shadowed by the ASL3 appliance's default site; set SUPERMON_SERVER_NAME or use APP_BASE_PATH=/supermon-ng"
+    fi
+}
+
 enable_supermon_site() {
     if [ "$DISABLE_DEFAULT_SITES" = true ]; then
         a2dissite -q 000-default 2>/dev/null || true
@@ -144,7 +175,7 @@ reload_apache() {
             return 1
         }
     else
-        warn "configure-apache: apache2ctl configtest failed — fix $APACHE_SITE_FILE manually"
+        warn "configure-apache: apache2ctl configtest failed — fix $APACHE_SITE_FILE / $APACHE_CONF_FILE manually"
         apache2ctl configtest 2>&1 || true
         return 1
     fi
@@ -164,16 +195,25 @@ configure_apache_site() {
     enable_apache_modules
     install_site_config
     enable_supermon_site
+    install_app_conf
+    warn_root_mode_shadowed
     reload_apache
 }
 
 remove_apache_site() {
+    local changed=false
     if [ -d /etc/apache2/sites-available ] && [ -f "$APACHE_SITE_FILE" ]; then
         a2dissite -q supermon-ng 2>/dev/null || true
         rm -f "$APACHE_SITE_FILE"
-        if command -v apache2ctl >/dev/null 2>&1; then
-            apache2ctl configtest >/dev/null 2>&1 && systemctl reload apache2 2>/dev/null || true
-        fi
+        changed=true
+    fi
+    if [ -f "$APACHE_CONF_FILE" ]; then
+        a2disconf -q supermon-ng 2>/dev/null || true
+        rm -f "$APACHE_CONF_FILE"
+        changed=true
+    fi
+    if [ "$changed" = true ] && command -v apache2ctl >/dev/null 2>&1; then
+        apache2ctl configtest >/dev/null 2>&1 && systemctl reload apache2 2>/dev/null || true
     fi
 }
 

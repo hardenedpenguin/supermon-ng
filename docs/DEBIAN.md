@@ -177,7 +177,11 @@ Older sites installed from the (now removed) `install.sh` tarball should move to
 | Path | Purpose |
 |------|---------|
 | `/var/www/html/supermon-ng/apache-config-template.conf` | Generated vhost template |
+| `/var/www/html/supermon-ng/apache-conf-template.conf` | Generated conf snippet (subdirectory mode only) |
 | `/etc/apache2/sites-available/supermon-ng.conf` | Installed site (refreshed on first install; preserved on upgrade unless debconf refresh) |
+| `/etc/apache2/conf-available/supermon-ng.conf` | Global `Alias`/`ProxyPass` routes for `APP_BASE_PATH` (subdirectory mode); regenerated and `a2enconf`'d on every configure |
+
+In subdirectory mode the app routes live in the global conf, so `/supermon-ng` works under whichever vhost Apache picks as default — including the ASL3 appliance's `000-asl3-appliance` sites (appliance 3.x), which otherwise shadow the `supermon-ng` site. Root mode (`APP_BASE_PATH=/`) uses only the vhost and removes the conf; on hosts with other default sites set `SUPERMON_SERVER_NAME` so the vhost is selected by hostname.
 
 Required modules are enabled automatically: `proxy`, `proxy_http`, `proxy_wstunnel`, `rewrite`, `headers`, `substitute`, `ssl`, `deflate`, `expires`.
 
@@ -223,8 +227,8 @@ On upgrade, if dpkg prompts about `/etc/sudoers.d/011-supermon-ng`, install the 
 
 ## Remove / purge
 
-- **remove**: stops services, disables the `supermon-ng` Apache site; keeps the site file on disk.
-- **purge**: also removes `/etc/apache2/sites-available/supermon-ng.conf`, sudoers drop-in, and the node-status timer drop-in.
+- **remove**: stops services, disables the `supermon-ng` Apache site and conf; keeps the files on disk.
+- **purge**: also removes `/etc/apache2/sites-available/supermon-ng.conf`, `/etc/apache2/conf-available/supermon-ng.conf`, sudoers drop-in, and the node-status timer drop-in.
 
 ## Legacy tarball note
 

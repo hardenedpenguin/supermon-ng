@@ -16,6 +16,7 @@ case "$1" in
         done
         if [ "$1" = "remove" ] && command -v a2dissite >/dev/null 2>&1; then
             a2dissite -q supermon-ng 2>/dev/null || true
+            a2disconf -q supermon-ng 2>/dev/null || true
             if command -v apache2ctl >/dev/null 2>&1; then
                 apache2ctl configtest >/dev/null 2>&1 && systemctl reload apache2 2>/dev/null || true
             fi

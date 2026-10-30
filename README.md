@@ -74,6 +74,8 @@ sudo dpkg-reconfigure supermon-ng
 | `/supermon-ng` (default) | Subdirectory under document root | `https://host/supermon-ng/` |
 | `/` | Dedicated vhost at site root | `https://sm.example.com/` |
 
+In subdirectory mode the routes are installed as a global Apache conf (`a2enconf supermon-ng`), so they work alongside other default sites such as the ASL3 appliance web UI.
+
 For a root vhost, also set `SUPERMON_SERVER_NAME` and `SSL_CERT_NAME` in `.env`, merge `apache-config-template.conf` into your live vhost, and reload Apache.
 
 ## Update
