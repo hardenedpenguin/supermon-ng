@@ -1096,15 +1096,22 @@ class ConfigController
             return 'allmon.ini';
         }
         
-        // Include the authini file to get the INI mapping
-        include_once $authIniFile;
-        
-        // Check if user has a specific INI file mapped
-        if (isset($ININAME[$username])) {
-            return $ININAME[$username];
+        // include (not include_once): this runs more than once per request.
+        $ININAME = [];
+        include $authIniFile;
+
+        $mapped = $ININAME[$username] ?? '';
+        if ($mapped === '') {
+            return 'allmon.ini';
         }
-        
-        return 'allmon.ini';
+
+        $mappedPath = str_starts_with($mapped, '/') ? $mapped : 'user_files/' . preg_replace('#^user_files/#', '', $mapped);
+        if (!file_exists($mappedPath)) {
+            $this->logger->warning('Mapped INI file not found; using allmon.ini', ['user' => $username, 'file' => $mapped]);
+            return 'allmon.ini';
+        }
+
+        return $mapped;
     }
 
     /**
