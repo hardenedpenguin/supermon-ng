@@ -27,6 +27,12 @@ const api = axios.create({
 // Request interceptor
 api.interceptors.request.use(
   async (config) => {
+    // With the instance's JSON Content-Type, axios serializes FormData to JSON and drops File parts;
+    // unset it so the browser sends multipart/form-data with its boundary.
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      config.headers.delete('Content-Type')
+    }
+
     // Add CSRF token for POST, PUT, DELETE, PATCH requests
     if (config.method && ['post', 'put', 'delete', 'patch'].includes(config.method.toLowerCase())) {
       try {

@@ -150,7 +150,7 @@ Legacy tarball installs often have an old `user_files/sbin/` tree missing the `a
 
 - `sox` / `libsox-fmt-mp3` for audio conversion.
 - `asl3-tts` and an installed Piper voice for TTS.
-- Upload size and extensions in `user_files/announcements.ini` (`max_bytes`, `allowed_extensions`).
+- Upload size and extensions in `user_files/announcements.ini` (`max_bytes`, `allowed_extensions`). The backend service allows request bodies up to 32 MB (`upload_max_filesize` in `supermon-ng-backend.service`); raise both if you set `max_bytes` higher.
 
 ### Play returns success but no audio
 

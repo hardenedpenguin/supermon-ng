@@ -6,7 +6,8 @@ After=network.target
 Type=simple
 User=www-data
 WorkingDirectory=APP_DIR_PLACEHOLDER
-ExecStart=/usr/bin/php -S localhost:8000 -t public public/index.php
+# php-cli defaults (upload_max_filesize=2M) are below the announcement upload limit (max_bytes)
+ExecStart=/usr/bin/php -d upload_max_filesize=32M -d post_max_size=33M -S localhost:8000 -t public public/index.php
 Restart=always
 RestartSec=10
 
