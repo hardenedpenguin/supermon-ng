@@ -24,8 +24,13 @@ supermon-ng (4.4.0-1) unstable; urgency=medium
     remove the alert temp file, and log to /var/log/supermon-ng.
   * din, ssinfo and dvswitch-bridge-restart.sh fixes: df -t and -P output,
     DHCP detection, CPU speed, global.inc lookup, single restart per unit.
+  * din: fix the disk table on systems using mawk (Raspberry Pi OS), where
+    an invalid printf format dropped the mount point and row breaks.
+  * ssinfo: read $LOCATION, $TITLE2 and $TITLE3 from global.inc with HTML
+    removed instead of matching comment lines, and skip the login history
+    quietly when last is not installed (trixie).
 
- -- Jory A. Pratt <geekypenguin@gmail.com>  Sat, 31 Oct 2026 16:01:00 +0000
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Sat, 31 Oct 2026 16:18:00 +0000
 
 supermon-ng (4.3.8-1) unstable; urgency=medium
 
