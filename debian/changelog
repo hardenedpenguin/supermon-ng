@@ -1,3 +1,32 @@
+supermon-ng (4.4.0-1) unstable; urgency=medium
+
+  * Install to /usr/share/supermon-ng so the site is served outside
+    /var/www/html, where the ASL3 appliance's fallback rewrite ignored our
+    Apache config. Configs live in /etc/supermon-ng (conffiles), data in
+    /var/lib/supermon-ng and logs in /var/log/supermon-ng, linked into the
+    app tree.
+  * Upgrades from earlier releases migrate .env, user_files, the
+    announcement library, database, astdb.txt and logs, rewrite old paths
+    in .env, the supermon-ng Apache site and announcement crontab entries,
+    archive leftovers to /var/backups/supermon-ng-legacy-*.tar.gz and remove
+    /var/www/html/supermon-ng. The old directory is kept if migration fails
+    or an enabled Apache config still references it.
+  * Helper scripts moved from user_files/sbin to /usr/share/supermon-ng/sbin;
+    node_info.ini moved to user_files.
+  * Depend on asl3-asterisk, php-apcu, sox, libsox-fmt-mp3 and asl3-tts
+    instead of recommending them.
+  * Harden the root-run announcement helpers: only the announcement library
+    and Asterisk sounds directories are accepted, library files are handled
+    as www-data, TTS runs only asl-tts, voice downloads go only to
+    /var/lib/piper-tts, playback survives sudo's pty closing, and the
+    schedule lock moved to /run/lock without hiding script errors.
+  * Node status: sanitize WX text, disable config interpolation, always
+    remove the alert temp file, and log to /var/log/supermon-ng.
+  * din, ssinfo and dvswitch-bridge-restart.sh fixes: df -t and -P output,
+    DHCP detection, CPU speed, global.inc lookup, single restart per unit.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Sat, 31 Oct 2026 16:01:00 +0000
+
 supermon-ng (4.3.8-1) unstable; urgency=medium
 
   * Fix announcement uploads always failing with "No file uploaded." The

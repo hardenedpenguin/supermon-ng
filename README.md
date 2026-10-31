@@ -15,7 +15,7 @@
 
 Web dashboard for AllStar Link nodes — Vue 3 frontend, PHP 8.1+ API, WebSocket real-time updates with AMI polling fallback.
 
-**Current release:** [V4.3.8](https://github.com/hardenedpenguin/supermon-ng/releases/tag/V4.3.8) (October 2026)
+**Current release:** [V4.4.0](https://github.com/hardenedpenguin/supermon-ng/releases/tag/V4.4.0) (October 2026)
 
 > **Install and upgrades:** Supermon-ng installs and updates via the **Debian `.deb` package** only. Use the [hardenedpenguin APT repository](https://hardenedpenguin.github.io/hardenedpenguin-apt/) (`apt install supermon-ng`) or install a `.deb` from [Releases](https://github.com/hardenedpenguin/supermon-ng/releases). The old tarball `install.sh` / `update.sh` flows have been **removed** and are no longer supported or published. Existing tarball installs should [migrate to apt](docs/DEBIAN.md#migrating-from-a-legacy-tarball-install-to-apt). See [docs/DEBIAN.md](docs/DEBIAN.md).
 
@@ -112,7 +112,7 @@ The package keeps code, configuration, data and logs apart. The app tree has sym
 | `/var/lib/supermon-ng` | `database/`, `cache/`, `astdb.txt`, announcement library (`mp3/`), generated Apache templates |
 | `/var/log/supermon-ng` | App and node-status logs |
 
-Upgrading from a release before 4.4.0 moves everything from `/var/www/html/supermon-ng` into these locations, rewrites old paths in `.env`, the Apache site and the announcement crontab, archives leftovers to `/var/backups/supermon-ng-legacy-*.tar.gz`, and removes the old directory.
+Upgrading from a release before 4.4.0 moves everything from `/var/www/html/supermon-ng` into these locations, rewrites old paths in `.env`, the Apache site and the announcement crontab, archives leftovers to `/var/backups/supermon-ng-legacy-*.tar.gz`, and removes the old directory (it is kept if an enabled Apache config still references it).
 
 | File | Purpose |
 |------|---------|
