@@ -1,3 +1,17 @@
+supermon-ng (4.3.8-1) unstable; urgency=medium
+
+  * Fix announcement uploads always failing with "No file uploaded." The
+    shared API client's JSON Content-Type made axios serialize the upload
+    FormData to JSON, dropping the file. FormData requests now go out as
+    multipart/form-data with the browser-set boundary.
+  * Raise backend upload limits: supermon-ng-backend now starts php -S with
+    upload_max_filesize=32M and post_max_size=33M. The php-cli defaults (2M)
+    were below the 10 MB announcement max_bytes.
+  * Docs: note the backend upload limit alongside max_bytes in
+    docs/ANNOUNCEMENTS.md.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Sat, 31 Oct 2026 14:26:00 +0000
+
 supermon-ng (4.3.7-1) unstable; urgency=medium
 
   * Subdirectory installs (/supermon-ng) no longer install a supermon-ng site
