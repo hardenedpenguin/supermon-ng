@@ -7,7 +7,7 @@
 
 set -euo pipefail
 
-APP_DIR="${1:-/var/www/html/supermon-ng}"
+APP_DIR="${1:-/usr/share/supermon-ng}"
 WWW_USER="${WWW_USER:-www-data}"
 WWW_GROUP="${WWW_GROUP:-www-data}"
 COMPOSER_CACHE_ROOT="${SUPERMON_COMPOSER_CACHE_ROOT:-/var/cache/supermon-ng}"

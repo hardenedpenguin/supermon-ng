@@ -2,19 +2,41 @@
 POSTINST_MODE="${1-}"
 PREVIOUS_VERSION="${2-}"
 
-APP_DIR=/var/www/html/supermon-ng
+APP_DIR=/usr/share/supermon-ng
+CONF_DIR=/etc/supermon-ng
+STATE_DIR=/var/lib/supermon-ng
+LOG_DIR=/var/log/supermon-ng
+ENV_FILE="$CONF_DIR/.env"
 WWW_USER=www-data
 WWW_GROUP=www-data
 NODE_STATUS_TIMER_DROPIN=/etc/systemd/system/supermon-ng-node-status.timer.d/interval.conf
+
+# Pre-4.4.0 install location. Its data is moved into the paths above and the
+# directory is then removed. Keep the conffile list in sync with debian/preinst
+# and debian/postrm.
+LEGACY_DIR=/var/www/html/supermon-ng
+LEGACY_LAYOUT_VERSION=4.4.0~
+MIGRATION_ERRORS=""
+
+legacy_conffile_moves() {
+    for f in allmon.ini global.inc authusers.inc authini.inc favorites.ini \
+        favini.inc controlpanel.ini privatenodes.txt announcements.ini; do
+        dpkg-maintscript-helper mv_conffile "$LEGACY_DIR/user_files/$f" \
+            "$CONF_DIR/user_files/$f" "$LEGACY_LAYOUT_VERSION" -- "$@"
+    done
+    dpkg-maintscript-helper mv_conffile "$LEGACY_DIR/user_files/sbin/node_info.ini" \
+        "$CONF_DIR/user_files/node_info.ini" "$LEGACY_LAYOUT_VERSION" -- "$@"
+    dpkg-maintscript-helper rm_conffile "$LEGACY_DIR/astdb.txt" "$LEGACY_LAYOUT_VERSION" -- "$@"
+}
 
 load_env() {
     APP_BASE_PATH="${APP_BASE_PATH:-/supermon-ng}"
     NODE_STATUS_INTERVAL_MINUTES="${NODE_STATUS_INTERVAL_MINUTES:-5}"
 
-    if [ -f "$APP_DIR/.env" ]; then
+    if [ -f "$ENV_FILE" ]; then
         # shellcheck disable=SC1091
         set -a
-        . "$APP_DIR/.env" 2>/dev/null || true
+        . "$ENV_FILE" 2>/dev/null || true
         set +a
         APP_BASE_PATH="${APP_BASE_PATH:-/supermon-ng}"
         NODE_STATUS_INTERVAL_MINUTES="${NODE_STATUS_INTERVAL_MINUTES:-5}"
@@ -40,23 +62,138 @@ read_debconf_bool() {
 
 apply_app_base_path() {
     load_env
-    if [ -f "$APP_DIR/.env" ] && [ -x "$APP_DIR/scripts/configure-app-base-path.sh" ]; then
+    if [ -f "$ENV_FILE" ] && [ -x "$APP_DIR/scripts/configure-app-base-path.sh" ]; then
         export APP_DIR APP_BASE_PATH
         "$APP_DIR/scripts/configure-app-base-path.sh" "$APP_DIR" || true
     fi
 }
 
+# Targets of the package's APP_DIR symlinks (logs, cache, database, astdb.txt)
+# and of CONF_DIR/user_files/mp3.
 ensure_runtime_dirs() {
-    mkdir -p "$APP_DIR/logs" "$APP_DIR/cache" "$APP_DIR/database"
-    chown -R "${WWW_USER}:${WWW_GROUP}" "$APP_DIR/logs" "$APP_DIR/cache" "$APP_DIR/database" 2>/dev/null || true
-    chmod 755 "$APP_DIR/logs" "$APP_DIR/cache" "$APP_DIR/database" 2>/dev/null || true
+    mkdir -p "$STATE_DIR/database" "$STATE_DIR/cache" "$STATE_DIR/mp3" "$LOG_DIR"
+    chmod 755 "$STATE_DIR" "$STATE_DIR/database" "$STATE_DIR/cache" "$STATE_DIR/mp3" "$LOG_DIR" 2>/dev/null || true
+    if [ ! -e "$STATE_DIR/mp3/.htaccess" ]; then
+        printf '%s\n' '# Deny direct web access to announcement library files' 'Require all denied' \
+            >"$STATE_DIR/mp3/.htaccess"
+    fi
+}
+
+ensure_astdb() {
+    if [ ! -e "$STATE_DIR/astdb.txt" ] && [ -f "$APP_DIR/astdb.txt.dist" ]; then
+        cp "$APP_DIR/astdb.txt.dist" "$STATE_DIR/astdb.txt"
+    fi
+}
+
+record_migration_error() {
+    echo "supermon-ng: could not migrate $1" >&2
+    [ -n "$MIGRATION_ERRORS" ] && echo "$1" >>"$MIGRATION_ERRORS"
+}
+
+# Move each file under $1 to the same relative path under $2 unless that path
+# already exists (packaged files win; leftovers are kept in the legacy backup).
+# $3: optional find expression for subdirectories to skip.
+move_missing() {
+    src="$1"
+    dst="$2"
+    prune="${3:-}"
+    [ -d "$src" ] || return 0
+    (
+        cd "$src" || exit 0
+        if [ -n "$prune" ]; then
+            # shellcheck disable=SC2086
+            find . \( $prune \) -prune -o \( -type f -o -type l \) ! -name '*.dpkg-*' -print
+        else
+            find . \( -type f -o -type l \) ! -name '*.dpkg-*' -print
+        fi
+    ) | while IFS= read -r rel; do
+        rel="${rel#./}"
+        if [ -e "$dst/$rel" ] || [ -L "$dst/$rel" ]; then
+            continue
+        fi
+        mkdir -p "$(dirname "$dst/$rel")" && mv "$src/$rel" "$dst/$rel" \
+            || record_migration_error "$src/$rel"
+    done
+}
+
+# Moves user data from the pre-4.4.0 tree. Conffiles were already moved by
+# legacy_conffile_moves (dpkg-maintscript-helper); this handles the rest.
+migrate_legacy_install() {
+    [ -d "$LEGACY_DIR" ] || return 0
+    echo "supermon-ng: migrating data from $LEGACY_DIR to $CONF_DIR, $STATE_DIR and $LOG_DIR..."
+
+    if [ -f "$LEGACY_DIR/.env" ] && [ ! -e "$ENV_FILE" ]; then
+        mkdir -p "$CONF_DIR"
+        mv "$LEGACY_DIR/.env" "$ENV_FILE" || record_migration_error "$LEGACY_DIR/.env"
+    fi
+    if [ -f "$ENV_FILE" ] && grep -q "$LEGACY_DIR" "$ENV_FILE" 2>/dev/null; then
+        sed -i -e "s#$LEGACY_DIR/user_files#$CONF_DIR/user_files#g" -e "s#$LEGACY_DIR#$APP_DIR#g" "$ENV_FILE"
+        echo "supermon-ng: updated $LEGACY_DIR paths in $ENV_FILE"
+    fi
+
+    move_missing "$LEGACY_DIR/user_files" "$CONF_DIR/user_files" "-path ./sbin -o -path ./mp3"
+    move_missing "$LEGACY_DIR/user_files/mp3" "$STATE_DIR/mp3"
+    move_missing "$LEGACY_DIR/database" "$STATE_DIR/database"
+    move_missing "$LEGACY_DIR/logs" "$LOG_DIR"
+
+    if [ ! -e "$STATE_DIR/astdb.txt" ]; then
+        # rm_conffile leaves a locally modified (regenerated) copy as .dpkg-bak
+        for f in "$LEGACY_DIR/astdb.txt.dpkg-bak" "$LEGACY_DIR/astdb.txt"; do
+            if [ -f "$f" ]; then
+                mv "$f" "$STATE_DIR/astdb.txt" || record_migration_error "$f"
+                break
+            fi
+        done
+    fi
+
+    migrate_announcement_crontab
+}
+
+# Announcement schedules are root crontab lines that call announce-play.sh by
+# absolute path.
+migrate_announcement_crontab() {
+    command -v crontab >/dev/null 2>&1 || return 0
+    current=$(crontab -l 2>/dev/null) || return 0
+    case "$current" in
+        *"$LEGACY_DIR/user_files/sbin/"*) ;;
+        *) return 0 ;;
+    esac
+    if printf '%s\n' "$current" | sed "s#$LEGACY_DIR/user_files/sbin/#$APP_DIR/sbin/#g" | crontab -; then
+        echo "supermon-ng: updated announcement schedules in the root crontab to $APP_DIR/sbin"
+    else
+        record_migration_error "root crontab announcement entries"
+    fi
+}
+
+# Archive whatever is left (generated files, .dpkg-new/.dpkg-bak copies, files
+# that already existed at the new location) and remove the legacy tree.
+remove_legacy_install() {
+    [ -d "$LEGACY_DIR" ] || return 0
+    if [ -n "$MIGRATION_ERRORS" ] && [ -s "$MIGRATION_ERRORS" ]; then
+        echo "supermon-ng: keeping $LEGACY_DIR because some files could not be migrated (see above)" >&2
+        return 0
+    fi
+    backup="/var/backups/supermon-ng-legacy-$(date +%Y%m%d%H%M%S).tar.gz"
+    mkdir -p /var/backups
+    if ! tar -C "$(dirname "$LEGACY_DIR")" --exclude="$(basename "$LEGACY_DIR")/vendor" \
+        --exclude="$(basename "$LEGACY_DIR")/cache" -czf "$backup" "$(basename "$LEGACY_DIR")" 2>/dev/null; then
+        rm -f "$backup"
+        echo "supermon-ng: could not archive $LEGACY_DIR; leaving it in place" >&2
+        return 0
+    fi
+    chmod 600 "$backup"
+    rm -rf "$LEGACY_DIR"
+    echo "supermon-ng: removed $LEGACY_DIR (remaining files archived in $backup)"
+}
+
+warn_legacy_apache_references() {
+    files=$(grep -ls "$LEGACY_DIR" /etc/apache2/sites-available/*.conf /etc/apache2/conf-available/*.conf 2>/dev/null || true)
+    [ -n "$files" ] || return 0
+    echo "supermon-ng: these Apache files still reference $LEGACY_DIR; update them to $APP_DIR (code) or $CONF_DIR/user_files:" >&2
+    printf '  %s\n' $files >&2
 }
 
 ensure_announcement_dirs() {
-    mkdir -p "$APP_DIR/user_files/mp3"
-    chown "${WWW_USER}:${WWW_GROUP}" "$APP_DIR/user_files/mp3" 2>/dev/null || true
-    chmod 755 "$APP_DIR/user_files/mp3" 2>/dev/null || true
-
     # Asterisk sounds target (announce-install.sh also mkdir -p when converting)
     if [ -d /usr/local/share/asterisk/sounds ]; then
         mkdir -p /usr/local/share/asterisk/sounds/announcements
@@ -65,24 +202,22 @@ ensure_announcement_dirs() {
     fi
 }
 
+# Code under APP_DIR stays root-owned; the app writes only to user_files and
+# the state/log directories.
 ensure_app_permissions() {
-    chown -R "${WWW_USER}:${WWW_GROUP}" "$APP_DIR" 2>/dev/null || true
-    chmod -R 755 "$APP_DIR" 2>/dev/null || true
-    chmod -R 755 "$APP_DIR/logs" "$APP_DIR/cache" 2>/dev/null || true
+    chown -R "${WWW_USER}:${WWW_GROUP}" "$CONF_DIR/user_files" "$STATE_DIR/database" "$STATE_DIR/cache" \
+        "$STATE_DIR/mp3" "$LOG_DIR" 2>/dev/null || true
+    if [ -f "$STATE_DIR/astdb.txt" ]; then
+        chown "${WWW_USER}:${WWW_GROUP}" "$STATE_DIR/astdb.txt" 2>/dev/null || true
+        chmod 644 "$STATE_DIR/astdb.txt" 2>/dev/null || true
+    fi
 
-    find "$APP_DIR/user_files" -type d -exec chmod 755 {} \; 2>/dev/null || true
-    find "$APP_DIR/user_files" -type f -exec chmod 644 {} \; 2>/dev/null || true
-    chmod 644 "$APP_DIR/user_files/.htaccess" 2>/dev/null || true
-    chmod 644 "$APP_DIR/user_files/.htpasswd" 2>/dev/null || true
+    find "$CONF_DIR/user_files" -type d -exec chmod 755 {} \; 2>/dev/null || true
+    find "$CONF_DIR/user_files" -type f -exec chmod 644 {} \; 2>/dev/null || true
 
-    for script in ast_node_status_update.py din ssinfo dvswitch-bridge-restart.sh announce-play.sh announce-install.sh announce-tts.sh announce-delete.sh announce-schedule.sh announce-voice-install.sh; do
-        [ -f "$APP_DIR/user_files/sbin/$script" ] && chmod 755 "$APP_DIR/user_files/sbin/$script"
-    done
-    [ -f "$APP_DIR/user_files/sbin/node_info.ini" ] && chmod 644 "$APP_DIR/user_files/sbin/node_info.ini"
-
-    if [ -f "$APP_DIR/.env" ]; then
-        chown root:${WWW_GROUP} "$APP_DIR/.env" 2>/dev/null || true
-        chmod 640 "$APP_DIR/.env" 2>/dev/null || true
+    if [ -f "$ENV_FILE" ]; then
+        chown root:${WWW_GROUP} "$ENV_FILE" 2>/dev/null || true
+        chmod 640 "$ENV_FILE" 2>/dev/null || true
     fi
 }
 
@@ -129,7 +264,7 @@ generate_local_allmon_if_needed() {
         return 0
     fi
 
-    allmon="$APP_DIR/user_files/allmon.ini"
+    allmon="$CONF_DIR/user_files/allmon.ini"
     should_generate=false
 
     if [ -z "$PREVIOUS_VERSION" ]; then
@@ -137,7 +272,7 @@ generate_local_allmon_if_needed() {
         # Asterisk (--force backs up the template first). --if-missing would
         # permanently leave the unused 1998/1999 example in place.
         should_generate=true
-        echo "supermon-ng: generating user_files/allmon.ini from Asterisk config..."
+        echo "supermon-ng: generating $allmon from Asterisk config..."
     elif is_stock_allmon_template "$allmon"; then
         should_generate=true
         echo "supermon-ng: replacing stock allmon.ini placeholder from Asterisk config..."
@@ -148,7 +283,7 @@ generate_local_allmon_if_needed() {
     fi
 
     php "$APP_DIR/scripts/generate_local_allmon.php" --force || {
-        echo "supermon-ng: allmon.ini generation failed; edit user_files/allmon.ini manually or run:" >&2
+        echo "supermon-ng: allmon.ini generation failed; edit $allmon manually or run:" >&2
         echo "  sudo php $APP_DIR/scripts/generate_local_allmon.php --force" >&2
     }
 }
@@ -186,15 +321,21 @@ configure_apache_from_debconf() {
     "$APP_DIR/scripts/configure-apache.sh" configure || true
 }
 
+legacy_conffile_moves "$@"
+
 case "$POSTINST_MODE" in
     configure)
-        if [ ! -f "$APP_DIR/.env" ] && [ -f "$APP_DIR/.env.example" ]; then
-            cp "$APP_DIR/.env.example" "$APP_DIR/.env"
-            chown root:${WWW_GROUP} "$APP_DIR/.env" 2>/dev/null || true
-            chmod 640 "$APP_DIR/.env" 2>/dev/null || true
+        MIGRATION_ERRORS=$(mktemp)
+        ensure_runtime_dirs
+        migrate_legacy_install
+        ensure_astdb
+
+        if [ ! -f "$ENV_FILE" ] && [ -f "$APP_DIR/.env.example" ]; then
+            cp "$APP_DIR/.env.example" "$ENV_FILE"
+            chown root:${WWW_GROUP} "$ENV_FILE" 2>/dev/null || true
+            chmod 640 "$ENV_FILE" 2>/dev/null || true
         fi
 
-        ensure_runtime_dirs
         ensure_announcement_dirs
         apply_app_base_path
         validate_sudoers
@@ -211,6 +352,9 @@ case "$POSTINST_MODE" in
         generate_local_allmon_if_needed
 
         ensure_app_permissions
+        remove_legacy_install
+        warn_legacy_apache_references
+        rm -f "$MIGRATION_ERRORS"
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure|triggered)

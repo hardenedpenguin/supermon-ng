@@ -6,13 +6,7 @@ Requires Supermon-ng **≥ 4.3.0** installed via the **`.deb` package**, which d
 
 ## Requirements
 
-Recommended packages:
-
-```bash
-sudo apt-get install sox libsox-fmt-mp3 asl3-tts
-```
-
-These are listed as `Recommends` on the Debian package.
+`sox`, `libsox-fmt-mp3` and `asl3-tts` are dependencies of the Debian package, so `apt` installs them with Supermon-ng.
 
 ## Permissions
 
@@ -48,15 +42,15 @@ Wrong permissions return **403** from the API, not a silent failure.
 
 | Path | Purpose |
 |------|---------|
-| `user_files/announcements.ini` | Defaults, paths, upload limits, TTS voice (conffile on `.deb`) |
-| `user_files/mp3/` | Library (`.ul` copies kept after install) |
+| `/etc/supermon-ng/user_files/announcements.ini` | Defaults, paths, upload limits, TTS voice (conffile on `.deb`) |
+| `user_files/mp3/` → `/var/lib/supermon-ng/mp3/` | Library (`.ul` copies kept after install) |
 | `/usr/local/share/asterisk/sounds/announcements/` | Asterisk playback directory |
-| `user_files/sbin/announce-play.sh` | Play via `rpt localplay` / `rpt playback` |
-| `user_files/sbin/announce-install.sh` | Convert upload to ulaw |
-| `user_files/sbin/announce-tts.sh` | Generate TTS with `asl-tts` / Piper |
-| `user_files/sbin/announce-delete.sh` | Remove library + sounds copy |
-| `user_files/sbin/announce-schedule.sh` | Root crontab list/add/toggle/delete |
-| `user_files/sbin/announce-voice-install.sh` | Download Piper voice on demand |
+| `/usr/share/supermon-ng/sbin/announce-play.sh` | Play via `rpt localplay` / `rpt playback` |
+| `/usr/share/supermon-ng/sbin/announce-install.sh` | Convert upload to ulaw |
+| `/usr/share/supermon-ng/sbin/announce-tts.sh` | Generate TTS with `asl-tts` / Piper |
+| `/usr/share/supermon-ng/sbin/announce-delete.sh` | Remove library + sounds copy |
+| `/usr/share/supermon-ng/sbin/announce-schedule.sh` | Root crontab list/add/toggle/delete |
+| `/usr/share/supermon-ng/sbin/announce-voice-install.sh` | Download Piper voice on demand |
 
 Sudoers must allow `www-data` to run these scripts (`/etc/sudoers.d/011-supermon-ng` on `.deb` installs). On upgrade, if dpkg prompts about sudoers, choose the **maintainer version** to pick up new `announce-*.sh` lines unless you have custom edits.
 
@@ -137,12 +131,12 @@ Interpretation:
 
 `authusers.inc` is not the cause of HTTP **500** (that is **403**). Check:
 
-- Supermon-ng **≥ 4.3.0** with all `user_files/sbin/announce-*.sh` present and executable (`chmod 755`).
+- Supermon-ng **≥ 4.3.0** with all `announce-*.sh` scripts present (`/usr/share/supermon-ng/sbin/` since 4.4.0; `user_files/sbin/` before) and executable (`chmod 755`).
 - Sudoers includes `announce-schedule.sh` for `www-data`.
 - As `www-data`:  
-  `sudo -n /var/www/html/supermon-ng/user_files/sbin/announce-schedule.sh list`  
+  `sudo -n /usr/share/supermon-ng/sbin/announce-schedule.sh list`  
   should print `[]` or JSON, not “not allowed” or “command not found”.
-- App log: `logs/app-YYYY-MM-DD.log` for `Announcements sudo script failed` or `Could not list announcement schedules`.
+- App log: `/var/log/supermon-ng/app-YYYY-MM-DD.log` for `Announcements sudo script failed` or `Could not list announcement schedules`.
 
 Legacy tarball installs often have an old `user_files/sbin/` tree missing the `announce-*.sh` scripts. [Migrate to the `.deb` package](DEBIAN.md#migrating-from-a-legacy-tarball-install-to-apt) to pick them up.
 

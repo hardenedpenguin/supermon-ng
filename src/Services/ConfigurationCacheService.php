@@ -301,7 +301,7 @@ class ConfigurationCacheService
         }
         
         // Fallback: use current working directory
-        return getcwd() ?: '/var/www/html/supermon-ng';
+        return getcwd() ?: dirname(__DIR__, 2);
     }
 
     /**

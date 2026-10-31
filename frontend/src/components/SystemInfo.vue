@@ -20,7 +20,7 @@
             <h4>Configuration Files</h4>
             <div class="info-item">
               <span class="label">Configurable Files Directory:</span>
-              <span class="value">ALL user configurable files are in the `/var/www/html/supermon-ng/user_files` directory.</span>
+              <span class="value">ALL user configurable files are in the `/etc/supermon-ng/user_files` directory.</span>
             </div>
           </div>
           

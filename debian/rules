@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 export DH_VERBOSE=1
-APP_DIR=/var/www/html/supermon-ng
+APP_DIR=/usr/share/supermon-ng
+CONF_DIR=/etc/supermon-ng
 
 %:
 	dh $@
@@ -17,9 +18,9 @@ override_dh_auto_install:
 	@NODE_INTERVAL="$${NODE_STATUS_INTERVAL_MINUTES:-5}"; \
 		sed -i "s|OnUnitActiveSec=5min|OnUnitActiveSec=$${NODE_INTERVAL}min|g" debian/supermon-ng-node-status.timer; \
 		sed -i "s|every 5 minutes|every $${NODE_INTERVAL} minutes|g" debian/supermon-ng-node-status.timer
-	@sed "s|@APP_DIR@|$(APP_DIR)|g" debian/sudoers.supermon-ng.in > debian/sudoers.staged
+	@sed -e "s|@APP_DIR@|$(APP_DIR)|g" -e "s|@CONF_DIR@|$(CONF_DIR)|g" debian/sudoers.supermon-ng.in > debian/sudoers.staged
 	chmod +x scripts/stage-deb-payload.sh
-	./scripts/stage-deb-payload.sh debian/supermon-ng
+	SUPERMON_INSTALL_DIR=$(APP_DIR) SUPERMON_CONF_DIR=$(CONF_DIR) ./scripts/stage-deb-payload.sh debian/supermon-ng
 	install -D -m 440 debian/sudoers.staged debian/supermon-ng/etc/sudoers.d/011-supermon-ng
 	install -D -m 755 scripts/supermon_unified_file_editor.sh debian/supermon-ng/usr/local/sbin/supermon_unified_file_editor.sh
 

@@ -10,7 +10,10 @@ set -euo pipefail
 
 OUTPUT="${1:?Usage: generate-apache-template.sh <site-output-file> [conf-output-file]}"
 CONF_OUTPUT="${2:-}"
-APP_DIR="${APP_DIR:-/var/www/html/supermon-ng}"
+APP_DIR="${APP_DIR:-/usr/share/supermon-ng}"
+# Packaged installs symlink APP_DIR/user_files to /etc/supermon-ng/user_files;
+# Apache is pointed at the real directory.
+USER_FILES_DIR="${USER_FILES_DIR:-$(readlink -f "$APP_DIR/user_files" 2>/dev/null || printf '%s' "$APP_DIR/user_files")}"
 APP_BASE_PATH="${APP_BASE_PATH:-/supermon-ng}"
 SERVER_NAME="${SUPERMON_SERVER_NAME:-}"
 SSL_CERT_NAME="${SSL_CERT_NAME:-}"
@@ -46,7 +49,7 @@ ${server_line}
     ProxyPass "/ws/" "ws://localhost:8105/ws/" upgrade=websocket
     ProxyPassReverse "/ws/" "ws://localhost:8105/ws/"
 
-    Alias /user_files ${APP_DIR}/user_files
+    Alias /user_files ${USER_FILES_DIR}
 
     <Directory "${APP_DIR}/public">
         AllowOverride All
@@ -59,7 +62,7 @@ ${server_line}
         RewriteRule ^ index.html [QSA,L]
     </Directory>
 
-    <Directory "${APP_DIR}/user_files">
+    <Directory "${USER_FILES_DIR}">
         AllowOverride All
         Require all granted
     </Directory>
@@ -94,7 +97,7 @@ write_subdir_conf() {
 SetEnvIf Request_URI "^${prefix_re}(/|\$)" supermon_ng_request
 GlobalLog \${APACHE_LOG_DIR}/supermon-ng_access.log combined env=supermon_ng_request
 
-Alias ${prefix}/user_files ${APP_DIR}/user_files
+Alias ${prefix}/user_files ${USER_FILES_DIR}
 Alias ${prefix} ${APP_DIR}/public
 
 ProxyPass ${prefix}/api http://localhost:8000/api
@@ -131,7 +134,7 @@ ProxyPassReverse ${prefix}/ws/ ws://localhost:8105${prefix}/ws/
     IncludeOptional ${APP_DIR}/config/apache-performance.conf
 </Directory>
 
-<Directory "${APP_DIR}/user_files">
+<Directory "${USER_FILES_DIR}">
     AllowOverride All
     Require all granted
 </Directory>

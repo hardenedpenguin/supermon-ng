@@ -828,7 +828,7 @@ class AnnouncementsService
      */
     private function runSudoScript(string $scriptName, array $args): array
     {
-        $script = $this->userFilesPath . 'sbin/' . $scriptName;
+        $script = dirname(__DIR__, 2) . '/sbin/' . $scriptName;
         if (!is_file($script) || !is_executable($script)) {
             throw new Exception('Privileged script is missing or not executable.');
         }

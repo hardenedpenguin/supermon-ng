@@ -18,6 +18,7 @@ final class ConfigBackupService
         'privatenodes.txt',
         'controlpanel.ini',
         'global.inc',
+        'node_info.ini',
         '.htpasswd',
         '.setup_complete',
         '.setup_global_saved',
@@ -60,7 +61,6 @@ final class ConfigBackupService
         }
 
         $this->addDirectoryToZip($zip, $userFiles . 'preferences', 'user_files/preferences');
-        $this->addDirectoryToZip($zip, $userFiles . 'sbin', 'user_files/sbin');
 
         foreach (glob($userFiles . 'dvswitch_config*.yml') ?: [] as $yml) {
             $this->addFileToZip($zip, $yml, 'user_files/' . basename($yml));
@@ -131,7 +131,9 @@ final class ConfigBackupService
                     continue;
                 }
                 $first = strtolower(explode('/', $relative, 2)[0]);
-                if ($first === 'sbin') {
+                if ($relative === 'sbin/node_info.ini') {
+                    $relative = 'node_info.ini';
+                } elseif ($first === 'sbin') {
                     $this->logger->warning('Skipped sbin path during config restore', ['path' => $relative]);
                     continue;
                 }

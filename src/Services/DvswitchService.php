@@ -879,7 +879,7 @@ class DvswitchService
      */
     public function restartBridgeServices(): array
     {
-        $script = $this->userFilesPath . 'sbin/dvswitch-bridge-restart.sh';
+        $script = dirname(__DIR__, 2) . '/sbin/dvswitch-bridge-restart.sh';
         if (!is_file($script) || !is_executable($script)) {
             throw new Exception('DVSwitch bridge restart script is missing or not executable.');
         }

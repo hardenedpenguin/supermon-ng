@@ -3,7 +3,9 @@
 # (and runnable by hand for reconfiguration).
 #
 # Environment:
-#   APP_DIR              Application root (default: /var/www/html/supermon-ng)
+#   APP_DIR              Application root (default: /usr/share/supermon-ng)
+#   USER_FILES_DIR       Real user_files directory Apache serves (default: APP_DIR/user_files, symlinks resolved)
+#   STATE_DIR            Where generated templates are written (default: /var/lib/supermon-ng)
 #   SKIP_APACHE          true = only generate template + app-base-path, no site install
 #   DISABLE_DEFAULT_SITES  root mode only: true = a2dissite 000-default and default-ssl (default: true)
 #   OVERWRITE_SITE       true = replace existing sites-available/supermon-ng.conf (root mode),
@@ -15,7 +17,11 @@
 
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/var/www/html/supermon-ng}"
+APP_DIR="${APP_DIR:-/usr/share/supermon-ng}"
+USER_FILES_DIR="${USER_FILES_DIR:-$(readlink -f "$APP_DIR/user_files" 2>/dev/null || printf '%s' "$APP_DIR/user_files")}"
+STATE_DIR="${STATE_DIR:-/var/lib/supermon-ng}"
+# Install location before 4.4.0; existing site files may still point here.
+LEGACY_APP_DIR=/var/www/html/supermon-ng
 SKIP_APACHE="${SKIP_APACHE:-false}"
 DISABLE_DEFAULT_SITES="${DISABLE_DEFAULT_SITES:-true}"
 OVERWRITE_SITE="${OVERWRITE_SITE:-false}"
@@ -24,9 +30,9 @@ CONFIGURE_LOG_ACLS="${CONFIGURE_LOG_ACLS:-true}"
 QUIET="${QUIET:-false}"
 
 APACHE_SITE_FILE="/etc/apache2/sites-available/supermon-ng.conf"
-APACHE_TEMPLATE="${APP_DIR}/apache-config-template.conf"
+APACHE_TEMPLATE="${STATE_DIR}/apache-config-template.conf"
 APACHE_CONF_FILE="/etc/apache2/conf-available/supermon-ng.conf"
-APACHE_CONF_TEMPLATE="${APP_DIR}/apache-conf-template.conf"
+APACHE_CONF_TEMPLATE="${STATE_DIR}/apache-conf-template.conf"
 WWW_GROUP="${WWW_GROUP:-www-data}"
 APACHE_LOG_DIR="${APACHE_LOG_DIR:-/var/log/apache2}"
 ASTERISK_LOG_DIR="${ASTERISK_LOG_DIR:-/var/log/asterisk}"
@@ -55,7 +61,7 @@ load_env() {
         SSL_CERT_NAME="${SSL_CERT_NAME:-$(grep -E '^SSL_CERT_NAME=' "$APP_DIR/.env" 2>/dev/null | cut -d= -f2- | tr -d '"' || true)}"
     fi
 
-    export APP_DIR APP_BASE_PATH SUPERMON_SERVER_NAME SSL_CERT_NAME
+    export APP_DIR USER_FILES_DIR APP_BASE_PATH SUPERMON_SERVER_NAME SSL_CERT_NAME
 }
 
 configure_log_acls() {
@@ -96,6 +102,7 @@ generate_template_and_paths() {
     fi
 
     log "Generating Apache template (APP_BASE_PATH=${APP_BASE_PATH})..."
+    mkdir -p "$STATE_DIR"
     bash "$APP_DIR/scripts/generate-apache-template.sh" "$APACHE_TEMPLATE" "$APACHE_CONF_TEMPLATE"
 
     if [ -x "$APP_DIR/scripts/configure-app-base-path.sh" ]; then
@@ -124,17 +131,33 @@ root_redirect_conflicts() {
     return 1
 }
 
-# True when the installed site is byte-identical to what root mode generates for the
-# ServerName and certificate recorded in that site (not the current .env).
+# Site text with pre-4.4.0 install paths rewritten to the current layout.
+with_current_paths() {
+    local legacy_re
+    legacy_re=$(re_escape "$LEGACY_APP_DIR")
+    sed -E -e "s#${legacy_re}/user_files#${USER_FILES_DIR}#g" -e "s#${legacy_re}#${APP_DIR}#g" "$1"
+}
+
+# Point a kept site file at the current install (backup: <site>.legacy-path.bak).
+migrate_legacy_site_paths() {
+    local f="$APACHE_SITE_FILE"
+    [ -f "$f" ] && grep -qF "$LEGACY_APP_DIR" "$f" || return 0
+    cp -p "$f" "${f}.legacy-path.bak"
+    with_current_paths "${f}.legacy-path.bak" > "$f"
+    log "Updated $LEGACY_APP_DIR paths in $f (backup: ${f}.legacy-path.bak)"
+}
+
+# True when the installed site is byte-identical (after with_current_paths) to what root
+# mode generates for the ServerName and certificate recorded in that site (not the current .env).
 root_site_is_generated() {
     local f="$APACHE_SITE_FILE" tmp rc=1 server_name cert_name force_snakeoil=false
     server_name=$(awk 'tolower($1) == "servername" { print $2; exit }' "$f")
     cert_name=$(sed -nE 's#^[[:space:]]*SSLCertificateFile[[:space:]]+/etc/letsencrypt/live/([^/]+)/fullchain\.pem[[:space:]]*$#\1#p' "$f" | head -n 1)
     [ -n "$cert_name" ] || force_snakeoil=true
     tmp=$(mktemp) || return 1
-    if APP_DIR="$APP_DIR" APP_BASE_PATH=/ SUPERMON_SERVER_NAME="$server_name" SSL_CERT_NAME="$cert_name" FORCE_SNAKEOIL="$force_snakeoil" \
+    if APP_DIR="$APP_DIR" USER_FILES_DIR="$USER_FILES_DIR" APP_BASE_PATH=/ SUPERMON_SERVER_NAME="$server_name" SSL_CERT_NAME="$cert_name" FORCE_SNAKEOIL="$force_snakeoil" \
         bash "$APP_DIR/scripts/generate-apache-template.sh" "$tmp" >/dev/null 2>&1 \
-        && cmp -s "$tmp" "$f"; then
+        && with_current_paths "$f" | cmp -s "$tmp" -; then
         rc=0
     fi
     rm -f "$tmp"
@@ -147,10 +170,12 @@ re_escape() {
 
 # Site text with the install dir and base path replaced by placeholders.
 normalize_site() {
-    local app_re prefix_re
+    local app_re legacy_re prefix_re
     app_re=$(re_escape "$APP_DIR")
+    legacy_re=$(re_escape "$LEGACY_APP_DIR")
     prefix_re=$(re_escape "$2")
-    sed -E -e "s#${app_re}#@APP_DIR@#g" -e "s#${prefix_re}([/[:space:]\")]|\$)#@PREFIX@\\1#g" "$1"
+    sed -E -e "s#${app_re}#@APP_DIR@#g" -e "s#${legacy_re}#@APP_DIR@#g" \
+        -e "s#${prefix_re}([/[:space:]\")]|\$)#@PREFIX@\\1#g" "$1"
 }
 
 # sha256 of normalize_site output for every subdirectory-mode site generate-apache-template.sh
@@ -319,9 +344,11 @@ configure_apache_site() {
     enable_apache_modules
     if [ -f "$APACHE_CONF_TEMPLATE" ]; then
         retire_subdir_site
+        migrate_legacy_site_paths
         install_app_conf
         ensure_default_sites
     else
+        migrate_legacy_site_paths
         install_site_config
         enable_supermon_site
         install_app_conf

@@ -56,17 +56,17 @@ sudo apt install ./supermon-ng_*_all.deb
 # or: sudo dpkg -i supermon-ng_*_all.deb && sudo apt-get install -f
 ```
 
-Apache is configured automatically (debconf can opt out). On a **fresh install**, `postinst` can generate `user_files/allmon.ini` from local `rpt.conf` + `manager.conf`.
+Apache is configured automatically (debconf can opt out). On a **fresh install**, `postinst` can generate `/etc/supermon-ng/user_files/allmon.ini` from local `rpt.conf` + `manager.conf`.
 
 Open `https://your-host/supermon-ng/` — the **setup wizard** walks through admin creation, `global.inc`, and node setup. Existing sites skip the wizard once complete.
 
 ### URL base path
 
-Set `APP_BASE_PATH` in `/var/www/html/supermon-ng/.env`, then reconfigure Apache:
+Set `APP_BASE_PATH` in `/etc/supermon-ng/.env`, then reconfigure Apache:
 
 ```bash
 sudo dpkg-reconfigure supermon-ng
-# or: sudo OVERWRITE_SITE=true /var/www/html/supermon-ng/scripts/configure-apache.sh configure
+# or: sudo OVERWRITE_SITE=true /usr/share/supermon-ng/scripts/configure-apache.sh configure
 ```
 
 | Value | Layout | Example |
@@ -76,7 +76,7 @@ sudo dpkg-reconfigure supermon-ng
 
 In subdirectory mode the routes are installed as a global Apache conf (`a2enconf supermon-ng`) and the existing default sites (Debian or ASL3 appliance) stay enabled and untouched; no Supermon-ng site is installed.
 
-For a root vhost, also set `SUPERMON_SERVER_NAME` and `SSL_CERT_NAME` in `.env`, merge `apache-config-template.conf` into your live vhost, and reload Apache.
+For a root vhost, also set `SUPERMON_SERVER_NAME` and `SSL_CERT_NAME` in `.env`, merge `/var/lib/supermon-ng/apache-config-template.conf` into your live vhost, and reload Apache.
 
 ## Update
 
@@ -87,7 +87,7 @@ sudo apt update
 sudo apt install supermon-ng
 ```
 
-`apt` / `dpkg` preserve conffiles under `user_files/` and prompt when maintainer configs change (for example sudoers).
+`apt` / `dpkg` preserve conffiles under `/etc/supermon-ng/user_files/` and prompt when maintainer configs change (for example sudoers).
 
 **Or** install a newer `.deb` from [Releases](https://github.com/hardenedpenguin/supermon-ng/releases):
 
@@ -98,10 +98,21 @@ sudo apt install ./supermon-ng_*_all.deb
 Legacy tarball sites should [migrate to apt](docs/DEBIAN.md#migrating-from-a-legacy-tarball-install-to-apt).
 
 ```bash
-sudo /var/www/html/supermon-ng/scripts/version-check.sh
+sudo /usr/share/supermon-ng/scripts/version-check.sh
 ```
 
 ## Configuration
+
+The package keeps code, configuration, data and logs apart. The app tree has symlinks to the other locations, so `user_files/` below means `/etc/supermon-ng/user_files/`.
+
+| Path | Contents |
+|------|----------|
+| `/usr/share/supermon-ng` | Application code, frontend, helper scripts (`sbin/`) |
+| `/etc/supermon-ng` | `.env` and `user_files/` (configuration, `.htpasswd`, user preferences) |
+| `/var/lib/supermon-ng` | `database/`, `cache/`, `astdb.txt`, announcement library (`mp3/`), generated Apache templates |
+| `/var/log/supermon-ng` | App and node-status logs |
+
+Upgrading from a release before 4.4.0 moves everything from `/var/www/html/supermon-ng` into these locations, rewrites old paths in `.env`, the Apache site and the announcement crontab, archives leftovers to `/var/backups/supermon-ng-legacy-*.tar.gz`, and removes the old directory.
 
 | File | Purpose |
 |------|---------|
@@ -110,11 +121,11 @@ sudo /var/www/html/supermon-ng/scripts/version-check.sh
 | `user_files/authusers.inc` | Per-button permissions |
 | `user_files/.htpasswd` | Login accounts |
 | `user_files/dvswitch_config.yml` | DVSwitch modes/talkgroups (copy from `.example`) |
-| `user_files/sbin/node_info.ini` | Node status / weather (or use Node Status UI) |
+| `user_files/node_info.ini` | Node status / weather (or use Node Status UI) |
 
-**Users:** `sudo ./scripts/manage_users.php add|list|change|remove`
+**Users:** `sudo /usr/share/supermon-ng/scripts/manage_users.php add|list|change|remove`
 
-**Regenerate `allmon.ini` from Asterisk:** `sudo php scripts/generate_local_allmon.php --force` (backs up first)
+**Regenerate `allmon.ini` from Asterisk:** `sudo php /usr/share/supermon-ng/scripts/generate_local_allmon.php --force` (backs up first)
 
 **Permissions** in `authusers.inc`: `$CONNECTUSER`, `$MONUSER`, `$FAVUSER`, `$DVSWITCHUSER`, `$CFGEDUSER`, `$SYSINFUSER`, `$CTRLUSER`, etc. Replace default `anarchy` with your username.
 
@@ -135,7 +146,7 @@ sudo systemctl status supermon-ng-node-status.timer
 | Log | Location |
 |-----|----------|
 | Apache | `/var/log/apache2/supermon-ng_*.log` |
-| App | `/var/www/html/supermon-ng/logs/app-YYYY-MM-DD.log` |
+| App | `/var/log/supermon-ng/app-YYYY-MM-DD.log` |
 | Backend / WS | `journalctl -u supermon-ng-backend` / `supermon-ng-websocket` |
 
 Hard-refresh the browser after upgrades so the latest frontend loads.
@@ -147,7 +158,7 @@ Hard-refresh the browser after upgrades so the latest frontend loads.
 | Site down / 502 | `systemctl status apache2 supermon-ng-backend`; Apache error log |
 | WS fallback / no live updates | `systemctl restart supermon-ng-websocket`; `a2enmod proxy_wstunnel` |
 | AMI errors | Asterisk running; `manager.conf` matches `allmon.ini` |
-| Permissions | `chown -R www-data:www-data /var/www/html/supermon-ng`; ACL on `/var/log/asterisk/` |
+| Permissions | `sudo dpkg-reconfigure supermon-ng` (resets `www-data` ownership of `/etc/supermon-ng/user_files`, `/var/lib/supermon-ng`, `/var/log/supermon-ng`); ACL on `/var/log/asterisk/` |
 
 ## Security notes
 
@@ -157,7 +168,7 @@ Hard-refresh the browser after upgrades so the latest frontend loads.
 - Unauthenticated users get no capabilities until login
 - `CORS_ORIGINS` should list explicit origins in production (not `*` with credentials)
 - Set `TRUST_FORWARDED_PROTO=true` only when a TLS-terminating reverse proxy sanitizes client-supplied `X-Forwarded-Proto` and writes the real external scheme; otherwise leave it disabled so session-cookie `Secure` behavior cannot be spoofed
-- Install `php-apcu` so API rate limits are shared across PHP-FPM workers (recommended by the `.deb` package)
+- `php-apcu` (a package dependency) shares API rate limits across PHP-FPM workers
 
 ## Contributing & support
 

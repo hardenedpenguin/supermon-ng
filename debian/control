@@ -28,8 +28,8 @@ Depends: ${misc:Depends},
          adduser,
          apache2,
          ssl-cert,
-         acl
-Recommends: asterisk,
+         acl,
+         asl3-asterisk,
          php-apcu,
          sox,
          libsox-fmt-mp3,
@@ -40,6 +40,8 @@ Description: AllStar Link node monitoring dashboard (Supermon-ng)
  announcements (upload, TTS, playback, cron scheduling), and node status/weather
  updates via systemd timers.
  .
- This package installs the application under /var/www/html/supermon-ng,
+ This package installs the application under /usr/share/supermon-ng with
+ configuration in /etc/supermon-ng, data in /var/lib/supermon-ng and logs in
+ /var/log/supermon-ng,
  configures Apache (modules, site, SSL), systemd units, and sudoers rules.
- See /var/www/html/supermon-ng/docs/DEBIAN.md for debconf and upgrade options.
+ See /usr/share/supermon-ng/docs/DEBIAN.md for debconf and upgrade options.

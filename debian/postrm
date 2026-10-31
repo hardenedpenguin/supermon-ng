@@ -1,8 +1,27 @@
 #!/bin/sh
 set -e
 
+# Keep in sync with debian/preinst and debian/postinst.
+LEGACY_DIR=/var/www/html/supermon-ng
+CONF_DIR=/etc/supermon-ng
+LEGACY_LAYOUT_VERSION=4.4.0~
+
+legacy_conffile_moves() {
+    for f in allmon.ini global.inc authusers.inc authini.inc favorites.ini \
+        favini.inc controlpanel.ini privatenodes.txt announcements.ini; do
+        dpkg-maintscript-helper mv_conffile "$LEGACY_DIR/user_files/$f" \
+            "$CONF_DIR/user_files/$f" "$LEGACY_LAYOUT_VERSION" -- "$@"
+    done
+    dpkg-maintscript-helper mv_conffile "$LEGACY_DIR/user_files/sbin/node_info.ini" \
+        "$CONF_DIR/user_files/node_info.ini" "$LEGACY_LAYOUT_VERSION" -- "$@"
+    dpkg-maintscript-helper rm_conffile "$LEGACY_DIR/astdb.txt" "$LEGACY_LAYOUT_VERSION" -- "$@"
+}
+
+legacy_conffile_moves "$@"
+
 case "$1" in
     purge)
+        rm -rf "$CONF_DIR" /var/lib/supermon-ng /var/log/supermon-ng
         rm -f /etc/sudoers.d/011-supermon-ng
         rm -rf /etc/systemd/system/supermon-ng-node-status.timer.d
         if command -v a2dissite >/dev/null 2>&1; then

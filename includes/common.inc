@@ -75,7 +75,7 @@ $ASTERISK_LOG = "/var/log/asterisk/messages.log";
 /**
  * @var string Path to the AllStar allmon database text file.
  */
-$_sm_app_root = rtrim(getenv('APP_ROOT') ?: '/var/www/html/supermon-ng', '/');
+$_sm_app_root = rtrim(getenv('APP_ROOT') ?: dirname(__DIR__), '/');
 $ASTDB_TXT = $_sm_app_root . '/astdb.txt';
 
 /**

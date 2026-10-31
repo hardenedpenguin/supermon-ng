@@ -66,7 +66,19 @@ sudo dpkg -i ../supermon-ng_*_all.deb
 sudo apt-get install -f   # if dependencies are missing
 ```
 
-Install location: `/var/www/html/supermon-ng` (matches tarball installs and sudoers paths).
+Install layout:
+
+| Path | Contents |
+|------|----------|
+| `/usr/share/supermon-ng` | Application code (root-owned), helper scripts in `sbin/` |
+| `/etc/supermon-ng/.env` | Environment settings |
+| `/etc/supermon-ng/user_files/` | Configuration (conffiles), `.htpasswd`, preferences |
+| `/var/lib/supermon-ng/` | `database/`, `cache/`, `astdb.txt`, `mp3/` (announcement library), generated Apache templates |
+| `/var/log/supermon-ng/` | App and node-status logs |
+
+`/usr/share/supermon-ng` contains symlinks (`user_files`, `.env`, `logs`, `cache`, `database`, `astdb.txt`) to those locations.
+
+Keeping the code out of `/var/www/html` matters on the ASL3 appliance 3.x: its default site serves any file that exists under `/var/www/html` before Apache's `Alias` runs, which would bypass the Supermon-ng conf.
 
 During install, debconf asks whether to:
 
@@ -83,16 +95,27 @@ sudo dpkg -i ../supermon-ng_*_all.deb
 
 On a **fresh install**, `postinst` also:
 
-- creates `.env` from `.env.example`
+- creates `/etc/supermon-ng/.env` from `.env.example`
 - runs `generate_local_allmon.php --force` on fresh install (the package ships a
   placeholder `allmon.ini` conffile; `--force` overwrites it from Asterisk and
   keeps a `.bak.*` copy). Upgrades skip generation unless the file is still that
   unused stock placeholder (nodes 1998/1999, empty passwords)
 - configures Apache from the current `.env`: the global conf for `/supermon-ng`, or the dedicated site for `APP_BASE_PATH=/` (using `OVERWRITE_SITE=true`)
 - applies `NODE_STATUS_INTERVAL_MINUTES` from `.env` via a systemd drop-in
-- sets `www-data` ownership and file modes under the app tree
+- sets `www-data` ownership of `/etc/supermon-ng/user_files`, `/var/lib/supermon-ng` and `/var/log/supermon-ng` (the code stays root-owned)
 
 Systemd units are enabled and started by the package maintainer scripts (`dh_installsystemd`).
+
+## Upgrading from a release before 4.4.0
+
+Releases before 4.4.0 installed everything under `/var/www/html/supermon-ng`. The first upgrade to 4.4.0 or later:
+
+1. Moves the `user_files` conffiles you changed to `/etc/supermon-ng/user_files/` (dpkg `mv_conffile`; unchanged ones are replaced by the packaged copies, and when you had a changed copy the packaged one is kept beside it as `*.dpkg-new`). `user_files/sbin/node_info.ini` becomes `user_files/node_info.ini`.
+2. Moves `.env`, the rest of `user_files/` (`.htpasswd`, preferences, `*-allmon.ini`, DVSwitch configs), `database/`, `logs/`, the announcement library and `astdb.txt` into the new locations. Files that already exist at the destination are not overwritten.
+3. Rewrites `/var/www/html/supermon-ng` paths in `.env`, in `/etc/apache2/sites-available/supermon-ng.conf` when that site is kept (backup: `supermon-ng.conf.legacy-path.bak`), and in root crontab announcement schedules.
+4. Archives whatever is left to `/var/backups/supermon-ng-legacy-<timestamp>.tar.gz` (mode 600) and deletes `/var/www/html/supermon-ng`. If any file could not be moved, the old directory is kept and the error is printed.
+
+Other Apache files that still mention `/var/www/html/supermon-ng` are listed at the end of the upgrade so you can update them. `/etc/sudoers.d/011-supermon-ng` changes paths in this release; if you edited it, dpkg will prompt, so pick the maintainer version and re-apply your edits.
 
 ## Migrating from a legacy tarball install to apt
 
@@ -118,10 +141,18 @@ Older sites installed from the (now removed) `install.sh` tarball should move to
 
    Or install a `.deb` from [GitHub Releases](https://github.com/hardenedpenguin/supermon-ng/releases) with `sudo apt install ./supermon-ng_*_all.deb`.
 
-4. **Restore** your backup over the package tree:
+4. **Restore** your backup to the package layout:
 
    ```bash
-   sudo tar -xzf /root/supermon-ng-pre-apt-backup.tar.gz -C /
+   sudo mkdir -p /tmp/smng-restore
+   sudo tar -xzf /root/supermon-ng-pre-apt-backup.tar.gz -C /tmp/smng-restore
+   cd /tmp/smng-restore/var/www/html/supermon-ng
+   sudo cp -a user_files/. /etc/supermon-ng/user_files/
+   sudo rm -rf /etc/supermon-ng/user_files/sbin
+   [ -f user_files/sbin/node_info.ini ] && sudo cp user_files/sbin/node_info.ini /etc/supermon-ng/user_files/
+   sudo cp .env /etc/supermon-ng/.env
+   sudo cp -a database/. /var/lib/supermon-ng/database/
+   sudo cp astdb.txt /var/lib/supermon-ng/astdb.txt
    ```
 
 5. **Re-apply** configuration from the restored `.env` (required for dedicated vhosts such as `APP_BASE_PATH=/` and `SUPERMON_SERVER_NAME`):
@@ -133,7 +164,7 @@ Older sites installed from the (now removed) `install.sh` tarball should move to
    Answer **Yes** to refresh the Apache site, or run:
 
    ```bash
-   sudo OVERWRITE_SITE=true /var/www/html/supermon-ng/scripts/configure-apache.sh configure
+   sudo OVERWRITE_SITE=true /usr/share/supermon-ng/scripts/configure-apache.sh configure
    ```
 
 6. Remove the old tarball sudoers file if still present:
@@ -146,7 +177,7 @@ Older sites installed from the (now removed) `install.sh` tarball should move to
 
 ## Configure
 
-1. Edit `.env` (created from `.env.example` on first install).
+1. Edit `/etc/supermon-ng/.env` (created from `.env.example` on first install).
 2. Set `APP_BASE_PATH` (`/supermon-ng` for subdirectory, `/` for dedicated vhost).
 3. Set `SUPERMON_SERVER_NAME` and `SSL_CERT_NAME` if using a custom certificate (see `.env.example`).
 4. Set `NODE_STATUS_INTERVAL_MINUTES` if you want a non-default node-status timer interval.
@@ -159,7 +190,7 @@ Older sites installed from the (now removed) `install.sh` tarball should move to
    Or re-run Apache + paths only:
 
    ```bash
-   sudo /var/www/html/supermon-ng/scripts/configure-apache.sh configure
+   sudo /usr/share/supermon-ng/scripts/configure-apache.sh configure
    ```
 
    To refresh only the node-status timer from `.env`:
@@ -176,9 +207,9 @@ Older sites installed from the (now removed) `install.sh` tarball should move to
 
 | Path | Purpose |
 |------|---------|
-| `/var/www/html/supermon-ng/apache-conf-template.conf` | Generated conf snippet (subdirectory mode) |
+| `/var/lib/supermon-ng/apache-conf-template.conf` | Generated conf snippet (subdirectory mode) |
 | `/etc/apache2/conf-available/supermon-ng.conf` | Global `Alias`/`ProxyPass` routes and `supermon-ng_access.log` for `APP_BASE_PATH` (subdirectory mode); regenerated and `a2enconf`'d on every configure |
-| `/var/www/html/supermon-ng/apache-config-template.conf` | Generated vhost template (root mode) |
+| `/var/lib/supermon-ng/apache-config-template.conf` | Generated vhost template (root mode) |
 | `/etc/apache2/sites-available/supermon-ng.conf` | Dedicated site (root mode; refreshed on first install, preserved on upgrade unless debconf refresh) |
 
 **Subdirectory mode (default).** Supermon-ng installs no site of its own and leaves the existing default sites enabled — Debian's `000-default` / `default-ssl` or the ASL3 appliance's `000-asl3-appliance` sites — so their settings are never overwritten. The global conf applies under whichever vhost answers. If no enabled site listens on port 80 or 443, `000-default` / `default-ssl` (snakeoil) are enabled; run `certbot --apache` for a real certificate. Requests under `/supermon-ng` are also copied to `/var/log/apache2/supermon-ng_access.log`; errors go to the serving site's error log (normally `error.log`, which the dashboard log viewer reads).
@@ -215,10 +246,10 @@ sudo apt install supermon-ng
 sudo dpkg -i ../supermon-ng_<new>_all.deb
 ```
 
-User configs listed in `debian/supermon-ng.conffiles` (including `favini.inc`) are preserved. To replace a customized Apache site with a freshly generated one (root mode), or retire it in favor of the default sites (subdirectory mode), answer **Yes** to the debconf refresh prompt, or run:
+Files under `/etc/supermon-ng` are conffiles (including `favini.inc`), so your edits are preserved. To replace a customized Apache site with a freshly generated one (root mode), or retire it in favor of the default sites (subdirectory mode), answer **Yes** to the debconf refresh prompt, or run:
 
 ```bash
-sudo OVERWRITE_SITE=true /var/www/html/supermon-ng/scripts/configure-apache.sh configure
+sudo OVERWRITE_SITE=true /usr/share/supermon-ng/scripts/configure-apache.sh configure
 ```
 
 `/etc/sudoers.d/011-supermon-ng` is also a conffile. If a package upgrade adds new sudo rules, dpkg may prompt to keep your file or install the package maintainer version. **Announcements** upgrades add `announce-*.sh` sudo lines — choose the package maintainer version unless you have custom edits.

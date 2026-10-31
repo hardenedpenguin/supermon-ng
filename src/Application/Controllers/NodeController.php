@@ -1542,18 +1542,18 @@ class NodeController
     }
 
     /**
-     * Execute CPU statistics commands using custom scripts from user_files/sbin
+     * Execute CPU statistics commands using the helper scripts in sbin/
      */
     private function executeCpuStatsCommands(): string
     {
-        $userFilesDir = __DIR__ . '/../../../user_files';
+        $sbinDir = dirname(__DIR__, 3) . '/sbin';
         
         $commands = [
             '/usr/bin/date',
-            file_exists("$userFilesDir/sbin/ssinfo") ? "export TERM=vt100 && $userFilesDir/sbin/ssinfo -" : '/usr/bin/uname -a',
+            file_exists("$sbinDir/ssinfo") ? "export TERM=vt100 && $sbinDir/ssinfo -" : '/usr/bin/uname -a',
             '/usr/bin/ip a',
             '/usr/bin/df -hT',
-            file_exists("$userFilesDir/sbin/din") ? "$userFilesDir/sbin/din" : '/usr/bin/free -h',
+            file_exists("$sbinDir/din") ? "$sbinDir/din" : '/usr/bin/free -h',
             '/usr/bin/uptime',
             '/usr/bin/top -b -n1'
         ];

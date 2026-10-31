@@ -649,7 +649,9 @@ rm -f "{alert_file_path}"
 if __name__ == "__main__":
     _debug_log_clear()
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    config_file = os.path.join(script_dir, "node_info.ini")
+    config_file = os.environ.get("SUPERMON_NODE_INFO") or os.path.join(
+        script_dir, "..", "user_files", "node_info.ini"
+    )
 
     if not os.path.exists(config_file):
         print(f"Error: Configuration file '{config_file}' not found.")

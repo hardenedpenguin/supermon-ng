@@ -49,7 +49,7 @@ class NodeStatusController
         }
 
         try {
-            $configFile = __DIR__ . '/../../../user_files/sbin/node_info.ini';
+            $configFile = __DIR__ . '/../../../user_files/node_info.ini';
 
             if (!file_exists($configFile)) {
                 return ApiResponseHelper::json($response, [
@@ -88,7 +88,7 @@ class NodeStatusController
 
         try {
             $data = $request->getParsedBody() ?? [];
-            $configFile = __DIR__ . '/../../../user_files/sbin/node_info.ini';
+            $configFile = __DIR__ . '/../../../user_files/node_info.ini';
 
             if (empty($data['nodes']) || !is_array($data['nodes'])) {
                 return ApiResponseHelper::error($response, 'Nodes array is required', 400);
@@ -150,8 +150,8 @@ class NodeStatusController
         }
 
         try {
-            $scriptPath = __DIR__ . '/../../../user_files/sbin/ast_node_status_update.py';
-            $configFile = __DIR__ . '/../../../user_files/sbin/node_info.ini';
+            $scriptPath = __DIR__ . '/../../../sbin/ast_node_status_update.py';
+            $configFile = __DIR__ . '/../../../user_files/node_info.ini';
 
             if (!file_exists($scriptPath)) {
                 return ApiResponseHelper::error($response, 'Node status update script not found', 500);

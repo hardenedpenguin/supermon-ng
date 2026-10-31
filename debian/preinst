@@ -1,0 +1,26 @@
+#!/bin/sh
+set -e
+
+# 4.4.0 moved the install from /var/www/html/supermon-ng to /usr/share/supermon-ng
+# with configuration under /etc/supermon-ng. Keep this list in sync with
+# debian/postinst and debian/postrm.
+LEGACY_DIR=/var/www/html/supermon-ng
+CONF_DIR=/etc/supermon-ng
+LEGACY_LAYOUT_VERSION=4.4.0~
+
+legacy_conffile_moves() {
+    for f in allmon.ini global.inc authusers.inc authini.inc favorites.ini \
+        favini.inc controlpanel.ini privatenodes.txt announcements.ini; do
+        dpkg-maintscript-helper mv_conffile "$LEGACY_DIR/user_files/$f" \
+            "$CONF_DIR/user_files/$f" "$LEGACY_LAYOUT_VERSION" -- "$@"
+    done
+    dpkg-maintscript-helper mv_conffile "$LEGACY_DIR/user_files/sbin/node_info.ini" \
+        "$CONF_DIR/user_files/node_info.ini" "$LEGACY_LAYOUT_VERSION" -- "$@"
+    dpkg-maintscript-helper rm_conffile "$LEGACY_DIR/astdb.txt" "$LEGACY_LAYOUT_VERSION" -- "$@"
+}
+
+legacy_conffile_moves "$@"
+
+#DEBHELPER#
+
+exit 0

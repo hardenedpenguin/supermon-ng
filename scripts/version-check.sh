@@ -9,7 +9,7 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-APP_DIR="${SUPERMON_INSTALL_DIR:-/var/www/html/supermon-ng}"
+APP_DIR="${SUPERMON_INSTALL_DIR:-/usr/share/supermon-ng}"
 
 echo -e "${BLUE}Supermon-NG Version Information${NC}"
 echo "================================"
@@ -53,7 +53,7 @@ else
 fi
 
 # Node status service
-if [ -f "$APP_DIR/user_files/sbin/node_info.ini" ]; then
+if [ -f "$APP_DIR/user_files/node_info.ini" ]; then
     echo -e "${GREEN}Node Status Service:${NC}"
     if systemctl is-active supermon-ng-node-status.timer >/dev/null 2>&1; then
         if [ -f "$APP_DIR/.env" ]; then
@@ -115,4 +115,4 @@ echo "To update to the latest release:"
 echo "  sudo apt update"
 echo "  sudo apt install supermon-ng"
 echo ""
-echo "See /var/www/html/supermon-ng/docs/DEBIAN.md for APT repository setup."
+echo "See /usr/share/supermon-ng/docs/DEBIAN.md for APT repository setup."

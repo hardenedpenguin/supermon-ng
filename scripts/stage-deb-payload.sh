@@ -1,16 +1,26 @@
 #!/bin/bash
 # Stage Supermon-NG files into a Debian package tree ($DESTDIR).
 # Called from debian/rules during package build.
+#
+# Layout: code in APP_DIR (/usr/share/supermon-ng), configuration in CONF_DIR
+# (/etc/supermon-ng), state in STATE_DIR (/var/lib/supermon-ng) and logs in
+# LOG_DIR (/var/log/supermon-ng). APP_DIR carries symlinks to the other three
+# so the app's relative paths (user_files/, logs/, cache/, database/,
+# astdb.txt, .env) keep working. postinst creates the STATE_DIR/LOG_DIR targets.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DESTDIR="${1:?Usage: stage-deb-payload.sh DESTDIR}"
-APP_DIR="${SUPERMON_INSTALL_DIR:-/var/www/html/supermon-ng}"
+APP_DIR="${SUPERMON_INSTALL_DIR:-/usr/share/supermon-ng}"
+CONF_DIR="${SUPERMON_CONF_DIR:-/etc/supermon-ng}"
+STATE_DIR="${SUPERMON_STATE_DIR:-/var/lib/supermon-ng}"
+LOG_DIR="${SUPERMON_LOG_DIR:-/var/log/supermon-ng}"
 STAGE="$DESTDIR$APP_DIR"
+CONF_STAGE="$DESTDIR$CONF_DIR"
 
-echo "stage-deb-payload: staging to $STAGE"
+echo "stage-deb-payload: staging to $STAGE (config: $CONF_STAGE)"
 
-mkdir -p "$STAGE"/{logs,cache,database,public/assets}
+mkdir -p "$STAGE/public/assets" "$CONF_STAGE"
 
 copy_tree() {
     local src="$1" dst="$2"
@@ -28,7 +38,8 @@ copy_tree bin bin
 cp "$ROOT/composer.json" "$STAGE/"
 [ -f "$ROOT/composer.lock" ] && cp "$ROOT/composer.lock" "$STAGE/" || true
 [ -f "$ROOT/.htaccess" ] && cp "$ROOT/.htaccess" "$STAGE/" || true
-[ -f "$ROOT/astdb.txt" ] && cp "$ROOT/astdb.txt" "$STAGE/" || true
+# Seed copied to $STATE_DIR/astdb.txt by postinst when missing
+[ -f "$ROOT/astdb.txt" ] && cp "$ROOT/astdb.txt" "$STAGE/astdb.txt.dist" || true
 cp "$ROOT/.env.example" "$STAGE/" 2>/dev/null || true
 
 # Static assets at app root
@@ -36,15 +47,24 @@ for f in "$ROOT"/*.{jpg,png,ico}; do
     [ -f "$f" ] && cp "$f" "$STAGE/" || true
 done
 
-# user_files (templates; conffiles protect local edits on upgrade)
-copy_tree user_files user_files
-chmod 755 "$STAGE/user_files/sbin" 2>/dev/null || true
-for script in ast_node_status_update.py din ssinfo dvswitch-bridge-restart.sh \
-    announce-play.sh announce-install.sh announce-tts.sh announce-delete.sh announce-schedule.sh announce-voice-install.sh; do
-    [ -f "$STAGE/user_files/sbin/$script" ] && chmod 755 "$STAGE/user_files/sbin/$script" || true
-done
-[ -f "$STAGE/user_files/sbin/node_info.ini" ] && chmod 644 "$STAGE/user_files/sbin/node_info.ini" || true
-mkdir -p "$STAGE/user_files/mp3"
+# Privileged helper scripts (sudoers and systemd reference these paths)
+copy_tree sbin sbin
+chmod 755 "$STAGE/sbin" "$STAGE"/sbin/* 2>/dev/null || true
+
+# user_files: everything under /etc becomes a conffile (dh_installdeb), so local
+# edits survive upgrades. Announcement audio lives in $STATE_DIR/mp3 instead.
+mkdir -p "$CONF_STAGE/user_files"
+cp -a "$ROOT/user_files/." "$CONF_STAGE/user_files/"
+rm -rf "$CONF_STAGE/user_files/mp3"
+find "$CONF_STAGE/user_files" -type f -exec chmod 644 {} +
+ln -s "$STATE_DIR/mp3" "$CONF_STAGE/user_files/mp3"
+
+ln -s "$CONF_DIR/user_files" "$STAGE/user_files"
+ln -s "$CONF_DIR/.env" "$STAGE/.env"
+ln -s "$LOG_DIR" "$STAGE/logs"
+ln -s "$STATE_DIR/cache" "$STAGE/cache"
+ln -s "$STATE_DIR/database" "$STAGE/database"
+ln -s "$STATE_DIR/astdb.txt" "$STAGE/astdb.txt"
 
 # public/ (non-asset static files; assets come from frontend dist)
 mkdir -p "$STAGE/public"
