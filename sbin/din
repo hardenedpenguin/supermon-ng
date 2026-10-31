@@ -82,7 +82,7 @@ optns=$(echo "$optns" | sed 's/\-h//g' | sed 's/ *//g')
 
 for fs in ufs vxfs nfs ext4 ext3 ext2 pcfs vfat fuseblk ntfs
 do
-    current_filesys_data=$(df "$fsm" -F "$fs" 2>/dev/null | grep -E -v -i '^$|^auto_|^Filesystem')
+    current_filesys_data=$(df "$fsm" -t "$fs" 2>/dev/null | grep -E -v -i '^$|^auto_|^Filesystem')
     if [ -n "$current_filesys_data" ]; then
         spc=""
         if [ "$fs" = "ufs" ] || [ "$fs" = "nfs" ]; then spc=" "; fi

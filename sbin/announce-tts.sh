@@ -34,35 +34,48 @@ done
 [[ -n "$TEXT_FILE" && -n "$NAME" && -n "$NODE" && -n "$MP3_DIR" && -n "$SOUNDS_DIR" ]] || usage
 [[ "$NAME" =~ ^[a-zA-Z0-9._-]+$ ]] || { echo "Invalid name" >&2; exit 1; }
 [[ "$NODE" =~ ^[0-9]+$ ]] || { echo "Invalid node" >&2; exit 1; }
-[[ -f "$TEXT_FILE" ]] || { echo "Text file not found" >&2; exit 1; }
-[[ "$TTS_CMD" =~ ^[a-zA-Z0-9._/-]+$ ]] || { echo "Invalid TTS command" >&2; exit 1; }
+[[ -z "$VOICE" || "$VOICE" =~ ^[a-zA-Z0-9._-]+$ ]] || { echo "Invalid voice" >&2; exit 1; }
 
-if ! command -v "$TTS_CMD" >/dev/null 2>&1; then
-    echo "${TTS_CMD} is not installed" >&2
-    exit 1
-fi
+# Runs as root: only the packaged asl-tts may be executed.
+case "$TTS_CMD" in
+    asl-tts|/usr/bin/asl-tts|/usr/local/bin/asl-tts) ;;
+    *) echo "Unsupported TTS command (only asl-tts is allowed)" >&2; exit 1 ;;
+esac
+TTS_CMD=$(command -v asl-tts) || { echo "asl-tts is not installed" >&2; exit 1; }
 
-[[ -d "$MP3_DIR" ]] || mkdir -p "$MP3_DIR"
+SCRIPT_DIR="$(dirname "$(realpath "${BASH_SOURCE[0]}")")"
+# shellcheck source=announce-common.sh
+. "$SCRIPT_DIR/announce-common.sh"
+require_mp3_dir "$MP3_DIR"
+MP3_DIR="$ANNOUNCE_MP3_DIR"
+SOUNDS_DIR=$(canonical_sounds_dir "$SOUNDS_DIR") || { echo "Sounds dir not allowed" >&2; exit 1; }
+require_library_file "$TEXT_FILE"
+[[ "$(basename -- "$TEXT_FILE")" == tts-* ]] || { echo "Invalid text file" >&2; exit 1; }
+TEXT_FILE="${MP3_DIR}/$(basename -- "$TEXT_FILE")"
 [[ -d "$SOUNDS_DIR" ]] || mkdir -p "$SOUNDS_DIR"
 
-UL_BASE="${MP3_DIR}/${NAME}"
-UL_OUT="${UL_BASE}.ul"
-TEXT=$(cat "$TEXT_FILE")
-rm -f "$TEXT_FILE"
-rm -f "$UL_OUT"
+UL_OUT="${MP3_DIR}/${NAME}.ul"
+TEXT=$(as_app_user cat -- "$TEXT_FILE")
+as_app_user rm -f -- "$TEXT_FILE" "$UL_OUT"
 
+# asl-tts writes as root, so let it write into a root-only temp dir and copy
+# the result into the www-data-owned library as www-data.
+WORK=$(mktemp -d)
+trap 'rm -rf "$WORK"' EXIT
 if [[ -n "$VOICE" ]]; then
-    "$TTS_CMD" -n "$NODE" -t "$TEXT" -v "$VOICE" -f "$UL_BASE"
+    "$TTS_CMD" -n "$NODE" -t "$TEXT" -v "$VOICE" -f "$WORK/$NAME"
 else
-    "$TTS_CMD" -n "$NODE" -t "$TEXT" -f "$UL_BASE"
+    "$TTS_CMD" -n "$NODE" -t "$TEXT" -f "$WORK/$NAME"
 fi
 
-if [[ ! -f "$UL_OUT" ]]; then
+if [[ ! -f "$WORK/$NAME.ul" || -L "$WORK/$NAME.ul" ]]; then
     echo "TTS did not produce output" >&2
     exit 1
 fi
+chmod 755 "$WORK"
+chmod 644 "$WORK/$NAME.ul"
+as_app_user cp -- "$WORK/$NAME.ul" "$UL_OUT"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 "$SCRIPT_DIR/announce-install.sh" \
     --input "$UL_OUT" \
     --name "$NAME" \

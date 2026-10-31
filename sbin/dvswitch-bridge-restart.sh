@@ -14,12 +14,11 @@ for name in $SERVICES; do
         echo "skip:${name}:unit_not_found"
         continue
     fi
-    if $SYSTEMCTL restart "$name" >/dev/null 2>&1; then
+    if out=$($SYSTEMCTL restart "$name" 2>&1); then
         echo "ok:${name}:restarted"
         restarted=$((restarted + 1))
     else
-        err=$($SYSTEMCTL restart "$name" 2>&1 | tr '\n' ' ')
-        echo "fail:${name}:${err}"
+        echo "fail:${name}:$(printf '%s' "$out" | tr '\n' ' ')"
     fi
 done
 

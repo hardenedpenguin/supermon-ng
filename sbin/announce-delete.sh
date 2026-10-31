@@ -26,6 +26,12 @@ done
 [[ -n "$NAME" && -n "$MP3_DIR" && -n "$SOUNDS_DIR" ]] || usage
 [[ "$NAME" =~ ^[a-zA-Z0-9._-]+$ ]] || { echo "Invalid name" >&2; exit 1; }
 
+# shellcheck source=announce-common.sh
+. "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/announce-common.sh"
+require_mp3_dir "$MP3_DIR"
+MP3_DIR="$ANNOUNCE_MP3_DIR"
+SOUNDS_DIR=$(canonical_sounds_dir "$SOUNDS_DIR") || { echo "Sounds dir not allowed" >&2; exit 1; }
+
 rm -f "${MP3_DIR}/${NAME}.ul" "${MP3_DIR}/${NAME}.wav" "${MP3_DIR}/${NAME}.mp3"
 rm -f "${SOUNDS_DIR}/${NAME}.ul"
 

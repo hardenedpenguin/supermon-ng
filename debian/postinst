@@ -175,8 +175,8 @@ remove_legacy_install() {
     fi
     backup="/var/backups/supermon-ng-legacy-$(date +%Y%m%d%H%M%S).tar.gz"
     mkdir -p /var/backups
-    if ! tar -C "$(dirname "$LEGACY_DIR")" --exclude="$(basename "$LEGACY_DIR")/vendor" \
-        --exclude="$(basename "$LEGACY_DIR")/cache" -czf "$backup" "$(basename "$LEGACY_DIR")" 2>/dev/null; then
+    if ! (umask 077 && tar -C "$(dirname "$LEGACY_DIR")" --exclude="$(basename "$LEGACY_DIR")/vendor" \
+        --exclude="$(basename "$LEGACY_DIR")/cache" -czf "$backup" "$(basename "$LEGACY_DIR")" 2>/dev/null); then
         rm -f "$backup"
         echo "supermon-ng: could not archive $LEGACY_DIR; leaving it in place" >&2
         return 0

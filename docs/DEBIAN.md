@@ -153,6 +153,7 @@ Older sites installed from the (now removed) `install.sh` tarball should move to
    sudo cp .env /etc/supermon-ng/.env
    sudo cp -a database/. /var/lib/supermon-ng/database/
    sudo cp astdb.txt /var/lib/supermon-ng/astdb.txt
+   cd / && sudo rm -rf /tmp/smng-restore
    ```
 
 5. **Re-apply** configuration from the restored `.env` (required for dedicated vhosts such as `APP_BASE_PATH=/` and `SUPERMON_SERVER_NAME`):

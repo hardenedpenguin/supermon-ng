@@ -1550,10 +1550,10 @@ class NodeController
         
         $commands = [
             '/usr/bin/date',
-            file_exists("$sbinDir/ssinfo") ? "export TERM=vt100 && $sbinDir/ssinfo -" : '/usr/bin/uname -a',
+            is_executable("$sbinDir/ssinfo") ? "export TERM=vt100 && $sbinDir/ssinfo -" : '/usr/bin/uname -a',
             '/usr/bin/ip a',
             '/usr/bin/df -hT',
-            file_exists("$sbinDir/din") ? "$sbinDir/din" : '/usr/bin/free -h',
+            is_executable("$sbinDir/din") ? "$sbinDir/din" : '/usr/bin/free -h',
             '/usr/bin/uptime',
             '/usr/bin/top -b -n1'
         ];

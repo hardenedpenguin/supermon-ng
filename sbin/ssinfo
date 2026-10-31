@@ -147,22 +147,33 @@ fi
 
 if [ -f /proc/cpuinfo ]; then
    SPEED2=""
-   SPEED=0; SLUG=0
-   if [ "$SPEED" = "$SLUG" ]; then
-      SPEED2=", TURBO-Mode enabled"
-   fi
-   if [ "$SPEED" -ge 1000000 ]; then
-      SPEED=`echo "$SPEED" | awk '{printf "%.2f GHz", ($1/1000000)}'`
-    else
-      SPEED=`echo "$SPEED" | awk '{printf "%.0f MHz", ($1/1000)}'`
-   fi
+   CPUFREQ=/sys/devices/system/cpu/cpu0/cpufreq
+   # kHz. The maximum frequency identifies the Raspberry Pi model below.
+   SPEED=`cat "$CPUFREQ/cpuinfo_max_freq" 2>/dev/null`
+   [ -n "$SPEED" ] || SPEED=`cat "$CPUFREQ/scaling_cur_freq" 2>/dev/null`
+   [ -n "$SPEED" ] || SPEED=`awk -F: '/^cpu MHz/ {printf "%d", $2 * 1000; exit}' /proc/cpuinfo`
+   CUR=`cat "$CPUFREQ/scaling_cur_freq" 2>/dev/null`
+   SLUG=`cat "$CPUFREQ/base_frequency" 2>/dev/null`
+   case "$CUR$SLUG" in
+      ''|*[!0-9]*) ;;
+      *) if [ -n "$CUR" ] && [ -n "$SLUG" ] && [ "$CUR" -gt "$SLUG" ]; then
+            SPEED2=", TURBO-Mode enabled"
+         fi ;;
+   esac
+   case "$SPEED" in
+      ''|*[!0-9]*|0) SPEED="" ;;
+      *) if [ "$SPEED" -ge 1000000 ]; then
+            SPEED=`echo "$SPEED" | awk '{printf "%.2f GHz", ($1/1000000)}'`
+         else
+            SPEED=`echo "$SPEED" | awk '{printf "%.0f MHz", ($1/1000)}'`
+         fi ;;
+   esac
    NCPU=`grep -c "^processor" /proc/cpuinfo`
    CPUTYPE=`cat /proc/cpuinfo | grep 'model name' | cut -f2 -d':' | tr -s '[:space:]' | sed 's/^ //g' | head -1`
 else
-   SPEED=0
+   SPEED=""
    NCPU=1
    CPUTYPE="NA"
-   SPEED=`echo "$SPEED" | awk '{printf "%.0f MHz", ($1/1000)}'`
 fi
 
 if [ "$SPEED" = "1.50 GHz" ]; then
@@ -177,7 +188,7 @@ fi
 if [ "$SPEED" = "900 MHz" ]; then
    MODEL="RPi-2"
 fi
-if [ "$NCPU" -gt 1 ]; then
+if [ "$NCPU" -gt 1 ] && [ -n "$SPEED" ]; then
    SPEED="$NCPU@$SPEED"
 fi
 
@@ -230,7 +241,7 @@ NetDevs=`ip link show | awk '/^[0-9]+:/ {gsub(/:/, "", $2); dev=$2} /state UP/ {
 DHCP=0
 for NETDEV in $NetDevs; do
   if [ -f "/etc/sysconfig/network-scripts/ifcfg-$NETDEV" ]; then
-    if [ \`grep -ic BOOTPROTO=dhcp "/etc/sysconfig/network-scripts/ifcfg-$NETDEV"\` -gt 0 ]; then
+    if grep -qi BOOTPROTO=dhcp "/etc/sysconfig/network-scripts/ifcfg-$NETDEV"; then
       DHCP=1
     fi
   fi

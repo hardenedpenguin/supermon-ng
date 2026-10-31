@@ -21,7 +21,7 @@ legacy_conffile_moves "$@"
 
 case "$1" in
     purge)
-        rm -rf "$CONF_DIR" /var/lib/supermon-ng /var/log/supermon-ng
+        rm -rf "$CONF_DIR" /var/lib/supermon-ng /var/log/supermon-ng /var/cache/supermon-ng
         rm -f /etc/sudoers.d/011-supermon-ng
         rm -rf /etc/systemd/system/supermon-ng-node-status.timer.d
         if command -v a2dissite >/dev/null 2>&1; then

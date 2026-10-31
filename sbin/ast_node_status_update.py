@@ -165,6 +165,17 @@ def resolve_weather_gps(wx_use_gps, wx_code):
     return _is_placeholder_wx_code(wx_code)
 
 
+def _wx_text(value):
+    """Make text safe inside the double-quoted WX variable value."""
+    text = str(value).replace('"', "'")
+    return text.replace("\r\n", " ").replace("\r", " ").replace("\n", " ")
+
+
+LOG_DIR = "/var/log/supermon-ng"
+CACHE_DIR = "/var/cache/supermon-ng"
+GPS_PLACE_CACHE = os.path.join(CACHE_DIR, "supermon-gps-place-cache.json")
+
+
 def _saytime_tmp_dir():
     return os.environ.get("SAYTIME_TMP", "/tmp")
 
@@ -205,9 +216,8 @@ def _format_nominatim_address(address):
 
 
 def _load_gps_place_cache():
-    path = os.path.join(_saytime_tmp_dir(), "supermon-gps-place-cache.json")
     try:
-        with open(path, encoding="utf-8") as f:
+        with open(GPS_PLACE_CACHE, encoding="utf-8") as f:
             data = json.load(f)
         return data if isinstance(data, dict) else {}
     except (OSError, json.JSONDecodeError):
@@ -215,9 +225,9 @@ def _load_gps_place_cache():
 
 
 def _save_gps_place_cache(cache):
-    path = os.path.join(_saytime_tmp_dir(), "supermon-gps-place-cache.json")
     try:
-        with open(path, "w", encoding="utf-8") as f:
+        os.makedirs(CACHE_DIR, mode=0o755, exist_ok=True)
+        with open(GPS_PLACE_CACHE, "w", encoding="utf-8") as f:
             json.dump(cache, f)
     except OSError:
         pass
@@ -293,7 +303,7 @@ def get_weather(wx_code, wx_location, use_gps=False):
             if label != "GPS":
                 print(f"[NodeStatus] GPS place label: {label}")
             if wx_raw:
-                return f'"<b>{label}   ({wx_raw})</b>"'
+                return f'"<b>{_wx_text(label)}   ({_wx_text(wx_raw)})</b>"'
         else:
             print("[NodeStatus] GPS weather requested but /usr/sbin/weather.rb not found or not executable")
         return '" "'
@@ -315,7 +325,7 @@ def get_weather(wx_code, wx_location, use_gps=False):
         if os.access(weather_script, os.X_OK):
             wx_raw = run_weather_command([weather_script, wx_code, "v"])
             if wx_raw:
-                return f'"<b>{label}   ({wx_raw})</b>"'
+                return f'"<b>{_wx_text(label)}   ({_wx_text(wx_raw)})</b>"'
 
     return '" "'
 
@@ -333,13 +343,13 @@ def get_disk_usage():
     return '"Disk - N/A"'
 
 def _debug_log(msg: str) -> None:
-    """Append to /tmp/node_status_debug.log for debugging API → ALERT flow."""
+    """Append to LOG_DIR/node_status_debug.log for debugging API → ALERT flow."""
     if os.environ.get("SUPERMON_NODE_STATUS_DEBUG", "").lower() not in ("1", "true", "yes", "on"):
         return
     from datetime import datetime
     try:
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        with open("/tmp/node_status_debug.log", "a", encoding="utf-8") as f:
+        with open(os.path.join(LOG_DIR, "node_status_debug.log"), "a", encoding="utf-8") as f:
             f.write(f"[{ts}] {msg}\n")
     except Exception:
         pass
@@ -350,21 +360,21 @@ def _debug_log_clear() -> None:
     if os.environ.get("SUPERMON_NODE_STATUS_DEBUG", "").lower() not in ("1", "true", "yes", "on"):
         return
     try:
-        with open("/tmp/node_status_debug.log", "w", encoding="utf-8") as f:
+        with open(os.path.join(LOG_DIR, "node_status_debug.log"), "w", encoding="utf-8") as f:
             f.write("")
     except Exception:
         pass
 
 
 def _log_skywarn_api_error(msg, status_code=None, body_snippet=None):
-    """Log API error to stderr and /tmp/skywarn_api_errors.log for debugging."""
+    """Log API error to stderr and LOG_DIR/skywarn_api_errors.log for debugging."""
     from datetime import datetime
     line = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {msg}"
     if status_code is not None:
         line += f" (HTTP {status_code})"
     print(line)
     try:
-        with open("/tmp/skywarn_api_errors.log", "a", encoding="utf-8") as f:
+        with open(os.path.join(LOG_DIR, "skywarn_api_errors.log"), "a", encoding="utf-8") as f:
             f.write(line + "\n")
             if body_snippet:
                 # Log first 500 chars inline; if longer, add truncated traceback/body
@@ -378,11 +388,9 @@ def _log_skywarn_api_error(msg, status_code=None, body_snippet=None):
 
 def _format_alert_html(enabled_text, has_alerts, alerts, no_alerts_text="<span style='color: #FF0000;'>No Alerts</span>", max_len=None):
     """Format alert data as HTML. Add full alerts only; stop before exceeding max_len (no mid-word truncation).
-    When max_len is set, use compact prefix so we can fit two full alerts (e.g. Brazoria)."""
+    When max_len is set, alerts that would exceed it are left out."""
     if not has_alerts or not alerts:
         return f'"{enabled_text}<br>{no_alerts_text}"'
-    compact = max_len is not None
-    # Keep provider branding consistent regardless of compact mode.
     prefix = f"{enabled_text}<br>"
     total = prefix
     first = True
@@ -408,7 +416,7 @@ def _format_alert_html(enabled_text, has_alerts, alerts, no_alerts_text="<span s
         total = candidate
         first = False
     if total == prefix:
-        head = prefix.rstrip("<br>") if compact else enabled_text
+        head = enabled_text
         return f'"{head}<br>{no_alerts_text}"'
     return f'"{total}"'
 
@@ -421,7 +429,7 @@ def get_alerts_from_api(api_url, master_enable, nodes=None, product_name="Skywar
     are configured, so each Supermon node shows alerts only for its counties.
 
     API errors (timeout, connection refused, HTTP errors) are logged to
-    /tmp/skywarn_api_errors.log and to stderr (node-status-update.log when run
+    /var/log/supermon-ng/skywarn_api_errors.log and to stderr (node-status-update.log when run
     via systemd). Check those when the dashboard shows "API Offline" or no alerts.
 
     Args:
@@ -657,7 +665,7 @@ if __name__ == "__main__":
         print(f"Error: Configuration file '{config_file}' not found.")
         exit(1)
 
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(interpolation=None)
     config.read(config_file)
     print(f"[NodeStatus] config={config_file}")
 
