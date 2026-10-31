@@ -44,9 +44,9 @@ write_crontab() {
 # Serialize read-modify-write of the root crontab so concurrent add/toggle/delete
 # operations cannot clobber each other. Best-effort: continues if flock is absent.
 lock_crontab() {
-    local lockfile="${TMPDIR:-/tmp}/supermon-ng-announce-cron.lock"
+    local lockfile=/run/lock/supermon-ng-announce-cron.lock
     if command -v flock >/dev/null 2>&1; then
-        exec 9>"$lockfile" 2>/dev/null || return 0
+        { exec 9>"$lockfile"; } 2>/dev/null || return 0
         flock -w 10 9 2>/dev/null || true
     fi
 }

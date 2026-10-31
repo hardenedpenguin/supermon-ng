@@ -151,6 +151,7 @@ Older sites installed from the (now removed) `install.sh` tarball should move to
    sudo rm -rf /etc/supermon-ng/user_files/sbin
    [ -f user_files/sbin/node_info.ini ] && sudo cp user_files/sbin/node_info.ini /etc/supermon-ng/user_files/
    sudo cp .env /etc/supermon-ng/.env
+   sudo sed -i -E '/^(APP_ROOT|USER_FILES_PATH)=/{s#/var/www/html/supermon-ng/user_files#/etc/supermon-ng/user_files#;s#/var/www/html/supermon-ng#/usr/share/supermon-ng#}' /etc/supermon-ng/.env
    sudo cp -a database/. /var/lib/supermon-ng/database/
    sudo cp astdb.txt /var/lib/supermon-ng/astdb.txt
    cd / && sudo rm -rf /tmp/smng-restore

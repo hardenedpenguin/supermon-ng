@@ -8,6 +8,7 @@ VOICE_ID=""
 VOICES_DIR=""
 HF_PATH=""
 BASE_URL="https://huggingface.co/rhasspy/piper-voices/resolve/main"
+PIPER_VOICES_DIR=/var/lib/piper-tts
 
 usage() {
     echo "Usage: $0 --voice-id ID --voices-dir DIR --huggingface-path PATH" >&2
@@ -26,7 +27,9 @@ done
 
 [[ -n "$VOICE_ID" && -n "$VOICES_DIR" && -n "$HF_PATH" ]] || usage
 [[ "$VOICE_ID" =~ ^[a-zA-Z0-9._-]+$ ]] || { echo "Invalid voice id" >&2; exit 1; }
-[[ "$HF_PATH" =~ ^[a-zA-Z0-9._/-]+$ ]] || { echo "Invalid huggingface path" >&2; exit 1; }
+[[ "$HF_PATH" =~ ^[a-zA-Z0-9._/-]+$ && "$HF_PATH" != *..* ]] || { echo "Invalid huggingface path" >&2; exit 1; }
+[[ "$(realpath -m -- "$VOICES_DIR")" == "$PIPER_VOICES_DIR" ]] || { echo "Voices dir not allowed" >&2; exit 1; }
+VOICES_DIR="$PIPER_VOICES_DIR"
 
 if ! command -v wget >/dev/null 2>&1; then
     echo "wget is not installed" >&2

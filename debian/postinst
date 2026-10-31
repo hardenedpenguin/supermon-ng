@@ -173,6 +173,10 @@ remove_legacy_install() {
         echo "supermon-ng: keeping $LEGACY_DIR because some files could not be migrated (see above)" >&2
         return 0
     fi
+    if grep -qsF "$LEGACY_DIR" /etc/apache2/sites-enabled/*.conf /etc/apache2/conf-enabled/*.conf; then
+        echo "supermon-ng: keeping $LEGACY_DIR because an enabled Apache site still references it" >&2
+        return 0
+    fi
     backup="/var/backups/supermon-ng-legacy-$(date +%Y%m%d%H%M%S).tar.gz"
     mkdir -p /var/backups
     if ! (umask 077 && tar -C "$(dirname "$LEGACY_DIR")" --exclude="$(basename "$LEGACY_DIR")/vendor" \

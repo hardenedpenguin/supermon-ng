@@ -639,10 +639,11 @@ rm -f "{alert_file_path}"
         os.chmod(script_path, 0o755)
         result_alert = subprocess.run(['bash', script_path], capture_output=True, text=True, check=False)
     finally:
-        try:
-            os.unlink(script_path)
-        except Exception:
-            pass
+        for path in (script_path, alert_file_path):
+            try:
+                os.unlink(path)
+            except Exception:
+                pass
     if result_alert.returncode != 0:
         print(f"Error setting ALERT for node {node}: return code {result_alert.returncode}")
         if result_alert.stderr:

@@ -70,12 +70,13 @@ fi
 # Detach playback: polite mode may wait several minutes for the node to clear,
 # and playback lasts the length of the clip. Returning immediately keeps the
 # web request fast and frees the PHP-FPM worker instead of blocking on exec().
-{
+(
+    trap '' HUP
     if [[ "$MODE" == "polite" ]]; then
         wait_for_clear
     fi
     "$ASTERISK" -rx "${CMD} ${NODE} ${FILE}"
-} </dev/null >/dev/null 2>&1 &
+) </dev/null >/dev/null 2>&1 &
 
 disown 2>/dev/null || true
 

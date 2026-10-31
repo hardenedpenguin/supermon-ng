@@ -587,13 +587,6 @@ class AnnouncementsService
                 '--mp3-dir', $this->getMp3Dir(),
                 '--sounds-dir', $this->getSoundsDir(),
             ]);
-        } elseif (is_file($sounds) && !is_file($library)) {
-            $this->runSudoScript('announce-install.sh', [
-                '--input', $sounds,
-                '--name', $name,
-                '--mp3-dir', $this->getMp3Dir(),
-                '--sounds-dir', $this->getSoundsDir(),
-            ]);
         }
     }
 

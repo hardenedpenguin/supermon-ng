@@ -82,7 +82,7 @@ optns=$(echo "$optns" | sed 's/\-h//g' | sed 's/ *//g')
 
 for fs in ufs vxfs nfs ext4 ext3 ext2 pcfs vfat fuseblk ntfs
 do
-    current_filesys_data=$(df "$fsm" -t "$fs" 2>/dev/null | grep -E -v -i '^$|^auto_|^Filesystem')
+    current_filesys_data=$(df -P "$fsm" -t "$fs" 2>/dev/null | grep -E -v -i '^$|^auto_|^Filesystem')
     if [ -n "$current_filesys_data" ]; then
         spc=""
         if [ "$fs" = "ufs" ] || [ "$fs" = "nfs" ]; then spc=" "; fi
@@ -143,7 +143,7 @@ do
             current_filesys_data=$(echo "$current_filesys_data" | grep -E -i 'pbynas|wkmnas' | sed 's/\/programs\/\///g' | sed 's/\/apps\/\///g')
         else
             current_filesys_data=$(echo "$current_filesys_data" | sed 's/\/dev\/mapper\///g')
-            current_filesys_data=$(echo $current_filesys_data | sed 's/  */ /g' | sed 's/\/dev/\n\/dev/g')
+            current_filesys_data=$(printf '%s\n' "$current_filesys_data" | sed 's/  */ /g')
             current_filesys_data=$(echo "$current_filesys_data" | sed 's/\/unnamed_rmdisk//g' | sed 's/\/unnamed//g')
         fi
 
