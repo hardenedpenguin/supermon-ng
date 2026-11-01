@@ -1,3 +1,20 @@
+supermon-ng (4.4.1-1) unstable; urgency=medium
+
+  * Fix services failing after the 4.4.0 upgrade on systems migrated from the
+    old tarball installer. Its unit files in /etc/systemd/system override the
+    packaged units and still pointed into /var/www/html/supermon-ng, so the
+    backend, websocket, database-update and node-status services failed with
+    CHDIR/STDOUT errors once that directory was removed. postinst now moves
+    those units (and their paired timers) to
+    /var/backups/supermon-ng-legacy-units-*, repoints their enable links at
+    the packaged units and reloads systemd before restarting services.
+    Systems already broken on 4.4.0 are repaired by this upgrade.
+  * Fix the menu bar going empty after login when a user's mapped INI in
+    authini.inc does not exist: fall back to allmon.ini, and keep the mapping
+    consistent when it is looked up more than once in a request.
+
+ -- Jory A. Pratt <geekypenguin@gmail.com>  Sun, 01 Nov 2026 15:43:00 +0000
+
 supermon-ng (4.4.0-1) unstable; urgency=medium
 
   * Install to /usr/share/supermon-ng so the site is served outside
