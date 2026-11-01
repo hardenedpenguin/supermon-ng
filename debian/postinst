@@ -190,6 +190,50 @@ remove_legacy_install() {
     echo "supermon-ng: removed $LEGACY_DIR (remaining files archived in $backup)"
 }
 
+# Moves /etc/systemd/system/$1 into $units_backup and repoints its enable links
+# to the packaged unit (or drops them when the package has no such unit).
+move_legacy_unit() {
+    unit="/etc/systemd/system/$1"
+    if [ -z "$units_backup" ]; then
+        units_backup="/var/backups/supermon-ng-legacy-units-$(date +%Y%m%d%H%M%S)"
+        mkdir -p "$units_backup"
+    fi
+    mv "$unit" "$units_backup/" || return 0
+    units_moved="$units_moved $1"
+    for link in /etc/systemd/system/*.wants/"$1"; do
+        [ -L "$link" ] && [ "$(readlink "$link")" = "$unit" ] || continue
+        if [ -f "/usr/lib/systemd/system/$1" ]; then
+            ln -sfn "/usr/lib/systemd/system/$1" "$link"
+        else
+            rm -f "$link"
+        fi
+    done
+}
+
+# Tarball installs wrote their own units to /etc/systemd/system, which override
+# the packaged ones in /usr/lib/systemd/system and still point into LEGACY_DIR.
+# Move them (and the timers installed alongside them) aside so the packaged
+# units take over before debhelper restarts the services.
+migrate_legacy_systemd_units() {
+    units_moved=""
+    units_backup=""
+    for unit in /etc/systemd/system/supermon-ng-*.service; do
+        [ -f "$unit" ] && [ ! -L "$unit" ] || continue
+        grep -qF "$LEGACY_DIR" "$unit" || continue
+        name=$(basename "$unit" .service)
+        move_legacy_unit "$name.service"
+        timer="/etc/systemd/system/$name.timer"
+        if [ -f "$timer" ] && [ ! -L "$timer" ]; then
+            move_legacy_unit "$name.timer"
+        fi
+    done
+    [ -n "$units_moved" ] || return 0
+    echo "supermon-ng: moved legacy systemd units that overrode the packaged ones to $units_backup:$units_moved"
+    if [ -d /run/systemd/system ]; then
+        systemctl daemon-reload || true
+    fi
+}
+
 warn_legacy_apache_references() {
     files=$(grep -ls "$LEGACY_DIR" /etc/apache2/sites-available/*.conf /etc/apache2/conf-available/*.conf 2>/dev/null || true)
     [ -n "$files" ] || return 0
@@ -332,6 +376,7 @@ case "$POSTINST_MODE" in
         MIGRATION_ERRORS=$(mktemp)
         ensure_runtime_dirs
         migrate_legacy_install
+        migrate_legacy_systemd_units
         ensure_astdb
 
         if [ ! -f "$ENV_FILE" ] && [ -f "$APP_DIR/.env.example" ]; then
